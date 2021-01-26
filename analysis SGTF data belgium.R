@@ -387,6 +387,7 @@ BIC(fit_be_uk1,fit_be_uk2)
 # fit_be_uk2  17 2085.841
 
 summary(fit_be_uk1)
+summary(fit_be_uk2)
 
 # growth rate advantage (differences in growth rate between VOC and old strains):
 # results common-slope model:
