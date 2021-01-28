@@ -240,12 +240,12 @@ fit2_contrasts
 # PLOT MODEL FIT
 
 # common slope model fit1
-date.to = as.numeric(as.Date("2021-03-01")) # date to extrapolate to
+date.to = as.numeric(as.Date("2021-03-30")) # date to extrapolate to
 total.SD = sqrt(sum(sapply(as.data.frame(VarCorr(fit1))$sdcor, function (x) x^2))) 
 # bias correction for random effects in marginal means, see https://cran.r-project.org/web/packages/emmeans/vignettes/transformations.html#bias-adj
 fit1_preds = as.data.frame(emmeans(fit1, ~ SAMPLE_DATE_NUM, 
                                    # by="LABORATORY", 
-                                   at=list(SAMPLE_DATE_NUM=seq(as.numeric(min(data$SAMPLE_DATE)),
+                                   at=list(SAMPLE_DATE_NUM=seq(as.numeric(min(data_ag_byday$SAMPLE_DATE)),
                                                                date.to)), 
                                     type="response"), bias.adjust = TRUE, sigma = total.SD)
 fit1_preds$SAMPLE_DATE = as.Date(fit1_preds$SAMPLE_DATE_NUM, origin="1970-01-01")
@@ -259,6 +259,16 @@ fit1_preds[fit1_preds$SAMPLE_DATE==as.Date("2021-01-26"),]
 fit1_preds[fit1_preds$SAMPLE_DATE==(as.Date("2021-01-26")+7),]
 #    SAMPLE_DATE_NUM     prob         SE  df asymp.LCL asymp.UCL SAMPLE_DATE
 # 34           18660 0.313647 0.06469475 Inf 0.2006735 0.4495972  2021-02-02
+
+# taking into account time from infection to diagnosis of ca 7 days this is 
+# the time at which new infections would be by more then 50% or 90% by VOC:
+fit1_preds$SAMPLE_DATE[fit1_preds[,"prob"]>=0.5][1]-7 # >50% by 3d of February [28 Jan - 12 Febr] 95% CLs
+fit1_preds$SAMPLE_DATE[fit1_preds[,"asymp.UCL"]>=0.5][1]-7
+fit1_preds$SAMPLE_DATE[fit1_preds[,"asymp.LCL"]>=0.5][1]-7
+
+fit1_preds$SAMPLE_DATE[fit1_preds[,"prob"]>=0.9]-7 # >90% by 22nd of February [12 Febr - 9 March] 95% CLs
+fit1_preds$SAMPLE_DATE[fit1_preds[,"asymp.UCL"]>=0.9][1]-7
+fit1_preds$SAMPLE_DATE[fit1_preds[,"asymp.LCL"]>=0.9][1]-7
 
 
 plot_fit1 = qplot(data=fit1_preds, x=SAMPLE_DATE, y=prob, geom="blank") +
@@ -414,6 +424,35 @@ fit_be_uk2_contrasts = emtrends(fit_be_uk2, pairwise ~ COUNTRY, var="SAMPLE_DATE
 fit_be_uk2_contrasts
 # contrast     estimate      SE  df z.ratio p.value
 # Belgium - UK   0.0193  0.0158 Inf 1.225   0.2205 
+
+
+
+
+# taking into account time from infection to diagnosis of ca 7 days this is 
+# the time at which new infections would be by more then 50% or 90% by VOC
+# using the joint UK+Belgium
+date.to = as.numeric(as.Date("2021-03-30")) # date to extrapolate to
+total.SD = sqrt(sum(sapply(as.data.frame(VarCorr(fit_be_uk1))$sdcor, function (x) x^2))) 
+# bias correction for random effects in marginal means, see https://cran.r-project.org/web/packages/emmeans/vignettes/transformations.html#bias-adj
+fit_be_uk1_preds = as.data.frame(emmeans(fit_be_uk1, ~ SAMPLE_DATE_NUM, 
+                                         by=c("COUNTRY","REGION"), 
+                                         at=list(SAMPLE_DATE_NUM=seq(as.numeric(min(data_be_uk$SAMPLE_DATE)),
+                                                                     date.to),
+                                                 COUNTRY="Belgium"), 
+                                         type="response"), bias.adjust = TRUE, sigma = total.SD)
+fit_be_uk1_preds$SAMPLE_DATE = as.Date(fit_be_uk1_preds$SAMPLE_DATE_NUM, origin="1970-01-01")
+fit_be_uk1_preds$COUNTRY = factor(fit_be_uk1_preds$COUNTRY)
+
+# estimated dates:
+(fit_be_uk1_preds$SAMPLE_DATE[fit_be_uk1_preds[,"prob"]>=0.5]-7)[1] # >50% by 2nd of February [29 Jan - 6 Febr] 95% CLs
+(fit_be_uk1_preds$SAMPLE_DATE[fit_be_uk1_preds[,"asymp.UCL"]>=0.5]-7)[1]
+(fit_be_uk1_preds$SAMPLE_DATE[fit_be_uk1_preds[,"asymp.LCL"]>=0.5]-7)[1]
+
+(fit_be_uk1_preds$SAMPLE_DATE[fit_be_uk1_preds[,"prob"]>=0.9]-7)[1] # >90% by 24th of February [19 Febr - 1 March] 95% CLs
+(fit_be_uk1_preds$SAMPLE_DATE[fit_be_uk1_preds[,"asymp.UCL"]>=0.9]-7)[1]
+(fit_be_uk1_preds$SAMPLE_DATE[fit_be_uk1_preds[,"asymp.LCL"]>=0.9]-7)[1]
+
+
 
 
 # PLOT MODEL FIT
