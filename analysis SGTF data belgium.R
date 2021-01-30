@@ -1,5 +1,5 @@
 # ANALYSIS OF S-GENE TARGET FAILURE DATA FROM BELGIUM TO INFER CONTAGIOUSNESS OF NEW VARIANT OF CONCERN B.1.1.7 / 501Y.V1 ####
-# T. Wenseleers, 25 JAN. 2021
+# T. Wenseleers, last update 30 JAN. 2021
 
 library(lme4)
 library(emmeans)
@@ -66,7 +66,7 @@ plot_fitseq = qplot(data=fitseq_preds, x=SAMPLE_DATE, y=prob, geom="blank") +
   geom_point(data=dat_seq, 
              aes(x=SAMPLE_DATE, y=PROP_501YV1, size=TOTAL_SDROPOUT_SEQUENCED), colour=I("steelblue"), alpha=I(0.5)) +
   scale_size_continuous("number of S dropout\nsamples sequenced", trans="sqrt", 
-                        range=c(0.01, 4), limits=c(5,100), breaks=c(10,50,100)) +
+                        range=c(0.01, 4), limits=c(1,100), breaks=c(1,10,100)) +
   guides(fill=FALSE) + guides(colour=FALSE) + theme(legend.position = "right") + xlab("Sampling date")
 plot_fitseq
 
@@ -97,7 +97,7 @@ plot_fitseq_response = qplot(data=fitseq_preds, x=SAMPLE_DATE, y=100*prob, geom=
   geom_point(data=dat_seq, 
              aes(x=SAMPLE_DATE, y=100*PROP_501YV1, size=TOTAL_SDROPOUT_SEQUENCED), colour=I("steelblue"), alpha=I(0.5)) +
   scale_size_continuous("number of S dropout\nsamples sequenced", trans="sqrt", 
-                        range=c(0.01, 4), limits=c(5,100), breaks=c(10,50,100)) +
+                        range=c(0.01, 4), limits=c(1,100), breaks=c(1,10,100)) +
   guides(fill=FALSE) + guides(colour=FALSE) + theme(legend.position = "right") + xlab("Sampling date")
 plot_fitseq_response
 
@@ -301,8 +301,8 @@ plot_fit1 = qplot(data=fit1_preds, x=SAMPLE_DATE, y=prob, geom="blank") +
                  ), 
              colour=I("steelblue"), 
              alpha=I(0.5)) +
-  scale_size_continuous("number of\npositive tests", trans="log2", 
-                        range=c(0.01, 6), limits=c(100,1600), breaks=c(100,200,400,800,1600)) +
+  scale_size_continuous("number of\npositive tests", trans="log10", 
+                        range=c(0.01, 4), limits=c(1,1000), breaks=c(1,10,100,1000)) +
   guides(fill=FALSE) + 
   # guides(colour=FALSE) + 
   theme(legend.position = "right") +
@@ -346,8 +346,8 @@ plot_fit1_response = qplot(data=fit1_preds, x=SAMPLE_DATE, y=100*prob, geom="bla
              ), 
              colour=I("steelblue"), 
              alpha=I(0.5)) +
-  scale_size_continuous("number of\npositive tests", trans="log2", 
-                        range=c(0.01, 6), limits=c(100,1600), breaks=c(100,200,400,800,1600)) +
+  scale_size_continuous("number of\npositive tests", trans="sqrt", 
+                        range=c(0.01, 4), limits=c(1,1000), breaks=c(1,10,100,1000)) +
   guides(fill=FALSE) + 
   # guides(colour=FALSE) + 
   theme(legend.position = "right") +
@@ -481,54 +481,7 @@ levels_BE = rev(c("UMons - Jolimont","Namur","UZ leuven","ULB","Saint LUC - UCL"
 fit_be_uk2_preds$REGION = factor(fit_be_uk2_preds$REGION, levels=c(levels_BE, levels_UKregions))
 data_be_uk$REGION = factor(data_be_uk$REGION, levels=c(levels_BE, levels_UKregions))
 
-plot_fit_be_uk2 = qplot(data=fit_be_uk2_preds, x=SAMPLE_DATE, y=prob, geom="blank") +
-  # facet_wrap(~COUNTRY) +
-  geom_ribbon(aes(y=prob, ymin=asymp.LCL, ymax=asymp.UCL, colour=NULL, 
-                  fill=REGION
-  ), 
-  # fill=I("steelblue"), 
-  alpha=I(0.3)) +
-  geom_line(aes(y=prob, 
-                colour=REGION
-  ), 
-  # colour=I("steelblue"), 
-  alpha=I(0.8)) +
-  ylab("Relative abundance of 501Y.V1 (%)") +
-  theme_hc() + xlab("") + 
-  # ggtitle("GROWTH OF 501Y.V1 IN BELGIUM & THE UK") +
-  # scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
-  #                   labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
-  scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
-                      labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
-  coord_cartesian(# xlim=c(as.Date("2020-09-01"),as.Date("2021-02-01")), 
-    # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")), 
-    ylim=c(0.001,0.999001), expand=c(0,0)) +
-  scale_color_manual("", values=reg_cols) +
-  scale_fill_manual("", values=reg_cols) +
-  # scale_color_discrete("", h=c(0, 280), c=200) +
-  # scale_fill_discrete("", h=c(0, 280), c=200) +
-  geom_point(data=data_be_uk, 
-             aes(x=SAMPLE_DATE, y=PROP, size=TOTAL,
-                 colour=REGION
-             ), 
-             # colour=I("steelblue"), 
-             alpha=I(0.5)) +
-  scale_size_continuous("number of\npositive tests", trans="log2", 
-                        range=c(0.01, 6), limits=c(100,1600), breaks=c(100,200,400,800,1600)) +
-  # guides(fill=FALSE) + 
-  # guides(colour=FALSE) + 
-  theme(legend.position = "right") +
-  xlab("Sampling date")
-plot_fit_be_uk2
-
-
-saveRDS(plot_fit_be_uk2, file = ".\\plots\\fit_be_uk2_binomGLMM_VOC_Belgium.rds")
-graph2ppt(file=".\\plots\\fit_be_uk2_binomGLMM_VOC_Belgium.pptx", width=8, height=6)
-ggsave(file=".\\plots\\fit_be_uk2_binomGLMM_VOC_Belgium.png", width=8, height=6)
-ggsave(file=".\\plots\\fit_be_uk2_binomGLMM_VOC_Belgium.pdf", width=8, height=6)
-
-
-# same on response scale:
+# on response scale:
 plot_fit_be_uk2_response = qplot(data=fit_be_uk2_preds, x=SAMPLE_DATE, y=prob*100, geom="blank") +
   # facet_wrap(~COUNTRY) +
   geom_ribbon(aes(y=prob*100, ymin=asymp.LCL*100, ymax=asymp.UCL*100, colour=NULL, 
@@ -561,8 +514,8 @@ plot_fit_be_uk2_response = qplot(data=fit_be_uk2_preds, x=SAMPLE_DATE, y=prob*10
              ), 
              # colour=I("steelblue"), 
              alpha=I(0.5)) +
-  scale_size_continuous("number of\npositive tests", trans="log2", 
-                        range=c(0.01, 6), limits=c(100,1600), breaks=c(100,200,400,800,1600)) +
+  scale_size_continuous("number of\npositive tests", trans="sqrt", 
+                        range=c(0.01, 4), limits=c(1,1000), breaks=c(1,10,100,1000)) +
   # guides(fill=FALSE) + 
   # guides(colour=FALSE) + 
   theme(legend.position = "right") +
@@ -701,54 +654,7 @@ levels_BE = rev(c("UMons - Jolimont","Namur","UZ leuven","ULB","Saint LUC - UCL"
 fit_be_uk2_2_preds$REGION = factor(fit_be_uk2_2_preds$REGION, levels=c(levels_BE, levels_UKregions))
 data_be_uk2$REGION = factor(data_be_uk2$REGION, levels=c(levels_BE, levels_UKregions))
 
-plot_fit_be_uk2_2 = qplot(data=fit_be_uk2_2_preds, x=SAMPLE_DATE, y=prob, geom="blank") +
-  # facet_wrap(~COUNTRY) +
-  geom_ribbon(aes(y=prob, ymin=asymp.LCL, ymax=asymp.UCL, colour=NULL, 
-                  fill=REGION
-  ), 
-  # fill=I("steelblue"), 
-  alpha=I(0.3)) +
-  geom_line(aes(y=prob, 
-                colour=REGION
-  ), 
-  # colour=I("steelblue"), 
-  alpha=I(0.8)) +
-  ylab("Relative abundance of 501Y.V1 (%)") +
-  theme_hc() + xlab("") + 
-  # ggtitle("GROWTH OF 501Y.V1 IN BELGIUM & THE UK") +
-  # scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
-  #                   labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
-  scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
-                      labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
-  coord_cartesian(# xlim=c(as.Date("2020-09-01"),as.Date("2021-02-01")), 
-    # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")), 
-    ylim=c(0.001,0.999001), expand=c(0,0)) +
-  scale_color_manual("", values=reg_cols) +
-  scale_fill_manual("", values=reg_cols) +
-  # scale_color_discrete("", h=c(0, 280), c=200) +
-  # scale_fill_discrete("", h=c(0, 280), c=200) +
-  geom_point(data=data_be_uk2, 
-             aes(x=SAMPLE_DATE, y=PROP, size=TOTAL,
-                 colour=REGION
-             ), 
-             # colour=I("steelblue"), 
-             alpha=I(0.5)) +
-  scale_size_continuous("number of\npositive tests", trans="log10", 
-                        range=c(0.01, 4), limits=c(10,10000), breaks=c(10,100,1000,10000)) +
-  # guides(fill=FALSE) + 
-  # guides(colour=FALSE) + 
-  theme(legend.position = "right") +
-  xlab("Sampling date")
-plot_fit_be_uk2_2
-
-
-saveRDS(plot_fit_be_uk2, file = ".\\plots\\fit_be_uk2_binomGLMM_VOC_Belgium_SGTF data.rds")
-graph2ppt(file=".\\plots\\fit_be_uk2_binomGLMM_VOC_Belgium_SGTF data.pptx", width=8, height=6)
-ggsave(file=".\\plots\\fit_be_uk2_binomGLMM_VOC_Belgium_SGTF data.png", width=8, height=6)
-ggsave(file=".\\plots\\fit_be_uk2_binomGLMM_VOC_Belgium_SGTF data.pdf", width=8, height=6)
-
-
-# same on response scale:
+# on response scale:
 plot_fit_be_uk2_2_response = qplot(data=fit_be_uk2_2_preds, x=SAMPLE_DATE, y=prob*100, geom="blank") +
   # facet_wrap(~COUNTRY) +
   geom_ribbon(aes(y=prob*100, ymin=asymp.LCL*100, ymax=asymp.UCL*100, colour=NULL, 
@@ -782,7 +688,7 @@ plot_fit_be_uk2_2_response = qplot(data=fit_be_uk2_2_preds, x=SAMPLE_DATE, y=pro
              # colour=I("steelblue"), 
              alpha=I(0.5)) +
   scale_size_continuous("number of\npositive tests", trans="log10", 
-                        range=c(0.01, 4), limits=c(10,10000), breaks=c(10,100,1000,10000)) +
+                        range=c(0.01, 4), limits=c(1,10000), breaks=c(1,10,100,1000,10000)) +
   # guides(fill=FALSE) + 
   # guides(colour=FALSE) + 
   theme(legend.position = "right") +
