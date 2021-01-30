@@ -563,15 +563,21 @@ fit_be_uk2_1 = glmer(cbind(VOC, TOTAL-VOC) ~ (1|obs)+scale(SAMPLE_DATE_NUM)+COUN
                    data=data_be_uk2)  # common slope model for country
 fit_be_uk2_2 = glmer(cbind(VOC, TOTAL-VOC) ~ (1|obs)+scale(SAMPLE_DATE_NUM)*COUNTRY+REGION, family=binomial(logit), 
                    data=data_be_uk2) # separate slopes model for country
-BIC(fit_be_uk2_1,fit_be_uk2_2) 
+fit_be_uk2_3 = glmer(cbind(VOC, TOTAL-VOC) ~ (1|obs)+scale(SAMPLE_DATE_NUM)*REGION, family=binomial(logit), 
+                     data=data_be_uk2) # separate slopes model for country
+BIC(fit_be_uk2_1, fit_be_uk2_2, fit_be_uk2_3) 
 # separate-slopes model very slightly better
 #              df      BIC
 # fit_be_uk2_1 14 7538.830
 # fit_be_uk2_2 15 7538.362
+# fit_be_uk2_3 25 7099.710
+# model fit_be_uk2_3 strictly speaking best, but below I'll use model fit_be_uk2_2
 
 summary(fit_be_uk2_1)
 summary(fit_be_uk2_2)
+summary(fit_be_uk2_3)
 
+# PLOT MODEL PREDICTIONS fit_be_uk2_2
 # growth rate advantage (differences in growth rate between VOC and old strains):
 # results common-slope model:
 fit_be_uk2_2_emtrends = as.data.frame(emtrends(fit_be_uk2_2, revpairwise ~ 1, var="SAMPLE_DATE_NUM", mode="link", adjust="Tukey")$emtrends)
@@ -605,25 +611,25 @@ fit_be_uk2_2_contrasts
 # the time at which new infections would be by more then 50% or 90% by VOC
 # using the joint UK+Belgium model
 date.to = as.numeric(as.Date("2021-03-30")) # date to extrapolate to
-total.SD = sqrt(sum(sapply(as.data.frame(VarCorr(fit_be_uk2_1))$sdcor, function (x) x^2))) 
+total.SD = sqrt(sum(sapply(as.data.frame(VarCorr(fit_be_uk2_2))$sdcor, function (x) x^2))) 
 # bias correction for random effects in marginal means, see https://cran.r-project.org/web/packages/emmeans/vignettes/transformations.html#bias-adj
-fit_be_uk2_1_preds = as.data.frame(emmeans(fit_be_uk2_1, ~ SAMPLE_DATE_NUM, 
+fit_be_uk2_2_preds = as.data.frame(emmeans(fit_be_uk2_2, ~ SAMPLE_DATE_NUM, 
                                          by=c("COUNTRY","REGION"), 
                                          at=list(SAMPLE_DATE_NUM=seq(as.numeric(min(data_be_uk$SAMPLE_DATE)),
                                                                      date.to),
                                                  COUNTRY="Belgium"), 
                                          type="response"), bias.adjust = TRUE, sigma = total.SD)
-fit_be_uk2_1_preds$SAMPLE_DATE = as.Date(fit_be_uk2_1_preds$SAMPLE_DATE_NUM, origin="1970-01-01")
-fit_be_uk2_1_preds$COUNTRY = factor(fit_be_uk2_1_preds$COUNTRY)
+fit_be_uk2_2_preds$SAMPLE_DATE = as.Date(fit_be_uk2_2_preds$SAMPLE_DATE_NUM, origin="1970-01-01")
+fit_be_uk2_2_preds$COUNTRY = factor(fit_be_uk2_2_preds$COUNTRY)
 
 # estimated dates:
-(fit_be_uk2_1_preds$SAMPLE_DATE[fit_be_uk2_1_preds[,"prob"]>=0.5]-7)[1] # >50% by 5th of February [2 Febr - 9 Febr] 95% CLs
-(fit_be_uk2_1_preds$SAMPLE_DATE[fit_be_uk2_1_preds[,"asymp.UCL"]>=0.5]-7)[1]
-(fit_be_uk2_1_preds$SAMPLE_DATE[fit_be_uk2_1_preds[,"asymp.LCL"]>=0.5]-7)[1]
+(fit_be_uk2_2_preds$SAMPLE_DATE[fit_be_uk2_2_preds[,"prob"]>=0.5]-7)[1] # >50% by 28th of January [24 Jan - 3 Febr] 95% CLs
+(fit_be_uk2_2_preds$SAMPLE_DATE[fit_be_uk2_2_preds[,"asymp.UCL"]>=0.5]-7)[1]
+(fit_be_uk2_2_preds$SAMPLE_DATE[fit_be_uk2_2_preds[,"asymp.LCL"]>=0.5]-7)[1]
 
-(fit_be_uk2_1_preds$SAMPLE_DATE[fit_be_uk1_preds[,"prob"]>=0.9]-7)[1] # >90% by 24th of February [19 Febr - 1 March] 95% CLs
-(fit_be_uk2_1_preds$SAMPLE_DATE[fit_be_uk1_preds[,"asymp.UCL"]>=0.9]-7)[1]
-(fit_be_uk2_1_preds$SAMPLE_DATE[fit_be_uk1_preds[,"asymp.LCL"]>=0.9]-7)[1]
+(fit_be_uk2_2_preds$SAMPLE_DATE[fit_be_uk2_2_preds[,"prob"]>=0.9]-7)[1] # >90% by 15th of February [8 Febr - 25 Febr] 95% CLs
+(fit_be_uk2_2_preds$SAMPLE_DATE[fit_be_uk2_2_preds[,"asymp.UCL"]>=0.9]-7)[1]
+(fit_be_uk2_2_preds$SAMPLE_DATE[fit_be_uk2_2_preds[,"asymp.LCL"]>=0.9]-7)[1]
 
 
 
@@ -632,7 +638,7 @@ fit_be_uk2_1_preds$COUNTRY = factor(fit_be_uk2_1_preds$COUNTRY)
 
 # separate slopes across countries model fit_be_uk2_2
 date.to = as.numeric(as.Date("2021-03-01")) # date to extrapolate to
-total.SD = sqrt(sum(sapply(as.data.frame(VarCorr(fit_be_uk2))$sdcor, function (x) x^2))) 
+total.SD = sqrt(sum(sapply(as.data.frame(VarCorr(fit_be_uk2_2))$sdcor, function (x) x^2))) 
 # bias correction for random effects in marginal means, see https://cran.r-project.org/web/packages/emmeans/vignettes/transformations.html#bias-adj
 fit_be_uk2_2_preds = as.data.frame(emmeans(fit_be_uk2_2, ~ SAMPLE_DATE_NUM, 
                                          by=c("COUNTRY","REGION"), 
@@ -700,6 +706,9 @@ saveRDS(plot_fit_be_uk2, file = ".\\plots\\fit_be_uk2_binomGLMM_VOC_Belgium_SGTF
 graph2ppt(file=".\\plots\\fit_be_uk2_binomGLMM_VOC_Belgium_SGTF data_response.pptx", width=8, height=6)
 ggsave(file=".\\plots\\fit_be_uk2_binomGLMM_VOC_Belgium_SGTF data_response.png", width=8, height=6)
 ggsave(file=".\\plots\\fit_be_uk2_binomGLMM_VOC_Belgium_SGTF data_response.pdf", width=8, height=6)
+
+
+
 
 
 
