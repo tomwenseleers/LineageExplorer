@@ -574,3 +574,226 @@ saveRDS(plot_fit_be_uk2, file = ".\\plots\\fit_be_uk2_binomGLMM_VOC_Belgium_resp
 graph2ppt(file=".\\plots\\fit_be_uk2_binomGLMM_VOC_Belgium_response.pptx", width=8, height=6)
 ggsave(file=".\\plots\\fit_be_uk2_binomGLMM_VOC_Belgium_response.png", width=8, height=6)
 ggsave(file=".\\plots\\fit_be_uk2_binomGLMM_VOC_Belgium_response.pdf", width=8, height=6)
+
+
+
+
+
+# 4. JOINT ANALYSIS OF BELGIAN SGTF DATA WITH UK S GENE DROPOUT (PILLAR 2 SGTF) DATA ####
+
+sgtfdata_uk = read.csv(".//data//sgtf_pillar2_UK-2021-01-25.csv") # Pillar 2 S gene targeted failure data (SGTF) (S dropout)
+sgtfdata_uk$other = sgtfdata_uk$other+sgtfdata_uk$sgtf
+colnames(sgtfdata_uk) = c("SAMPLE_DATE","REGION","SGTF","TOTAL")
+sgtfdata_uk_truepos = read.csv(".//data//sgtf_pillar2_UK-2021-01-25_nick davies_modelled true pos rate sgtfv.csv") # modelled proportion of S dropout that was actually the VOC
+sgtfdata_uk$TRUEPOS = sgtfdata_uk_truepos$sgtfv[match(interaction(sgtfdata_uk$REGION, sgtfdata_uk$SAMPLE_DATE),
+                                                      interaction(sgtfdata_uk_truepos$group, sgtfdata_uk_truepos$date))] # modelled proportion of S dropout samples that were actually the VOC
+sgtfdata_uk$VOC = sgtfdata_uk$SGTF*sgtfdata_uk$TRUEPOS
+sgtfdata_uk$COUNTRY = "UK"
+sgtfdata_uk = sgtfdata_uk[,c("SAMPLE_DATE","COUNTRY","REGION","VOC","TOTAL")]
+head(sgtfdata_uk)
+
+data_be = data_ag
+colnames(data_be)[2] = "REGION"
+data_be$COUNTRY = "Belgium"
+data_be = data_be[,c("SAMPLE_DATE","COUNTRY","REGION","VOC","TOTAL")]
+
+# joined Belgian S dropout & COG-UK data
+data_be_uk2 = rbind(data_be, sgtfdata_uk)
+data_be_uk2$COUNTRY = factor(data_be_uk2$COUNTRY)
+data_be_uk2$SAMPLE_DATE_NUM = as.numeric(data_be_uk2$SAMPLE_DATE)
+data_be_uk2$PROP = data_be_uk2$VOC/data_be_uk2$TOTAL
+data_be_uk2$obs = factor(1:nrow(data_be_uk2)) # for observation-level random effect, to take into account overdispersion
+head(data_be_uk2)
+
+set_sum_contrasts()
+fit_be_uk2_1 = glmer(cbind(VOC, TOTAL-VOC) ~ (1|obs)+scale(SAMPLE_DATE_NUM)+COUNTRY+REGION, family=binomial(logit), 
+                   data=data_be_uk2)  # common slope model for country
+fit_be_uk2_2 = glmer(cbind(VOC, TOTAL-VOC) ~ (1|obs)+scale(SAMPLE_DATE_NUM)*COUNTRY+REGION, family=binomial(logit), 
+                   data=data_be_uk2) # separate slopes model for country
+BIC(fit_be_uk2_1,fit_be_uk2_2) 
+# separate-slopes model very slightly better
+#              df      BIC
+# fit_be_uk2_1 14 7538.830
+# fit_be_uk2_2 15 7538.362
+
+summary(fit_be_uk2_1)
+summary(fit_be_uk2_2)
+
+# growth rate advantage (differences in growth rate between VOC and old strains):
+# results common-slope model:
+fit_be_uk2_2_emtrends = as.data.frame(emtrends(fit_be_uk2_2, revpairwise ~ 1, var="SAMPLE_DATE_NUM", mode="link", adjust="Tukey")$emtrends)
+fit_be_uk2_2_emtrends[,c(2,5,6)]
+# 0.108 [0.10-0.12] 95% CLs
+# with a generation time of 4.7 days this would translate in an increased 
+# infectiousness (multiplicative effect on Rt) of
+exp(fit_be_uk2_2_emtrends[,c(2,5,6)]*4.7) 
+# 1.66 [1.57-1.76] 95% CLs
+
+# results separate-slopes per country model:                         
+# although one might think there are some slight differences in the growth rate advantage across the UK & Belgium:
+fit_be_uk2_2_emtrends = emtrends(fit_be_uk2_2, revpairwise ~ COUNTRY, var="SAMPLE_DATE_NUM", mode="link")$emtrends
+fit_be_uk2_2_emtrends
+# COUNTRY SAMPLE_DATE_NUM.trend       SE  df asymp.LCL asymp.UCL
+# Belgium                0.1255 0.012699 Inf    0.1006    0.1503
+# UK                     0.0907 0.000586 Inf    0.0896    0.0919
+# 
+# Confidence level used: 0.95 
+
+# these differences in slope are significant:
+fit_be_uk2_2_contrasts = emtrends(fit_be_uk2_2, pairwise ~ COUNTRY, var="SAMPLE_DATE_NUM", mode="link")$contrasts
+fit_be_uk2_2_contrasts
+# contrast     estimate      SE  df z.ratio p.value
+# Belgium - UK   0.0347 0.0127 Inf 2.733   0.0063
+
+
+
+
+# taking into account time from infection to diagnosis of ca 7 days this is 
+# the time at which new infections would be by more then 50% or 90% by VOC
+# using the joint UK+Belgium model
+date.to = as.numeric(as.Date("2021-03-30")) # date to extrapolate to
+total.SD = sqrt(sum(sapply(as.data.frame(VarCorr(fit_be_uk2_1))$sdcor, function (x) x^2))) 
+# bias correction for random effects in marginal means, see https://cran.r-project.org/web/packages/emmeans/vignettes/transformations.html#bias-adj
+fit_be_uk2_1_preds = as.data.frame(emmeans(fit_be_uk2_1, ~ SAMPLE_DATE_NUM, 
+                                         by=c("COUNTRY","REGION"), 
+                                         at=list(SAMPLE_DATE_NUM=seq(as.numeric(min(data_be_uk$SAMPLE_DATE)),
+                                                                     date.to),
+                                                 COUNTRY="Belgium"), 
+                                         type="response"), bias.adjust = TRUE, sigma = total.SD)
+fit_be_uk2_1_preds$SAMPLE_DATE = as.Date(fit_be_uk2_1_preds$SAMPLE_DATE_NUM, origin="1970-01-01")
+fit_be_uk2_1_preds$COUNTRY = factor(fit_be_uk2_1_preds$COUNTRY)
+
+# estimated dates:
+(fit_be_uk2_1_preds$SAMPLE_DATE[fit_be_uk2_1_preds[,"prob"]>=0.5]-7)[1] # >50% by 5th of February [2 Febr - 9 Febr] 95% CLs
+(fit_be_uk2_1_preds$SAMPLE_DATE[fit_be_uk2_1_preds[,"asymp.UCL"]>=0.5]-7)[1]
+(fit_be_uk2_1_preds$SAMPLE_DATE[fit_be_uk2_1_preds[,"asymp.LCL"]>=0.5]-7)[1]
+
+(fit_be_uk2_1_preds$SAMPLE_DATE[fit_be_uk1_preds[,"prob"]>=0.9]-7)[1] # >90% by 24th of February [19 Febr - 1 March] 95% CLs
+(fit_be_uk2_1_preds$SAMPLE_DATE[fit_be_uk1_preds[,"asymp.UCL"]>=0.9]-7)[1]
+(fit_be_uk2_1_preds$SAMPLE_DATE[fit_be_uk1_preds[,"asymp.LCL"]>=0.9]-7)[1]
+
+
+
+
+# PLOT MODEL FIT
+
+# separate slopes across countries model fit_be_uk2_2
+date.to = as.numeric(as.Date("2021-03-01")) # date to extrapolate to
+total.SD = sqrt(sum(sapply(as.data.frame(VarCorr(fit_be_uk2))$sdcor, function (x) x^2))) 
+# bias correction for random effects in marginal means, see https://cran.r-project.org/web/packages/emmeans/vignettes/transformations.html#bias-adj
+fit_be_uk2_2_preds = as.data.frame(emmeans(fit_be_uk2_2, ~ SAMPLE_DATE_NUM, 
+                                         by=c("COUNTRY","REGION"), 
+                                         at=list(SAMPLE_DATE_NUM=seq(as.numeric(min(data_be_uk2$SAMPLE_DATE)),
+                                                                     date.to)), 
+                                         type="response"), bias.adjust = TRUE, sigma = total.SD)
+fit_be_uk2_2_preds$SAMPLE_DATE = as.Date(fit_be_uk2_2_preds$SAMPLE_DATE_NUM, origin="1970-01-01")
+fit_be_uk2_2_preds$COUNTRY = factor(fit_be_uk2_2_preds$COUNTRY)
+
+n = length(levels(fit_be_uk2_2_preds$REGION))
+reg_cols = hcl(h = seq(290, 0, length = n + 1), l = 50, c = 255)[1:n]
+reg_cols[6:n] = rev(reg_cols[6:n])
+
+levels_UKregions = c("South East","London","East of England",
+                     "South West","Midlands","North East and Yorkshire",
+                     "Scotland","North West","Wales")
+levels_BE = rev(c("UMons - Jolimont","Namur","UZ leuven","ULB","Saint LUC - UCL"))
+
+fit_be_uk2_2_preds$REGION = factor(fit_be_uk2_2_preds$REGION, levels=c(levels_BE, levels_UKregions))
+data_be_uk2$REGION = factor(data_be_uk2$REGION, levels=c(levels_BE, levels_UKregions))
+
+plot_fit_be_uk2_2 = qplot(data=fit_be_uk2_2_preds, x=SAMPLE_DATE, y=prob, geom="blank") +
+  # facet_wrap(~COUNTRY) +
+  geom_ribbon(aes(y=prob, ymin=asymp.LCL, ymax=asymp.UCL, colour=NULL, 
+                  fill=REGION
+  ), 
+  # fill=I("steelblue"), 
+  alpha=I(0.3)) +
+  geom_line(aes(y=prob, 
+                colour=REGION
+  ), 
+  # colour=I("steelblue"), 
+  alpha=I(0.8)) +
+  ylab("Relative abundance of 501Y.V1 (%)") +
+  theme_hc() + xlab("") + 
+  # ggtitle("GROWTH OF 501Y.V1 IN BELGIUM & THE UK") +
+  # scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
+  #                   labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
+  scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
+                      labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
+  coord_cartesian(# xlim=c(as.Date("2020-09-01"),as.Date("2021-02-01")), 
+    # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")), 
+    ylim=c(0.001,0.999001), expand=c(0,0)) +
+  scale_color_manual("", values=reg_cols) +
+  scale_fill_manual("", values=reg_cols) +
+  # scale_color_discrete("", h=c(0, 280), c=200) +
+  # scale_fill_discrete("", h=c(0, 280), c=200) +
+  geom_point(data=data_be_uk2, 
+             aes(x=SAMPLE_DATE, y=PROP, size=TOTAL,
+                 colour=REGION
+             ), 
+             # colour=I("steelblue"), 
+             alpha=I(0.5)) +
+  scale_size_continuous("number of\npositive tests", trans="log10", 
+                        range=c(0.01, 4), limits=c(10,10000), breaks=c(10,100,1000,10000)) +
+  # guides(fill=FALSE) + 
+  # guides(colour=FALSE) + 
+  theme(legend.position = "right") +
+  xlab("Sampling date")
+plot_fit_be_uk2_2
+
+
+saveRDS(plot_fit_be_uk2, file = ".\\plots\\fit_be_uk2_binomGLMM_VOC_Belgium_SGTF data.rds")
+graph2ppt(file=".\\plots\\fit_be_uk2_binomGLMM_VOC_Belgium_SGTF data.pptx", width=8, height=6)
+ggsave(file=".\\plots\\fit_be_uk2_binomGLMM_VOC_Belgium_SGTF data.png", width=8, height=6)
+ggsave(file=".\\plots\\fit_be_uk2_binomGLMM_VOC_Belgium_SGTF data.pdf", width=8, height=6)
+
+
+# same on response scale:
+plot_fit_be_uk2_2_response = qplot(data=fit_be_uk2_2_preds, x=SAMPLE_DATE, y=prob*100, geom="blank") +
+  # facet_wrap(~COUNTRY) +
+  geom_ribbon(aes(y=prob*100, ymin=asymp.LCL*100, ymax=asymp.UCL*100, colour=NULL, 
+                  fill=REGION
+  ), 
+  # fill=I("steelblue"), 
+  alpha=I(0.3)) +
+  geom_line(aes(y=prob*100, 
+                colour=REGION
+  ), 
+  # colour=I("steelblue"), 
+  alpha=I(0.8)) +
+  ylab("Relative abundance of 501Y.V1 (%)") +
+  theme_hc() + xlab("") + 
+  # ggtitle("GROWTH OF 501Y.V1 IN BELGIUM & THE UK") +
+  # scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
+  #                   labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
+  # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
+  #                    labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
+  coord_cartesian(# xlim=c(as.Date("2020-09-01"),as.Date("2021-02-01")), 
+    # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")), 
+    ylim=c(0,100), expand=c(0,0)) +
+  scale_color_manual("", values=reg_cols) +
+  scale_fill_manual("", values=reg_cols) +
+  # scale_color_discrete("", h=c(0, 280), c=200) +
+  # scale_fill_discrete("", h=c(0, 280), c=200) +
+  geom_point(data=data_be_uk2, 
+             aes(x=SAMPLE_DATE, y=PROP*100, size=TOTAL,
+                 colour=REGION
+             ), 
+             # colour=I("steelblue"), 
+             alpha=I(0.5)) +
+  scale_size_continuous("number of\npositive tests", trans="log10", 
+                        range=c(0.01, 4), limits=c(10,10000), breaks=c(10,100,1000,10000)) +
+  # guides(fill=FALSE) + 
+  # guides(colour=FALSE) + 
+  theme(legend.position = "right") +
+  xlab("Sampling date")
+plot_fit_be_uk2_2_response
+
+
+saveRDS(plot_fit_be_uk2, file = ".\\plots\\fit_be_uk2_binomGLMM_VOC_Belgium_SGTF data_response.rds")
+graph2ppt(file=".\\plots\\fit_be_uk2_binomGLMM_VOC_Belgium_SGTF data_response.pptx", width=8, height=6)
+ggsave(file=".\\plots\\fit_be_uk2_binomGLMM_VOC_Belgium_SGTF data_response.png", width=8, height=6)
+ggsave(file=".\\plots\\fit_be_uk2_binomGLMM_VOC_Belgium_SGTF data_response.pdf", width=8, height=6)
+
+
+
