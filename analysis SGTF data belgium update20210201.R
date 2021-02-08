@@ -141,7 +141,7 @@ testdata = map_df(sheets, ~ read_excel(file, sheet = .x, skip = 0,
                                        col_types=c("text","text","text","text","text","text"))) 
 testdata = testdata[-which(grepl("Laboratory",testdata$Laboratory)),]
 testdata$Laboratory[testdata$Laboratory=="ULG - FF 3.x"]="ULG"
-unique(testdata$Laboratory)
+unique(testdata$Laboratory) # UZ leuven        UZ Gent          UMons - Jolimont UZA              Namur            Saint LUC - UCL  ULB 
 testdata$Analysis_date = as.Date(as.numeric(testdata$Analysis_date), origin="1899-12-30")
 range(testdata$Analysis_date) # "2020-12-01" - "2021-01-30"
 testdata$date = testdata$Analysis_date-1 # sampling date = analysis date-1 
@@ -255,6 +255,10 @@ data_ag_byday$obs = factor(1:nrow(data_ag_byday))
 sum(data_ag_byday$TOTAL) == nrow(testdata_onlypos) # TRUE - check
 head(data_ag_byday)
 
+sum(tail(data_ag_byday$VOC, 14))/sum(tail(data_ag_byday$TOTAL,14)) 
+# 15.4% of the samples of last 2 weeks estimated to be by British variant 
+# note: this is not the same as the estimated prop of the new infections or new diagnoses today that are of the British
+# variant, which are much higher, see below)
 
 
 # fit common-slope and separate-slopes binomial GLM
@@ -932,3 +936,42 @@ saveRDS(plot_fit_be_uk2_response, file = paste0(".\\plots\\",dat,"\\plot_fit_S d
 graph2ppt(file=paste0(".\\plots\\",dat,"\\plot_fit_S dropout BE COGUK sequencing data_binomial spline GLMM.pptx"), width=8, height=6)
 ggsave(file=paste0(".\\plots\\",dat,"\\plot_fit_S dropout BE COGUK sequencing data_binomial spline GLMM.png"), width=8, height=6)
 ggsave(file=paste0(".\\plots\\",dat,"\\plot_fit_S dropout BE COGUK sequencing data_binomial spline GLMM.pdf"), width=8, height=6)
+
+
+# 5. SOME INTERNATIONAL COMPARISONS ####
+
+# data from https://ispmbern.github.io/covid-19/variants/
+
+data_geneva = read.csv("https://ispmbern.github.io/covid-19/variants/data/variants_GE.csv")
+data_geneva$date = as.Date(data_geneva$date)
+data_geneva$date_num = as.numeric(data_geneva$date)
+data_geneva$obs = factor(1:nrow(data_geneva))
+data_zurich = read.csv("https://ispmbern.github.io/covid-19/variants/data/variants_ZH.csv")
+data_zurich$date = as.Date(data_zurich$date)
+data_zurich$date_num = as.numeric(data_zurich$date)
+data_zurich$obs = factor(1:nrow(data_zurich))
+data_switzerland = read.csv("https://ispmbern.github.io/covid-19/variants/data/variants_CH.csv")
+data_switzerland$date = as.Date(data_switzerland$date)
+data_switzerland$date_num = as.numeric(data_switzerland$date)
+data_switzerland$obs = factor(1:nrow(data_switzerland))
+data_denmark = read.csv("https://ispmbern.github.io/covid-19/variants/data/variants_DK.csv")
+data_denmark$date = as.Date(data_denmark$date)
+data_denmark$date_num = as.numeric(data_denmark$date)
+data_denmark$obs = factor(1:nrow(data_denmark))
+fit_geneva = glm(cbind(N501Y,total-N501Y)~date_num, family=quasibinomial(logit), data=data_geneva)
+summary(fit_geneva)
+cbind(coef(fit_geneva),confint(fit_geneva))[2,] # 0.11 [0.07-0.16] 95% CLs
+exp(4.7*cbind(coef(fit_geneva),confint(fit_geneva))[2,]) # 1.67 [1.36-2.08] 
+fit_zurich = glm(cbind(N501Y,total-N501Y)~date_num, family=quasibinomial(logit), data=data_zurich)
+summary(fit_zurich)
+cbind(coef(fit_zurich),confint(fit_zurich))[2,] # 0.10 [0.07-0.14] 95% CLs
+exp(4.7*cbind(coef(fit_zurich),confint(fit_zurich))[2,]) # 1.61 [1.37-1.92] 
+fit_zwitzerland = glm(cbind(B117,total-B117)~date_num, family=quasibinomial(logit), data=data_switzerland)
+summary(fit_zwitzerland)
+cbind(coef(fit_zwitzerland),confint(fit_zwitzerland))[2,] # 0.11 [0.095-0.14] 95% CLs
+exp(4.7*cbind(coef(fit_zwitzerland),confint(fit_zwitzerland))[2,]) # 1.71 [1.56-1.88] 
+fit_denmark = glm(cbind(B117,total-B117)~date_num, family=quasibinomial(logit), data=data_denmark)
+summary(fit_denmark)
+cbind(coef(fit_denmark),confint(fit_denmark))[2,] # 0.08 [0.074-0.087] 95% CLs
+exp(4.7*cbind(coef(fit_denmark),confint(fit_denmark))[2,]) # 1.46 [1.41-1.51] 
+
