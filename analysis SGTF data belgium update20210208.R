@@ -1063,7 +1063,16 @@ helix_sgtf = read_tsv("https://github.com/andersen-lab/paper_2021_early-b117-usa
   select(state, collection_date, n, n_sgtf) # n_sgtf/n = prop of pos tests that have S dropout
 helix_sgtf = helix_sgtf[helix_sgtf$state %in% unique(helix_b117$state),]
 
-# helix_metadata = left_join(helix_sgtf, helix_b117, by=c("state", "collection_date"))
+helix_metadata = left_join(helix_sgtf, helix_b117, by=c("state", "collection_date"))
+
+tmp <- helix_metadata %>%
+  group_by(collection_date) %>%
+  summarise(n_sgtf = sum(n_sgtf), n = sum(n)) %>%
+  mutate(state = "USA")
+
+tmp <- bind_rows(tmp, helix_metadata)
+states_gt_500 <- tmp %>% group_by(state) %>% summarise(n = sum(n), n_sgtf = sum(n_sgtf)) %>% filter(n > 500 & n_sgtf > 0) %>% select(state) %>% as_vector()
+
 
 helix_b117$collection_date_num = as.numeric(helix_b117$collection_date)
 helix_b117$obs = factor(1:nrow(helix_b117))
@@ -1074,12 +1083,14 @@ helix_sgtf$collection_date_num = as.numeric(helix_sgtf$collection_date)
 helix_sgtf$state = factor(helix_sgtf$state)
 helix_sgtf$obs = factor(1:nrow(helix_sgtf))
 
+# FIT FOR WHOLE US + PLOT ####
+
 fitted_truepos = predict(fit_us_propB117amongSGTF, newdat=helix_sgtf, type="response") 
 # fitted true positive rate, ie prop of SGTF samples that are B.1.1.7 for dates & states in helix_sgtf
 
 helix_sgtf$estB117 = helix_sgtf$n_sgtf*fitted_truepos # estimated nr of B.1.1.7 samples
 helix_sgtf$propB117 = helix_sgtf$estB117/helix_sgtf$n 
-fit_us = glmer(cbind(estB117, n-estB117) ~ (1|state/obs)+scale(collection_date_num), 
+fit_us = glmer(cbind(estB117, n-estB117) ~ (1|state)+scale(collection_date_num), 
                family=binomial(logit), data=helix_sgtf)
 summary(fit_us)
 as.data.frame(emtrends(fit_us, ~ 1, "collection_date_num"))[,c(2,5,6)]
@@ -1100,7 +1111,126 @@ exp(6.5*as.data.frame(emtrends(fit_us, ~ 1, "collection_date_num"))[,c(2,5,6)])
 # 1                  1.746433  1.681522   1.81385
 
 
-# estimates just for Florida & California + plots:
+# plot model fit fit_us
+
+date.to = as.numeric(as.Date("2021-06-01"))
+sel_states = intersect(rownames(ranef(fit_us)$state)[order(ranef(fit_us)$state[,1], decreasing=T)],states_gt_500)[1:16] # unique(helix_sgtf$state[helix_sgtf$propB117>0.03])
+rem_states = c("NY","NJ","MN","IL","AL","OH","MI") # states with too few data points we don't want to show on plot
+sel_states = setdiff(sel_states,rem_states)
+
+total.SD = sqrt(sum(sapply(as.data.frame(VarCorr(fit_us))$sdcor, function (x) x^2))) 
+fit_us_preds = as.data.frame(emmeans(fit_us, ~ collection_date_num, 
+                                         # by="state", 
+                                         at=list(collection_date_num=seq(min(helix_sgtf$collection_date_num),
+                                                                         date.to)), 
+                                         type="link"), bias.adjust = TRUE, sigma = total.SD)
+fit_us_preds$collection_date = as.Date(fit_us_preds$collection_date_num, origin="1970-01-01")
+fit_us_preds2 = do.call(rbind,lapply(unique(helix_sgtf$state), function(st) { ranintercs = ranef(fit_us)$state
+                                raninterc = ranintercs[rownames(ranintercs)==st,]
+                                data.frame(state=st, fit_us_preds, raninterc=raninterc)}))
+fit_us_preds2$prob = plogis(fit_us_preds2$emmean+fit_us_preds2$raninterc)
+fit_us_preds2$prob.asymp.LCL = plogis(fit_us_preds2$asymp.LCL+fit_us_preds2$raninterc)
+fit_us_preds2$prob.asymp.UCL = plogis(fit_us_preds2$asymp.UCL+fit_us_preds2$raninterc)
+fit_us_preds2 = fit_us_preds2[as.character(fit_us_preds2$state) %in% sel_states,]
+fit_us_preds2$state = droplevels(fit_us_preds2$state)
+fit_us_preds2$state = factor(fit_us_preds2$state, # we order states by random intercept, ie date of introduction
+                             levels=intersect(rownames(ranef(fit_us)$state)[order(ranef(fit_us)$state[,1], decreasing=T)],
+                                              sel_states))
+
+# PLOT MODEL FIT
+plot_fitus = qplot(data=fit_us_preds2, x=collection_date, y=prob, geom="blank") +
+  facet_wrap(~state) +
+  geom_ribbon(aes(y=prob, ymin=prob.asymp.LCL, ymax=prob.asymp.UCL, colour=NULL, 
+                  fill=state
+  ), 
+  # fill=I("steelblue"), 
+  alpha=I(0.3)) +
+  geom_line(aes(y=prob, 
+                colour=state
+  ), 
+  # colour=I("steelblue"), 
+  alpha=I(0.8)) +
+  ylab("Relative abundance of B.1.1.7 (%)") +
+  theme_hc() + xlab("") + 
+  ggtitle("SPREAD OF B.1.1.7 IN THE US") +
+  # scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
+  #                   labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
+  scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
+                      labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
+  coord_cartesian(xlim=c(min(fit_us_preds$collection_date), as.Date("2021-04-01")), 
+                  # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")), 
+                  ylim=c(0.001,0.9990001), expand=c(0,0)) +
+  scale_color_discrete("state", h=c(0, 240), c=120, l=50) +
+  scale_fill_discrete("state", h=c(0, 240), c=120, l=50) +
+  geom_point(data=helix_sgtf[helix_sgtf$state %in% sel_states,],  
+             aes(x=collection_date, y=propB117, size=n,
+                 colour=state
+             ), pch=I(16),
+             # colour=I("steelblue"), 
+             alpha=I(0.3)) +
+  scale_size_continuous("number of\npositive tests", trans="log10", 
+                        range=c(1, 4), limits=c(10,10^(round(log10(max(helix_sgtf$n)),0)+1)), breaks=c(10,100,1000,10000)) +
+  # guides(fill=FALSE) + 
+  # guides(colour=FALSE) + 
+  theme(legend.position = "right") +
+  xlab("Sampling date") +
+  theme(axis.text.x = element_text(angle = 90, vjust=0.5))
+plot_fitus
+
+saveRDS(plot_fitus, file = paste0(".\\plots\\",dat,"\\fit_us_binomGLMM_B117.rds"))
+graph2ppt(file=paste0(".\\plots\\",dat,"\\fit_us_binomGLMM_B117.pptx"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",dat,"\\fit_us_binomGLMM_B117.png"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",dat,"\\fit_us_binomGLMM_B117.pdf"), width=8, height=6)
+
+
+# PLOT MODEL FIT (response scale)
+plot_fitus_resp = qplot(data=fit_us_preds2, x=collection_date, y=prob*100, geom="blank") +
+  facet_wrap(~state) +
+  geom_ribbon(aes(y=prob*100, ymin=prob.asymp.LCL*100, ymax=prob.asymp.UCL*100, colour=NULL, 
+                  fill=state
+  ), 
+  # fill=I("steelblue"), 
+  alpha=I(0.3)) +
+  geom_line(aes(y=prob*100, 
+                colour=state
+  ), 
+  # colour=I("steelblue"), 
+  alpha=I(0.8)) +
+  ylab("Relative abundance of B.1.1.7 (%)") +
+  theme_hc() + xlab("") + 
+  ggtitle("SPREAD OF B.1.1.7 IN THE US") +
+  # scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
+  #                   labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
+  # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
+  #                    labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
+  coord_cartesian(xlim=c(min(fit_calfl2_preds$collection_date), as.Date("2021-04-01")), 
+                  # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")), 
+                  ylim=c(0,100), expand=c(0,0)) +
+  scale_color_discrete("state", h=c(0, 240), c=120, l=50) +
+  scale_fill_discrete("state", h=c(0, 240), c=120, l=50) +
+  geom_point(data=helix_sgtf[helix_sgtf$state %in% sel_states,],  
+             aes(x=collection_date, y=propB117*100, size=n,
+                 colour=state
+             ), pch=I(16),
+             # colour=I("steelblue"), 
+             alpha=I(0.3)) +
+  scale_size_continuous("number of\npositive tests", trans="log10", 
+                        range=c(1, 4), limits=c(10,10^(round(log10(max(helix_sgtf_subs2$n)),0)+1)), breaks=c(10,100,1000,10000)) +
+  # guides(fill=FALSE) + 
+  # guides(colour=FALSE) + 
+  theme(legend.position = "right") +
+  xlab("Sampling date") +
+  theme(axis.text.x = element_text(angle = 90, vjust=0.5))
+plot_fitus_resp
+
+saveRDS(plot_fitus_resp, file = paste0(".\\plots\\",dat,"\\fit_us_cafl_binomGLMM_B117_resp.rds"))
+graph2ppt(file=paste0(".\\plots\\",dat,"\\fit_us_cafl_binomGLMM_B117_resp.pptx"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",dat,"\\fit_us_cafl_binomGLMM_B117_resp.png"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",dat,"\\fit_us_cafl_binomGLMM_B117_resp.pdf"), width=8, height=6)
+
+
+
+# FIT JUST USING DATA FROM FLORIDA+CALIFORNIA + PLOTS ####
 sel_states = c("FL","CA")
 helix_sgtf_subs = helix_sgtf[helix_sgtf$state %in% sel_states,]
 
