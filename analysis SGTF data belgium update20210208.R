@@ -1090,7 +1090,7 @@ fitted_truepos = predict(fit_us_propB117amongSGTF, newdat=helix_sgtf, type="resp
 
 helix_sgtf$estB117 = helix_sgtf$n_sgtf*fitted_truepos # estimated nr of B.1.1.7 samples
 helix_sgtf$propB117 = helix_sgtf$estB117/helix_sgtf$n 
-fit_us = glmer(cbind(estB117, n-estB117) ~ (1|state)+scale(collection_date_num), 
+fit_us = glmer(cbind(estB117, n-estB117) ~ (1|state/obs)+scale(collection_date_num), 
                family=binomial(logit), data=helix_sgtf)
 summary(fit_us)
 as.data.frame(emtrends(fit_us, ~ 1, "collection_date_num"))[,c(2,5,6)]
@@ -1179,8 +1179,8 @@ plot_fitus
 
 saveRDS(plot_fitus, file = paste0(".\\plots\\",dat,"\\fit_us_binomGLMM_B117.rds"))
 graph2ppt(file=paste0(".\\plots\\",dat,"\\fit_us_binomGLMM_B117.pptx"), width=8, height=6)
-ggsave(file=paste0(".\\plots\\",dat,"\\fit_us_binomGLMM_B117.png"), width=8, height=6)
-ggsave(file=paste0(".\\plots\\",dat,"\\fit_us_binomGLMM_B117.pdf"), width=8, height=6)
+ggsave(plot_fitus, file=paste0(".\\plots\\",dat,"\\fit_us_binomGLMM_B117.png"), width=8, height=6)
+ggsave(plot_fitus, file=paste0(".\\plots\\",dat,"\\fit_us_binomGLMM_B117.pdf"), width=8, height=6)
 
 
 # PLOT MODEL FIT (response scale)
@@ -1223,10 +1223,10 @@ plot_fitus_resp = qplot(data=fit_us_preds2, x=collection_date, y=prob*100, geom=
   theme(axis.text.x = element_text(angle = 90, vjust=0.5))
 plot_fitus_resp
 
-saveRDS(plot_fitus_resp, file = paste0(".\\plots\\",dat,"\\fit_us_cafl_binomGLMM_B117_resp.rds"))
-graph2ppt(file=paste0(".\\plots\\",dat,"\\fit_us_cafl_binomGLMM_B117_resp.pptx"), width=8, height=6)
-ggsave(file=paste0(".\\plots\\",dat,"\\fit_us_cafl_binomGLMM_B117_resp.png"), width=8, height=6)
-ggsave(file=paste0(".\\plots\\",dat,"\\fit_us_cafl_binomGLMM_B117_resp.pdf"), width=8, height=6)
+saveRDS(plot_fitus_resp, file = paste0(".\\plots\\",dat,"\\fit_us_binomGLMM_B117_resp.rds"))
+graph2ppt(file=paste0(".\\plots\\",dat,"\\fit_us_binomGLMM_B117_resp.pptx"), width=8, height=6)
+ggsave(plot_fitus_resp, file=paste0(".\\plots\\",dat,"\\fit_us_binomGLMM_B117_resp.png"), width=8, height=6)
+ggsave(plot_fitus_resp, file=paste0(".\\plots\\",dat,"\\fit_us_binomGLMM_B117_resp.pdf"), width=8, height=6)
 
 
 
@@ -1409,8 +1409,8 @@ plot_fitcafl2
 
 saveRDS(plot_fitcafl2, file = paste0(".\\plots\\",dat,"\\fit_us_cafl_binomGLMM_B117.rds"))
 graph2ppt(file=paste0(".\\plots\\",dat,"\\fit_us_cafl_binomGLMM_B117.pptx"), width=8, height=6)
-ggsave(file=paste0(".\\plots\\",dat,"\\fit_us_cafl_binomGLMM_B117.png"), width=8, height=6)
-ggsave(file=paste0(".\\plots\\",dat,"\\fit_us_cafl_binomGLMM_B117.pdf"), width=8, height=6)
+ggsave(plot_fitcafl2, file=paste0(".\\plots\\",dat,"\\fit_us_cafl_binomGLMM_B117.png"), width=8, height=6)
+ggsave(plot_fitcafl2, file=paste0(".\\plots\\",dat,"\\fit_us_cafl_binomGLMM_B117.pdf"), width=8, height=6)
 
 
 # PLOT MODEL FIT (response scale)
@@ -1453,8 +1453,8 @@ plot_fitcafl2_resp = qplot(data=fit_calfl2_preds, x=collection_date, y=prob*100,
   theme(axis.text.x = element_text(angle = 90, vjust=0.5))
 plot_fitcafl2_resp
 
-saveRDS(plot_fitcafl2, file = paste0(".\\plots\\",dat,"\\fit_us_cafl_binomGLMM_B117_resp.rds"))
+saveRDS(plot_fitcafl2_resp, file = paste0(".\\plots\\",dat,"\\fit_us_cafl_binomGLMM_B117_resp.rds"))
 graph2ppt(file=paste0(".\\plots\\",dat,"\\fit_us_cafl_binomGLMM_B117_resp.pptx"), width=8, height=6)
-ggsave(file=paste0(".\\plots\\",dat,"\\fit_us_cafl_binomGLMM_B117_resp.png"), width=8, height=6)
-ggsave(file=paste0(".\\plots\\",dat,"\\fit_us_cafl_binomGLMM_B117_resp.pdf"), width=8, height=6)
+ggsave(plot_fitcafl2_resp, file=paste0(".\\plots\\",dat,"\\fit_us_cafl_binomGLMM_B117_resp.png"), width=8, height=6)
+ggsave(plot_fitcafl2_resp, file=paste0(".\\plots\\",dat,"\\fit_us_cafl_binomGLMM_B117_resp.pdf"), width=8, height=6)
 
