@@ -44,10 +44,21 @@ dat_seq
 fit_seq = glmer(cbind(VOC,TOTAL_SDROPOUT_SEQUENCED-VOC) ~ (1|obs)+scale(SAMPLE_DATE_NUM), family=binomial(logit), data=dat_seq)
 summary(fit_seq)
 
+# implied growth rate advantage of B.1.1.7 over other earlier strains showing S dropout:
+as.data.frame(emtrends(fit_seq, ~ 1, var="SAMPLE_DATE_NUM"))[,c(2,5,6)]
+#   SAMPLE_DATE_NUM.trend  asymp.LCL asymp.UCL
+# 1             0.1107948 0.07844251  0.143147
+
+# with a generation time of 4.7 days this would translate to a multiplicative effect on Rt
+# and estimated increased infectiousness of
+exp(4.7*as.data.frame(emtrends(fit_seq, ~ 1, var="SAMPLE_DATE_NUM"))[,c(2,5,6)])
+#    SAMPLE_DATE_NUM.trend asymp.LCL asymp.UCL
+# 1              1.683265  1.445825  1.959699
+
 plot(fit_seq)
 
 # PLOT MODEL FIT
-extrapolate = 20 # nr of days to extrapolate fit into the future
+extrapolate = 30 # nr of days to extrapolate fit into the future
 total.SD = sqrt(sum(sapply(as.data.frame(VarCorr(fit_seq))$sdcor, function (x) x^2))) 
 # bias correction for random effects in marginal means, see https://cran.r-project.org/web/packages/emmeans/vignettes/transformations.html#bias-adj
 fitseq_preds = as.data.frame(emmeans(fit_seq, ~ SAMPLE_DATE_NUM, 
@@ -57,7 +68,7 @@ fitseq_preds = as.data.frame(emmeans(fit_seq, ~ SAMPLE_DATE_NUM,
 fitseq_preds$SAMPLE_DATE = as.Date(fitseq_preds$SAMPLE_DATE_NUM, origin="1970-01-01")
 
 # prop of S dropout samples among newly diagnosed infections that are now estimated to be 501Y.V1
-fitseq_preds[fitseq_preds$SAMPLE_DATE==as.Date("2021-02-01"),]
+fitseq_preds[fitseq_preds$SAMPLE_DATE==as.Date("2021-02-09"),]
 #    SAMPLE_DATE_NUM      prob         SE  df asymp.LCL asymp.UCL SAMPLE_DATE
 # 62           18659 0.9722353 0.01206926 Inf 0.9358751 0.9882587  2021-02-01
 
@@ -395,11 +406,11 @@ fit1_preds_bylab$LABORATORY = factor(fit1_preds_bylab$LABORATORY,
 
 
 # estimated share of VOC among currently diagnosed infections based on fit1
-fit1_preds[fit1_preds$SAMPLE_DATE==as.Date("2021-02-01"),]
+fit1_preds[fit1_preds$SAMPLE_DATE==as.Date("2021-02-08"),]
 #    SAMPLE_DATE_NUM     prob         SE  df asymp.LCL asymp.UCL SAMPLE_DATE
 # 27           18659 0.2810843 0.02412842 Inf 0.2360364 0.3303836  2021-02-01
 # estimated share of VOC among new infections (assuming time between infection & diagnosis of 7 days)
-fit1_preds[fit1_preds$SAMPLE_DATE==(as.Date("2021-02-01")+7),]
+fit1_preds[fit1_preds$SAMPLE_DATE==(as.Date("2021-02-08")+7),]
 #    SAMPLE_DATE_NUM     prob         SE  df asymp.LCL asymp.UCL SAMPLE_DATE
 # 34           18666 0.4519059 0.03992995 Inf 0.3751331 0.5306089  2021-02-08
 
@@ -1045,6 +1056,10 @@ as.data.frame(emmeans(fit_denmark, ~date_num,
                       type="response"))[,c(2,5,6)] 
 # 32% [22-44%]
 
+# PS note that https://sites.google.com/site/peterreinhardhansen/research-papers/howcontagiousisthebritishvariantofsars-cov-2
+# arrives at a slightly lower growth rate advantage because it uses aggregated counts over the whole of Denmark, and that this
+# pools data from regions where the variant may have been introduced at slightly different times
+# other analysis for DK is presented at https://ispmbern.github.io/covid-19/variants/
 
 # 5.3. DATA US ####
 
@@ -1074,14 +1089,29 @@ tmp <- bind_rows(tmp, helix_metadata)
 states_gt_500 <- tmp %>% group_by(state) %>% summarise(n = sum(n), n_sgtf = sum(n_sgtf)) %>% filter(n > 500 & n_sgtf > 0) %>% select(state) %>% as_vector()
 
 
+
 helix_b117$collection_date_num = as.numeric(helix_b117$collection_date)
 helix_b117$obs = factor(1:nrow(helix_b117))
 helix_b117$state = factor(helix_b117$state)
-fit_us_propB117amongSGTF = glmer(cbind(n_b117, n_sgtf_seq-n_b117) ~ (1|state)+scale(collection_date_num), 
-                                family=binomial(logit), data=helix_b117)
 helix_sgtf$collection_date_num = as.numeric(helix_sgtf$collection_date)
 helix_sgtf$state = factor(helix_sgtf$state)
 helix_sgtf$obs = factor(1:nrow(helix_sgtf))
+
+
+fit_us_propB117amongSGTF = glmer(cbind(n_b117, n_sgtf_seq-n_b117) ~ (1|state)+scale(collection_date_num), 
+                                family=binomial(logit), data=helix_b117)
+
+# implied growth rate advantage of B.1.1.7 over other earlier strains showing S dropout:
+as.data.frame(emtrends(fit_us_propB117amongSGTF, ~ 1, var="collection_date_num"))[,c(2,5,6)]
+#   collection_date_num.trend  asymp.LCL asymp.UCL
+# 1                0.08999387 0.06042387 0.1195639
+
+# with a generation time of 4.7 days this would translate to a multiplicative effect on Rt
+# and estimated increased infectiousness of
+exp(4.7*as.data.frame(emtrends(fit_us_propB117amongSGTF, ~ 1, var="collection_date_num"))[,c(2,5,6)])
+#   collection_date_num.trend asymp.LCL asymp.UCL
+# 1                   1.52649  1.328423   1.75409
+
 
 # FIT FOR WHOLE US + PLOT ####
 
@@ -1091,8 +1121,16 @@ fitted_truepos = predict(fit_us_propB117amongSGTF, newdat=helix_sgtf, type="resp
 helix_sgtf$estB117 = helix_sgtf$n_sgtf*fitted_truepos # estimated nr of B.1.1.7 samples
 helix_sgtf$propB117 = helix_sgtf$estB117/helix_sgtf$n 
 fit_us = glmer(cbind(estB117, n-estB117) ~ (1|state/obs)+scale(collection_date_num), 
-               family=binomial(logit), data=helix_sgtf)
+               family=binomial(logit), data=helix_sgtf) # random intercepts by state
+fit_us2 = glmer(cbind(estB117, n-estB117) ~ (collection_date_num||state/obs)+scale(collection_date_num), 
+               family=binomial(logit), data=helix_sgtf) # random intercepts+slopes by state, with uncorrelated intercepts & slopes
+BIC(fit_us, fit_us2) # random intercept model is best
+# df      BIC
+# fit_us   4 1171.852
+# fit_us2  6 1188.542
 summary(fit_us)
+
+# growth advantage of 8.6% per day [8.0-9.2%] 95% CLs
 as.data.frame(emtrends(fit_us, ~ 1, "collection_date_num"))[,c(2,5,6)]
 #   date_num.trend  asymp.LCL  asymp.UCL
 # 1     0.08578087 0.07995376 0.09160798
@@ -1239,6 +1277,29 @@ fit_us_propB117amongSGTF_calfl1 = glmer(cbind(n_b117, n_sgtf_seq-n_b117) ~ (1|ob
 fit_us_propB117amongSGTF_calfl2 = glmer(cbind(n_b117, n_sgtf_seq-n_b117) ~ (1|obs)+state*scale(collection_date_num), 
                                         family=binomial(logit), data=helix_b117, subset=helix_b117$state %in% sel_states)
 BIC(fit_us_propB117amongSGTF_calfl1,fit_us_propB117amongSGTF_calfl2) # fit_us_propB117amongSGTF_calfl1 fits best
+# implied growth rate advantage of B.1.1.7 over other earlier strains showing S dropout:
+as.data.frame(emtrends(fit_us_propB117amongSGTF_calfl1, ~ 1, var="collection_date_num"))[,c(2,5,6)]
+#   collection_date_num.trend  asymp.LCL asymp.UCL
+# 1                0.07797705 0.04500484 0.1109493
+
+# with a generation time of 4.7 days this would translate to a multiplicative effect on Rt
+# and estimated increased infectiousness of
+exp(4.7*as.data.frame(emtrends(fit_us_propB117amongSGTF_calfl1, ~ 1, var="collection_date_num"))[,c(2,5,6)])
+#    collection_date_num.trend asymp.LCL asymp.UCL
+# 1                   1.442665  1.235558  1.684488
+
+# with a generation time of 5 days this would translate to a multiplicative effect on Rt
+# and estimated increased infectiousness of
+exp(5*as.data.frame(emtrends(fit_us_propB117amongSGTF_calfl1, ~ 1, var="collection_date_num"))[,c(2,5,6)])
+#    collection_date_num.trend asymp.LCL asymp.UCL
+# 1                   1.476811  1.252353  1.741499
+
+# with a generation time of 6.5 days this would translate to a multiplicative effect on Rt
+# and estimated increased infectiousness of
+exp(6.5*as.data.frame(emtrends(fit_us_propB117amongSGTF_calfl1, ~ 1, var="collection_date_num"))[,c(2,5,6)])
+#    collection_date_num.trend asymp.LCL asymp.UCL
+# 1                   1.660055  1.339815  2.056839
+
 
 fitted_truepos_calfl = predict(fit_us_propB117amongSGTF, newdat=helix_sgtf_subs, type="response") 
 helix_sgtf_subs$estB117 = helix_sgtf_subs$n_sgtf*fitted_truepos_calfl # estimated nr of B.1.1.7 samples
