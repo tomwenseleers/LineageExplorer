@@ -211,55 +211,73 @@ ctdata_onlypos = bind_rows(ctdata_onlypos[ctdata_onlypos$S_dropout=="0",], ctdat
 # plot & analysis of Ct values of all labs for dates from 13th of Jan onward when >80% of all S dropouts were B.1.1.7 / 501Y.V1
 
 (fitseq_preds[fitseq_preds$prob>0.8,"collection_date"][1]) # "2021-01-13", from 13th of Jan >80% of all S dropouts are B.1.1.7 / 501Y.V1
-# we also just use the positive samples with relatively strong signal, (ctdata_onlypos$N_cq<30) & (ctdata_onlypos$ORF1_cq<30)
-# to not include pos samples with very low viral titers (indicative of old infections etc)
+# we also just use the pos samples with Ct values < 30 to be able to focus only on new, active infections
 # this is the same criterion that was used for the SGTF analysis in the UK (N. Davies, pers. comm.)
-subs = (ctdata_onlypos$collection_date > (fitseq_preds[fitseq_preds$prob>0.8,"collection_date"][1])) 
+subs = (ctdata_onlypos$collection_date > (fitseq_preds[fitseq_preds$prob>0.8,"collection_date"][1])) & 
+       (ctdata_onlypos$N_cq<30) & (ctdata_onlypos$ORF1_cq<30) 
 ctdata_onlypos_subs = ctdata_onlypos[subs,]
 ctdata_onlypos_subs = ctdata_onlypos_subs[!(is.na(ctdata_onlypos_subs$S_dropout)|
                                               is.na(ctdata_onlypos_subs$N_cq)|
                                               is.na(ctdata_onlypos_subs$ORF1_cq)|
                                               (ctdata_onlypos_subs$ORF1_cq==0)),]
 
-cor.test(ctdata_onlypos_subs$N_cq, ctdata_onlypos_subs$ORF1_cq, method="pearson") # Pearson R=0.71, t=162.24, p<2E-16
+cor.test(ctdata_onlypos_subs$N_cq, ctdata_onlypos_subs$ORF1_cq, method="pearson") # Pearson R=0.74
 
-# Namur, UCL, ULB, ULG & UZ leuven show high correlation between N & ORF1ab Ct values, as should be the case
-# below we continue with those Ct values for those labs, except for ULG, which was removed due to low sample size
+# below we continue with the data from all labs, except 
+# UMons & ULG (which both had low sample size) and 
+# UZ Ghent & UZA (which both were very heavily involved in active surveillance, 
+# which may results in biased, nonrepresentative samples)
 
 do.call( rbind, lapply( split(ctdata_onlypos_subs, ctdata_onlypos_subs$Laboratory),
                         function(x) data.frame(Laboratory=x$Laboratory[1], correlation_Ct_N_ORF1ab=cor(x$N_cq, x$ORF1_cq)) ) )
 #                        Laboratory correlation_Ct_N_ORF1ab
-# Namur                       Namur               0.9461671
-# Saint LUC - UCL   Saint LUC - UCL               0.9851169
-# ULB                           ULB               0.9857200
-# ULG - FF 3.x         ULG - FF 3.x               0.9681429
-# UMons - Jolimont UMons - Jolimont              -0.4122443
-# UZ Gent                   UZ Gent              -0.2620254
-# UZ leuven               UZ leuven               0.9808761
-# UZA                           UZA               0.7952392
+# Namur                       Namur             0.945827328
+# Saint LUC - UCL   Saint LUC - UCL             0.981151728
+# ULB                           ULB             0.981289669
+# ULG - FF 3.x         ULG - FF 3.x             0.955847687
+# UMons - Jolimont UMons - Jolimont            -0.264402762
+# UZ Gent                   UZ Gent            -0.008149941
+# UZ leuven               UZ leuven             0.976820844
+# UZA                           UZA             0.836841503
 
+ctcorplot_all_labs = qplot(data=ctdata_onlypos_subs, x=ORF1_cq, y=N_cq, group=Laboratory, fill=S_dropout, colour=S_dropout, size=I(3), shape=I(16)) +
+  facet_wrap(~Laboratory) + 
+  scale_colour_manual("", values=alpha(c("blue","red"), 0.05), breaks=c("0","1"), labels=c("S positive","S dropout")) +
+  scale_fill_manual("", values=alpha(c("blue","red"), 0.05), breaks=c("0","1"), labels=c("S positive","S dropout")) +
+  xlab("Ct value ORF1ab gene") + ylab("Ct value N gene") +
+  guides(colour = guide_legend(override.aes = list(alpha = 0.5,fill=NA))) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+ctcorplot_all_labs
+saveRDS(ctcorplot_all_labs, file = paste0(".\\plots\\",dat,"\\dataBE_correlation Ct values N ORF1 by lab_all labs.rds"))
+graph2ppt(file=paste0(".\\plots\\",dat,"\\dataBE_correlation Ct values N ORF1 by lab_all labs.pptx"), width=7, height=6)
+ggsave(file=paste0(".\\plots\\",dat,"\\dataBE_correlation Ct values N ORF1 by lab_all labs.png"), width=7, height=6)
+ggsave(file=paste0(".\\plots\\",dat,"\\dataBE_correlation Ct values N ORF1 by lab_all labs.pdf"), width=7, height=6)
 
 
 ctplot_rawdataN_all_labs = qplot(data=ctdata_onlypos_subs, x=collection_date, y=N_cq, group=S_dropout, 
-                        colour=S_dropout, fill=S_dropout, geom="point", pch=I(16), size=I(1)) +
+                        colour=S_dropout, fill=S_dropout, geom="point", size=I(1), shape=I(16)) +
   # geom_smooth(lwd=2, method="lm", alpha=I(0.4), fullrange=TRUE, expand=c(0,0)) + # formula='y ~ s(x, bs = "cs", k=3)') +
   # stat_smooth(geom="line", lwd=1.2, method="lm", alpha=I(1), fullrange=TRUE, expand=c(0,0)) + # formula='y ~ s(x, bs = "cs", k=3)') +
   facet_wrap(~Laboratory) +
-  scale_colour_manual("", values=alpha(c("blue","red"), 0.2), breaks=c("0","1"), labels=c("S positive","SGTF")) +
-  scale_fill_manual("", values=alpha(c("blue","red"), 0.2), breaks=c("0","1"), labels=c("S positive","SGTF")) +
+  scale_colour_manual("", values=alpha(c("blue","red"), 0.2), breaks=c("0","1"), labels=c("S positive","S dropout")) +
+  scale_fill_manual("", values=alpha(c("blue","red"), 0.2), breaks=c("0","1"), labels=c("S positive","S dropout")) +
   xlab("Collection date") + ylab("Ct value") + labs(title = "N gene") +
-  theme(axis.text.x = element_text(angle = 0))
+  theme(axis.text.x = element_text(angle = 0)) +
+  guides(colour = guide_legend(override.aes = list(alpha = 0.5,fill=NA))) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 ctplot_rawdataN_all_labs
 
 ctplot_rawdataORF1_all_labs = qplot(data=ctdata_onlypos_subs, x=collection_date, y=ORF1_cq, group=S_dropout, 
-                                 colour=S_dropout, fill=S_dropout, geom="point", pch=I(16), size=I(1)) +
+                                 colour=S_dropout, fill=S_dropout, geom="point", size=I(1), shape=I(16)) +
   # geom_smooth(lwd=2, method="lm", alpha=I(0.4), fullrange=TRUE, expand=c(0,0)) + # formula='y ~ s(x, bs = "cs", k=3)') +
   # stat_smooth(geom="line", lwd=1.2, method="lm", alpha=I(1), fullrange=TRUE, expand=c(0,0)) + # formula='y ~ s(x, bs = "cs", k=3)') +
   facet_wrap(~Laboratory) +
-  scale_colour_manual("", values=alpha(c("blue","red"), 0.2), breaks=c("0","1"), labels=c("S positive","SGTF")) +
-  scale_fill_manual("", values=alpha(c("blue","red"), 0.2), breaks=c("0","1"), labels=c("S positive","SGTF")) +
+  scale_colour_manual("", values=alpha(c("blue","red"), 0.2), breaks=c("0","1"), labels=c("S positive","S dropout")) +
+  scale_fill_manual("", values=alpha(c("blue","red"), 0.2), breaks=c("0","1"), labels=c("S positive","S dropout")) +
   xlab("Collection date") + ylab("Ct value") + labs(title = "ORF1ab gene") +
-  theme(axis.text.x = element_text(angle = 0))
+  theme(axis.text.x = element_text(angle = 0)) +
+  guides(colour = guide_legend(override.aes = list(alpha = 0.5,fill=NA))) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 ctplot_rawdataORF1_all_labs
 
 ctplots_rawdata_all_labs = ggarrange(ctplot_rawdataN_all_labs+xlab("")+theme(axis.text.x = element_blank()), 
@@ -268,17 +286,22 @@ ctplots_rawdata_all_labs = ggarrange(ctplot_rawdataN_all_labs+xlab("")+theme(axi
 ctplots_rawdata_all_labs
 
 saveRDS(ctplots_rawdata_all_labs, file = paste0(".\\plots\\",dat,"\\dataBE_Ct values_raw data_all labs.rds"))
-graph2ppt(file=paste0(".\\plots\\",dat,"\\dataBE_Ct values_raw data_all labs.pptx"), width=7, height=8)
-ggsave(file=paste0(".\\plots\\",dat,"\\dataBE_Ct values_raw data_all labs.png"), width=7, height=8)
-ggsave(file=paste0(".\\plots\\",dat,"\\dataBE_Ct values_raw data_all labs.pdf"), width=7, height=8)
+graph2ppt(file=paste0(".\\plots\\",dat,"\\dataBE_Ct values_raw data_all labs.pptx"), width=7, height=9)
+ggsave(file=paste0(".\\plots\\",dat,"\\dataBE_Ct values_raw data_all labs.png"), width=7, height=9)
+ggsave(file=paste0(".\\plots\\",dat,"\\dataBE_Ct values_raw data_all labs.pdf"), width=7, height=9)
 
 
-# plot & analysis of Ct values of 4 labs with comparable overall distribution in Ct values & high correlation between N & ORF1ab Ct values (Pearson R>0.9)
+
+# plot & analysis of Ct values of all labs except Mons (low S dropout counts) & UZ Gent (heavily involved in active surveillance, so not representative)
 # for dates from 13th of Jan onward when >80% of all S dropouts were B.1.1.7 / 501Y.V1
 # we also just use the pos samples with Ct values < 30 to be able to focus only on new, active infections
-sel_labs = c("Namur", "Saint LUC - UCL", "ULB", "UZ leuven") # we use data from these 4 labs as the data distribution was comparable for these
+
+sel_labs = setdiff(unique(ctdata_onlypos_subs$Laboratory), c("UMons - Jolimont", "ULG - FF 3.x", "UZ Gent", "UZA")) 
+sel_labs # "UZ leuven"       "Saint LUC - UCL" "ULB"             "Namur" 
+# we use data from these 4 labs as the data distribution was comparable for these
+# they also had large sample size & were not heavily involved in active surveillance
 # sel_labs = unique(ctdata_onlypos$Laboratory) # to select data from all the labs, but distribution not comparable for all
-# we use the subset of timepoints (from 20th Jan 2021 onwards) where >80% of all S dropout samples were indeed B.1.1.7 / 501Y.V1
+# we use the subset of timepoints (from 13th Jan 2021 onwards) where >80% of all S dropout samples were indeed B.1.1.7 / 501Y.V1
 (fitseq_preds[fitseq_preds$prob>0.8,"collection_date"][1]) # "2021-01-13", from 13th of Jan >80% of all S dropouts are B.1.1.7 / 501Y.V1
 # we also just use the positive samples with relatively strong signal, (ctdata_onlypos$N_cq<30) & (ctdata_onlypos$ORF1_cq<30)
 # to not include pos samples with very low viral titers (indicative of old infections etc)
@@ -291,7 +314,21 @@ ctdata_onlypos_subs = ctdata_onlypos_subs[!(is.na(ctdata_onlypos_subs$S_dropout)
                                               is.na(ctdata_onlypos_subs$ORF1_cq)|
                                               (ctdata_onlypos_subs$ORF1_cq==0)),]
 ctdata_onlypos_subs$Laboratory = droplevels(ctdata_onlypos_subs$Laboratory)
+  
+# make joint dataset for integrated analysis of both genes to estimate average effect across both sets of genes
+ctdata_onlypos_subs_bothgenes = rbind(data.frame(ctdata_onlypos_subs, Gene="N gene", Ct=ctdata_onlypos_subs$N_cq), 
+                                      data.frame(ctdata_onlypos_subs, Gene="ORF1ab gene", Ct=ctdata_onlypos_subs$ORF1_cq))
+# we define a high viral load as one where the Ct value was 1.25x lower than in the non-S dropout sample group
+# which was a Ct value < 15.03 for the N gene and < 15.92 for the ORF1ab gene
+thresh_N = median(unlist(ctdata_onlypos_subs[ctdata_onlypos_subs$S_dropout=="0","N_cq"]))/1.25
+thresh_N # 15.03
+thresh_ORF1 = median(unlist(ctdata_onlypos_subs[ctdata_onlypos_subs$S_dropout=="0","ORF1_cq"]))/1.25
+thresh_ORF1 # 15.92264
+ctdata_onlypos_subs_bothgenes$high_viral_load[ctdata_onlypos_subs_bothgenes$Gene=="N gene"] = ctdata_onlypos_subs_bothgenes$Ct[ctdata_onlypos_subs_bothgenes$Gene=="N gene"]<thresh_N
+ctdata_onlypos_subs_bothgenes$high_viral_load[ctdata_onlypos_subs_bothgenes$Gene=="ORF1ab gene"] = ctdata_onlypos_subs_bothgenes$Ct[ctdata_onlypos_subs_bothgenes$Gene=="ORF1ab gene"]<thresh_ORF1
 
+
+# check correlation between Ct values for N & ORF1ab gene
 cor.test(ctdata_onlypos_subs$N_cq, ctdata_onlypos_subs$ORF1_cq, method="pearson") # Pearson R=0.97, t=436.44, p<2E-16
 
 do.call( rbind, lapply( split(ctdata_onlypos_subs, ctdata_onlypos_subs$Laboratory),
@@ -302,324 +339,247 @@ do.call( rbind, lapply( split(ctdata_onlypos_subs, ctdata_onlypos_subs$Laborator
 # ULB                         ULB               0.9812897
 # UZ leuven             UZ leuven               0.9768208
 
-# variance in the log(Ct) values a bit larger for N gene than for ORF1ab gene, so more informative??
-do.call( rbind, lapply( split(ctdata_onlypos_subs, ctdata_onlypos_subs$S_dropout),
-                        function(x) data.frame(S_dropout=x$S_dropout[1], 
-                                               variance_logCt_N=sd(log(x$N_cq))^2, 
-                                               variance_logCt_ORF1ab=sd(log(x$ORF1_cq))^2) ) )
-#   S_dropout variance_logCt_N variance_logCt_ORF1ab
-# 0         0        0.1275958            0.09735638
-# 1         1        0.1247022            0.08787650
+
+ctcorplot_sellabs = qplot(data=ctdata_onlypos_subs, x=ORF1_cq, y=N_cq, group=Laboratory, fill=S_dropout, colour=S_dropout, size=I(3), shape=I(16)) +
+  facet_wrap(~Laboratory) + 
+  scale_colour_manual("", values=alpha(c("blue","red"), 0.05), breaks=c("0","1"), labels=c("S positive","S dropout")) +
+  scale_fill_manual("", values=alpha(c("blue","red"), 0.05), breaks=c("0","1"), labels=c("S positive","S dropout")) +
+  xlab("Ct value ORF1ab gene") + ylab("Ct value N gene") +
+  guides(colour = guide_legend(override.aes = list(alpha = 0.5,fill=NA))) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+  geom_hline(yintercept=thresh_N, colour=alpha("black", 1), lwd=I(0.3), lty=I(2)) +
+  geom_vline(xintercept=thresh_ORF1, colour=alpha("black", 1), lwd=I(0.3), lty=I(2))
+ctcorplot_sellabs
+saveRDS(ctcorplot_sellabs, file = paste0(".\\plots\\",dat,"\\Fig2_dataBE_correlation Ct values N ORF1 by lab_4 main labs.rds"))
+graph2ppt(file=paste0(".\\plots\\",dat,"\\Fig2_dataBE_correlation Ct values N ORF1 by lab_4 main labs.pptx"), width=7, height=4.5)
+ggsave(file=paste0(".\\plots\\",dat,"\\Fig2_dataBE_correlation Ct values N ORF1 by lab_4 main labs.png"), width=7, height=4.5)
+ggsave(file=paste0(".\\plots\\",dat,"\\Fig2_dataBE_correlation Ct values N ORF1 by lab_4 main labs.pdf"), width=7, height=4.5)
 
 
 ctplot_rawdataN = qplot(data=ctdata_onlypos_subs, x=collection_date, y=N_cq, group=S_dropout, 
-                        colour=S_dropout, fill=S_dropout, geom="point", pch=I(16), size=I(1.5)) +
+                        colour=S_dropout, fill=S_dropout, geom="point", shape=I(16), size=I(2)) +
   # geom_smooth(lwd=2, method="lm", alpha=I(0.4), fullrange=TRUE, expand=c(0,0)) + # formula='y ~ s(x, bs = "cs", k=3)') +
   # stat_smooth(geom="line", lwd=1.2, method="lm", alpha=I(1), fullrange=TRUE, expand=c(0,0)) + # formula='y ~ s(x, bs = "cs", k=3)') +
   facet_wrap(~Laboratory) +
-  scale_colour_manual("", values=alpha(c("blue","red"), 0.2), breaks=c("0","1"), labels=c("S positive","SGTF")) +
-  scale_fill_manual("", values=alpha(c("blue","red"), 0.2), breaks=c("0","1"), labels=c("S positive","SGTF")) +
+  scale_colour_manual("", values=alpha(c("blue","red"), 0.05), breaks=c("0","1"), labels=c("S positive","S dropout")) +
+  scale_fill_manual("", values=alpha(c("blue","red"), 0.05), breaks=c("0","1"), labels=c("S positive","S dropout")) +
   xlab("Collection date") + ylab("Ct value") + labs(title = "N gene") +
-  theme(axis.text.x = element_text(angle = 0))
-ctplot_rawdataN
+  theme(axis.text.x = element_text(angle = 0)) +
+  guides(colour = guide_legend(override.aes = list(alpha = 0.5,fill=NA))) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+ctplot_rawdataN # there is no obvious temporal patterns
 
 ctplot_rawdataORF1 = qplot(data=ctdata_onlypos_subs, x=collection_date, y=ORF1_cq, group=S_dropout, 
-                           colour=S_dropout, fill=S_dropout, geom="point", pch=I(16), size=I(1.5)) +
+                           colour=S_dropout, fill=S_dropout, geom="point", shape=I(16), size=I(2)) +
   # geom_smooth(lwd=2, method="lm", alpha=I(0.4), fullrange=TRUE, expand=c(0,0)) + # formula='y ~ s(x, bs = "cs", k=3)') +
   # stat_smooth(geom="line", lwd=1.2, method="lm", alpha=I(1), fullrange=TRUE, expand=c(0,0)) + # formula='y ~ s(x, bs = "cs", k=3)') +
   facet_wrap(~Laboratory) +
-  scale_colour_manual("", values=alpha(c("blue","red"), 0.2), breaks=c("0","1"), labels=c("S positive","SGTF")) +
-  scale_fill_manual("", values=alpha(c("blue","red"), 0.2), breaks=c("0","1"), labels=c("S positive","SGTF")) +
+  scale_colour_manual("", values=alpha(c("blue","red"), 0.05), breaks=c("0","1"), labels=c("S positive","S dropout")) +
+  scale_fill_manual("", values=alpha(c("blue","red"), 0.05), breaks=c("0","1"), labels=c("S positive","S dropout")) +
   xlab("Collection date") + ylab("Ct value") + labs(title = "ORF1ab gene") +
-  theme(axis.text.x = element_text(angle = 0))
-ctplot_rawdataORF1
+  theme(axis.text.x = element_text(angle = 0)) +
+  guides(colour = guide_legend(override.aes = list(alpha = 0.5,fill=NA))) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+ctplot_rawdataORF1 # there is no obvious temporal patterns
 
 ctplots_rawdata = ggarrange(ctplot_rawdataN+xlab("")+theme(axis.text.x = element_blank()), 
                             ctplot_rawdataORF1,
                             ncol=1, common.legend=TRUE, legend="right")
-ctplots_rawdata
+ctplots_rawdata # there is no obvious temporal patterns
 
-saveRDS(ctplots_rawdata, file = paste0(".\\plots\\",dat,"\\dataBE_Ct values_raw data.rds"))
-graph2ppt(file=paste0(".\\plots\\",dat,"\\dataBE_Ct values_raw data.pptx"), width=6, height=8)
-ggsave(file=paste0(".\\plots\\",dat,"\\dataBE_Ct values_raw data.png"), width=6, height=8)
-ggsave(file=paste0(".\\plots\\",dat,"\\dataBE_Ct values_raw data.pdf"), width=6, height=8)
-
-
-
-# Function to produce summary statistics (median + 25 & 75% quantiles)
-data_summary = function(x) {
-  m <- median(x) # mean(x)
-  ymin <- quantile(x,0.25) # m-sd(x)
-  ymax <- quantile(x,0.75) # m+sd(x)
-  return(data.frame(y=m,ymin=ymin,ymax=ymax))
-}
-
-ctplot_violin_N = ggplot(data=ctdata_onlypos_subs, aes(x=factor(S_dropout), y=N_cq, fill=factor(S_dropout))) +
-  geom_violin(alpha=1, colour=NA, trim=FALSE, draw_quantiles=TRUE, adjust=2) +
-  stat_summary(fun.data=data_summary,  
-               geom="pointrange", aes(color=factor(S_dropout))) +
-  # geom_dotplot(binaxis='y', stackdir='center', dotsize=0.1) +
-  # geom_point(aes(colour=factor(S_dropout))) +
-  facet_wrap(~Laboratory) +
-  scale_colour_manual("", values=alpha(c("blue3","red3"), 1), breaks=c("0","1"), labels=c("S positive","SGTF")) +
-  scale_fill_manual("", values=c("steelblue","pink3"), breaks=c("0","1"), labels=c("S positive","SGTF")) +
-  xlab("") + ylab("Ct value") + 
-  theme(legend.position = "none") +
-  scale_x_discrete(breaks=c("0","1"), labels=c("S pos","SGTF")) +
-  labs(title = "N gene")
-ctplot_violin_N
-
-ctplot_violin_ORF1 = ggplot(data=ctdata_onlypos_subs, aes(x=factor(S_dropout), y=ORF1_cq, fill=factor(S_dropout))) +
-  geom_violin(alpha=1, colour=NA, trim=FALSE, draw_quantiles=TRUE, adjust=2) +
-  stat_summary(fun.data=data_summary, 
-               geom="pointrange", aes(color=factor(S_dropout))) +
-  # geom_dotplot(binaxis='y', stackdir='center', dotsize=0.1) +
-  # geom_point(aes(colour=factor(S_dropout))) +
-  facet_wrap(~Laboratory) +
-  scale_colour_manual("", values=alpha(c("blue3","red3"), 1), breaks=c("0","1"), labels=c("S positive","SGTF")) +
-  scale_fill_manual("", values=c("steelblue","pink3"), breaks=c("0","1"), labels=c("S positive","SGTF")) +
-  xlab("") + ylab("Ct value") + 
-  theme(legend.position = "none") +
-  scale_x_discrete(breaks=c("0","1"), labels=c("S pos","SGTF")) +
-  labs(title = "ORF1ab gene")
-ctplot_violin_ORF1
-
-ctplots_violin = ggarrange(ctplot_violin_N, 
-                           ctplot_violin_ORF1,
-                           ncol=1, common.legend=FALSE)
-ctplots_violin
-
-saveRDS(ctplots_violin, file = paste0(".\\plots\\",dat,"\\Fig2_dataBE_Ct values_violin plots.rds"))
-graph2ppt(file=paste0(".\\plots\\",dat,"\\Fig2_dataBE_Ct values_violin plots.pptx"), width=6, height=6)
-ggsave(file=paste0(".\\plots\\",dat,"\\Fig2_dataBE_Ct values_violin plots.png"), width=6, height=6)
-ggsave(file=paste0(".\\plots\\",dat,"\\Fig2_dataBE_Ct values_violin plots.pdf"), width=6, height=6)
-
-# associated p value for difference in median Ct values over all 4 labs (quantile regression)
-# p<0.000001 for both the N & ORF1ab genes for the median Ct value to be lower among S dropout samples
-set_treatment_contrasts()
-qr_N = rq(N_cq ~ S_dropout + Laboratory, data=ctdata_onlypos_subs, tau=0.5)
-summary(qr_N)
-# Coefficients:
-#                            Value     Std. Error t value   Pr(>|t|) 
-# (Intercept)                18.32080   0.22102   82.89358   0.00000
-# S_dropout1                 -2.75440   0.22226  -12.39251   0.00000
-# LaboratorySaint LUC - UCL   0.36300   0.31437    1.15469   0.24824
-# LaboratoryULB              -0.56030   0.27973   -2.00303   0.04520
-# LaboratoryUZ leuven         2.97820   0.31309    9.51240   0.00000
-
-qr_ORF1 = rq(ORF1_cq ~ S_dropout + Laboratory, data=ctdata_onlypos_subs, tau=0.5)
-summary(qr_ORF1)
-# Coefficients:
-#                            Value     Std. Error t value   Pr(>|t|) 
-# (Intercept)                18.96290   0.18877  100.45771   0.00000
-# S_dropout1                 -1.84180   0.20776   -8.86505   0.00000
-# LaboratorySaint LUC - UCL   0.63190   0.29571    2.13692   0.03263
-# LaboratoryULB               0.54440   0.25717    2.11691   0.03429
-# LaboratoryUZ leuven         3.17010   0.28524   11.11365   0.00000
+saveRDS(ctplots_rawdata, file = paste0(".\\plots\\",dat,"\\dataBE_Ct values_raw data_temporal.rds"))
+graph2ppt(file=paste0(".\\plots\\",dat,"\\dataBE_Ct values_raw data_temporal.pptx"), width=6, height=8)
+ggsave(file=paste0(".\\plots\\",dat,"\\dataBE_Ct values_raw data_temporal.png"), width=6, height=8)
+ggsave(file=paste0(".\\plots\\",dat,"\\dataBE_Ct values_raw data_temporal.pdf"), width=6, height=8)
 
 
 
-# tests for differences in Cq values using log link Gamma GLMMs:
-# we fit models of Ct values in function of S dropout, with or without a collection date effect & without or without a S dropout x collection date interaction effect
-# and with either a random intercept or random intercept+slope for Laboratory
-set_treatment_contrasts()
-fitct_N_0 = glmer(N_cq ~ (1|Laboratory) + S_dropout, family=Gamma(log), data=ctdata_onlypos_subs)
-fitct_N_1 = glmer(N_cq ~ (1|Laboratory) + S_dropout + scale(collection_date_num), family=Gamma(log), data=ctdata_onlypos_subs)
-fitct_N_2 = glmer(N_cq ~ (1|Laboratory) + S_dropout * scale(collection_date_num), family=Gamma(log), data=ctdata_onlypos_subs)
-fitct_N_3 = glmer(N_cq ~ (collection_date_num||Laboratory) + S_dropout + scale(collection_date_num), family=Gamma(log), data=ctdata_onlypos_subs)
-fitct_N_4 = glmer(N_cq ~ (collection_date_num||Laboratory) + S_dropout * scale(collection_date_num), family=Gamma(log), data=ctdata_onlypos_subs)
-BIC(fitct_N_0, fitct_N_1, fitct_N_2, fitct_N_3, fitct_N_4)
-# df      BIC
-# fitct_N_0  4 67219.40
-# fitct_N_1  5 67225.98
-# fitct_N_2  6 67234.76
-# fitct_N_3  6 67235.23
-# fitct_N_4  7 67244.01
-# fitct_N_0 provides the best fit
-summary(fitct_N_0)
-# Random effects:
-#   Groups     Name        Variance  Std.Dev.
-# Laboratory (Intercept) 0.0001779 0.01334 
-# Residual               0.1088851 0.32998 
-# Number of obs: 10417, groups:  Laboratory, 4
+
+# quantile/median regression to compare median Ct values of both genes across S dropout & non-S dropout samples in the different labs
+qr_bothgenes0 = rq(ORF1_cq ~ Ggene + S_dropout + Laboratory, data=ctdata_onlypos_subs_bothgenes, tau=0.5)
+qr_bothgenes1 = rq(ORF1_cq ~ Gene * S_dropout + Laboratory, data=ctdata_onlypos_subs_bothgenes, tau=0.5)
+qr_bothgenes2 = rq(ORF1_cq ~ Gene + S_dropout * Laboratory, data=ctdata_onlypos_subs_bothgenes, tau=0.5)
+qr_bothgenes3 = rq(ORF1_cq ~ Gene * Laboratory + S_dropout, data=ctdata_onlypos_subs_bothgenes, tau=0.5)
+qr_bothgenes4 = rq(ORF1_cq ~ (Gene + Laboratory + S_dropout)^2, data=ctdata_onlypos_subs_bothgenes, tau=0.5)
+qr_bothgenes5 = rq(ORF1_cq ~ Gene * Laboratory * S_dropout, data=ctdata_onlypos_subs_bothgenes, tau=0.5)
+AIC(qr_bothgenes0, k=-1) # 138099.4
+AIC(qr_bothgenes1, k=-1) # 138109.3
+AIC(qr_bothgenes2, k=-1) # 138020.9 # fits data best based on BIC criterion (PS: here AIC with k<0 returns BIC)
+AIC(qr_bothgenes3, k=-1) # 138129.2
+AIC(qr_bothgenes4, k=-1) # 138060.7
+AIC(qr_bothgenes5, k=-1) # 138090.5
+
+summary(qr_bothgenes)
+qr_emmeans_bylab99 = data.frame(emmeans(qr_bothgenes2, ~ Laboratory + Gene + S_dropout, level=0.99)) # median Ct values + 99% CLs
+qr_emmeans_bylab99
+qr_emmeans99 = data.frame(emmeans(qr_bothgenes2, ~ Gene + S_dropout, level=0.99)) # median Ct values + 99% CLs
+qr_emmeans99
+qr_emmeans = data.frame(emmeans(qr_bothgenes2, ~ Gene + S_dropout, level=0.95)) # median Ct values + 95% CLs
+qr_emmeans
+# Gene S_dropout   emmean        SE    df lower.CL upper.CL
+# 1      N gene         0 20.00580 0.1213226 20825 19.76800 20.24360
+# 2 ORF1ab gene         0 20.00580 0.1213226 20825 19.76800 20.24360
+# 3      N gene         1 18.25605 0.1406013 20825 17.98046 18.53164
+# 4 ORF1ab gene         1 18.25605 0.1406013 20825 17.98046 18.53164
+contrast(emmeans(qr_bothgenes2, ~ S_dropout, level=0.95), method="pairwise") # difference in median Ct value highly significant across both genes: p<0.0001
+# contrast estimate    SE    df t.ratio p.value
+# 0 - 1        1.75 0.153 20825 11.456  <.0001 
+confint(contrast(emmeans(qr_bothgenes2, ~ S_dropout|Gene, level=0.95), method="pairwise"))
+# gene = N gene:
+#   contrast estimate    SE    df lower.CL upper.CL
+# 0 - 1        1.75 0.153 20825     1.45     2.05
 # 
-# Fixed effects:
-#                Estimate Std. Error t value Pr(>|z|)    
-#   (Intercept)  2.939335   0.014488   202.9   <2e-16 ***
-#   S_dropout1  -0.095571   0.007643   -12.5   <2e-16 ***
+# gene = ORF1ab gene:
+#   contrast estimate    SE    df lower.CL upper.CL
+# 0 - 1        1.75 0.153 20825     1.45     2.05
+# 
+# Results are averaged over the levels of: Laboratory 
+# Confidence level used: 0.95 
 
-plot(allEffects(fitct_N_0))
+
+# # Function to produce summary statistics (median + 25 & 75% quantiles)
+# data_summary = function(x) {
+#   m <- median(x) # mean(x)
+#   ymin <- quantile(x,0.25) # m-sd(x)
+#   ymax <- quantile(x,0.75) # m+sd(x)
+#   return(data.frame(y=m,ymin=ymin,ymax=ymax))
+# }
+
+# violin plots by gene & lab & S dropout with expected marginal means+99% CLs of best fitting median regression model
+ctviolinplots_bylab = ggplot(data=ctdata_onlypos_subs_bothgenes, aes(x=factor(S_dropout), y=Ct, fill=factor(S_dropout))) +
+  geom_violin(alpha=1, colour=NA, trim=FALSE, draw_quantiles=TRUE, adjust=2, scale="width") +
+  geom_crossbar(data=qr_emmeans_bylab99, aes(x=factor(S_dropout), y=emmean, ymin=lower.CL, ymax=upper.CL, group=Gene)) +
+  # stat_summary(fun.data=data_summary,  
+  #             geom="pointrange", aes(color=factor(S_dropout))) +
+  # geom_dotplot(binaxis='y', stackdir='center', dotsize=0.1) +
+  # geom_point(aes(colour=factor(S_dropout))) +
+  facet_wrap(~ Gene + Laboratory,ncol=4) +
+  scale_colour_manual("", values=alpha(c("steelblue","lightcoral"), 1), breaks=c("0","1"), labels=c("S positive","S dropout")) +
+  scale_fill_manual("", values=alpha(c("steelblue","lightcoral"), 1), breaks=c("0","1"), labels=c("S positive","S dropout")) +
+  xlab("") + ylab("Ct value") + 
+  theme(legend.position = "none") +
+  scale_x_discrete(breaks=c("0","1"), labels=c("S pos","S dropout")) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+ctviolinplots_bylab
+
+saveRDS(ctviolinplots_bylab, file = paste0(".\\plots\\",dat,"\\Ct values_violin plots_by lab.rds"))
+graph2ppt(file=paste0(".\\plots\\",dat,"\\Ct values_violin plots_by lab.pptx"), width=6, height=6)
+ggsave(file=paste0(".\\plots\\",dat,"\\Ct values_violin plots_by lab.png"), width=6, height=6)
+ggsave(file=paste0(".\\plots\\",dat,"\\Ct values_violin plots_by lab.pdf"), width=6, height=6)
+
+# violin plots by gene & S dropout with expected marginal means+99% CLs of best fitting median regression model
+ctviolinplots = ggplot(data=ctdata_onlypos_subs_bothgenes, aes(x=factor(S_dropout), y=Ct, fill=factor(S_dropout))) +
+  geom_violin(alpha=1, colour=NA, trim=FALSE, draw_quantiles=TRUE, adjust=2, scale="width") +
+  geom_crossbar(data=qr_emmeans99, aes(x=factor(S_dropout), y=emmean, ymin=lower.CL, ymax=upper.CL, group=Gene)) +
+  # stat_summary(fun.data=data_summary,  
+  #             geom="pointrange", aes(color=factor(S_dropout))) +
+  # geom_dotplot(binaxis='y', stackdir='center', dotsize=0.1) +
+  # geom_point(aes(colour=factor(S_dropout))) +
+  facet_wrap(~Gene,ncol=4) +
+  scale_colour_manual("", values=muted(c("steelblue","lightcoral"), l=55), breaks=c("0","1"), labels=c("S positive","S dropout")) +
+  scale_fill_manual("", values=muted(c("steelblue","lightcoral"), l=55), breaks=c("0","1"), labels=c("S positive","S dropout")) +
+  xlab("") + ylab("Ct value") + 
+  theme(legend.position = "none") +
+  scale_x_discrete(breaks=c("0","1"), labels=c("S pos","S dropout")) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+ctviolinplots
 
 
-fitct_ORF1_0 = glmer(ORF1_cq ~ (1|Laboratory) + S_dropout, family=Gamma(log), data=ctdata_onlypos_subs)
-fitct_ORF1_1 = glmer(ORF1_cq ~ (1|Laboratory) + S_dropout + scale(collection_date_num), family=Gamma(log), data=ctdata_onlypos_subs)
-fitct_ORF1_2 = glmer(ORF1_cq ~ (1|Laboratory) + S_dropout * scale(collection_date_num), family=Gamma(log), data=ctdata_onlypos_subs)
-fitct_ORF1_3 = glmer(ORF1_cq ~ (collection_date_num||Laboratory) + S_dropout + scale(collection_date_num), family=Gamma(log), data=ctdata_onlypos_subs)
-fitct_ORF1_4 = glmer(ORF1_cq ~ (collection_date_num||Laboratory) + S_dropout * scale(collection_date_num), family=Gamma(log), data=ctdata_onlypos_subs)
-BIC(fitct_ORF1_0, fitct_ORF1_1, fitct_ORF1_2, fitct_ORF1_3, fitct_ORF1_4)
-#           df      BIC
-# fitct_ORF1_0  4 66218.03
-# fitct_ORF1_1  5 66226.16
-# fitct_ORF1_2  6 66234.62
-# fitct_ORF1_3  6 66235.41
-# fitct_ORF1_4  7 66243.87
-# fitct_ORF1_0 provides the best fit
-summary(fitct_ORF1_0)
+
+
+# binomial GLMMs to test for differences in prop with high viral load (Ct values a factor of 1.25 lower than median Ct in non-S dropout samples) :
+
+fitct_highvirload_0A = glmer(high_viral_load ~ (1|Laboratory) + Gene + S_dropout, family=binomial(logit), data=ctdata_onlypos_subs_bothgenes)
+fitct_highvirload_1A = glmer(high_viral_load ~ (1|Laboratory) + Gene + S_dropout + scale(collection_date_num), family=binomial(logit), data=ctdata_onlypos_subs_bothgenes)
+fitct_highvirload_2A = glmer(high_viral_load ~ (1|Laboratory) + Gene + S_dropout * scale(collection_date_num), family=binomial(logit), data=ctdata_onlypos_subs_bothgenes)
+fitct_highvirload_3A = glmer(high_viral_load ~ (collection_date_num||Laboratory) + Gene + S_dropout + scale(collection_date_num), family=binomial(logit), data=ctdata_onlypos_subs_bothgenes)
+fitct_highvirload_4A = glmer(high_viral_load ~ (collection_date_num||Laboratory) + Gene + S_dropout * scale(collection_date_num), family=binomial(logit), data=ctdata_onlypos_subs_bothgenes)
+fitct_highvirload_0B = glmer(high_viral_load ~ (1|Laboratory) + Gene * S_dropout, family=binomial(logit), data=ctdata_onlypos_subs_bothgenes)
+fitct_highvirload_1B = glmer(high_viral_load ~ (1|Laboratory) + Gene * S_dropout + scale(collection_date_num), family=binomial(logit), data=ctdata_onlypos_subs_bothgenes)
+fitct_highvirload_2B = glmer(high_viral_load ~ (1|Laboratory) + Gene * S_dropout * scale(collection_date_num), family=binomial(logit), data=ctdata_onlypos_subs_bothgenes)
+fitct_highvirload_3B = glmer(high_viral_load ~ (collection_date_num||Laboratory) + Gene * S_dropout + scale(collection_date_num), family=binomial(logit), data=ctdata_onlypos_subs_bothgenes)
+fitct_highvirload_4B = glmer(high_viral_load ~ (collection_date_num||Laboratory) + Gene * S_dropout * scale(collection_date_num), family=binomial(logit), data=ctdata_onlypos_subs_bothgenes)
+
+BIC(fitct_highvirload_0A, fitct_highvirload_1A, fitct_highvirload_2A, fitct_highvirload_3A, fitct_highvirload_4A,
+    fitct_highvirload_0B, fitct_highvirload_1B, fitct_highvirload_2B, fitct_highvirload_3B, fitct_highvirload_4B)
+#                      df      BIC
+# fitct_highvirload_0A  4 26262.19
+# fitct_highvirload_1A  5 26269.82
+# fitct_highvirload_2A  6 26279.71
+# fitct_highvirload_3A  6 26279.73
+# fitct_highvirload_4A  7 26289.62
+# fitct_highvirload_0B  5 26250.33
+# fitct_highvirload_1B  6 26257.96
+# fitct_highvirload_2B  9 26287.55
+# fitct_highvirload_3B  7 26267.88
+# fitct_highvirload_4B 10 26297.47
+
+
+# fitct_highvirload_0B best model
+summary(fitct_highvirload_0B) # S dropout samples more frequently have high viral load based on N gene Ct values
 # Random effects:
 #   Groups     Name        Variance Std.Dev.
-#   Laboratory (Intercept) 0.000222 0.0149  
-#   Residual               0.085007 0.2916  
-# Number of obs: 10417, groups:  Laboratory, 4
-# 
-# Fixed effects:
-#                Estimate Std. Error t value Pr(>|z|)    
-#   (Intercept)  3.003554   0.018001 166.857  < 2e-16 ***
-#   S_dropout1  -0.047839   0.006671  -7.172 7.41e-13 ***
-plot(allEffects(fitct_ORF1_0))
-
-Ngene_emmeans = data.frame(Gene="N", as.data.frame(emmeans(fitct_N_0, ~ S_dropout, type="response")))
-ORF1gene_emmeans = data.frame(Gene="ORF1ab", as.data.frame(emmeans(fitct_ORF1_0, ~ S_dropout, type="response")))
-
-# N gene Ct values are 1.1x lower among SGTF samples
-confint(contrast(emmeans(fitct_N_0, ~ S_dropout, type="response"), method="pairwise", type="response"))
-# contrast ratio      SE  df asymp.LCL asymp.UCL
-# 0 / 1      1.1 0.00841 Inf      1.08      1.12
-
-# ORF1ab gene Ct values are 1.05x lower among SGTF samples
-confint(contrast(emmeans(fitct_ORF1_0, ~ S_dropout, type="response"), method="pairwise", type="response"))
-# contrast ratio    SE  df asymp.LCL asymp.UCL
-# 0 / 1     1.05 0.007 Inf      1.04      1.06
-
-Ct_N_ORF1_emmeans = rbind(Ngene_emmeans, ORF1gene_emmeans)
-Ct_N_ORF1_emmeans$S_dropout = factor(Ct_N_ORF1_emmeans$S_dropout)
-Ct_N_ORF1_emmeans$Gene = factor(Ct_N_ORF1_emmeans$Gene)
-Ct_N_ORF1_emmeans
-#     Gene S_dropout response        SE  df asymp.LCL asymp.UCL
-# 1      N         0 18.90327 0.2738744 Inf  18.37404  19.44775
-# 2      N         1 17.18031 0.2653273 Inf  16.66807  17.70830 # 1.72296 Ct values lower
-# 3 ORF1ab         0 20.15704 0.3628413 Inf  19.45829  20.88089
-# 4 ORF1ab         1 19.21545 0.3573484 Inf  18.52767  19.92876 # 0.94159 Ct values lower
-
-Ctvalueplot_gammaGLMM = ggplot(data=Ct_N_ORF1_emmeans, aes(x=Gene, y=response, fill=S_dropout, group=S_dropout)) +
-  geom_col(colour=NA, position=position_dodge2(width=0.8, padding=0.2)) +
-  geom_linerange(aes(ymin=asymp.LCL, ymax=asymp.UCL), position=position_dodge2(width=0.8, padding=0.2)) +
-  scale_fill_manual("", values=c("blue3","red3"), breaks=c("0","1"), labels=c("S positive","SGTF")) +
-  scale_y_continuous(breaks=seq(10,22,by=2), expand=c(0,0)) +
-  scale_x_discrete(expand=c(0.3,0.3)) +
-  ylab("Ct values") + xlab("Gene") + coord_cartesian(ylim=c(10,21))
-Ctvalueplot_gammaGLMM
-
-
-# binomial GLMMs to test for differences in prop with high viral load (Ct values factor 1.25 less than median Ct in non-SGTF samples) :
-
-# we define a high virus titer for the N gene as one where the Ct value was 1.25x lower than in the non-S dropout sample group
-# which was a Ct value < 15.03
-thresh_N = median(unlist(ctdata_onlypos_subs[ctdata_onlypos_subs$S_dropout=="0","N_cq"]))/1.25
-thresh_N # 15.03
-
-fitct_highvirloadN_0 = glmer((N_cq<thresh_N) ~ (1|Laboratory) + S_dropout, family=binomial(logit), data=ctdata_onlypos, subset=subs)
-fitct_highvirloadN_1 = glmer((N_cq<thresh_N) ~ (1|Laboratory) + S_dropout + scale(collection_date_num), family=binomial(logit), data=ctdata_onlypos, subset=subs)
-fitct_highvirloadN_2 = glmer((N_cq<thresh_N) ~ (1|Laboratory) + S_dropout * scale(collection_date_num), family=binomial(logit), data=ctdata_onlypos, subset=subs)
-fitct_highvirloadN_3 = glmer((N_cq<thresh_N) ~ (collection_date_num||Laboratory) + S_dropout + scale(collection_date_num), family=binomial(logit), data=ctdata_onlypos, subset=subs)
-fitct_highvirloadN_4 = glmer((N_cq<thresh_N) ~ (collection_date_num||Laboratory) + S_dropout * scale(collection_date_num), family=binomial(logit), data=ctdata_onlypos, subset=subs)
-BIC(fitct_highvirloadN_0, fitct_highvirloadN_1, fitct_highvirloadN_2, fitct_highvirloadN_3, fitct_highvirloadN_4)
-# df      BIC
-# fitct_highvirloadN_0  3 13408.15
-# fitct_highvirloadN_1  4 13416.47
-# fitct_highvirloadN_2  5 13425.54
-# fitct_highvirloadN_3  5 13425.71
-# fitct_highvirloadN_4  6 13434.77
-# fitct_highvirloadN_0  provides the best fit
-summary(fitct_highvirloadN_0) # S dropout samples more frequently have high viral load based on N gene Ct values
-# Random effects:
-# Groups     Name        Variance Std.Dev.
-# Laboratory (Intercept) 0.02182  0.1477  
-# Number of obs: 10417, groups:  Laboratory, 4
+# Laboratory (Intercept) 0.02795  0.1672  
+# Number of obs: 20834, groups:  Laboratory, 4
 # 
 # Fixed effects:
 #   Estimate Std. Error z value Pr(>|z|)    
-#   (Intercept) -0.72642    0.07783  -9.333   <2e-16 ***
-#   S_dropout1   0.44466    0.04590   9.688   <2e-16 ***
-plot(allEffects(fitct_highvirloadN_0))
+#   (Intercept)                -0.72877    0.08720  -8.357  < 2e-16 ***
+#   GeneORF1ab gene            -0.10455    0.03499  -2.988  0.00281 ** 
+#   S_dropout1                  0.44578    0.04583   9.726  < 2e-16 ***
+#   GeneORF1ab gene:S_dropout1 -0.30741    0.06596  -4.661 3.15e-06 ***
 
-# we define a high virus titer for the ORF1ab gene as one where the Ct value is 1.25x lower than in the non-S dropout sample group
-# which was a Ct value < 15.92
-thresh_ORF1 = median(unlist(ctdata_onlypos_subs[ctdata_onlypos_subs$S_dropout=="0","ORF1_cq"]))/1.25
-thresh_ORF1 # 15.92264
-
-fitct_highvirloadORF1_0 = glmer((ORF1_cq<thresh_ORF1) ~ (1|Laboratory) + S_dropout, family=binomial(logit), data=ctdata_onlypos, subset=subs)
-fitct_highvirloadORF1_1 = glmer((ORF1_cq<thresh_ORF1) ~ (1|Laboratory) + S_dropout + scale(collection_date_num), family=binomial(logit), data=ctdata_onlypos, subset=subs)
-fitct_highvirloadORF1_2 = glmer((ORF1_cq<thresh_ORF1) ~ (1|Laboratory) + S_dropout * scale(collection_date_num), family=binomial(logit), data=ctdata_onlypos, subset=subs)
-fitct_highvirloadORF1_3 = glmer((ORF1_cq<thresh_ORF1) ~ (collection_date_num||Laboratory) + S_dropout + scale(collection_date_num), family=binomial(logit), data=ctdata_onlypos, subset=subs)
-fitct_highvirloadORF1_4 = glmer((ORF1_cq<thresh_ORF1) ~ (collection_date_num||Laboratory) + S_dropout * scale(collection_date_num), family=binomial(logit), data=ctdata_onlypos, subset=subs)
-BIC(fitct_highvirloadORF1_0, fitct_highvirloadORF1_1, fitct_highvirloadORF1_2, fitct_highvirloadORF1_3, fitct_highvirloadORF1_4)
-# df      BIC
-# fitct_highvirloadORF1_0  3 12852.95
-# fitct_highvirloadORF1_1  4 12860.80
-# fitct_highvirloadORF1_2  5 12870.04
-# fitct_highvirloadORF1_3  5 12870.04
-# fitct_highvirloadORF1_4  6 12879.28
-# fitct_highvirloadORF1_0  provides the best fit
-summary(fitct_highvirloadORF1_0)
-# Random effects:
-#   Groups     Name        Variance Std.Dev.
-#    Laboratory (Intercept) 0.03594  0.1896  
-#  Number of obs: 10417, groups:  Laboratory, 4
-# 
-# Fixed effects:
-#               Estimate Std. Error z value Pr(>|z|)    
-#   (Intercept) -0.83684    0.09804  -8.536  < 2e-16 ***
-#   S_dropout1   0.13947    0.04787   2.913  0.00358 ** 
-plot(allEffects(fitct_highvirloadORF1_0))
+plot(allEffects(fitct_highvirload_0B))
 
 
-# odds to encounter high viral load sample (Ct N gene < 15.03 = 1.25x lower than median in non-S dropout samples) 
-# 1.56x increased among S dropout samples
-confint(contrast(emmeans(fitct_highvirloadN_0, ~ S_dropout, type="response"), method="revpairwise", type="response"))
+# odds to encounter high viral load samples based on Ct values of both genes (high vir load = Ct values >1.25x lower than median in non-S dropout samples)
+# 1.34x [1.25-1.43x] 95% CLs increased among S dropout samples
+confint(contrast(emmeans(fitct_highvirload_0B, ~ S_dropout, type="response"), method="revpairwise", type="response"))
 # contrast odds.ratio     SE  df asymp.LCL asymp.UCL
-# 1 / 0          1.56 0.0716 Inf      1.42       1.7
+# 1 / 0          1.34 0.0444 Inf      1.25      1.43
 
-# odds to encounter high viral load sample (Ct ORF1ab gene < 15.92 = 1.25x lower than median in non-S dropout samples) 
-# 1.15x increased among S dropout samples
-confint(contrast(emmeans(fitct_highvirloadORF1_0, ~ S_dropout, type="response"), method="revpairwise", type="response"))
+# odds ratio = 1.56 [1.43-1.71] for N gene & 1.15 [1.05-1.26] for ORF1ab gene 
+confint(contrast(emmeans(fitct_highvirload_0B, ~ S_dropout|Gene, type="response"), method="revpairwise", type="response"))
 # contrast odds.ratio    SE  df asymp.LCL asymp.UCL
 # 1 / 0          1.15 0.055 Inf      1.04      1.26
 
+fitct_highvirload_emmeans = as.data.frame(emmeans(fitct_highvirload_0B, ~ S_dropout+Gene, type="response"))
+fitct_highvirload_emmeans$S_dropout = factor(fitct_highvirload_emmeans$S_dropout)
+fitct_highvirload_emmeans$Gene = factor(fitct_highvirload_emmeans$Gene)
+fitct_highvirload_emmeans
+# S_dropout        Gene      prob         SE  df asymp.LCL asymp.UCL
+# 1         0      N gene 0.3254656 0.01914425 Inf 0.2891163 0.3640446
+# 2         1      N gene 0.4297220 0.02260911 Inf 0.3860823 0.4744819
+# 3         0 ORF1ab gene 0.3029439 0.01844108 Inf 0.2680616 0.3402551
+# 4         1 ORF1ab gene 0.3329331 0.02067025 Inf 0.2937238 0.3746005
 
-fitct_highvirloadN_emmeans = data.frame(Gene="N", as.data.frame(emmeans(fitct_highvirloadN_0, ~ S_dropout, type="response")))
-fitct_highvirloadORF1_emmeans = data.frame(Gene="ORF1ab", as.data.frame(emmeans(fitct_highvirloadORF1_0, ~ S_dropout, type="response")))
-fitct_highvirload_N_ORF1_emmeans = rbind(fitct_highvirloadN_emmeans, fitct_highvirloadORF1_emmeans)
-fitct_highvirload_N_ORF1_emmeans$S_dropout = factor(fitct_highvirload_N_ORF1_emmeans$S_dropout)
-fitct_highvirload_N_ORF1_emmeans$Gene = factor(fitct_highvirload_N_ORF1_emmeans$Gene)
-fitct_highvirload_N_ORF1_emmeans
-#     Gene S_dropout  response         SE  df asymp.LCL asymp.UCL
-# 1      N         0 0.3259808 0.01710057 Inf 0.2924643 0.3594973
-# 2      N         1 0.4300221 0.02048550 Inf 0.3898713 0.4701730
-# 3 ORF1ab         0 0.3021999 0.02067453 Inf 0.2616786 0.3427212
-# 4 ORF1ab         1 0.3323942 0.02292828 Inf 0.2874556 0.3773328
-
-plot_fitct_highvirload_N_ORF1_binGLMM = ggplot(data=fitct_highvirload_N_ORF1_emmeans, 
-                                               aes(x=Gene, y=response*100, fill=S_dropout, group=S_dropout)) +
+ct_highvirload_binGLMM = ggplot(data=fitct_highvirload_emmeans, 
+                                               aes(x=S_dropout, y=prob*100, fill=S_dropout, group=S_dropout)) +
+  facet_wrap(~ Gene) +
   geom_col(colour=NA, position=position_dodge2(width=0.8, padding=0.2)) +
   geom_linerange(aes(ymin=asymp.LCL*100, ymax=asymp.UCL*100), position=position_dodge2(width=0.8, padding=0.2)) +
-  scale_fill_manual("", values=c("blue3","red3"), breaks=c("0","1"), labels=c("S positive","SGTF")) +
+  scale_fill_manual("", values=muted(c("steelblue","lightcoral"), l=55), breaks=c("0","1"), labels=c("S positive","S dropout")) +
   scale_y_continuous(breaks=seq(0,100,by=10), expand=c(0,0)) +
-  scale_x_discrete(expand=c(0.3,0.3)) +
-  ylab("High viral load samples (%)") + xlab("Gene") + coord_cartesian(ylim=c(0,50))
-plot_fitct_highvirload_N_ORF1_binGLMM
+  ylab("High viral load samples (%)") + xlab("Gene") + coord_cartesian(ylim=c(0,50)) +
+  theme(legend.position = "none") +
+  scale_x_discrete(breaks=c("0","1"), labels=c("S pos","S dropout"), expand=c(0.3,0.3)) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+ct_highvirload_binGLMM
 
-ctplots_all_rawdata = ggarrange(Ctvalueplot_gammaGLMM+xlab(""), 
-                                plot_fitct_highvirload_N_ORF1_binGLMM,
-                                ncol=1, common.legend=TRUE, legend="right")
-ctplots_all_rawdata
+ctplots_multipanel = ggarrange(ctviolinplots+xlab(""), 
+                               ct_highvirload_binGLMM,
+                                ncol=1, legend=NULL, common.legend=FALSE)
+ctplots_multipanel
 
-saveRDS(ctplots_all_rawdata, file = paste0(".\\plots\\",dat,"\\Fig3_dataBE_Ct values_gammaGLMM_high viral load_binGLMM.rds"))
-graph2ppt(file=paste0(".\\plots\\",dat,"\\Fig3_dataBE_Ct values_gammaGLMM_high viral load_binGLMM.pptx"), width=8, height=6)
-ggsave(file=paste0(".\\plots\\",dat,"\\Fig3_dataBE_Ct values_gammaGLMM_high viral load_binGLMM.png"), width=8, height=6)
-ggsave(file=paste0(".\\plots\\",dat,"\\Fig3_dataBE_Ct values_gammaGLMM_high viral load_binGLMM.pdf"), width=8, height=6)
+saveRDS(ctplots_all_rawdata, file = paste0(".\\plots\\",dat,"\\Fig3_dataBE_Ct values_multipanel violin plot plus high viral load.rds"))
+graph2ppt(file=paste0(".\\plots\\",dat,"\\Fig3_dataBE_Ct values_multipanel violin plot plus high viral load.pptx"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",dat,"\\Fig3_dataBE_Ct values_multipanel violin plot plus high viral load.png"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",dat,"\\Fig3_dataBE_Ct values_multipanel violin plot plus high viral load.pdf"), width=8, height=6)
 
- 
 # TO DO: I DIDN'T COMPLETE / UPDATE THE REST BELOW YET ####
+
+
+
 
 
 # 3. ESTIMATE GROWTH RATE AND TRANSMISSION ADVANTAGE OF B.1.1.7 / 501Y.V1 IN BELGIUM BASED ON S-GENE TARGET FAILURE DATA ####
@@ -1538,7 +1498,7 @@ exp(4.7*as.data.frame(emtrends(fit_us_propB117amongSGTF, ~ 1, var="collection_da
 # FIT FOR WHOLE US + PLOT ####
 
 fitted_truepos = predict(fit_us_propB117amongSGTF, newdat=helix_sgtf, type="response") 
-# fitted true positive rate, ie prop of SGTF samples that are B.1.1.7 for dates & states in helix_sgtf
+# fitted true positive rate, ie prop of S dropout samples that are B.1.1.7 for dates & states in helix_sgtf
 
 helix_sgtf$estB117 = helix_sgtf$n_sgtf*fitted_truepos # estimated nr of B.1.1.7 samples
 helix_sgtf$propB117 = helix_sgtf$estB117/helix_sgtf$n 
