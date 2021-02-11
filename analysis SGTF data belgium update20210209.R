@@ -9,7 +9,7 @@
 # https://ispmbern.github.io/covid-19/variants/data & https://github.com/covid-19-Re/variantPlot/raw/master/data/data.csv)
 # and Helix, San Mateo, CA, Karthik Gangavarapu & Kristian G. Andersen (US, https://github.com/andersen-lab/paper_2021_early-b117-usa/tree/master/b117_frequency/data, https://www.medrxiv.org/content/10.1101/2021.02.06.21251159v1)
 
-# last update 9 FEBR. 2021
+# last update 11 FEBR. 2021
 
 library(lme4)
 library(splines)
