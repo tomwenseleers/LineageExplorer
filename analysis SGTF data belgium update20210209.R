@@ -63,6 +63,8 @@ datBE_b117$propB117 = datBE_b117$n_b117/datBE_b117$n_sgtf_seq
 datBE_b117$obs = factor(1:nrow(datBE_b117))
 datBE_b117
 
+write.csv(datBE_b117, file=".\\data\\be_latest\\sequencing_Sdropouts.csv", row.names=FALSE)
+
 fit_seq = glmer(cbind(n_b117,n_sgtf_seq-n_b117) ~ (1|obs)+scale(collection_date_num), family=binomial(logit), data=datBE_b117)
 summary(fit_seq)
 
@@ -607,6 +609,7 @@ colnames(data_ag) = c("collection_date", "LABORATORY", "GROUP", "COUNT")
 data_ag_wide = spread(data_ag, GROUP, COUNT)
 colnames(data_ag_wide)[colnames(data_ag_wide) %in% c("negative","S_pos","S_dropout")] = c("n_neg","n_spos","n_sgtf")
 data_ag_wide$n_pos = data_ag_wide$n_spos+data_ag_wide$n_sgtf
+data_ag_wide$total = data_ag_wide$n_neg + data_ag_wide$n_pos
 data_ag_wide$collection_date = as.Date(data_ag_wide$collection_date)
 data_ag_wide$collection_date_num = as.numeric(data_ag_wide$collection_date)
 # calculate prop of S dropout that is actually B.1.1.7 / 501Y.V1 estimated from binomial GLMM:
@@ -620,10 +623,13 @@ fitseq_preds$collection_date = as.Date(fitseq_preds$collection_date_num, origin=
 # prob that S dropout was B.1.1.7 / 501Y.V1
 data_ag_wide$TRUEPOS = fitseq_preds$prob[match(data_ag_wide$collection_date, fitseq_preds$collection_date)] 
 # estimated count of 501Y.V1, we adjust numerator of binomial GLMM to take into account true positive rate
-data_ag_wide$estB117 = round(data_ag_wide$n_sgtf * data_ag_wide$TRUEPOS) 
+data_ag_wide$estB117 = data_ag_wide$n_sgtf * data_ag_wide$TRUEPOS 
 data_ag_wide$propB117 = data_ag_wide$estB117 / data_ag_wide$n_pos
 data_ag_wide$obs = factor(1:nrow(data_ag_wide))
+data_ag_wide = data_ag_wide[data_ag_wide$total != 0, ]
 head(data_ag_wide)
+
+write.csv(data_ag_wide, file=".\\data\\be_latest\\be_B117_by lab.csv", row.names=FALSE)
 
 
 # aggregated counts by date over all Laboratories
@@ -632,6 +638,7 @@ colnames(data_ag_byday) = c("collection_date", "GROUP", "COUNT")
 data_ag_byday_wide = spread(data_ag_byday, GROUP, COUNT)
 colnames(data_ag_byday_wide)[colnames(data_ag_byday_wide) %in% c("negative","S_pos","S_dropout")] = c("n_neg","n_spos","n_sgtf")
 data_ag_byday_wide$n_pos = data_ag_byday_wide$n_spos+data_ag_byday_wide$n_sgtf
+data_ag_byday_wide$total = data_ag_byday_wide$n_neg + data_ag_byday_wide$n_pos
 data_ag_byday_wide$collection_date = as.Date(data_ag_byday_wide$collection_date)
 data_ag_byday_wide$collection_date_num = as.numeric(data_ag_byday_wide$collection_date)
 # calculate prop of S dropout that is actually B.1.1.7 / 501Y.V1 estimated from binomial GLMM:
@@ -648,10 +655,14 @@ data_ag_byday_wide$TRUEPOS = fitseq_preds$prob[match(data_ag_byday_wide$collecti
 data_ag_byday_wide$estB117 = data_ag_byday_wide$n_sgtf * data_ag_byday_wide$TRUEPOS
 data_ag_byday_wide$propB117 = data_ag_byday_wide$estB117 / data_ag_byday_wide$n_pos
 data_ag_byday_wide$obs = factor(1:nrow(data_ag_byday_wide))
+data_ag_byday_wide = data_ag_byday_wide[data_ag_byday_wide$total != 0, ]
 head(data_ag_byday_wide)
 
+write.csv(data_ag_byday_wide, file=".\\data\\be_latest\\be_B117_total.csv", row.names=FALSE)
 
 
+
+# 3.1 ESTIMATE GROWTH RATE & TRANSMISSION ADVANTAGE OF B.1.1.7 USING BINOMIAL GLMM (LOGISTIC FIT) ####
 
 # fit common-slope and separate-slopes binomial GLM
 set_sum_contrasts()
@@ -894,6 +905,26 @@ saveRDS(plot_fit1, file = paste0(".\\plots\\",dat,"\\Fig5_fit1_binomGLMM_B117_Be
 graph2ppt(file=paste0(".\\plots\\",dat,"\\Fig5_fit1_binomGLMM_B117_Belgium by lab.pptx"), width=8, height=6)
 ggsave(file=paste0(".\\plots\\",dat,"\\Fig5_fit1_binomGLMM_B117_Belgium by lab.png"), width=8, height=6)
 ggsave(file=paste0(".\\plots\\",dat,"\\Fig5_fit1_binomGLMM_B117_Belgium by lab.pdf"), width=8, height=6)
+
+
+
+
+# 3.2 ESTIMATE GROWTH RATE & R VALUE OF B.1.1.7 & WILD TYPE STRAINS SEPARATELY USING MULTINOMIAL MODEL ####
+
+data_ag_wide2 = data_ag_wide 
+data_ag_wide2$
+data_ag_wide2 = data_ag_wide2[,c("collection_date","LABORATORY","n_neg",)]
+head(data_ag_wide2)
+data_ag_wide_long = 
+
+set.seed(1)
+mfit1 = multinom(variant~sample_date_num+nhs_name, data = data, maxit=1000) # multinomial common slopes model
+mfit2 = multinom(variant~sample_date_num*nhs_name, data = data, maxit=10000) # multinomial separate-slopes model
+mfit3 = multinom(variant~ns(sample_date_num, df=2)+nhs_name, data = data, maxit=1000) # with 2-knot nat cubic splines ifo time
+mfit4 = multinom(variant~ns(sample_date_num, df=2)*nhs_name, data = data, maxit=10000) # with 2-knot nat cubic splines ifo time
+
+
+
 
 
 
@@ -1259,10 +1290,11 @@ plot_switzerland_response
 
 # analysis of sequencing data from Denmark, split by region
 # from https://www.covid19genomics.dk/statistics
-data_denmark = read.csv(".//data/dk//B117_denmark_20210207.csv", sep=";", dec=",")
+data_denmark = read.csv(".//data/dk//B117_denmark_20210211.csv", sep=";", dec=",")
 data_denmark = data_denmark[data_denmark$Region!="Whole Denmark",]
 data_denmark$percent = NULL
 data_denmark$Region = gsub("SjÃ¦lland","Sjælland",data_denmark$Region)
+data_denmark = data_denmark[data_denmark$Region!="Other",]
 data_denmark$WEEK = sapply(data_denmark$Week, function(s) as.numeric(strsplit(s, "W")[[1]][[2]]))
 data_denmark$date = as.Date(NA)
 data_denmark$date[data_denmark$WEEK>=42] = lubridate::ymd( "2020-01-01" ) + 
@@ -1271,7 +1303,8 @@ data_denmark$date[data_denmark$WEEK<42] = lubridate::ymd( "2021-01-01" ) +
   lubridate::weeks( data_denmark$WEEK[data_denmark$WEEK<42] - 1 ) + 6 
 data_denmark$date_num = as.numeric(data_denmark$date)
 data_denmark$obs = factor(1:nrow(data_denmark))
-data_denmark$Region = factor(data_denmark$Region, levels=c("Nordjylland","Syddanmark","Sjælland","Hovedstaden","Midtjylland"))
+levels_DK = c("Syddanmark","Sjælland","Nordjylland","Hovedstaden","Midtjylland")
+data_denmark$Region = factor(data_denmark$Region, levels=levels_DK)
 colnames(data_denmark)[colnames(data_denmark) %in% c("yes")] = "n_B117"
 data_denmark$propB117 = data_denmark$n_B117 / data_denmark$total
 
@@ -1284,39 +1317,39 @@ fit_denmark_emtrends = as.data.frame(emtrends(fit_denmark, revpairwise ~ 1,
                                                   mode="link", adjust="Tukey")$emtrends)
 fit_denmark_emtrends[,c(2,5,6)]
 #   collection_date_num.trend asymp.LCL asymp.UCL
-# 1                 0.07919077 0.06686061 0.09152093
+# 1                 0.07699966 0.0670402 0.08695911
 
 # with a generation time of 4.7 days this would translate in an increased 
 # infectiousness (multiplicative effect on Rt) of
 exp(fit_denmark_emtrends[,c(2,5,6)]*4.7) 
 #   date_num.trend asymp.LCL asymp.UCL
-# 1       1.450918  1.369225  1.537486
+# 1       1.436053  1.370381  1.504872
 
 # predicted prop of diagnosed samples that are B.1.1.7 today
 emmeans(fit_denmark, revpairwise ~ Region, at=list(date_num=today_num), type="response")$emmeans
 # Region       prob     SE  df asymp.LCL asymp.UCL
-# Nordjylland 0.429 0.0917 Inf     0.265     0.610
-# Syddanmark  0.401 0.0842 Inf     0.252     0.571
-# Sjælland    0.378 0.0826 Inf     0.234     0.547
-# Hovedstaden 0.336 0.0817 Inf     0.198     0.509
-# Midtjylland 0.255 0.0672 Inf     0.146     0.406
+# Syddanmark  0.389 0.0676 Inf     0.267     0.526
+# Sjælland    0.379 0.0674 Inf     0.258     0.517
+# Nordjylland 0.376 0.0715 Inf     0.249     0.523
+# Hovedstaden 0.327 0.0641 Inf     0.216     0.463
+# Midtjylland 0.247 0.0542 Inf     0.156     0.367
 
 emmeans(fit_denmark, revpairwise ~ 1, at=list(date_num=today_num), type="response")$emmeans
 # 1        prob     SE  df asymp.LCL asymp.UCL
-# overall 0.357 0.0605 Inf     0.249     0.482
+# overall 0.341 0.0449 Inf      0.26     0.434
 
 # predicted prop of infections that are B.1.1.7 today
 emmeans(fit_denmark, revpairwise ~ Region, at=list(date_num=today_num+7), type="response")$emmeans
 # Region       prob     SE  df asymp.LCL asymp.UCL
-# Nordjylland 0.566 0.0997 Inf     0.371     0.743
-# Syddanmark  0.538 0.0944 Inf     0.356     0.711
-# Sjælland    0.514 0.0947 Inf     0.334     0.690
-# Hovedstaden 0.468 0.0995 Inf     0.287     0.658
-# Midtjylland 0.373 0.0891 Inf     0.220     0.556
+# Syddanmark  0.522 0.0764 Inf     0.374     0.665
+# Sjælland    0.511 0.0766 Inf     0.365     0.656
+# Nordjylland 0.508 0.0819 Inf     0.352     0.662
+# Hovedstaden 0.455 0.0783 Inf     0.310     0.608
+# Midtjylland 0.360 0.0716 Inf     0.234     0.508
 
 emmeans(fit_denmark, revpairwise ~ 1, at=list(date_num=today_num+7), type="response")$emmeans
 # 1        prob     SE  df asymp.LCL asymp.UCL
-# overall 0.491 0.0757 Inf     0.348     0.636
+# overall 0.47 0.0574 Inf     0.361     0.582
 
 
 # PLOT MODEL FIT
