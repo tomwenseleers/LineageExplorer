@@ -189,14 +189,17 @@ ctdata$Outcome[ctdata$Outcome=="Detected"] = "Positive"
 ctdata$Outcome[ctdata$Outcome=="Not detected"] = "Negative"
 unique(ctdata$Outcome)
 ctdata$Analysis_date = as.Date(as.numeric(ctdata$Analysis_date), origin="1899-12-30")
+sum(is.na(ctdata$Analysis_date)) # 0
 range(ctdata$Analysis_date) # "2021-01-01" - "2021-02-08"
 ctdata$collection_date = ctdata$Analysis_date-1 # collection date = analysis date-1 
+sum(is.na(ctdata$collection_date)) # 0
 ctdata$collection_date_num = as.numeric(ctdata$collection_date)
 range(ctdata$collection_date) # "2020-12-31" "2021-02-07"
 ctdata$group = interaction(ctdata$Outcome, ctdata$S_dropout)
-ctdata$high_viral_load_N = ifelse(ctdata$N_cq<20, 1, 0)
-ctdata$high_viral_load_ORF1 = ifelse(ctdata$ORF1_cq<20, 1, 0)
+ctdata$group = droplevels(ctdata$group)
+unique(ctdata$group) # Positive.0 Positive.1 Negative.0
 ctdata$Outcome = factor(ctdata$Outcome)
+unique(ctdata$Outcome) # Positive Negative
 ctdata$Laboratory = factor(ctdata$Laboratory)
 ctdata$S_dropout = factor(ctdata$S_dropout)
 head(ctdata)
@@ -470,7 +473,7 @@ ggsave(file=paste0(".\\plots\\",dat,"\\Ct values_violin plots_by lab.pdf"), widt
 # violin plots by gene & S dropout with expected marginal means+99% CLs of best fitting median regression model
 ctviolinplots = ggplot(data=ctdata_onlypos_subs_bothgenes, aes(x=factor(S_dropout), y=Ct, fill=factor(S_dropout))) +
   geom_violin(alpha=1, colour=NA, trim=FALSE, draw_quantiles=TRUE, adjust=2, scale="width") +
-  geom_crossbar(data=qr_emmeans99, aes(x=factor(S_dropout), y=emmean, ymin=lower.CL, ymax=upper.CL, group=Gene)) +
+  geom_crossbar(data=qr_emmeans99, aes(x=factor(S_dropout), y=emmean, ymin=lower.CL, ymax=upper.CL, group=Gene, lwd=I(0.1))) +
   # stat_summary(fun.data=data_summary,  
   #             geom="pointrange", aes(color=factor(S_dropout))) +
   # geom_dotplot(binaxis='y', stackdir='center', dotsize=0.1) +
@@ -556,8 +559,8 @@ fitct_highvirload_emmeans
 ct_highvirload_binGLMM = ggplot(data=fitct_highvirload_emmeans, 
                                                aes(x=S_dropout, y=prob*100, fill=S_dropout, group=S_dropout)) +
   facet_wrap(~ Gene) +
-  geom_col(colour=NA, position=position_dodge2(width=0.8, padding=0.2)) +
-  geom_linerange(aes(ymin=asymp.LCL*100, ymax=asymp.UCL*100), position=position_dodge2(width=0.8, padding=0.2)) +
+  geom_col(colour=NA, position=position_dodge2(width=0.8, padding=0.5)) +
+  geom_linerange(aes(ymin=asymp.LCL*100, ymax=asymp.UCL*100), position=position_dodge2(width=0.8, padding=0.5)) +
   scale_fill_manual("", values=muted(c("steelblue","lightcoral"), l=55), breaks=c("0","1"), labels=c("S positive","S dropout")) +
   scale_y_continuous(breaks=seq(0,100,by=10), expand=c(0,0)) +
   ylab("High viral load samples (%)") + xlab("Gene") + coord_cartesian(ylim=c(0,50)) +
@@ -576,85 +579,81 @@ graph2ppt(file=paste0(".\\plots\\",dat,"\\Fig3_dataBE_Ct values_multipanel violi
 ggsave(file=paste0(".\\plots\\",dat,"\\Fig3_dataBE_Ct values_multipanel violin plot plus high viral load.png"), width=8, height=6)
 ggsave(file=paste0(".\\plots\\",dat,"\\Fig3_dataBE_Ct values_multipanel violin plot plus high viral load.pdf"), width=8, height=6)
 
-# TO DO: I DIDN'T COMPLETE / UPDATE THE REST BELOW YET ####
-
-
 
 
 
 # 3. ESTIMATE GROWTH RATE AND TRANSMISSION ADVANTAGE OF B.1.1.7 / 501Y.V1 IN BELGIUM BASED ON S-GENE TARGET FAILURE DATA ####
 
-# We remove ULG - FF 3.x because of low sample size
-# Note: we look at last 14 days to minimise impact
-#testdata_onlypos = testdata_onlypos[!testdata_onlypos$Laboratory %in% c("UZ Gent","UZA","ULG - FF 3.x"),]
-excluded_labs = c("ULG - FF 3.x","ULG")
-testdata = testdata[!testdata$Laboratory %in% excluded_labs,]
-nrow(testdata) # 281518
-testdata_onlypos = testdata_onlypos[!testdata_onlypos$Laboratory %in% excluded_labs,]
+# we remove ULG - FF 3.x due to low sample size & also just use positive samples with Ct values for N & ORF1ab < 30 to focus on active, recent infections
+sel_labs = setdiff(unique(ctdata$Laboratory), c("ULG - FF 3.x"))  # unique(ctdata$Laboratory) 
+# setdiff(unique(ctdata$Laboratory), c("UMons - Jolimont", "ULG - FF 3.x", "UZ Gent", "UZA")) 
+# setdiff(unique(ctdata$Laboratory), c("UMons - Jolimont", "UZ Gent","UZA","ULG - FF 3.x")) 
+sel_labs  
+subs = which((ctdata$Laboratory %in% sel_labs) & (((ctdata$Outcome=="Positive")&(ctdata$N_cq<30)&(ctdata$ORF1_cq<30))|
+                                            (ctdata$Outcome=="Negative")))
+ctdata_subs = ctdata
+ctdata_subs = ctdata_subs[subs,]
+nrow(ctdata) # 387653
+nrow(ctdata_subs) # 368471
 
+ctdata_subs$group = factor(ctdata_subs$group, 
+                           levels=c("Negative.0","Positive.0","Positive.1"), 
+                           labels=c("negative","S_pos","S_dropout"))
+ctdata_subs$Laboratory = droplevels(ctdata_subs$Laboratory)
 
 # aggregated counts by date (sample date) and Laboratory
-data_ag = as.data.frame(table(testdata_onlypos$date, testdata_onlypos$Laboratory, testdata_onlypos$Sdropout), check.names=F)
-colnames(data_ag) = c("collection_date", "LABORATORY", "S_DROPOUT", "COUNT")
-data_ag_sum = aggregate(COUNT ~ collection_date + LABORATORY, data=data_ag, sum)
-data_ag$TOTAL = data_ag_sum$COUNT[match(interaction(data_ag$collection_date,data_ag$LABORATORY),
-                                        interaction(data_ag_sum$collection_date,data_ag_sum$LABORATORY))]
-data_ag$collection_date = as.Date(data_ag$collection_date)
-data_ag$S_DROPOUT = factor(data_ag$S_DROPOUT, levels=c(FALSE,TRUE))
-data_ag = data_ag[data_ag$S_DROPOUT==TRUE,]
-data_ag$S_DROPOUT = NULL
-colnames(data_ag)[which(colnames(data_ag)=="COUNT")] = "S_DROPOUT"
-data_ag$LABORATORY = factor(data_ag$LABORATORY)
-data_ag$collection_date_num = as.numeric(data_ag$collection_date)
+data_ag = as.data.frame(table(ctdata_subs$collection_date, ctdata_subs$Laboratory, ctdata_subs$group), check.names=F)
+colnames(data_ag) = c("collection_date", "LABORATORY", "GROUP", "COUNT")
+data_ag_wide = spread(data_ag, GROUP, COUNT)
+colnames(data_ag_wide)[colnames(data_ag_wide) %in% c("negative","S_pos","S_dropout")] = c("n_neg","n_spos","n_sgtf")
+data_ag_wide$n_pos = data_ag_wide$n_spos+data_ag_wide$n_sgtf
+data_ag_wide$collection_date = as.Date(data_ag_wide$collection_date)
+data_ag_wide$collection_date_num = as.numeric(data_ag_wide$collection_date)
 # calculate prop of S dropout that is actually B.1.1.7 / 501Y.V1 estimated from binomial GLMM:
 # (using expected marginal mean calculated using emmeans, taking into account random effects)
 total.SD = sqrt(sum(sapply(as.data.frame(VarCorr(fit_seq))$sdcor, function (x) x^2))) 
 fitseq_preds = as.data.frame(emmeans(fit_seq, ~ collection_date_num, 
-                                     at=list(collection_date_num=seq(min(data_ag$collection_date_num),
-                                                                 max(data_ag$collection_date_num))),
+                                     at=list(collection_date_num=seq(min(data_ag_wide$collection_date_num),
+                                                                     max(data_ag_wide$collection_date_num))),
                                      type="response"), bias.adjust = TRUE, sigma = total.SD)
 fitseq_preds$collection_date = as.Date(fitseq_preds$collection_date_num, origin="1970-01-01")
-data_ag$TRUEPOS = fitseq_preds$prob[match(data_ag$collection_date, fitseq_preds$collection_date)] # prob that S dropout was B.1.1.7 / 501Y.V1
+# prob that S dropout was B.1.1.7 / 501Y.V1
+data_ag_wide$TRUEPOS = fitseq_preds$prob[match(data_ag_wide$collection_date, fitseq_preds$collection_date)] 
 # estimated count of 501Y.V1, we adjust numerator of binomial GLMM to take into account true positive rate
-data_ag$n_b117 = data_ag$S_DROPOUT*data_ag$TRUEPOS 
-data_ag$PROP = data_ag$n_b117/data_ag$TOTAL
-data_ag = data_ag[data_ag$TOTAL!=0,]
-data_ag$obs = factor(1:nrow(data_ag))
-sum(data_ag$TOTAL) == nrow(testdata_onlypos) # TRUE - check
-head(data_ag)
+data_ag_wide$estB117 = round(data_ag_wide$n_sgtf * data_ag_wide$TRUEPOS) 
+data_ag_wide$propB117 = data_ag_wide$estB117 / data_ag_wide$n_pos
+data_ag_wide$obs = factor(1:nrow(data_ag_wide))
+head(data_ag_wide)
 
 
 # aggregated counts by date over all Laboratories
-data_ag_byday = as.data.frame(table(testdata_onlypos$date, testdata_onlypos$Sdropout), check.names=F)
-colnames(data_ag_byday) = c("collection_date", "S_DROPOUT", "COUNT")
-data_ag_byday_sum = aggregate(COUNT ~ collection_date, data=data_ag_byday, sum)
-data_ag_byday$TOTAL = data_ag_byday_sum$COUNT[match(data_ag_byday$collection_date,
-                                                    data_ag_byday_sum$collection_date)]
-data_ag_byday$collection_date = as.Date(data_ag_byday$collection_date)
-data_ag_byday$S_DROPOUT = factor(data_ag_byday$S_DROPOUT, levels=c(FALSE,TRUE))
-data_ag_byday = data_ag_byday[data_ag_byday$S_DROPOUT==TRUE,]
-data_ag_byday$S_DROPOUT = NULL
-colnames(data_ag_byday)[which(colnames(data_ag_byday)=="COUNT")] = "S_DROPOUT"
-data_ag_byday$collection_date_num = as.numeric(data_ag_byday$collection_date)
+data_ag_byday = as.data.frame(table(ctdata_subs$collection_date, ctdata_subs$group), check.names=F)
+colnames(data_ag_byday) = c("collection_date", "GROUP", "COUNT")
+data_ag_byday_wide = spread(data_ag_byday, GROUP, COUNT)
+colnames(data_ag_byday_wide)[colnames(data_ag_byday_wide) %in% c("negative","S_pos","S_dropout")] = c("n_neg","n_spos","n_sgtf")
+data_ag_byday_wide$n_pos = data_ag_byday_wide$n_spos+data_ag_byday_wide$n_sgtf
+data_ag_byday_wide$collection_date = as.Date(data_ag_byday_wide$collection_date)
+data_ag_byday_wide$collection_date_num = as.numeric(data_ag_byday_wide$collection_date)
 # calculate prop of S dropout that is actually B.1.1.7 / 501Y.V1 estimated from binomial GLMM:
 # (using expected marginal mean calculated using emmeans, taking into account random effects)
 total.SD = sqrt(sum(sapply(as.data.frame(VarCorr(fit_seq))$sdcor, function (x) x^2))) 
 fitseq_preds = as.data.frame(emmeans(fit_seq, ~ collection_date_num, 
-                                     at=list(collection_date_num=seq(min(data_ag_byday$collection_date_num),
-                                                                 max(data_ag_byday$collection_date_num))),
+                                     at=list(collection_date_num=seq(min(data_ag_byday_wide$collection_date_num),
+                                                                     max(data_ag_byday_wide$collection_date_num))),
                                      type="response"), bias.adjust = TRUE, sigma = total.SD)
 fitseq_preds$collection_date = as.Date(fitseq_preds$collection_date_num, origin="1970-01-01")
-data_ag_byday$TRUEPOS = fitseq_preds$prob[match(data_ag_byday$collection_date, fitseq_preds$collection_date)] # prob that S dropout was B.1.1.7 / 501Y.V1
+# prob that S dropout was B.1.1.7 / 501Y.V1
+data_ag_byday_wide$TRUEPOS = fitseq_preds$prob[match(data_ag_byday_wide$collection_date, fitseq_preds$collection_date)] 
 # estimated count of 501Y.V1, we adjust numerator of binomial GLMM to take into account true positive rate
-data_ag_byday$n_b117 = data_ag_byday$S_DROPOUT*data_ag_byday$TRUEPOS 
-data_ag_byday$PROP = data_ag_byday$n_b117/data_ag_byday$TOTAL
-data_ag_byday = data_ag_byday[data_ag_byday$TOTAL!=0,]
-data_ag_byday$obs = factor(1:nrow(data_ag_byday))
-sum(data_ag_byday$TOTAL) == nrow(testdata_onlypos) # TRUE - check
-head(data_ag_byday)
+data_ag_byday_wide$estB117 = data_ag_byday_wide$n_sgtf * data_ag_byday_wide$TRUEPOS
+data_ag_byday_wide$propB117 = data_ag_byday_wide$estB117 / data_ag_byday_wide$n_pos
+data_ag_byday_wide$obs = factor(1:nrow(data_ag_byday_wide))
+head(data_ag_byday_wide)
 
-sum(tail(data_ag_byday$n_b117, 14))/sum(tail(data_ag_byday$TOTAL,14)) 
-# 15.4% of the samples of last 2 weeks estimated to be by British variant 
+
+sum(tail(data_ag_byday_wide$estB117, 14))/sum(tail(data_ag_byday_wide$n_pos,14)) 
+# 30.8% of the samples of last 2 weeks estimated to be by British variant
+# PS: with data 31/1 this was 15.4%  
 # note: this is not the same as the estimated prop of the new infections or new diagnoses today that are of the British
 # variant, which are much higher, see below)
 
@@ -663,99 +662,88 @@ sum(tail(data_ag_byday$n_b117, 14))/sum(tail(data_ag_byday$TOTAL,14))
 set_sum_contrasts()
 glmersettings = glmerControl(optimizer="optimx", optCtrl=list(method="nlminb")) # PS : to try all optimizer run all_fit(fit1)
 glmersettings2 = glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=1E4)) # PS : to try all optimizer run all_fit(fit1)
-fit1 = glmer(cbind(VOC, TOTAL-VOC) ~ (1|obs)+scale(collection_date_num)+LABORATORY, family=binomial(logit), 
-             data=data_ag, control=glmersettings)  # common slope model, with lab coded as fixed factor
-fit2 = glmer(cbind(VOC, TOTAL-VOC) ~ (1|obs)+scale(collection_date_num)*LABORATORY, family=binomial(logit), 
-             data=data_ag, control=glmersettings) # separate slopes model, with lab coded as fixed factor
-fit3 = glmer(cbind(VOC, TOTAL-VOC) ~ (1|obs)+ns(collection_date_num,df=2)+LABORATORY, family=binomial(logit), 
-             data=data_ag, control=glmersettings2)  # common slope model, with lab coded as fixed factor & using 2 df spline ifo date to allow time-varying benefit
-fit4 = glmer(cbind(VOC, TOTAL-VOC) ~ (1|obs)+ns(collection_date_num,df=2)*LABORATORY, family=binomial(logit), 
-             data=data_ag, control=glmersettings) # separate slopes model, with lab coded as fixed factor & using 2 df spline ifo date to allow time-varying benefit
-BIC(fit1,fit2,fit3,fit4) 
-# df      BIC
-# fit1  9 1008.667
-# fit2 15 1021.240
-# fit3 10 1013.432
-# fit4 22 1050.627
+fit1 = glmer(cbind(estB117, n_pos-estB117) ~ (1|obs)+scale(collection_date_num)+LABORATORY, family=binomial(logit), 
+             data=data_ag_wide, subset=data_ag_wide$n_pos>0, control=glmersettings)  # common slope model, with lab coded as fixed factor
+fit2 = glmer(cbind(estB117, n_pos-estB117) ~ (1|obs)+scale(collection_date_num)*LABORATORY, family=binomial(logit), 
+             data=data_ag_wide, subset=data_ag_wide$n_pos>0, control=glmersettings) # separate slopes model, with lab coded as fixed factor
+BIC(fit1,fit2) 
+#      df      BIC
+# fit1 10 1709.339
+# fit2 17 1734.279
 
 
-# common-slope model fit1 fits best, i.e. rate at which VOC is displacing other strains constant across regions/labs
+# common-slope model fit1 fits best, i.e. rate at which B.1.1.7 is displacing other strains constant across regions/labs
 
 summary(fit1)
+# Random effects:
+#   Groups Name        Variance Std.Dev.
+# obs    (Intercept) 0.3744   0.6119  
+# Number of obs: 312, groups:  obs, 312
+# 
+# Fixed effects:
+#   Estimate Std. Error z value Pr(>|z|)    
+# (Intercept)                -1.94901    0.06394 -30.480  < 2e-16 ***
+#   scale(collection_date_num)  0.99080    0.05321  18.619  < 2e-16 ***
+#   LABORATORY1                -0.37981    0.12797  -2.968 0.002998 ** 
+#   LABORATORY2                 0.38405    0.11554   3.324 0.000887 ***
+#   LABORATORY3                 0.45376    0.11587   3.916    9e-05 ***
+#   LABORATORY4                 0.11437    0.28974   0.395 0.693044    
+#   LABORATORY5                -1.25919    0.13823  -9.109  < 2e-16 ***
+#   LABORATORY6                 0.45099    0.12280   3.673 0.000240 ***
+#   LABORATORY7                -0.12825    0.11918  -1.076 0.281889    
 
 
-# growth rate advantage (differences in growth rate between VOC and old strains):
+# growth rate advantage (differences in growth rate between B.1.1.7 and old strains):
 # results common-slope model
-fit1_emtrends = as.data.frame(emtrends(fit1, revpairwise ~ 1, var="collection_date_num", mode="link", adjust="Tukey")$emtrends)
+fit1_emtrends = as.data.frame(emtrends(fit1, revpairwise ~ 1, var="collection_date_num", 
+                                       at=list(collection_date_num=today_num), mode="link", adjust="Tukey")$emtrends)
 fit1_emtrends[,c(2,5,6)]
-# 0.12 [0.10-0.13] 95% CLs 95% CLs
+#   collection_date_num.trend asymp.LCL  asymp.UCL
+# 1                0.08816107 0.0790066 0.09731553
+
 # with a generation time of 4.7 days this would translate in an increased 
 # infectiousness (multiplicative effect on Rt) of
-exp(fit1_emtrends[,c(2,5,6)]*4.7) # 1.74 [1.61-1.87] 95% CLs
+exp(fit1_emtrends[,c(2,5,6)]*4.7) 
+# collection_date_num.trend asymp.LCL asymp.UCL
+# 1                  1.513397  1.449663  1.579934
 
 # tests for differences in date of introduction
-emmeans(fit1,eff~LABORATORY)$contrasts # UCL, ULB, Ghent & UZA earlier than avg (FDR p<0.05), Mons later than avg (FDR p<0.0001)
+emmeans(fit1,eff~LABORATORY)$contrasts # UCL, ULB, Ghent & UZA earlier than avg (FDR p<0.01), Namur & Mons later than avg (FDR p<0.01 & p<0.0001)
 # contrast                  estimate    SE  df z.ratio p.value
-# Namur effect                 0.173 0.167 Inf  1.035  0.3007 
-# (Saint LUC - UCL) effect     0.427 0.143 Inf  2.985  0.0099 
-# ULB effect                   0.306 0.143 Inf  2.139  0.0454 
-# (UMons - Jolimont) effect   -1.918 0.214 Inf -8.973  <.0001 
-# UZ Gent effect               0.430 0.153 Inf  2.813  0.0114 
-# UZ leuven effect             0.258 0.151 Inf  1.707  0.1024 
-# UZA effect                   0.323 0.143 Inf  2.260  0.0417 
+# Namur effect                -0.364 0.119 Inf -3.052  0.0027 
+# (Saint LUC - UCL) effect     0.398 0.106 Inf  3.753  0.0003 
+# ULB effect                   0.468 0.106 Inf  4.398  <.0001 
+# (UMons - Jolimont) effect   -1.242 0.130 Inf -9.546  <.0001 
+# UZ Gent effect               0.472 0.114 Inf  4.124  0.0001 
+# UZ leuven effect            -0.111 0.110 Inf -1.005  0.3151 
+# UZA effect                   0.379 0.106 Inf  3.571  0.0005
 # 
 # Results are given on the log odds ratio (not the response) scale. 
-# P value adjustment: fdr method for 7 tests 
-
-
-# results spline model fit3 for growth & transmission advantage on the 1st of Febr & the 1st of Jan:
-# the growth & transmission advantage as measured today on the 1st of February is probably most
-# representative, as for the period between 1-14th of Jan there was quite a bit of active surveillance being done,
-# whereas now testing is done more randomly :
-fit3_emtrends = as.data.frame(emtrends(fit3, revpairwise ~ 1, var="collection_date_num", 
-                                       at=list(collection_date_num=as.numeric(as.Date("2021-02-01"))),
-                                       mode="link", adjust="Tukey")$emtrends)
-fit3_emtrends[,c(2,5,6)]
-# 0.10 [0.06-0.14] 95% CLs 95% CLs
-# with a generation time of 4.7 days this would translate in an increased 
-# infectiousness (multiplicative effect on Rt) of
-exp(fit3_emtrends[,c(2,5,6)]*4.7) # 1.62 [1.33-1.97] 95% CLs
-
-fit3_emtrends = as.data.frame(emtrends(fit3, revpairwise ~ 1, var="collection_date_num", 
-                                       at=list(collection_date_num=as.numeric(as.Date("2021-01-01"))),
-                                       mode="link", adjust="Tukey")$emtrends)
-fit3_emtrends[,c(2,5,6)]
-# 0.14 [0.08-0.19] 95% CLs 95% CLs
-# with a generation time of 4.7 days this would translate in an increased 
-# infectiousness (multiplicative effect on Rt) of
-exp(fit3_emtrends[,c(2,5,6)]*4.7) # 1.89 [1.48-2.42] 95% CLs
-
-
+# P value adjustment: fdr method for 8 tests
 
 # results separate-slopes model fit2:                         
 fit2_emtrends = emtrends(fit2, revpairwise ~ LABORATORY, var="collection_date_num", mode="link", adjust="Tukey")$emtrends
 fit2_emtrends
 # LABORATORY       collection_date_num.trend     SE  df asymp.LCL asymp.UCL
-# Namur                           0.0854 0.0222 Inf    0.0418     0.129
-# Saint LUC - UCL                 0.0818 0.0172 Inf    0.0480     0.116
-# ULB                             0.1005 0.0175 Inf    0.0662     0.135
-# UMons - Jolimont                0.0755 0.0297 Inf    0.0173     0.134
-# UZ Gent                         0.1803 0.0229 Inf    0.1353     0.225
-# UZ leuven                       0.1421 0.0208 Inf    0.1014     0.183
-# UZA                             0.1389 0.0187 Inf    0.1022     0.175
+# Namur                               0.0717 0.0132 Inf    0.0459    0.0976
+# Saint LUC - UCL                     0.0746 0.0106 Inf    0.0538    0.0955
+# ULB                                 0.0823 0.0108 Inf    0.0612    0.1035
+# UMons - Jolimont                    0.1062 0.0169 Inf    0.0732    0.1393
+# UZ Gent                             0.1074 0.0133 Inf    0.0813    0.1335
+# UZ leuven                           0.1061 0.0120 Inf    0.0826    0.1297
+# UZA                                 0.0812 0.0110 Inf    0.0597    0.1026
 
-# only Ghent has a sign abover-average rate of spread, but this could be linked to that lab's heavy focus on active surveillance,
-# and so could be due to a bias:
+# for none of the labs/regions we observe a sign above-average rate of spread
 fit2_contrasts = emtrends(fit2, eff ~ LABORATORY, var="collection_date_num", mode="link", adjust="Tukey")$contrasts
 fit2_contrasts
 # contrast                  estimate     SE  df z.ratio p.value
-# Namur effect               -0.0295 0.0204 Inf -1.447  0.6736 
-# (Saint LUC - UCL) effect   -0.0331 0.0167 Inf -1.981  0.2889 
-# ULB effect                 -0.0144 0.0170 Inf -0.849  0.9707 
-# (UMons - Jolimont) effect  -0.0394 0.0264 Inf -1.496  0.6364 
-# UZ Gent effect              0.0654 0.0210 Inf  3.118  0.0127 
-# UZ leuven effect            0.0272 0.0193 Inf  1.408  0.7027 
-# UZA effect                  0.0239 0.0178 Inf  1.345  0.7475 
+# Namur effect              -0.01822 0.0121 Inf -1.506  0.6293 
+# (Saint LUC - UCL) effect  -0.01532 0.0102 Inf -1.503  0.6315 
+# ULB effect                -0.00759 0.0103 Inf -0.734  0.9871 
+# (UMons - Jolimont) effect  0.01629 0.0150 Inf  1.084  0.8981 
+# UZ Gent effect             0.01744 0.0122 Inf  1.431  0.6860 
+# UZ leuven effect           0.01618 0.0112 Inf  1.445  0.6752 
+# UZA effect                -0.00878 0.0104 Inf -0.844  0.9715 
 # 
 # P value adjustment: sidak method for 7 tests 
 
@@ -769,7 +757,7 @@ total.SD = sqrt(sum(sapply(as.data.frame(VarCorr(fit1))$sdcor, function (x) x^2)
 # bias correction for random effects in marginal means, see https://cran.r-project.org/web/packages/emmeans/vignettes/transformations.html#bias-adj
 fit1_preds = as.data.frame(emmeans(fit1, ~ collection_date_num, 
                                          # by="LABORATORY", 
-                                         at=list(collection_date_num=seq(as.numeric(min(data_ag_byday$collection_date)),
+                                         at=list(collection_date_num=seq(as.numeric(min(data_ag_byday_wide$collection_date)),
                                                                      date.to)), 
                                          type="response"), bias.adjust = TRUE, sigma = total.SD)
 fit1_preds$collection_date = as.Date(fit1_preds$collection_date_num, origin="1970-01-01")
@@ -778,7 +766,7 @@ fit1_preds$collection_date = as.Date(fit1_preds$collection_date_num, origin="197
 total.SD = sqrt(sum(sapply(as.data.frame(VarCorr(fit1))$sdcor, function (x) x^2))) 
 fit1_preds_bylab = as.data.frame(emmeans(fit1, ~ collection_date_num, 
                                    by="LABORATORY", 
-                                   at=list(collection_date_num=seq(as.numeric(min(data_ag_byday$collection_date)),
+                                   at=list(collection_date_num=seq(as.numeric(min(data_ag_byday_wide$collection_date)),
                                                                date.to)), 
                                     type="response"), bias.adjust = TRUE, sigma = total.SD)
 fit1_preds_bylab$collection_date = as.Date(fit1_preds_bylab$collection_date_num, origin="1970-01-01")
@@ -789,86 +777,34 @@ fit1_preds_bylab$LABORATORY = factor(fit1_preds_bylab$LABORATORY,
                                      levels=levels_BE)
 
 
-
-
-
-# estimated share of VOC among currently diagnosed infections based on fit1
-fit1_preds[fit1_preds$collection_date==as.Date("2021-02-08"),]
+# estimated share of B.1.1.7 among currently diagnosed infections based on fit1
+fit1_preds[fit1_preds$collection_date==today,]
 #    collection_date_num     prob         SE  df asymp.LCL asymp.UCL collection_date
-# 27           18659 0.2810843 0.02412842 Inf 0.2360364 0.3303836  2021-02-01
-# estimated share of VOC among new infections (assuming time between infection & diagnosis of 7 days)
-fit1_preds[fit1_preds$collection_date==(as.Date("2021-02-08")+7),]
+# 27              18667 0.4744899 0.02093081 Inf 0.4336906 0.5155814      2021-02-09
+# estimated share of B.1.1.7 among new infections (assuming time between infection & diagnosis of 7 days)
+fit1_preds[fit1_preds$collection_date==(today+7),]
 #    collection_date_num     prob         SE  df asymp.LCL asymp.UCL collection_date
-# 34           18666 0.4519059 0.03992995 Inf 0.3751331 0.5306089  2021-02-08
+# 34               18674 0.6131542 0.02641399 Inf  0.560443 0.6636623      2021-02-16
 
 # taking into account time from infection to diagnosis of ca 7 days this is 
-# the time at which new infections would be by more then 50%, 75% 90% by VOC:
-# (really broad confidence intervals though)
-fit1_preds$collection_date[fit1_preds[,"prob"]>=0.5][1]-7 # >50% by 3d of February [31 Jan - 7 Febr] 95% CLs
+# the time at which new infections would be by more then 50%, 75% 90% by B.1.1.7 :
+fit1_preds$collection_date[fit1_preds[,"prob"]>=0.5][1]-7 # >50% by 4th of February [2nd Feb - 6 Feb] 95% CLs
 fit1_preds$collection_date[fit1_preds[,"asymp.UCL"]>=0.5][1]-7
 fit1_preds$collection_date[fit1_preds[,"asymp.LCL"]>=0.5][1]-7
 
-fit1_preds$collection_date[fit1_preds[,"prob"]>=0.75][1]-7 # >75% by 14th of February [10 Febr - 19 Febr] 95% CLs
+fit1_preds$collection_date[fit1_preds[,"prob"]>=0.75][1]-7 # >75% by 17th of February [14 Feb - 21 Feb] 95% CLs
 fit1_preds$collection_date[fit1_preds[,"asymp.UCL"]>=0.75][1]-7
 fit1_preds$collection_date[fit1_preds[,"asymp.LCL"]>=0.75][1]-7
 
-fit1_preds$collection_date[fit1_preds[,"prob"]>=0.9][1]-7 # >90% by 23d of Febr [18 Febr - 2 March] 95% CLs
+fit1_preds$collection_date[fit1_preds[,"prob"]>=0.9][1]-7 # >90% by 2nd of March [26 Feb - 8 March] 95% CLs
 fit1_preds$collection_date[fit1_preds[,"asymp.UCL"]>=0.9][1]-7
 fit1_preds$collection_date[fit1_preds[,"asymp.LCL"]>=0.9][1]-7
 
 
 
-
 # PLOT MODEL FIT common-slope model fit1
-plot_fit1 = qplot(data=fit1_preds_bylab, x=collection_date, y=prob, geom="blank") +
-  facet_wrap(~LABORATORY) +
-  geom_ribbon(aes(y=prob, ymin=asymp.LCL, ymax=asymp.UCL, colour=NULL, 
-                  fill=LABORATORY
-                  ), 
-              # fill=I("steelblue"), 
-              alpha=I(0.3)) +
-  geom_line(aes(y=prob, 
-                colour=LABORATORY
-                ), 
-            # colour=I("steelblue"), 
-            alpha=I(0.8)) +
-  ylab("Relative abundance of 501Y.V1 (%)") +
-  theme_hc() + xlab("") + 
-  # ggtitle("GROWTH OF VOC 202012/01 BY NHS REGION") +
-  # scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
-  #                   labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
-  scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
-                      labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
-  coord_cartesian(xlim=c(min(data_ag$collection_date), as.Date("2021-03-01")-1), 
-                  # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")), 
-                  ylim=c(0.01,0.99), expand=c(0,0)) +
-  scale_color_discrete("", h=c(0, 280), c=200) +
-  scale_fill_discrete("", h=c(0, 280), c=200) +
-  geom_point(data=data_ag, # data_ag_byday, 
-             aes(x=collection_date, y=PROP, size=TOTAL,
-                 colour=LABORATORY
-                 ), 
-             # colour=I("steelblue"), 
-             alpha=I(0.5)) +
-  scale_size_continuous("number of\npositive tests", trans="log10", 
-                        range=c(1, 4), limits=c(10,10^round(log10(max(data_ag_byday$TOTAL)),0)), breaks=c(10,100,1000)) +
-  # guides(fill=FALSE) + 
-  # guides(colour=FALSE) + 
-  theme(legend.position = "right") +
-  xlab("Collection date") +
-  theme(axis.text.x = element_text(angle = 90))
-plot_fit1
 
-
-saveRDS(plot_fit1, file = paste0(".\\plots\\",dat,"\\fit1_binomGLMM_VOC_Belgium by lab.rds"))
-graph2ppt(file=paste0(".\\plots\\",dat,"\\fit1_binomGLMM_VOC_Belgium by lab.pptx"), width=8, height=6)
-ggsave(file=paste0(".\\plots\\",dat,"\\fit1_binomGLMM_VOC_Belgium by lab.png"), width=8, height=6)
-ggsave(file=paste0(".\\plots\\",dat,"\\fit1_binomGLMM_VOC_Belgium by lab.pdf"), width=8, height=6)
-
-
-
-
-# same on response scale (avg over the whole of Belgium):
+# plot for the whole of Belgium on response scale:
 plot_fit1_response = qplot(data=fit1_preds, x=collection_date, y=100*prob, geom="blank") +
   # facet_wrap(~LABORATORY) +
   geom_ribbon(aes(y=100*prob, ymin=100*asymp.LCL, ymax=100*asymp.UCL, colour=NULL, 
@@ -881,26 +817,26 @@ plot_fit1_response = qplot(data=fit1_preds, x=collection_date, y=100*prob, geom=
   ), 
   colour=I("steelblue"), 
   alpha=I(1)) +
-  ylab("Relative abundance of 501Y.V1 (%)") +
+  ylab("Relative abundance of B.1.1.7 (%)") +
   theme_hc() + xlab("") + 
   # ggtitle("GROWTH OF VOC 202012/01 BY NHS REGION") +
   # scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
   #                   labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
   # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
   #                     labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
-  coord_cartesian(xlim=c(min(data_ag_byday$collection_date), as.Date("2021-03-01")), 
-    # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")), 
-    ylim=c(0,100), expand=c(0,0)) +
+  coord_cartesian(xlim=c(min(data_ag_byday_wide$collection_date), as.Date("2021-03-01")), 
+                  # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")), 
+                  ylim=c(0,100), expand=c(0,0)) +
   scale_color_discrete("", h=c(0, 280), c=200) +
   scale_fill_discrete("", h=c(0, 280), c=200) +
-  geom_point(data=data_ag_byday, 
-             aes(x=collection_date, y=100*PROP, size=TOTAL,
+  geom_point(data=data_ag_byday_wide, 
+             aes(x=collection_date, y=100*propB117, size=n_pos,
                  # colour=LABORATORY
              ), 
              colour=I("steelblue"), 
              alpha=I(1)) +
-  scale_size_continuous("number of\npositive tests", trans="sqrt", 
-                        range=c(1, 4), limits=c(10,10^round(log10(max(data_ag_byday$TOTAL)),0)), breaks=c(10,100,1000)) +
+  scale_size_continuous("number of\npositive tests (Ct<30)", trans="sqrt", 
+                        range=c(1, 4), limits=c(10,10^round(log10(max(data_ag_byday_wide$n_pos)+1),0)), breaks=c(10,100,1000)) +
   guides(fill=FALSE) + 
   # guides(colour=FALSE) + 
   theme(legend.position = "right") +
@@ -908,16 +844,64 @@ plot_fit1_response = qplot(data=fit1_preds, x=collection_date, y=100*prob, geom=
 plot_fit1_response
 
 
+saveRDS(plot_fit1_response, file = paste0(".\\plots\\",dat,"\\Fig4_fit1_binomGLMM_B117_Belgium_response scale.rds"))
+graph2ppt(file=paste0(".\\plots\\",dat,"\\Fig4_fit1_binomGLMM_B117_Belgium_response scale.pptx"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",dat,"\\Fig4_fit1_binomGLMM_B117_Belgium_response scale.png"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",dat,"\\Fig4_fit1_binomGLMM_B117_Belgium_response scale.pdf"), width=8, height=6)
 
-saveRDS(plot_fit1, file = paste0(".\\plots\\",dat,"\\fit1_binomGLMM_VOC_Belgium_response scale.rds"))
-graph2ppt(file=paste0(".\\plots\\",dat,"\\fit1_binomGLMM_VOC_Belgium_response scale.pptx"), width=8, height=6)
-ggsave(file=paste0(".\\plots\\",dat,"\\fit1_binomGLMM_VOC_Belgium_response scale.png"), width=8, height=6)
-ggsave(file=paste0(".\\plots\\",dat,"\\fit1_binomGLMM_VOC_Belgium_response scale.pdf"), width=8, height=6)
+# plot per lab on logit scale:
+plot_fit1 = qplot(data=fit1_preds_bylab, x=collection_date, y=prob, geom="blank") +
+  facet_wrap(~LABORATORY) +
+  geom_ribbon(aes(y=prob, ymin=asymp.LCL, ymax=asymp.UCL, colour=NULL, 
+                  fill=LABORATORY
+                  ), 
+              # fill=I("steelblue"), 
+              alpha=I(0.3)) +
+  geom_line(aes(y=prob, 
+                colour=LABORATORY
+                ), 
+            # colour=I("steelblue"), 
+            alpha=I(0.8)) +
+  ylab("Relative abundance of B.1.1.7 (%)") +
+  theme_hc() + xlab("") + 
+  # scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
+  #                   labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
+  scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
+                      labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
+  coord_cartesian(xlim=c(min(data_ag_byday_wide$collection_date), as.Date("2021-03-01")-1), 
+                  # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")), 
+                  ylim=c(0.01,0.99), expand=c(0,0)) +
+  scale_color_discrete("", h=c(0, 280), c=200) +
+  scale_fill_discrete("", h=c(0, 280), c=200) +
+  geom_point(data=data_ag_wide,  
+             aes(x=collection_date, y=propB117, size=n_pos,
+                 colour=LABORATORY
+                 ), 
+             # colour=I("steelblue"), 
+             alpha=I(0.5)) +
+  scale_size_continuous("number of\npositive tests (Ct<30)", trans="log10", 
+                        range=c(1, 4), limits=c(10,10^round(log10(max(data_ag_wide$n_pos)+1),0)), breaks=c(10,100,1000)) +
+  # guides(fill=FALSE) + 
+  # guides(colour=FALSE) + 
+  theme(legend.position = "right") +
+  xlab("Collection date") +
+  theme(axis.text.x = element_text(angle = 90))
+plot_fit1
+
+saveRDS(plot_fit1, file = paste0(".\\plots\\",dat,"\\Fig5_fit1_binomGLMM_B117_Belgium by lab.rds"))
+graph2ppt(file=paste0(".\\plots\\",dat,"\\Fig5_fit1_binomGLMM_B117_Belgium by lab.pptx"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",dat,"\\Fig5_fit1_binomGLMM_B117_Belgium by lab.png"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",dat,"\\Fig5_fit1_binomGLMM_B117_Belgium by lab.pdf"), width=8, height=6)
 
 
 
+# 6. SOME INTERNATIONAL COMPARISONS ####
 
-# 4. JOINT ANALYSIS OF BELGIAN SGTF DATA WITH UK S GENE DROPOUT (PILLAR 2 SGTF) DATA ####
+# 6.1. DATA UK: PILLAR 2 SGTF DATA ####
+
+levels_UKregions = c("South East","London","East of England",
+                     "South West","Midlands","North East and Yorkshire",
+                     "Scotland","North West","Wales")
 
 sgtfdata_uk = read.csv(".//data//uk//sgtf_pillar2_UK-2021-01-25.csv") # Pillar 2 S gene targeted failure data (SGTF) (S dropout)
 sgtfdata_uk$other = sgtfdata_uk$other+sgtfdata_uk$sgtf
@@ -926,151 +910,123 @@ sgtfdata_uk_truepos = read.csv(".//data//uk//sgtf_pillar2_UK-2021-01-25_nick dav
 # PS this could also be estimated from the COG-UK data based on the presence of deletion 69/70, which is S dropout
 sgtfdata_uk$TRUEPOS = sgtfdata_uk_truepos$sgtfv[match(interaction(sgtfdata_uk$REGION, sgtfdata_uk$collection_date),
                                                       interaction(sgtfdata_uk_truepos$group, sgtfdata_uk_truepos$date))] # modelled proportion of S dropout samples that were actually the VOC
-sgtfdata_uk$n_b117 = sgtfdata_uk$SGTF*sgtfdata_uk$TRUEPOS
+sgtfdata_uk$estB117 = sgtfdata_uk$SGTF * sgtfdata_uk$TRUEPOS
 sgtfdata_uk$COUNTRY = "UK"
-sgtfdata_uk = sgtfdata_uk[,c("collection_date","COUNTRY","REGION","VOC","TOTAL")]
+sgtfdata_uk = sgtfdata_uk[,c("collection_date","COUNTRY","REGION","estB117","TOTAL")]
+colnames(sgtfdata_uk)[which(colnames(sgtfdata_uk)=="TOTAL")] = "n_pos"
 range(sgtfdata_uk$collection_date) # "2020-10-01" "2021-01-24"
+sgtfdata_uk$collection_date = as.Date(sgtfdata_uk$collection_date)
+sgtfdata_uk$collection_date_num = as.numeric(sgtfdata_uk$collection_date)
+sgtfdata_uk$REGION = factor(sgtfdata_uk$REGION, levels=levels_UKregions)
+sgtfdata_uk$obs = factor(1:nrow(sgtfdata_uk))
+sgtfdata_uk$propB117 = sgtfdata_uk$estB117 / sgtfdata_uk$n_pos
 head(sgtfdata_uk)
-
-data_be = data_ag_byday
-data_be$REGION = "Belgium"
-data_be$COUNTRY = "Belgium"
-data_be = data_be[,c("collection_date","COUNTRY","REGION","VOC","TOTAL")]
-
-# joined Belgian S dropout & COG-UK data
-data_be_uk2 = rbind(data_be, sgtfdata_uk)
-data_be_uk2$COUNTRY = factor(data_be_uk2$COUNTRY)
-data_be_uk2$collection_date_num = as.numeric(data_be_uk2$collection_date)
-data_be_uk2$PROP = data_be_uk2$n_b117/data_be_uk2$TOTAL
-data_be_uk2$obs = factor(1:nrow(data_be_uk2)) # for observation-level random effect, to take into account overdispersion
-data_be_uk2$REGION = factor(data_be_uk2$REGION, levels=c(c("Belgium","South East","London","East of England",
-                                                           "South West","Midlands","North East and Yorkshire",
-                                                           "Scotland","North West","Wales")))
-head(data_be_uk2)
 
 set_sum_contrasts()
 glmersettings = glmerControl(optimizer="Nelder_Mead", optCtrl=list(maxfun=1e5)) # bobyqa, PS : to try all optimizer run all_fit(fit1)
 glmersettings2 = glmerControl(optimizer="optimx", optCtrl=list(method="L-BFGS-B"))
 glmersettings3 = glmerControl(optimizer="optimx", optCtrl=list(method="nlminb"))
 glmersettings4 = glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=1e5))
-fit_be_uk2_1 = glmer(cbind(VOC, TOTAL-VOC) ~ (1|obs)+scale(collection_date_num)+REGION, family=binomial(logit), 
-                     data=data_be_uk2, control=glmersettings)  # common slope model for country
-fit_be_uk2_2 = glmer(cbind(VOC, TOTAL-VOC) ~ (1|obs)+scale(collection_date_num)*REGION, family=binomial(logit), 
-                     data=data_be_uk2, control=glmersettings) # separate slopes model for country
-fit_be_uk2_3 = glmer(cbind(VOC, TOTAL-VOC) ~ (1|obs)+ns(collection_date_num,df=3)+REGION, family=binomial(logit), 
-                     data=data_be_uk2, control=glmersettings) # with additive spline term
-fit_be_uk2_4 = glmer(cbind(VOC, TOTAL-VOC) ~ (1|obs)+ns(collection_date_num,df=3)*REGION, family=binomial(logit), 
-                     data=data_be_uk2, control=glmersettings3) # with spline term in interaction with region
-BIC(fit_be_uk2_1, fit_be_uk2_2, fit_be_uk2_3, fit_be_uk2_4) 
-# separate-slopes model very slightly better
+fit_ukSGTF_1 = glmer(cbind(estB117, n_pos-estB117 ) ~ (1|obs)+scale(collection_date_num)+REGION, family=binomial(logit), 
+                     data=sgtfdata_uk, control=glmersettings)  # common slope model for country
+fit_ukSGTF_2 = glmer(cbind(estB117, n_pos-estB117) ~ (1|obs)+scale(collection_date_num)*REGION, family=binomial(logit), 
+                     data=sgtfdata_uk, control=glmersettings) # separate slopes model for country
+fit_ukSGTF_3 = glmer(cbind(estB117, n_pos-estB117) ~ (1|obs)+ns(collection_date_num,df=3)+REGION, family=binomial(logit), 
+                     data=sgtfdata_uk, control=glmersettings) # with additive spline term
+fit_ukSGTF_4 = glmer(cbind(estB117, n_pos-estB117) ~ (1|obs)+ns(collection_date_num,df=3)*REGION, family=binomial(logit), 
+                     data=sgtfdata_uk, control=glmersettings3) # with spline term in interaction with region
+BIC(fit_ukSGTF_1, fit_ukSGTF_2, fit_ukSGTF_3, fit_ukSGTF_4) 
+# separate-slopes 3 df spline model fit_be_uk2_4 best
 # df      BIC
-# fit_be_uk2_1 10 7281.447
-# fit_be_uk2_2 17 6807.933
-# fit_be_uk2_3 12 7178.812
-# fit_be_uk2_4 32 6090.350
+# fit_ukSGTF_1  9 7048.188
+# fit_ukSGTF_2 15 6574.709
+# fit_ukSGTF_3 11 6929.594
+# fit_ukSGTF_4 29 5868.880
 
 
-# model fit_be_uk2_4 best
+# model fit_ukSGTF_4 best
 
-summary(fit_be_uk2_4)
+summary(fit_ukSGTF_4)
 
-# PLOT MODEL PREDICTIONS fit_be_uk2_4
-# growth rate advantage for BE (differences in growth rate between VOC and old strains):
-# results model, with growth rate advantage evaluated today (1/2/2021):
-fit_be_uk2_4_emtrends = as.data.frame(emtrends(fit_be_uk2_4, revpairwise ~ 1, 
-                                               var="collection_date_num", 
-                                               at=list(REGION="Belgium",
-                                                       collection_date_num=as.numeric(as.Date("2021-02-01"))),
+# avg growth rate advantage for UK (difference in growth rate between B.1.1.7 and old strains):
+fit_ukSGTF_4_emtrends = as.data.frame(emtrends(fit_ukSGTF_4, revpairwise ~ 1, 
+                                               var="collection_date_num",
                                                mode="link", adjust="Tukey")$emtrends)
-fit_be_uk2_4_emtrends[,c(2,5,6)]
-# 0.096 [0.074-0.12] 95% CLs
+fit_ukSGTF_4_emtrends[,c(2,5,6)]
+#   collection_date_num.trend asymp.LCL asymp.UCL
+# 1                 0.11106 0.1096202 0.1124998
+
 # with a generation time of 4.7 days this would translate in an increased 
 # infectiousness (multiplicative effect on Rt) of
-exp(fit_be_uk2_4_emtrends[,c(2,5,6)]*4.7) 
-# 1.57 [1.42-1.73] 95% CLs
-
-# growth & transmission advantage evaluated one month ago (1/1/2021):
-fit_be_uk2_4_emtrends = as.data.frame(emtrends(fit_be_uk2_4, revpairwise ~ 1, 
-                                               var="collection_date_num", 
-                                               at=list(REGION="Belgium",
-                                                       collection_date_num=as.numeric(as.Date("2021-01-01"))),
-                                               mode="link", adjust="Tukey")$emtrends)
-fit_be_uk2_4_emtrends[,c(2,5,6)]
-# 0.17 [0.11-0.24] 95% CLs
-# with a generation time of 4.7 days this would translate in an increased 
-# infectiousness (multiplicative effect on Rt) of
-exp(fit_be_uk2_4_emtrends[,c(2,5,6)]*4.7) 
-# 2.27 [1.66-3.12] 95% CLs
-
-
-# for comparison: growth rate advantage for South East UK mid-November (differences in growth rate between VOC and old strains):
-# results model :
-fit_be_uk2_4_emtrends = as.data.frame(emtrends(fit_be_uk2_4, revpairwise ~ 1, 
-                                               var="collection_date_num", 
-                                               at=list(REGION="South East",
-                                                       collection_date_num=as.numeric(as.Date("2020-11-14"))),
-                                               mode="link", adjust="Tukey")$emtrends)
-fit_be_uk2_4_emtrends[,c(2,5,6)]
-# 0.086 [0.084-0.089] 95% CLs
-# with a generation time of 4.7 days this would translate in an increased 
-# infectiousness (multiplicative effect on Rt) of
-exp(fit_be_uk2_4_emtrends[,c(2,5,6)]*4.7) 
-# 1.50 [1.49-1.52] 95% CLs
-
-
-
-# taking into account time from infection to diagnosis of ca 7 days this is 
-# the time at which new infections would be by more then 50% or 90% by VOC
-# using the joint UK+Belgium model
-date.to = as.numeric(as.Date("2021-05-01")) # date to extrapolate to
-total.SD = sqrt(sum(sapply(as.data.frame(VarCorr(fit_be_uk2_4))$sdcor, function (x) x^2))) 
-# bias correction for random effects in marginal means, see https://cran.r-project.org/web/packages/emmeans/vignettes/transformations.html#bias-adj
-fit_be_uk2_4_preds = as.data.frame(emmeans(fit_be_uk2_4, ~ collection_date_num, 
-                                           by=c("REGION"), 
-                                           at=list(collection_date_num=seq(as.numeric(min(data_be$collection_date)),
-                                                                       date.to),
-                                                   COUNTRY="Belgium"), 
-                                           type="response"), bias.adjust = TRUE, sigma = total.SD)
-fit_be_uk2_4_preds$collection_date = as.Date(fit_be_uk2_4_preds$collection_date_num, origin="1970-01-01")
-# fit_be_uk2_4_preds$COUNTRY = factor(fit_be_uk2_4_preds$COUNTRY)
-
-# estimated dates at which new infections with UK variant will reach 50, 75 or 90% (at time of infection, assumed 7 days before diagnosis):
-(fit_be_uk2_4_preds$collection_date[fit_be_uk2_4_preds[,"prob"]>=0.5]-7)[1] # >50% by 4th of February [1 Febr - 9 Febr] 95% CLs
-(fit_be_uk2_4_preds$collection_date[fit_be_uk2_4_preds[,"asymp.UCL"]>=0.5]-7)[1]
-(fit_be_uk2_4_preds$collection_date[fit_be_uk2_4_preds[,"asymp.LCL"]>=0.5]-7)[1]
-
-(fit_be_uk2_4_preds$collection_date[fit_be_uk2_4_preds[,"prob"]>=0.9]-7)[1] # >90% by 27th of February [20th Febr - 11th March] 95% CLs
-(fit_be_uk2_4_preds$collection_date[fit_be_uk2_4_preds[,"asymp.UCL"]>=0.9]-7)[1]
-(fit_be_uk2_4_preds$collection_date[fit_be_uk2_4_preds[,"asymp.LCL"]>=0.9]-7)[1]
+exp(fit_ukSGTF_4_emtrends[,c(2,5,6)]*4.7) 
+#    collection_date_num.trend asymp.LCL asymp.UCL
+# 1                  1.685365  1.673998  1.696808
 
 
 # PLOT MODEL FIT
 
-# spline model fit_be_uk2_4
-date.to = as.numeric(as.Date("2021-04-01")) # date to extrapolate to
-total.SD = sqrt(sum(sapply(as.data.frame(VarCorr(fit_be_uk2_4))$sdcor, function (x) x^2))) 
+# spline model fit_ukSGTF_4
+date.to = as.numeric(as.Date("2021-03-01")) # date to extrapolate to
+total.SD = sqrt(sum(sapply(as.data.frame(VarCorr(fit_ukSGTF_4))$sdcor, function (x) x^2))) 
 # bias correction for random effects in marginal means, see https://cran.r-project.org/web/packages/emmeans/vignettes/transformations.html#bias-adj
-fit_be_uk2_4_preds = as.data.frame(emmeans(fit_be_uk2_4, ~ collection_date_num, 
+fit_ukSGTF_4_preds = as.data.frame(emmeans(fit_ukSGTF_4, ~ collection_date_num, 
                                            by=c("REGION"), 
-                                           at=list(collection_date_num=seq(as.numeric(min(data_be_uk2$collection_date)),
+                                           at=list(collection_date_num=seq(as.numeric(min(sgtfdata_uk$collection_date)),
                                                                        date.to)), 
                                            type="response"), bias.adjust = TRUE, sigma = total.SD)
-fit_be_uk2_4_preds$collection_date = as.Date(fit_be_uk2_4_preds$collection_date_num, origin="1970-01-01")
-# fit_be_uk2_2_preds$COUNTRY = factor(fit_be_uk2_2_preds$COUNTRY)
+fit_ukSGTF_4_preds$collection_date = as.Date(fit_ukSGTF_4_preds$collection_date_num, origin="1970-01-01")
 
-n = length(levels(fit_be_uk2_4_preds$REGION))
+n = length(levels(fit_ukSGTF_4_preds$REGION))
 reg_cols = hcl(h = seq(290, 0, length = n + 1), l = 50, c = 255)[1:n]
-reg_cols[2:n] = rev(reg_cols[2:n])
+# reg_cols[2:n] = rev(reg_cols[2:n])
 
-levels_UKregions = c("South East","London","East of England",
-                     "South West","Midlands","North East and Yorkshire",
-                     "Scotland","North West","Wales")
 
-fit_be_uk2_4_preds$REGION = factor(fit_be_uk2_4_preds$REGION, levels=c("Belgium", levels_UKregions))
-data_be_uk2$REGION = factor(data_be_uk2$REGION, levels=c("Belgium", levels_UKregions))
+# PLOT MODEL FIT (logit scale):
+plot_UK_SGTF = qplot(data=fit_ukSGTF_4_preds, x=collection_date, y=prob, geom="blank") +
+  # facet_wrap(~COUNTRY) +
+  geom_ribbon(aes(y=prob, ymin=asymp.LCL, ymax=asymp.UCL, colour=NULL, 
+                  fill=REGION
+  ), 
+  # fill=I("steelblue"), 
+  alpha=I(0.3)) +
+  geom_line(aes(y=prob, 
+                colour=REGION
+  ), 
+  # colour=I("steelblue"), 
+  alpha=I(0.8)) +
+  ylab("Relative abundance of B.1.1.7 (%)") +
+  theme_hc() + 
+  xlab("") + 
+  # scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
+  #                   labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
+  scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
+                      labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
+  coord_cartesian(# xlim=c(as.Date("2020-09-01"),as.Date("2021-02-01")), 
+    # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")), 
+    ylim=c(0.001,99.9), expand=c(0,0)) +
+  scale_color_manual("", values=reg_cols) +
+  scale_fill_manual("", values=reg_cols) +
+  # scale_color_discrete("", h=c(0, 280), c=200) +
+  # scale_fill_discrete("", h=c(0, 280), c=200) +
+  geom_point(data=sgtfdata_uk, 
+             aes(x=collection_date, y=propB117, size=n_pos,
+                 colour=REGION
+             ), 
+             # colour=I("steelblue"), 
+             alpha=I(0.5)) +
+  scale_size_continuous("number of\npositive tests (Ct<30)", trans="sqrt", 
+                        range=c(1, 4), limits=c(1,10000), breaks=c(100,1000,10000)) +
+  # guides(fill=FALSE) + 
+  # guides(colour=FALSE) + 
+  theme(legend.position = "right") +
+  xlab("Collection date") +
+  ggtitle("UK") +
+  theme(plot.title = element_text(hjust = 0.5))
+plot_UK_SGTF
 
-# on response scale:
-plot_fit_be_uk2_4_response = qplot(data=fit_be_uk2_4_preds, x=collection_date, y=prob*100, geom="blank") +
+
+# PLOT MODEL FIT (response scale):
+plot_UK_SGTF_response = qplot(data=fit_ukSGTF_4_preds, x=collection_date, y=prob*100, geom="blank") +
   # facet_wrap(~COUNTRY) +
   geom_ribbon(aes(y=prob*100, ymin=asymp.LCL*100, ymax=asymp.UCL*100, colour=NULL, 
                   fill=REGION
@@ -1082,9 +1038,9 @@ plot_fit_be_uk2_4_response = qplot(data=fit_be_uk2_4_preds, x=collection_date, y
   ), 
   # colour=I("steelblue"), 
   alpha=I(0.8)) +
-  ylab("Relative abundance of 501Y.V1 (%)") +
-  theme_hc() + xlab("") + 
-  # ggtitle("GROWTH OF 501Y.V1 IN BELGIUM & THE UK") +
+  ylab("Relative abundance of B.1.1.7 (%)") +
+  theme_hc() + 
+  xlab("") + 
   # scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
   #                   labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
   # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
@@ -1096,64 +1052,26 @@ plot_fit_be_uk2_4_response = qplot(data=fit_be_uk2_4_preds, x=collection_date, y
   scale_fill_manual("", values=reg_cols) +
   # scale_color_discrete("", h=c(0, 280), c=200) +
   # scale_fill_discrete("", h=c(0, 280), c=200) +
-  geom_point(data=data_be_uk2, 
-             aes(x=collection_date, y=PROP*100, size=TOTAL,
+  geom_point(data=sgtfdata_uk, 
+             aes(x=collection_date, y=propB117*100, size=n_pos,
                  colour=REGION
              ), 
              # colour=I("steelblue"), 
              alpha=I(0.5)) +
-  scale_size_continuous("number of\npositive tests", trans="log10", 
-                        range=c(1, 4), limits=c(100,10000), breaks=c(100,1000,10000)) +
+  scale_size_continuous("number of\npositive tests (Ct<30)", trans="sqrt", 
+                        range=c(1, 4), limits=c(1,10000), breaks=c(100,1000,10000)) +
   # guides(fill=FALSE) + 
   # guides(colour=FALSE) + 
   theme(legend.position = "right") +
-  xlab("Collection date")
-plot_fit_be_uk2_4_response
-
-saveRDS(plot_fit_be_uk2_4_response, file = paste0(".\\plots\\",dat,"\\plot_fit_be_uk2_4_S dropout data BE and UK_binomial spline GLMM.rds"))
-graph2ppt(file=paste0(".\\plots\\",dat,"\\plot_fit_be_uk2_4_S dropout data BE and UK_binomial spline GLMM.pptx"), width=8, height=6)
-ggsave(file=paste0(".\\plots\\",dat,"\\plot_fit_be_uk2_4_S dropout data BE and UK_binomial spline GLMM.png"), width=8, height=6)
-ggsave(file=paste0(".\\plots\\",dat,"\\plot_fit_be_uk2_4_S dropout data BE and UK_binomial spline GLMM.pdf"), width=8, height=6)
+  xlab("Collection date") +
+  ggtitle("UK") +
+  theme(plot.title = element_text(hjust = 0.5))
+plot_UK_SGTF_response
 
 
 
-
-# results separate-slopes per region model:                         
-fit_be_uk2_2_emtrends = emtrends(fit_be_uk2_2, ~ REGION, 
-                                 var="collection_date_num", 
-                                 mode="link")
-fit_be_uk2_2_emtrends
-# REGION                   collection_date_num.trend       SE  df asymp.LCL asymp.UCL
-# Belgium                                 0.1256 0.005374 Inf    0.1150    0.1361
-# South East                              0.0888 0.001166 Inf    0.0865    0.0910
-# London                                  0.0876 0.000992 Inf    0.0857    0.0896
-# East of England                         0.1044 0.001251 Inf    0.1019    0.1068
-# South West                              0.0913 0.001097 Inf    0.0891    0.0934
-# Midlands                                0.1084 0.001341 Inf    0.1058    0.1110
-# North East and Yorkshire                0.0716 0.000950 Inf    0.0698    0.0735
-# North West                              0.0914 0.001588 Inf    0.0883    0.0946
-# 
-# Confidence level used: 0.95 
-
-# significance of differences in slope in Belgium vs in different regions in the UK:
-fit_be_uk2_2_contrasts = emtrends(fit_be_uk2_2, trt.vs.ctrl ~ REGION, var="collection_date_num", mode="link", reverse=TRUE)$contrasts
-fit_be_uk2_2_contrasts
-# contrast                           estimate      SE  df z.ratio p.value
-# Belgium - South East                0.02714 0.00800 Inf 3.394   0.0045 
-# Belgium - London                    0.02825 0.00797 Inf 3.543   0.0026 
-# Belgium - East of England           0.01152 0.00801 Inf 1.438   0.5373 
-# Belgium - South West                0.02463 0.00799 Inf 3.083   0.0129 
-# Belgium - Midlands                  0.00751 0.00803 Inf 0.935   0.8372 
-# Belgium - North East and Yorkshire  0.04428 0.00797 Inf 5.556   <.0001 
-# Belgium - North West                0.02445 0.00807 Inf 3.029   0.0153 
-# 
-# P value adjustment: dunnettx method for 7 tests 
-
-
-
-
-# 5. JOINT ANALYSIS OF BELGIAN S DROPOUT DATA WITH COG-UK SEQUENCING DATA ####
-# (NOT INCLUDED IN REPORT)
+# 6.2. DATA UK: COG-UK SEQUENCING DATA ####
+# (NOT UPDATED YET & NOT INCLUDED IN REPORT)
 
 data_uk = read.csv(".//data//uk//COGUKdata_agbydayregion.csv") 
 data_uk = data_uk[data_uk$variant=="VOC 202012/01",]
@@ -1166,144 +1084,144 @@ data_be = data_be[,c("collection_date","COUNTRY","REGION","VOC","TOTAL")]
 data_uk$COUNTRY = "UK"
 data_uk = data_uk[,c("collection_date","COUNTRY","nhs_name","count","total")]
 colnames(data_uk) = c("collection_date","COUNTRY","REGION","VOC","TOTAL")
+# XXX
 
-# joined Belgian S dropout & COG-UK data
-data_be_uk = rbind(data_be, data_uk)
-data_be_uk$COUNTRY = factor(data_be_uk$COUNTRY)
-data_be_uk$collection_date_num = as.numeric(data_be_uk$collection_date)
-data_be_uk$PROP = data_be_uk$n_b117/data_be_uk$TOTAL
-data_be_uk = data_be_uk[data_be_uk$collection_date>as.Date("2020-08-01"),]
-data_be_uk$obs = factor(1:nrow(data_be_uk)) # for observation-level random effect, to take into account overdispersion
-head(data_be_uk)
 
-set_sum_contrasts()
-glmersettings = glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e4)) # PS : to try all optimizer run all_fit(fit1)
-fit_be_uk1 = glmer(cbind(VOC, TOTAL-VOC) ~ (1|obs)+scale(collection_date_num)+COUNTRY+REGION, family=binomial(logit), 
-             data=data_be_uk, control=glmersettings)  # common slope model for country
-fit_be_uk2 = glmer(cbind(VOC, TOTAL-VOC) ~ (1|obs)+scale(collection_date_num)*COUNTRY+REGION, family=binomial(logit), 
-             data=data_be_uk, control=glmersettings) # separate slopes model for country
-fit_be_uk3 = glmer(cbind(VOC, TOTAL-VOC) ~ (1|obs)+ns(collection_date_num,df=2)+COUNTRY+REGION, family=binomial(logit), 
-                   data=data_be_uk, control=glmersettings)  # with additive 2 df spline
-fit_be_uk4 = glmer(cbind(VOC, TOTAL-VOC) ~ (1|obs)+ns(collection_date_num,df=2)*COUNTRY+REGION, family=binomial(logit), 
-                   data=data_be_uk, control=glmersettings) # with 2 df spline in interaction with country
-BIC(fit_be_uk1,fit_be_uk2,fit_be_uk3,fit_be_uk4) 
-# common-slope model fits best, i.e. no evidence for the rate of the VOC displacing other variants being different in Belgium vs in the UK
-#       df      BIC
-# fit_be_uk1 18 2750.357
-# fit_be_uk2 19 2742.109
-# fit_be_uk3 19 2754.407
-# fit_be_uk4 21 2744.210
 
-summary(fit_be_uk1)
-summary(fit_be_uk2)
 
-# growth rate advantage (differences in growth rate between VOC and old strains):
-# results common-slope model:
-fit_be_uk1_emtrends = as.data.frame(emtrends(fit_be_uk4, revpairwise ~ 1, 
-                                             var="collection_date_num", 
-                                             at=list(collection_date_num=as.numeric(as.Date("2021-02-01"))),
-                                             mode="link", adjust="Tukey")$emtrends)
-fit_be_uk1_emtrends[,c(2,5,6)]
-# 0.09 [0.07-0.11] 95% CLs
+# 6.3. DATA SWITZERLAND ####
+
+# data from https://ispmbern.github.io/covid-19/variants/ & https://github.com/covid-19-Re/variantPlot/raw/master/data/data.csv
+
+data_geneva = read.csv("https://ispmbern.github.io/covid-19/variants/data/variants_GE.csv")
+data_geneva$date = as.Date(data_geneva$date)
+data_geneva$lab = "Geneva"
+colnames(data_geneva)[colnames(data_geneva) %in% c("N501Y")] = c("n_B117")
+head(data_geneva)
+data_zurich = read.csv("https://ispmbern.github.io/covid-19/variants/data/variants_ZH.csv")
+data_zurich$date = as.Date(data_zurich$date)
+data_zurich$lab = "Zürich"
+colnames(data_zurich)[colnames(data_zurich) %in% c("N501Y")] = c("n_B117")
+head(data_zurich)
+data_viollier_risch = read.csv("https://github.com/covid-19-Re/variantPlot/raw/master/data/data.csv")
+data_viollier_risch[is.na(data_viollier_risch)] = 0
+data_viollier_risch$date = as.Date(NA)
+data_viollier_risch$date[data_viollier_risch$week>=51] = lubridate::ymd( "2020-01-01" ) + 
+  lubridate::weeks( data_viollier_risch$week[data_viollier_risch$week>=51] - 1 ) + 1
+data_viollier_risch$date[data_viollier_risch$week<51] = lubridate::ymd( "2021-01-01" ) + 
+  lubridate::weeks( data_viollier_risch$week[data_viollier_risch$week<51] - 1 ) + 6 # PS dates were made to match the ones given in https://ispmbern.github.io/covid-19/variants/data/variants_CH.csv
+colnames(data_viollier_risch)[colnames(data_viollier_risch) %in% c("n","b117")] = c("total","n_B117")
+data_viollier_risch = data_viollier_risch[,c("date","total","n_B117","lab")]
+data_switzerland = rbind(data_geneva, data_zurich, data_viollier_risch)[,c("date","lab","n_B117","total")]
+data_switzerland$lab = factor(data_switzerland$lab, levels=c("Geneva","Zürich","Viollier","Risch"),
+                                 labels=c("Geneva University Hospitals","University Hospital Zürich","Viollier lab","Risch lab"))
+data_switzerland$date_num = as.numeric(data_switzerland$date)
+data_switzerland$obs = factor(1:nrow(data_switzerland))
+data_switzerland$propB117 = data_switzerland$n_B117 / data_switzerland$total
+
+
+fit_switerland = glmer(cbind(n_B117,total-n_B117) ~ (1|obs)+lab+scale(date_num), family=binomial(logit), data=data_switzerland)
+summary(fit_switerland)
+
+# avg growth rate advantage for SWITZERLAND (difference in growth rate between B.1.1.7 and old strains):
+fit_switzerland_emtrends = as.data.frame(emtrends(fit_switerland, revpairwise ~ 1, 
+                                               var="date_num",
+                                               mode="link", adjust="Tukey")$emtrends)
+fit_switzerland_emtrends[,c(2,5,6)]
+#   collection_date_num.trend asymp.LCL asymp.UCL
+# 1                 0.108048 0.09565667 0.1204394
+
 # with a generation time of 4.7 days this would translate in an increased 
 # infectiousness (multiplicative effect on Rt) of
-exp(fit_be_uk1_emtrends[,c(2,5,6)]*4.7) 
-# 1.54 [1.39-1.71] 95% CLs
-
-# results separate-slopes per country model:                         
-# although one might think there are some slight differences in the growth rate advantage across the UK & Belgium:
-fit_be_uk2_emtrends = emtrends(fit_be_uk4, revpairwise ~ COUNTRY, 
-                               var="collection_date_num", 
-                               at=list(collection_date_num=as.numeric(as.Date("2021-02-01"))),
-                               mode="link")$emtrends
-fit_be_uk2_emtrends
-# COUNTRY collection_date_num.trend     SE  df asymp.LCL asymp.UCL
-# Belgium                0.1135 0.0177 Inf    0.0787    0.1482
-# UK                     0.0712 0.0132 Inf    0.0453    0.0971
-# 
-# Confidence level used: 0.95 
-
-# these differences in slope are not actually significant:
-fit_be_uk2_contrasts = emtrends(fit_be_uk4, pairwise ~ COUNTRY, var="collection_date_num", mode="link")$contrasts
-fit_be_uk2_contrasts
-# contrast     estimate      SE  df z.ratio p.value
-# Belgium - UK    0.141 0.762 Inf 0.186   0.8528 
+exp(fit_switzerland_emtrends[,c(2,5,6)]*4.7) 
+#   date_num.trend asymp.LCL asymp.UCL
+# 1       1.661674  1.567664  1.761323
 
 
-
-
-# taking into account time from infection to diagnosis of ca 7 days this is 
-# the time at which new infections would be by more then 50% or 90% by VOC
-# using the joint UK+Belgium
-date.to = as.numeric(as.Date("2021-05-30")) # date to extrapolate to
-total.SD = sqrt(sum(sapply(as.data.frame(VarCorr(fit_be_uk1))$sdcor, function (x) x^2))) 
-# bias correction for random effects in marginal means, see https://cran.r-project.org/web/packages/emmeans/vignettes/transformations.html#bias-adj
-fit_be_uk1_preds = as.data.frame(emmeans(fit_be_uk1, ~ collection_date_num, 
-                                         by=c("COUNTRY","REGION"), 
-                                         at=list(collection_date_num=seq(min(data_be_uk$collection_date_num),
-                                                                     date.to),
-                                                 COUNTRY="Belgium"), 
-                                         type="response"), bias.adjust = TRUE, sigma = total.SD)
-fit_be_uk1_preds$collection_date = as.Date(fit_be_uk1_preds$collection_date_num, origin="1970-01-01")
-fit_be_uk1_preds$COUNTRY = factor(fit_be_uk1_preds$COUNTRY)
-
-# estimated dates:
-(fit_be_uk1_preds$collection_date[fit_be_uk1_preds[,"prob"]>=0.5]-7)[1] # >50% by 4th of February [31 Jan - 7 Febr] 95% CLs
-(fit_be_uk1_preds$collection_date[fit_be_uk1_preds[,"asymp.UCL"]>=0.5]-7)[1]
-(fit_be_uk1_preds$collection_date[fit_be_uk1_preds[,"asymp.LCL"]>=0.5]-7)[1]
-
-(fit_be_uk1_preds$collection_date[fit_be_uk1_preds[,"prob"]>=0.75]-7)[1] # >75% by 15th of February [11 Febr - 19 Febr 95% CLs
-(fit_be_uk1_preds$collection_date[fit_be_uk1_preds[,"asymp.UCL"]>=0.75]-7)[1]
-(fit_be_uk1_preds$collection_date[fit_be_uk1_preds[,"asymp.LCL"]>=0.75]-7)[1]
-
-(fit_be_uk1_preds$collection_date[fit_be_uk1_preds[,"prob"]>=0.9]-7)[1] # >90% by 26th of February [22 Febr - 2 March] 95% CLs
-(fit_be_uk1_preds$collection_date[fit_be_uk1_preds[,"asymp.UCL"]>=0.9]-7)[1]
-(fit_be_uk1_preds$collection_date[fit_be_uk1_preds[,"asymp.LCL"]>=0.9]-7)[1]
-
-
+# PS: note that the effect on Rt is in https://ispmbern.github.io/covid-19/variants/
+# (1) assumed to be additive as opposed to multiplicative (not quite correct -
+# with gamma distributed gen time and small k Rt=exp(r*GT) and multiplicative
+# is the logical choice and mult effect on Rt = exp(logistic regression slope*GT);
+# (for derivation see https://cmmid.github.io/topics/covid19/uk-novel-variant.html)
+# with exponentially distributed GT Rt=r*GT and multiplicative effect on Rt = 1+logistic slope*GT, 
+# (2) that unlike in our analysis overdispersion is ignored and that (3) a generation time 
+# of 5.2 days instead of 4.7 days is used.
 
 
 # PLOT MODEL FIT
 
-# separate slopes across countries model fit_be_uk2
 date.to = as.numeric(as.Date("2021-03-01")) # date to extrapolate to
-total.SD = sqrt(sum(sapply(as.data.frame(VarCorr(fit_be_uk2))$sdcor, function (x) x^2))) 
+total.SD = sqrt(sum(sapply(as.data.frame(VarCorr(fit_switerland))$sdcor, function (x) x^2))) 
 # bias correction for random effects in marginal means, see https://cran.r-project.org/web/packages/emmeans/vignettes/transformations.html#bias-adj
-fit_be_uk2_preds = as.data.frame(emmeans(fit_be_uk2, ~ collection_date_num, 
-                                   by=c("COUNTRY","REGION"), 
-                                   at=list(collection_date_num=seq(min(data_be_uk$collection_date_num),
-                                                               date.to)), 
-                                   type="response"), bias.adjust = TRUE, sigma = total.SD)
-fit_be_uk2_preds$collection_date = as.Date(fit_be_uk2_preds$collection_date_num, origin="1970-01-01")
-fit_be_uk2_preds$COUNTRY = factor(fit_be_uk2_preds$COUNTRY)
+fit_switzerland_preds = as.data.frame(emmeans(fit_switerland, ~ date_num, 
+                                              by=c("lab"), 
+                                              at=list(date_num=seq(as.numeric(min(data_switzerland$date)),
+                                                                              date.to)), 
+                                              type="response"), bias.adjust = TRUE, sigma = total.SD)
+fit_switzerland_preds$date = as.Date(fit_switzerland_preds$date_num, origin="1970-01-01")
 
-n = length(levels(fit_be_uk2_preds$REGION))
+n = length(levels(fit_switzerland_preds$lab))
 reg_cols = hcl(h = seq(290, 0, length = n + 1), l = 50, c = 255)[1:n]
-reg_cols[8:n] = rev(reg_cols[8:n])
+# reg_cols[2:n] = rev(reg_cols[2:n])
 
-levels_UKregions = c("South East","London","East of England",
-                    "South West","Midlands","North East and Yorkshire",
-                    "Scotland","North West","Wales")
+# PLOT MODEL FIT (logit scale):
+plot_switzerland = qplot(data=fit_switzerland_preds, x=date, y=prob, geom="blank") +
+  geom_ribbon(aes(y=prob, ymin=asymp.LCL, ymax=asymp.UCL, colour=NULL, 
+                  fill=lab
+  ), 
+  # fill=I("steelblue"), 
+  alpha=I(0.3)) +
+  geom_line(aes(y=prob, 
+                colour=lab
+  ), 
+  # colour=I("steelblue"), 
+  alpha=I(0.8)) +
+  ylab("Relative abundance of B.1.1.7 (%)") +
+  theme_hc() + 
+  xlab("") + 
+  # scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
+  #                   labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
+  scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
+                      labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
+  coord_cartesian(# xlim=c(as.Date("2020-09-01"),as.Date("2021-02-01")), 
+    # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")), 
+    ylim=c(0.001,99.9), expand=c(0,0)) +
+  scale_color_manual("", values=reg_cols) +
+  scale_fill_manual("", values=reg_cols) +
+  # scale_color_discrete("", h=c(0, 280), c=200) +
+  # scale_fill_discrete("", h=c(0, 280), c=200) +
+  geom_point(data=data_switzerland, 
+             aes(x=date, y=propB117, size=total,
+                 colour=lab
+             ), 
+             # colour=I("steelblue"), 
+             alpha=I(0.5)) +
+  scale_size_continuous("total n", trans="sqrt", 
+                        range=c(1, 4), limits=c(1,2000), breaks=c(10,100,1000)) +
+  # guides(fill=FALSE) + 
+  # guides(colour=FALSE) + 
+  theme(legend.position = "right") +
+  xlab("Collection date") +
+  ggtitle("SWITZERLAND") +
+  theme(plot.title = element_text(hjust = 0.5))
+plot_switzerland
 
-fit_be_uk2_preds$REGION = factor(fit_be_uk2_preds$REGION, levels=c(levels_BE, levels_UKregions))
-data_be_uk$REGION = factor(data_be_uk$REGION, levels=c(levels_BE, levels_UKregions))
 
-# on response scale:
-plot_fit_be_uk2_response = qplot(data=fit_be_uk2_preds, x=collection_date, y=prob*100, geom="blank") +
-  # facet_wrap(~COUNTRY) +
+# PLOT MODEL FIT (response scale):
+plot_switzerland_response = qplot(data=fit_switzerland_preds, x=date, y=prob*100, geom="blank") +
   geom_ribbon(aes(y=prob*100, ymin=asymp.LCL*100, ymax=asymp.UCL*100, colour=NULL, 
-                  fill=REGION
+                  fill=lab
   ), 
   # fill=I("steelblue"), 
   alpha=I(0.3)) +
   geom_line(aes(y=prob*100, 
-                colour=REGION
+                colour=lab
   ), 
   # colour=I("steelblue"), 
   alpha=I(0.8)) +
-  ylab("Relative abundance of 501Y.V1 (%)") +
-  theme_hc() + xlab("") + 
-  # ggtitle("GROWTH OF 501Y.V1 IN BELGIUM & THE UK") +
+  ylab("Relative abundance of B.1.1.7 (%)") +
+  theme_hc() + 
+  xlab("") + 
   # scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
   #                   labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
   # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
@@ -1315,106 +1233,29 @@ plot_fit_be_uk2_response = qplot(data=fit_be_uk2_preds, x=collection_date, y=pro
   scale_fill_manual("", values=reg_cols) +
   # scale_color_discrete("", h=c(0, 280), c=200) +
   # scale_fill_discrete("", h=c(0, 280), c=200) +
-  geom_point(data=data_be_uk, 
-             aes(x=collection_date, y=PROP*100, size=TOTAL,
-                 colour=REGION
+  geom_point(data=data_switzerland, 
+             aes(x=date, y=propB117*100, size=total,
+                 colour=lab
              ), 
              # colour=I("steelblue"), 
              alpha=I(0.5)) +
-  scale_size_continuous("number of\npositive tests", trans="sqrt", 
-                        range=c(1, 4), limits=c(1,1000), breaks=c(10,100,1000)) +
+  scale_size_continuous("total n", trans="sqrt", 
+                        range=c(1, 4), limits=c(1,2000), breaks=c(500,1000,2000)) +
   # guides(fill=FALSE) + 
   # guides(colour=FALSE) + 
   theme(legend.position = "right") +
-  xlab("Collection date")
-plot_fit_be_uk2_response
+  xlab("Collection date") +
+  ggtitle("SWITZERLAND") +
+  theme(plot.title = element_text(hjust = 0.5))
+plot_switzerland_response
 
 
-saveRDS(plot_fit_be_uk2_response, file = paste0(".\\plots\\",dat,"\\plot_fit_S dropout BE COGUK sequencing data_binomial spline GLMM.rds"))
-graph2ppt(file=paste0(".\\plots\\",dat,"\\plot_fit_S dropout BE COGUK sequencing data_binomial spline GLMM.pptx"), width=8, height=6)
-ggsave(file=paste0(".\\plots\\",dat,"\\plot_fit_S dropout BE COGUK sequencing data_binomial spline GLMM.png"), width=8, height=6)
-ggsave(file=paste0(".\\plots\\",dat,"\\plot_fit_S dropout BE COGUK sequencing data_binomial spline GLMM.pdf"), width=8, height=6)
 
 
-# 6. SOME INTERNATIONAL COMPARISONS ####
 
-# 6.1. DATA SWITZERLAND ####
+# 6.4. DATA DENMARK: SEQUENCING DATA ####
 
-# data from https://ispmbern.github.io/covid-19/variants/
-
-data_geneva = read.csv("https://ispmbern.github.io/covid-19/variants/data/variants_GE.csv")
-data_geneva$date = as.Date(data_geneva$date)
-data_geneva$date_num = as.numeric(data_geneva$date)
-data_geneva$obs = factor(1:nrow(data_geneva))
-data_zurich = read.csv("https://ispmbern.github.io/covid-19/variants/data/variants_ZH.csv")
-data_zurich$date = as.Date(data_zurich$date)
-data_zurich$date_num = as.numeric(data_zurich$date)
-data_zurich$obs = factor(1:nrow(data_zurich))
-data_switzerland = read.csv("https://ispmbern.github.io/covid-19/variants/data/variants_CH.csv")
-data_switzerland$date = as.Date(data_switzerland$date)
-data_switzerland$date_num = as.numeric(data_switzerland$date)
-data_switzerland$obs = factor(1:nrow(data_switzerland))
-sum(data_switzerland[,"B117"]) # 302
-sum(data_switzerland[,"total"]) # 12805
-
-fit_geneva = glm(cbind(N501Y,total-N501Y)~date_num, family=quasibinomial(logit), data=data_geneva)
-summary(fit_geneva)
-cbind(coef(fit_geneva),confint(fit_geneva))[2,] # 0.11 [0.07-0.16] 95% CLs
-exp(4.7*cbind(coef(fit_geneva),confint(fit_geneva))[2,]) # 1.67 [1.36-2.08] 
-as.data.frame(emmeans(fit_geneva, ~date_num, at=list(date_num=as.numeric(as.Date("2021-02-07"))), type="response"))[,c(2,5,6)] # 71% [55-83%]
-fit_zurich = glm(cbind(N501Y,total-N501Y)~date_num, family=quasibinomial(logit), data=data_zurich)
-summary(fit_zurich)
-cbind(coef(fit_zurich),confint(fit_zurich))[2,] # 0.10 [0.07-0.14] 95% CLs
-exp(4.7*cbind(coef(fit_zurich),confint(fit_zurich))[2,]) # 1.61 [1.37-1.92] 
-as.data.frame(emmeans(fit_zurich, ~date_num, at=list(date_num=as.numeric(as.Date("2021-02-07"))), type="response"))[,c(2,5,6)] # 40% [27-55%]
-fit_switzerland = glm(cbind(B117,total-B117)~date_num, family=quasibinomial(logit), data=data_switzerland)
-summary(fit_switzerland)
-cbind(coef(fit_switzerland),confint(fit_switzerland))[2,] # 0.11 [0.095-0.14] 95% CLs
-exp(4.7*cbind(coef(fit_switzerland),confint(fit_switzerland))[2,]) # 1.71 [1.56-1.88] 
-as.data.frame(emmeans(fit_switzerland, ~date_num, at=list(date_num=as.numeric(as.Date("2021-02-07"))), type="response"))[,c(2,5,6)] # 42% [31-56%]
-# PS: note that the effect on Rt is in https://ispmbern.github.io/covid-19/variants/
-# (1) assumed to be additive as opposed to multiplicative (not quite correct -
-# with gamma distributed gen time and small k Rt=exp(r*GT) and multiplicative
-# is the logical choice and mult effect on Rt = exp(logistic regression slope*GT);
-# (for derivation see https://cmmid.github.io/topics/covid19/uk-novel-variant.html)
-# with exponentially distributed GT Rt=r*GT and multiplicative effect on Rt = 1+logistic slope*GT, 
-# (2) that unlike in our analysis overdispersion is ignored and that (3) a generation time 
-# of 5.2 days instead of 4.7 days is used.
-
-
-# from randomly selected variants reported by Viollier lab (Basel) & Risch lab 
-# (branches throughout Switzerland, e.g. in Zurich & Bern, https://www.risch.ch/de/locations)
-# PS : this is the same data as above, just more recent (1 week more for Rish lab data) & split up by lab
-data_switzerland2 = read.csv("https://github.com/covid-19-Re/variantPlot/raw/master/data/data.csv")
-data_switzerland2[is.na(data_switzerland2)] = 0
-data_switzerland2$date = as.Date(NA)
-data_switzerland2$date[data_switzerland2$week>=51] = lubridate::ymd( "2020-01-01" ) + 
-  lubridate::weeks( data_switzerland2$week[data_switzerland2$week>=51] - 1 ) + 1
-data_switzerland2$date[data_switzerland2$week<51] = lubridate::ymd( "2021-01-01" ) + 
-  lubridate::weeks( data_switzerland2$week[data_switzerland2$week<51] - 1 ) + 6 # PS dates were made to match the ones given in https://ispmbern.github.io/covid-19/variants/data/variants_CH.csv
-data_switzerland2$date_num = as.numeric(data_switzerland2$date)
-data_switzerland2$obs = factor(1:nrow(data_switzerland2))
-data_switzerland2$prop = data_switzerland2$b117/data_switzerland2$n
-data_switzerland2$lab = factor(data_switzerland2$lab)
-sum(data_switzerland2[-nrow(data_switzerland2),"b117"]) # 302
-sum(data_switzerland2[-nrow(data_switzerland2),"n"]) # 12805
-
-summary(fit_switzerland2)
-as.data.frame(emtrends(fit_switzerland2, ~ 1, "date_num"))[,c(2,5,6)]
-#   date_num.trend  asymp.LCL asymp.UCL
-# 1      0.1209993 0.09777233 0.1442262
-exp(4.7*as.data.frame(emtrends(fit_switzerland2, ~ 1, "date_num"))[,c(2,5,6)])
-#   date_num.trend asymp.LCL asymp.UCL
-# 1       1.765964   1.58333  1.969664
-as.data.frame(emmeans(fit_switzerland2, ~date_num, 
-                      at=list(date_num=as.numeric(as.Date("2021-02-07"))), 
-                      type="response"))[,c(2,5,6)] 
-# 45% [29-62%]
-
-
-# 6.2. DATA DENMARK ####
-
-# analysis of data from Denmark, split by region
+# analysis of sequencing data from Denmark, split by region
 # from https://www.covid19genomics.dk/statistics
 data_denmark = read.csv(".//data/dk//B117_denmark_20210207.csv", sep=";", dec=",")
 data_denmark = data_denmark[data_denmark$Region!="Whole Denmark",]
@@ -1428,27 +1269,161 @@ data_denmark$date[data_denmark$WEEK<42] = lubridate::ymd( "2021-01-01" ) +
   lubridate::weeks( data_denmark$WEEK[data_denmark$WEEK<42] - 1 ) + 6 
 data_denmark$date_num = as.numeric(data_denmark$date)
 data_denmark$obs = factor(1:nrow(data_denmark))
-data_denmark$Region = factor(data_denmark$Region)
-head(data_denmark)
-fit_denmark = glmer(cbind(yes,total-yes) ~ (1|obs) + Region + date_num, family=binomial(logit), data=data_denmark)
+data_denmark$Region = factor(data_denmark$Region, levels=c("Nordjylland","Syddanmark","Sjælland","Hovedstaden","Midtjylland"))
+colnames(data_denmark)[colnames(data_denmark) %in% c("yes")] = "n_B117"
+data_denmark$propB117 = data_denmark$n_B117 / data_denmark$total
+
+fit_denmark = glmer(cbind(n_B117,total-n_B117) ~ (1|obs) + Region + scale(date_num), family=binomial(logit), data=data_denmark)
 summary(fit_denmark)
-as.data.frame(emtrends(fit_denmark, ~ 1, "date_num"))[,c(2,5,6)]
-#   date_num.trend  asymp.LCL  asymp.UCL
-# 1     0.07919027 0.06722759 0.09115295
-exp(4.7*as.data.frame(emtrends(fit_denmark, ~ 1, "date_num"))[,c(2,5,6)])
+
+# avg growth rate advantage for DENMARK (difference in growth rate between B.1.1.7 and old strains):
+fit_denmark_emtrends = as.data.frame(emtrends(fit_denmark, revpairwise ~ 1, 
+                                                  var="date_num",
+                                                  mode="link", adjust="Tukey")$emtrends)
+fit_denmark_emtrends[,c(2,5,6)]
+#   collection_date_num.trend asymp.LCL asymp.UCL
+# 1                 0.07919077 0.06686061 0.09152093
+
+# with a generation time of 4.7 days this would translate in an increased 
+# infectiousness (multiplicative effect on Rt) of
+exp(fit_denmark_emtrends[,c(2,5,6)]*4.7) 
 #   date_num.trend asymp.LCL asymp.UCL
-# 1       1.450915  1.371589  1.534829
-as.data.frame(emmeans(fit_denmark, ~date_num, 
-                      at=list(date_num=as.numeric(as.Date("2021-02-07"))), 
-                      type="response"))[,c(2,5,6)] 
-# 32% [22-44%]
+# 1       1.450918  1.369225  1.537486
 
-# PS note that https://sites.google.com/site/peterreinhardhansen/research-papers/howcontagiousisthebritishvariantofsars-cov-2
-# arrives at a slightly lower growth rate advantage because it uses aggregated counts over the whole of Denmark, and that this
-# pools data from regions where the variant may have been introduced at slightly different times
-# other analysis for DK is presented at https://ispmbern.github.io/covid-19/variants/
+# predicted prop of diagnosed samples that are B.1.1.7 today
+emmeans(fit_denmark, revpairwise ~ Region, at=list(date_num=today_num), type="response")$emmeans
+# Region       prob     SE  df asymp.LCL asymp.UCL
+# Nordjylland 0.429 0.0917 Inf     0.265     0.610
+# Syddanmark  0.401 0.0842 Inf     0.252     0.571
+# Sjælland    0.378 0.0826 Inf     0.234     0.547
+# Hovedstaden 0.336 0.0817 Inf     0.198     0.509
+# Midtjylland 0.255 0.0672 Inf     0.146     0.406
 
-# 6.3. DATA US ####
+emmeans(fit_denmark, revpairwise ~ 1, at=list(date_num=today_num), type="response")$emmeans
+# 1        prob     SE  df asymp.LCL asymp.UCL
+# overall 0.357 0.0605 Inf     0.249     0.482
+
+# predicted prop of infections that are B.1.1.7 today
+emmeans(fit_denmark, revpairwise ~ Region, at=list(date_num=today_num+7), type="response")$emmeans
+# Region       prob     SE  df asymp.LCL asymp.UCL
+# Nordjylland 0.566 0.0997 Inf     0.371     0.743
+# Syddanmark  0.538 0.0944 Inf     0.356     0.711
+# Sjælland    0.514 0.0947 Inf     0.334     0.690
+# Hovedstaden 0.468 0.0995 Inf     0.287     0.658
+# Midtjylland 0.373 0.0891 Inf     0.220     0.556
+
+emmeans(fit_denmark, revpairwise ~ 1, at=list(date_num=today_num+7), type="response")$emmeans
+# 1        prob     SE  df asymp.LCL asymp.UCL
+# overall 0.491 0.0757 Inf     0.348     0.636
+
+
+# PLOT MODEL FIT
+
+date.to = as.numeric(as.Date("2021-03-01")) # date to extrapolate to
+total.SD = sqrt(sum(sapply(as.data.frame(VarCorr(fit_denmark))$sdcor, function (x) x^2))) 
+# bias correction for random effects in marginal means, see https://cran.r-project.org/web/packages/emmeans/vignettes/transformations.html#bias-adj
+fit_denmark_preds = as.data.frame(emmeans(fit_denmark, ~ date_num, 
+                                              by=c("Region"), 
+                                              at=list(date_num=seq(as.numeric(min(data_denmark$date)),
+                                                                   date.to)), 
+                                              type="response"), bias.adjust = TRUE, sigma = total.SD)
+fit_denmark_preds$date = as.Date(fit_denmark_preds$date_num, origin="1970-01-01")
+
+n = length(levels(fit_denmark_preds$Region))
+reg_cols = hcl(h = seq(290, 0, length = n + 1), l = 50, c = 255)[1:n]
+# reg_cols[2:n] = rev(reg_cols[2:n])
+
+# PLOT MODEL FIT (response scale)
+plot_denmark = qplot(data=fit_denmark_preds, x=date, y=prob, geom="blank") +
+  geom_ribbon(aes(y=prob, ymin=asymp.LCL, ymax=asymp.UCL, colour=NULL, 
+                  fill=Region
+  ), 
+  # fill=I("steelblue"), 
+  alpha=I(0.3)) +
+  geom_line(aes(y=prob, 
+                colour=Region
+  ), 
+  # colour=I("steelblue"), 
+  alpha=I(0.8)) +
+  ylab("Relative abundance of B.1.1.7 (%)") +
+  theme_hc() + 
+  xlab("") + 
+  # scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
+  #                   labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
+  scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
+                      labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
+  coord_cartesian(# xlim=c(as.Date("2020-09-01"),as.Date("2021-02-01")), 
+    # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")), 
+    ylim=c(0.001,99.9), expand=c(0,0)) +
+  scale_color_manual("", values=reg_cols) +
+  scale_fill_manual("", values=reg_cols) +
+  # scale_color_discrete("", h=c(0, 280), c=200) +
+  # scale_fill_discrete("", h=c(0, 280), c=200) +
+  geom_point(data=data_denmark, 
+             aes(x=date, y=propB117, size=total,
+                 colour=Region
+             ), 
+             # colour=I("steelblue"), 
+             alpha=I(0.5)) +
+  scale_size_continuous("total n", trans="sqrt", 
+                        range=c(1, 4), limits=c(1,2000), breaks=c(10,100,1000)) +
+  # guides(fill=FALSE) + 
+  # guides(colour=FALSE) + 
+  theme(legend.position = "right") +
+  xlab("Collection date") +
+  ggtitle("DENMARK") +
+  theme(plot.title = element_text(hjust = 0.5))
+plot_denmark
+
+
+# PLOT MODEL FIT (response scale)
+plot_denmark_response = qplot(data=fit_denmark_preds, x=date, y=prob*100, geom="blank") +
+  geom_ribbon(aes(y=prob*100, ymin=asymp.LCL*100, ymax=asymp.UCL*100, colour=NULL, 
+                  fill=Region
+  ), 
+  # fill=I("steelblue"), 
+  alpha=I(0.3)) +
+  geom_line(aes(y=prob*100, 
+                colour=Region
+  ), 
+  # colour=I("steelblue"), 
+  alpha=I(0.8)) +
+  ylab("Relative abundance of B.1.1.7 (%)") +
+  theme_hc() + 
+  xlab("") + 
+  # scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
+  #                   labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
+  # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
+  #                    labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
+  coord_cartesian(# xlim=c(as.Date("2020-09-01"),as.Date("2021-02-01")), 
+    # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")), 
+    ylim=c(0,100), expand=c(0,0)) +
+  scale_color_manual("", values=reg_cols) +
+  scale_fill_manual("", values=reg_cols) +
+  # scale_color_discrete("", h=c(0, 280), c=200) +
+  # scale_fill_discrete("", h=c(0, 280), c=200) +
+  geom_point(data=data_denmark, 
+             aes(x=date, y=propB117*100, size=total,
+                 colour=Region
+             ), 
+             # colour=I("steelblue"), 
+             alpha=I(0.5)) +
+  scale_size_continuous("total n", trans="sqrt", 
+                        range=c(1, 4), limits=c(1,2000), breaks=c(10,100,1000)) +
+  # guides(fill=FALSE) + 
+  # guides(colour=FALSE) + 
+  theme(legend.position = "right") +
+  xlab("Collection date") +
+  ggtitle("DENMARK") +
+  theme(plot.title = element_text(hjust = 0.5))
+plot_denmark_response
+
+
+
+
+
+
+# 6.5. DATA US ####
 
 # US data from https://github.com/andersen-lab/paper_2021_early-b117-usa/tree/master/b117_frequency/data
 # https://www.medrxiv.org/content/10.1101/2021.02.06.21251159v1
@@ -1470,8 +1445,6 @@ tmp = helix_metadata %>%
 tmp = bind_rows(tmp, helix_metadata)
 states_gt_500 = tmp %>% group_by(state) %>% summarise(n = sum(n), n_sgtf = sum(n_sgtf)) %>% filter(n > 500 & n_sgtf > 0) %>% select(state) %>% as_vector()
 
-
-
 helix_b117$collection_date_num = as.numeric(helix_b117$collection_date)
 helix_b117$obs = factor(1:nrow(helix_b117))
 helix_b117$state = factor(helix_b117$state)
@@ -1489,7 +1462,7 @@ as.data.frame(emtrends(fit_us_propB117amongSGTF, ~ 1, var="collection_date_num")
 # 1                0.08999387 0.06042387 0.1195639
 
 # with a generation time of 4.7 days this would translate to a multiplicative effect on Rt
-# and estimated increased infectiousness of
+# and estimated increased infectiousness of B.1.1.7 over other strains showing S dropout of
 exp(4.7*as.data.frame(emtrends(fit_us_propB117amongSGTF, ~ 1, var="collection_date_num"))[,c(2,5,6)])
 #   collection_date_num.trend asymp.LCL asymp.UCL
 # 1                   1.52649  1.328423   1.75409
@@ -1516,6 +1489,7 @@ summary(fit_us)
 as.data.frame(emtrends(fit_us, ~ 1, "collection_date_num"))[,c(2,5,6)]
 #   date_num.trend  asymp.LCL  asymp.UCL
 # 1     0.08578087 0.07995376 0.09160798
+
 # increased infectiousness for GT=4.7 days: 49% more infectious [46-54%] 95% CLs
 # PS: most logical value to use for GT is the one that has always been used to calculate Rt values in the US, what value is that?
 exp(4.7*as.data.frame(emtrends(fit_us, ~ 1, "collection_date_num"))[,c(2,5,6)])
@@ -1557,8 +1531,8 @@ fit_us_preds2$state = factor(fit_us_preds2$state, # we order states by random in
                              levels=intersect(rownames(ranef(fit_us)$state)[order(ranef(fit_us)$state[,1], decreasing=T)],
                                               sel_states))
 
-# PLOT MODEL FIT
-plot_fitus = qplot(data=fit_us_preds2, x=collection_date, y=prob, geom="blank") +
+# PLOT MODEL FIT (logit scale)
+plot_us = qplot(data=fit_us_preds2, x=collection_date, y=prob, geom="blank") +
   facet_wrap(~state) +
   geom_ribbon(aes(y=prob, ymin=prob.asymp.LCL, ymax=prob.asymp.UCL, colour=NULL, 
                   fill=state
@@ -1572,7 +1546,6 @@ plot_fitus = qplot(data=fit_us_preds2, x=collection_date, y=prob, geom="blank") 
   alpha=I(0.8)) +
   ylab("Relative abundance of B.1.1.7 (%)") +
   theme_hc() + xlab("") + 
-  ggtitle("SPREAD OF B.1.1.7 IN THE US") +
   # scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
   #                   labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
   scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
@@ -1588,23 +1561,25 @@ plot_fitus = qplot(data=fit_us_preds2, x=collection_date, y=prob, geom="blank") 
              ), pch=I(16),
              # colour=I("steelblue"), 
              alpha=I(0.3)) +
-  scale_size_continuous("number of\npositive tests", trans="log10", 
-                        range=c(1, 4), limits=c(10,10^(round(log10(max(helix_sgtf$n)),0)+1)), breaks=c(10,100,1000,10000)) +
+  scale_size_continuous("number of\npositive tests", trans="sqrt", 
+                        range=c(1, 4), limits=c(1,10^(round(log10(max(helix_sgtf$n)),0)+1)), breaks=c(10,100,1000)) +
   # guides(fill=FALSE) + 
   # guides(colour=FALSE) + 
   theme(legend.position = "right") +
   xlab("Collection date") +
-  theme(axis.text.x = element_text(angle = 90, vjust=0.5))
-plot_fitus
+  theme(axis.text.x = element_text(angle = 90, vjust=0.5)) +
+  ggtitle("US") +
+  theme(plot.title = element_text(hjust = 0.5))
+plot_us
 
-saveRDS(plot_fitus, file = paste0(".\\plots\\",dat,"\\fit_us_binomGLMM_B117.rds"))
+saveRDS(plot_us, file = paste0(".\\plots\\",dat,"\\fit_us_binomGLMM_B117.rds"))
 graph2ppt(file=paste0(".\\plots\\",dat,"\\fit_us_binomGLMM_B117.pptx"), width=8, height=6)
-ggsave(plot_fitus, file=paste0(".\\plots\\",dat,"\\fit_us_binomGLMM_B117.png"), width=8, height=6)
-ggsave(plot_fitus, file=paste0(".\\plots\\",dat,"\\fit_us_binomGLMM_B117.pdf"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",dat,"\\fit_us_binomGLMM_B117.png"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",dat,"\\fit_us_binomGLMM_B117.pdf"), width=8, height=6)
 
 
 # PLOT MODEL FIT (response scale)
-plot_fitus_resp = qplot(data=fit_us_preds2, x=collection_date, y=prob*100, geom="blank") +
+plot_us_response = qplot(data=fit_us_preds2, x=collection_date, y=prob*100, geom="blank") +
   facet_wrap(~state) +
   geom_ribbon(aes(y=prob*100, ymin=prob.asymp.LCL*100, ymax=prob.asymp.UCL*100, colour=NULL, 
                   fill=state
@@ -1618,7 +1593,6 @@ plot_fitus_resp = qplot(data=fit_us_preds2, x=collection_date, y=prob*100, geom=
   alpha=I(0.8)) +
   ylab("Relative abundance of B.1.1.7 (%)") +
   theme_hc() + xlab("") + 
-  ggtitle("SPREAD OF B.1.1.7 IN THE US") +
   # scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
   #                   labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
   # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
@@ -1635,269 +1609,188 @@ plot_fitus_resp = qplot(data=fit_us_preds2, x=collection_date, y=prob*100, geom=
              # colour=I("steelblue"), 
              alpha=I(0.3)) +
   scale_size_continuous("number of\npositive tests", trans="log10", 
-                        range=c(1, 4), limits=c(10,10^(round(log10(max(helix_sgtf_subs2$n)),0)+1)), breaks=c(10,100,1000,10000)) +
+                        range=c(1, 4), limits=c(1,10^(round(log10(max(helix_sgtf_subs2$n)),0)+1)), breaks=c(10,100,1000)) +
   # guides(fill=FALSE) + 
   # guides(colour=FALSE) + 
   theme(legend.position = "right") +
   xlab("Collection date") +
-  theme(axis.text.x = element_text(angle = 90, vjust=0.5))
-plot_fitus_resp
+  theme(axis.text.x = element_text(angle = 90, vjust=0.5)) +
+  ggtitle("US") +
+  theme(plot.title = element_text(hjust = 0.5))
 
-saveRDS(plot_fitus_resp, file = paste0(".\\plots\\",dat,"\\fit_us_binomGLMM_B117_resp.rds"))
-graph2ppt(file=paste0(".\\plots\\",dat,"\\fit_us_binomGLMM_B117_resp.pptx"), width=8, height=6)
-ggsave(plot_fitus_resp, file=paste0(".\\plots\\",dat,"\\fit_us_binomGLMM_B117_resp.png"), width=8, height=6)
-ggsave(plot_fitus_resp, file=paste0(".\\plots\\",dat,"\\fit_us_binomGLMM_B117_resp.pdf"), width=8, height=6)
+plot_us_response
 
 
 
-# FIT JUST USING DATA FROM FLORIDA+CALIFORNIA + PLOTS ####
-sel_states = c("FL","CA")
-helix_sgtf_subs = helix_sgtf[helix_sgtf$state %in% sel_states,]
-
-fit_us_propB117amongSGTF_calfl1 = glmer(cbind(n_b117, n_sgtf_seq-n_b117) ~ (1|obs)+state+scale(collection_date_num), 
-                                 family=binomial(logit), data=helix_b117, subset=helix_b117$state %in% sel_states)
-fit_us_propB117amongSGTF_calfl2 = glmer(cbind(n_b117, n_sgtf_seq-n_b117) ~ (1|obs)+state*scale(collection_date_num), 
-                                        family=binomial(logit), data=helix_b117, subset=helix_b117$state %in% sel_states)
-BIC(fit_us_propB117amongSGTF_calfl1,fit_us_propB117amongSGTF_calfl2) # fit_us_propB117amongSGTF_calfl1 fits best
-# implied growth rate advantage of B.1.1.7 over other earlier strains showing S dropout:
-as.data.frame(emtrends(fit_us_propB117amongSGTF_calfl1, ~ 1, var="collection_date_num"))[,c(2,5,6)]
-#   collection_date_num.trend  asymp.LCL asymp.UCL
-# 1                0.07797705 0.04500484 0.1109493
-
-# with a generation time of 4.7 days this would translate to a multiplicative effect on Rt
-# and estimated increased infectiousness of
-exp(4.7*as.data.frame(emtrends(fit_us_propB117amongSGTF_calfl1, ~ 1, var="collection_date_num"))[,c(2,5,6)])
-#    collection_date_num.trend asymp.LCL asymp.UCL
-# 1                   1.442665  1.235558  1.684488
-
-# with a generation time of 5 days this would translate to a multiplicative effect on Rt
-# and estimated increased infectiousness of
-exp(5*as.data.frame(emtrends(fit_us_propB117amongSGTF_calfl1, ~ 1, var="collection_date_num"))[,c(2,5,6)])
-#    collection_date_num.trend asymp.LCL asymp.UCL
-# 1                   1.476811  1.252353  1.741499
-
-# with a generation time of 6.5 days this would translate to a multiplicative effect on Rt
-# and estimated increased infectiousness of
-exp(6.5*as.data.frame(emtrends(fit_us_propB117amongSGTF_calfl1, ~ 1, var="collection_date_num"))[,c(2,5,6)])
-#    collection_date_num.trend asymp.LCL asymp.UCL
-# 1                   1.660055  1.339815  2.056839
 
 
-fitted_truepos_calfl = predict(fit_us_propB117amongSGTF, newdat=helix_sgtf_subs, type="response") 
-helix_sgtf_subs$estB117 = helix_sgtf_subs$n_sgtf*fitted_truepos_calfl # estimated nr of B.1.1.7 samples
-helix_sgtf_subs$propB117 = helix_sgtf_subs$estB117/helix_sgtf_subs$n 
 
-fit_calfl1 = glmer(cbind(estB117, n-estB117) ~ (1|obs)+state+scale(collection_date_num), 
-               family=binomial(logit), data=helix_sgtf_subs)
-fit_calfl2 = glmer(cbind(estB117, n-estB117) ~ (1|obs)+state*scale(collection_date_num), 
-                   family=binomial(logit), data=helix_sgtf_subs)
-BIC(fit_calfl1,fit_calfl2) # model with different slopes per state fits better
-summary(fit_calfl2)
+# 6.6. MULTIPANEL PLOT INTERNATIONAL COMPARISONS ####
 
-# logistic growth rates (growth rate advantage)
-as.data.frame(emtrends(fit_calfl2, ~ state, "collection_date_num"))[,c(1,2,5,6)]
-#   state collection_date_num.trend  asymp.LCL  asymp.UCL
-# 1    CA                0.06684163 0.05852582 0.07515745
-# 2    FL                0.09031168 0.08209082 0.09853253
-# CA+FL:
-as.data.frame(emtrends(fit_calfl2, ~ 1, "collection_date_num"))[,c(1,2,5,6)]
-# 1         collection_date_num.trend  asymp.LCL  asymp.UCL
-# 1 overall                0.07857665 0.07272997 0.08442334
+fit_uk_preds2 = fit_ukSGTF_4_preds
+fit_uk_preds2$country = "UK"
+colnames(fit_uk_preds2)[2] = "REGION"
+colnames(fit_uk_preds2)[1] = "date_num"
+colnames(fit_uk_preds2)[8] = "date"
+fit_switzerland_preds2 = fit_switzerland_preds
+fit_switzerland_preds2$country = "Switzerland"
+colnames(fit_switzerland_preds2)[2] = "REGION"
+colnames(fit_switzerland_preds2)[1] = "date_num"
+colnames(fit_switzerland_preds2)[8] = "date"
+fit_denmark_preds2 = fit_denmark_preds
+fit_denmark_preds2$country = "Denmark"
+colnames(fit_denmark_preds2)[2] = "REGION"
+colnames(fit_denmark_preds2)[1] = "date_num"
+colnames(fit_denmark_preds2)[8] = "date"
 
-# the lower growth rate advantage in CA vs FL is actually significant
-# (though it could be caused by competition from other highly contagious strains,
-# to test that theory one would have to use a multinomial model or multinomial mixed model
-# as in https://cmmid.github.io/topics/covid19/uk-novel-variant.html)
-contrast(emtrends(fit_calfl2, ~ state, "collection_date_num"), method="pairwise")
-# contrast estimate      SE  df z.ratio p.value
-# CA - FL   -0.0235 0.00597 Inf -3.934  0.0001
+fits_international = rbind(fit_uk_preds2,fit_switzerland_preds2,fit_denmark_preds2)
+fits_international$country = factor(fits_international$country, levels=c("UK","Switzerland","Denmark"))
 
-# increased infectiousness for GT=4.7 days: 
-# CA: 37% more infectious [32-42%] 95% CLs
-# FL: 53% more infectious [47-59%] 95% CLs
-# CA+FL: 45% more infectious [41-49%] 95% CLs
-data.frame(state=as.data.frame(emtrends(fit_calfl2, ~ state, "collection_date_num"))[,1],
-      exp(4.7*as.data.frame(emtrends(fit_calfl2, ~ state, "collection_date_num"))[,c(2,5,6)]))
-# state collection_date_num.trend asymp.LCL asymp.UCL
-# 1    CA                  1.369103  1.316625  1.423673
-# 2    FL                  1.528772  1.470830  1.588997
-exp(4.7*as.data.frame(emtrends(fit_calfl2, ~ 1, "collection_date_num"))[,c(2,5,6)])
-# collection_date_num.trend asymp.LCL asymp.UCL
-# 1                  1.446736  1.407522  1.487043
+sgtfdata_uk2 = sgtfdata_uk
+sgtfdata_uk2$country = "UK"
+colnames(sgtfdata_uk2)[colnames(sgtfdata_uk2) %in% c("collection_date","n_pos")] = c("date","total")
+sgtfdata_uk2 = sgtfdata_uk2[,c("date","country","REGION","propB117","total")]
 
-# increased infectiousness for GT=5 days: 
-# CA: 40% more infectious [34-46%] 95% CLs
-# FL: 57% more infectious [51-64%] 95% CLs
-# CA+FL: 48% more infectious [44-53%] 95% CLs
-data.frame(state=as.data.frame(emtrends(fit_calfl2, ~ state, "collection_date_num"))[,1],
-           exp(5*as.data.frame(emtrends(fit_calfl2, ~ state, "collection_date_num"))[,c(2,5,6)]))
-# state collection_date_num.trend asymp.LCL asymp.UCL
-# 1    CA                  1.396834  1.339946  1.456137
-# 2    FL                  1.570758  1.507502  1.636668
-exp(5*as.data.frame(emtrends(fit_calfl2, ~ 1, "collection_date_num"))[,c(2,5,6)])
-# collection_date_num.trend asymp.LCL asymp.UCL
-# 1                  1.481245   1.43857  1.525186
+data_switzerland2 = data_switzerland
+data_switzerland2$country = "Switzerland"
+colnames(data_switzerland2)[colnames(data_switzerland2) %in% c("lab")] = c("REGION")
+data_switzerland2 = data_switzerland2[,c("date","country","REGION","propB117","total")]
 
-# increased infectiousness for GT=6.5days: 
-# CA: 54% more infectious [46-63%] 95% CLs
-# FL: 80% more infectious [71-90%] 95% CLs
-# CA+FL: 67% more infectious [60-73%] 95% CLs
-data.frame(state=as.data.frame(emtrends(fit_calfl2, ~ state, "collection_date_num"))[,1],
-           exp(6.5*as.data.frame(emtrends(fit_calfl2, ~ state, "collection_date_num"))[,c(2,5,6)]))
-# state collection_date_num.trend asymp.LCL asymp.UCL
-# 1    CA                  1.544145  1.462896  1.629908
-# 2    FL                  1.798631  1.705043  1.897356
-exp(6.5*as.data.frame(emtrends(fit_calfl2, ~ 1, "collection_date_num"))[,c(2,5,6)])
-# collection_date_num.trend asymp.LCL asymp.UCL
-# 1                  1.666538  1.604392  1.731091
+data_denmark2 = data_denmark
+data_denmark2$country = "Denmark"
+colnames(data_denmark2)[colnames(data_denmark2) %in% c("Region")] = c("REGION")
+data_denmark2 = data_denmark2[,c("date","country","REGION","propB117","total")]
 
+data_international = rbind(sgtfdata_uk2, data_switzerland2, data_denmark2)
+data_international$country = factor(data_international$country, levels=c("UK","Switzerland","Denmark"))
 
-# plot model fit fit_calfl2
+# n1 = length(levels(fit_uk_preds2$REGION))
+# n2 = length(levels(fit_switzerland_preds2$REGION))
+# n3 = length(levels(fit_denmark_preds2$REGION))
+# reg_cols = c(hcl(h = seq(290, 0, length = n1), l = 50, c = 255),
+#              muted(hcl(h = seq(290, 0, length = n2+n3), l = 50, c = 255), c=200, l=40))
 
-date.to = as.numeric(as.Date("2021-06-01"))
-total.SD = sqrt(sum(sapply(as.data.frame(VarCorr(fit_calfl2))$sdcor, function (x) x^2))) 
-fit_calfl2_preds = as.data.frame(emmeans(fit_calfl2, ~ collection_date_num, 
-                                         by="state", 
-                                         at=list(collection_date_num=seq(min(helix_sgtf_subs$collection_date_num),
-                                                                     date.to)), 
-                                         type="response"), bias.adjust = TRUE, sigma = total.SD)
-fit_calfl2_preds$collection_date = as.Date(fit_calfl2_preds$collection_date_num, origin="1970-01-01")
-fit_calfl2_preds$state = factor(fit_calfl2_preds$state, 
-                                     levels=c("FL","CA"), labels=c("Florida","California"))
-
-# estimated share of B.1.1.7 among currently diagnosed infections based on fit fit_calfl2
-fit_calfl2_preds[fit_calfl2_preds$collection_date==as.Date("2021-02-08"),]
-#     collection_date_num      state       prob          SE  df  asymp.LCL  asymp.UCL collection_date
-# 157               18666 California 0.05116515 0.006268388 Inf 0.04018506 0.06494242      2021-02-08
-# 335               18666    Florida 0.16243593 0.013850901 Inf 0.13708060 0.19144070      2021-02-08
-
-# estimated share of B.1.1.7 among new infections (assuming time between infection & diagnosis of 7 days)
-fit_calfl2_preds[fit_calfl2_preds$collection_date==(as.Date("2021-02-08")+7),]
-#     collection_date_num      state       prob         SE  df  asymp.LCL asymp.UCL collection_date
-# 164               18673 California 0.07927163 0.01140055 Inf 0.05961243 0.1046923      2021-02-15
-# 342               18673    Florida 0.26736510 0.02522735 Inf 0.22089567 0.3196001      2021-02-15
-
-# taking into account time from infection to diagnosis of ca 7 days this is 
-# the time at which new infections would be by more then 50%, 75% 90% by VOC:
-# in Florida:
-fit_calfl2_preds$collection_date[fit_calfl2_preds[fit_calfl2_preds$state=="Florida","prob"]>=0.5][1]-7 # >50% by 20th of February [16 Febr - 24 Febr] 95% CLs
-fit_calfl2_preds$collection_date[fit_calfl2_preds[fit_calfl2_preds$state=="Florida","asymp.UCL"]>=0.5][1]-7
-fit_calfl2_preds$collection_date[fit_calfl2_preds[fit_calfl2_preds$state=="Florida","asymp.LCL"]>=0.5][1]-7
-
-fit_calfl2_preds$collection_date[fit_calfl2_preds[fit_calfl2_preds$state=="Florida","prob"]>=0.75][1]-7 # >75% by 4th of March [27 Febr - 9 March] 95% CLs
-fit_calfl2_preds$collection_date[fit_calfl2_preds[fit_calfl2_preds$state=="Florida","asymp.UCL"]>=0.75][1]-7
-fit_calfl2_preds$collection_date[fit_calfl2_preds[fit_calfl2_preds$state=="Florida","asymp.LCL"]>=0.75][1]-7
-
-fit_calfl2_preds$collection_date[fit_calfl2_preds[fit_calfl2_preds$state=="Florida","prob"]>=0.9][1]-7 # >90% by 16th of March [11 March - 23 March] 95% CLs
-fit_calfl2_preds$collection_date[fit_calfl2_preds[fit_calfl2_preds$state=="Florida","asymp.UCL"]>=0.9][1]-7
-fit_calfl2_preds$collection_date[fit_calfl2_preds[fit_calfl2_preds$state=="Florida","asymp.LCL"]>=0.9][1]-7
-
-# in California:
-fit_calfl2_preds$collection_date[fit_calfl2_preds[fit_calfl2_preds$state=="California","prob"]>=0.5][1]-7 # >50% by 17th of March [9 March - 27 March] 95% CLs
-fit_calfl2_preds$collection_date[fit_calfl2_preds[fit_calfl2_preds$state=="California","asymp.UCL"]>=0.5][1]-7
-fit_calfl2_preds$collection_date[fit_calfl2_preds[fit_calfl2_preds$state=="California","asymp.LCL"]>=0.5][1]-7
-
-fit_calfl2_preds$collection_date[fit_calfl2_preds[fit_calfl2_preds$state=="California","prob"]>=0.75][1]-7 # >75% by 3d of April [24 March - 15 April] 95% CLs
-fit_calfl2_preds$collection_date[fit_calfl2_preds[fit_calfl2_preds$state=="California","asymp.UCL"]>=0.75][1]-7
-fit_calfl2_preds$collection_date[fit_calfl2_preds[fit_calfl2_preds$state=="California","asymp.LCL"]>=0.75][1]-7
-
-fit_calfl2_preds$collection_date[fit_calfl2_preds[fit_calfl2_preds$state=="California","prob"]>=0.9][1]-7 # >90% by 19th of April [7 April - 4 May] 95% CLs
-fit_calfl2_preds$collection_date[fit_calfl2_preds[fit_calfl2_preds$state=="California","asymp.UCL"]>=0.9][1]-7
-fit_calfl2_preds$collection_date[fit_calfl2_preds[fit_calfl2_preds$state=="California","asymp.LCL"]>=0.9][1]-7
-
-
-helix_sgtf_subs2 = helix_sgtf_subs
-helix_sgtf_subs2$state = factor(helix_sgtf_subs2$state, levels=c("FL","CA"), labels=c("Florida","California"))
-helix_sgtf_subs2$collection_date
-
-# PLOT MODEL FIT
-plot_fitcafl2 = qplot(data=fit_calfl2_preds, x=collection_date, y=prob, geom="blank") +
-  facet_wrap(~state) +
+# PLOT MODEL FITS (response scale)
+plot_international = qplot(data=fits_international, x=date, y=prob, geom="blank") +
+  facet_wrap(~country, ncol=1) +
   geom_ribbon(aes(y=prob, ymin=asymp.LCL, ymax=asymp.UCL, colour=NULL, 
-                  fill=state
+                  fill=REGION
   ), 
   # fill=I("steelblue"), 
   alpha=I(0.3)) +
   geom_line(aes(y=prob, 
-                colour=state
+                colour=REGION
   ), 
   # colour=I("steelblue"), 
   alpha=I(0.8)) +
   ylab("Relative abundance of B.1.1.7 (%)") +
-  theme_hc() + xlab("") + 
-  ggtitle("SPREAD OF B.1.1.7 IN THE US") +
+  theme_hc() + 
+  xlab("") + 
   # scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
   #                   labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
   scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
                       labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
-  coord_cartesian(xlim=c(min(fit_calfl2_preds$collection_date), as.Date("2021-04-01")), 
-                  # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")), 
-                  ylim=c(0.01,0.99), expand=c(0,0)) +
-  scale_color_manual("", values=c("red","blue")) +
-  scale_fill_manual("", values=c("red","blue")) +
-  geom_point(data=helix_sgtf_subs2,  
-             aes(x=collection_date, y=propB117, size=n,
-                 colour=state
+  coord_cartesian(# xlim=c(as.Date("2020-09-01"),as.Date("2021-02-01")), 
+    # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")), 
+    ylim=c(0.001,99.9), expand=c(0,0)) +
+  # scale_color_manual("", values=reg_cols) +
+  # scale_fill_manual("", values=reg_cols) +
+  scale_color_discrete("region", h=c(0, 240), c=250, l=50) +
+  scale_fill_discrete("region", h=c(0, 240), c=250, l=50) +
+  # scale_color_discrete("", h=c(0, 280), c=200) +
+  # scale_fill_discrete("", h=c(0, 280), c=200) +
+  geom_point(data=data_international, 
+             aes(x=date, y=propB117, size=total, shape=country,
+                 colour=REGION
              ), 
              # colour=I("steelblue"), 
-             alpha=I(0.3)) +
-  scale_size_continuous("number of\npositive tests", trans="log10", 
-                        range=c(1, 4), limits=c(10,10^(round(log10(max(helix_sgtf_subs2$n)),0)+1)), breaks=c(10,100,1000,10000)) +
+             alpha=I(0.5)) +
+  scale_size_continuous("total n", trans="sqrt", 
+                        range=c(1, 4), limits=c(1,10000), breaks=c(100,1000,10000)) +
   # guides(fill=FALSE) + 
   # guides(colour=FALSE) + 
   theme(legend.position = "right") +
   xlab("Collection date") +
-  theme(axis.text.x = element_text(angle = 90, vjust=0.5))
-plot_fitcafl2
+  guides(
+    shape = guide_legend(order = 1),
+    color = guide_legend(order = 2),
+    fill = guide_legend(order = 2),
+    size = guide_legend(order = 3)
+  ) # +
+  # ggtitle("INTERNATIONAL SPREAD OF SARS-CoV2 VARIANT B.1.1.7") +
+  # theme(plot.title = element_text(hjust = 0.5))
+plot_international
 
-saveRDS(plot_fitcafl2, file = paste0(".\\plots\\",dat,"\\fit_us_cafl_binomGLMM_B117.rds"))
-graph2ppt(file=paste0(".\\plots\\",dat,"\\fit_us_cafl_binomGLMM_B117.pptx"), width=8, height=6)
-ggsave(plot_fitcafl2, file=paste0(".\\plots\\",dat,"\\fit_us_cafl_binomGLMM_B117.png"), width=8, height=6)
-ggsave(plot_fitcafl2, file=paste0(".\\plots\\",dat,"\\fit_us_cafl_binomGLMM_B117.pdf"), width=8, height=6)
+saveRDS(plot_international, file = paste0(".\\plots\\",dat,"\\Fig6_binomGLMM_B117_fits_UK_CH_DK.rds"))
+graph2ppt(file=paste0(".\\plots\\",dat,"\\Fig6_binomGLMM_B117_fits_UK_CH_DK.pptx"), width=7, height=8)
+ggsave(file=paste0(".\\plots\\",dat,"\\Fig6_binomGLMM_B117_fits_UK_CH_DK.png"), width=7, height=8)
+ggsave(file=paste0(".\\plots\\",dat,"\\Fig6_binomGLMM_B117_fits_UK_CH_DK.pdf"), width=7, height=8)
 
 
-# PLOT MODEL FIT (response scale)
-plot_fitcafl2_resp = qplot(data=fit_calfl2_preds, x=collection_date, y=prob*100, geom="blank") +
-  facet_wrap(~state) +
+
+
+# PLOT MODEL FITS (response scale)
+plot_international_response = qplot(data=fits_international, x=date, y=prob*100, geom="blank") +
+  facet_wrap(~country, ncol=1) +
   geom_ribbon(aes(y=prob*100, ymin=asymp.LCL*100, ymax=asymp.UCL*100, colour=NULL, 
-                  fill=state
+                  fill=REGION
   ), 
   # fill=I("steelblue"), 
   alpha=I(0.3)) +
   geom_line(aes(y=prob*100, 
-                colour=state
+                colour=REGION
   ), 
   # colour=I("steelblue"), 
   alpha=I(0.8)) +
   ylab("Relative abundance of B.1.1.7 (%)") +
-  theme_hc() + xlab("") + 
-  ggtitle("SPREAD OF B.1.1.7 IN THE US") +
+  theme_hc() + 
+  xlab("") + 
   # scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
   #                   labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
   # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
   #                    labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
-  coord_cartesian(xlim=c(min(fit_calfl2_preds$collection_date), as.Date("2021-04-01")), 
-                  # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")), 
-                  ylim=c(0,100), expand=c(0,0)) +
-  scale_color_manual("", values=c("red","blue")) +
-  scale_fill_manual("", values=c("red","blue")) +
-  geom_point(data=helix_sgtf_subs2,  
-             aes(x=collection_date, y=propB117*100, size=n,
-                 colour=state
+  coord_cartesian(# xlim=c(as.Date("2020-09-01"),as.Date("2021-02-01")), 
+    # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")), 
+    ylim=c(0,100), expand=c(0,0)) +
+  scale_color_discrete("region", h=c(0, 240), c=120, l=50) +
+  scale_fill_discrete("region", h=c(0, 240), c=120, l=50) +
+#   scale_color_manual("", values=reg_cols) +
+#  scale_fill_manual("", values=reg_cols) +
+  # scale_color_discrete("", h=c(0, 280), c=200) +
+  # scale_fill_discrete("", h=c(0, 280), c=200) +
+  geom_point(data=data_international, 
+             aes(x=date, y=propB117*100, size=total, shape=country,
+                 colour=REGION
              ), 
              # colour=I("steelblue"), 
-             alpha=I(0.3)) +
-  scale_size_continuous("number of\npositive tests", trans="log10", 
-                        range=c(1, 4), limits=c(10,10^(round(log10(max(helix_sgtf_subs2$n)),0)+1)), breaks=c(10,100,1000,10000)) +
+             alpha=I(0.5)) +
+  scale_size_continuous("total n", trans="sqrt", 
+                        range=c(1, 4), limits=c(1,10000), breaks=c(100,1000,10000)) +
   # guides(fill=FALSE) + 
   # guides(colour=FALSE) + 
   theme(legend.position = "right") +
   xlab("Collection date") +
-  theme(axis.text.x = element_text(angle = 90, vjust=0.5))
-plot_fitcafl2_resp
+  guides(
+  shape = guide_legend(order = 1),
+  color = guide_legend(order = 2),
+  fill = guide_legend(order = 2),
+  size = guide_legend(order = 3)
+) # +
+  # ggtitle("INTERNATIONAL SPREAD OF SARS-CoV2 VARIANT B.1.1.7") +
+  # theme(plot.title = element_text(hjust = 0.5))
+plot_international_response
 
-saveRDS(plot_fitcafl2_resp, file = paste0(".\\plots\\",dat,"\\fit_us_cafl_binomGLMM_B117_resp.rds"))
-graph2ppt(file=paste0(".\\plots\\",dat,"\\fit_us_cafl_binomGLMM_B117_resp.pptx"), width=8, height=6)
-ggsave(plot_fitcafl2_resp, file=paste0(".\\plots\\",dat,"\\fit_us_cafl_binomGLMM_B117_resp.png"), width=8, height=6)
-ggsave(plot_fitcafl2_resp, file=paste0(".\\plots\\",dat,"\\fit_us_cafl_binomGLMM_B117_resp.pdf"), width=8, height=6)
+saveRDS(plot_international_response, file = paste0(".\\plots\\",dat,"\\binomGLMM_B117_fits_UK_CH_DK_response.rds"))
+graph2ppt(file=paste0(".\\plots\\",dat,"\\binomGLMM_B117_fits_UK_CH_DK_response.pptx"), width=7, height=8)
+ggsave(file=paste0(".\\plots\\",dat,"\\binomGLMM_B117_fits_UK_CH_DK_response.png"), width=7, height=8)
+ggsave(file=paste0(".\\plots\\",dat,"\\binomGLMM_B117_fits_UK_CH_DK_response.pdf"), width=7, height=8)
+
+
+plot_us2 = plot_us + coord_cartesian(xlim=c(as.Date("2020-11-01"), as.Date("2021-03-31")),
+                          ylim=c(0.001,99.9), expand=c(0,0)) + ggtitle("SPREAD OF VARIANT B.1.1.7 IN THE US")
+plot_us2
+saveRDS(plot_us2, file = paste0(".\\plots\\",dat,"\\binomGLMM_B117_fit_US.rds"))
+graph2ppt(file=paste0(".\\plots\\",dat,"\\binomGLMM_B117_fit_US.pptx"), width=7, height=8)
+ggsave(file=paste0(".\\plots\\",dat,"\\binomGLMM_B117_fit_US.png"), width=7, height=8)
+ggsave(file=paste0(".\\plots\\",dat,"\\binomGLMM_B117_fit_US.pdf"), width=7, height=8)
 
