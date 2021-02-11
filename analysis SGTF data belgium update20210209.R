@@ -974,6 +974,17 @@ R.from.r(-0.0217) # Rt of S-positive/wild type = 0.9012047
 R.from.r(0.0785) # Rt of S dropout/B.1.1.7 variant = 1.412321
 R.from.r(0.0785)/R.from.r(-0.0217) # Rt of B.1.1.7 = 1.567148x times higher than of wild type
 
+# growth rate & transmission advantage
+delta_r = data.frame(confint(contrast(emtrends(mfit2, ~outcome|1, var="collection_date_num",  
+                                               at=list(outcome=c("n_spos","n_b117")), mode="latent"), method="revpairwise")))[,c(2,5,6)]
+delta_r # growth advantage
+#    estimate lower.CL  upper.CL
+# 1 0.1001354 0.080826 0.1194448
+exp(delta_r*4.7) # transmission advantage
+#    estimate lower.CL upper.CL
+# 1 1.601013 1.462112 1.753109
+
+
 # average growth rates of S-positive/wild type & S dropout/B.1.1.7 cases evaluated today
 emtrends(mfit2, ~outcome|1, var="collection_date_num",  at=list(collection_date_num=today_num), mode="latent")
 # outcome collection_date_num.trend     SE df lower.CL upper.CL
@@ -985,6 +996,17 @@ R.from.r(-0.0355) # 0.841655
 R.from.r(-0.0355)/R.from.r(-0.0758) # Rt of B.1.1.7 = 1.234257x times higher than of wild type
 # PS recent shift from active surveillance for B.1.1.7 in beginning of january to random sampling
 # right now might introduce downward bias though
+
+# growth rate & transmission advantage
+delta_r = data.frame(confint(contrast(emtrends(mfit2, ~outcome|1, var="collection_date_num",  
+                                               at=list(outcome=c("n_spos","n_b117"),
+                                                       collection_date_num=today_num), mode="latent"), method="revpairwise")))[,c(2,5,6)]
+delta_r # growth advantage
+#       estimate lower.CL  upper.CL
+# 1 0.04028708 -0.0435366 0.1241108
+exp(delta_r*4.7) # transmission advantage
+#    estimate lower.CL upper.CL
+# 1 1.208463 0.8149553 1.791979
 
 
 
