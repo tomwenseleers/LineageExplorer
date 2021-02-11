@@ -944,19 +944,40 @@ test_outcomes = ggplot(data=data_ag_long,
 test_outcomes
 
 saveRDS(test_outcomes, file = paste0(".\\plots\\",dat,"\\test_outcomes_for_multinomial spline fit.rds"))
-graph2ppt(file=paste0(".\\plots\\",dat,"\\test_outcomes_for_multinomial spline fit.pptx"), width=7, height=8)
-ggsave(file=paste0(".\\plots\\",dat,"\\test_outcomes_for_multinomial spline fit.png"), width=7, height=8)
-ggsave(file=paste0(".\\plots\\",dat,"\\test_outcomes_for_multinomial spline fit.pdf"), width=7, height=8)
+graph2ppt(file=paste0(".\\plots\\",dat,"\\test_outcomes_for_multinomial spline fit.pptx"), width=7, height=5)
+ggsave(file=paste0(".\\plots\\",dat,"\\test_outcomes_for_multinomial spline fit.png"), width=7, height=5)
+ggsave(file=paste0(".\\plots\\",dat,"\\test_outcomes_for_multinomial spline fit.pdf"), width=7, height=5)
+
+test_outcomes_pos = ggplot(data=data_ag_long[data_ag_long$outcome!="n_neg",], 
+                       aes(x=collection_date, 
+                           y=count, fill=outcome, group=outcome)) +
+  facet_wrap(~LABORATORY) +
+  geom_area(aes(fill=outcome), position = position_fill(reverse = TRUE)) +
+  theme_hc() +
+  scale_fill_manual("test outcome", values=c("steelblue","lightcoral"), labels=c("S positive","S dropout")) +
+  ylab("Share") +
+  xlab("Collection date") +
+  theme(axis.text.x = element_text(angle = 90, vjust=0.5)) +
+  # ggtitle("Test outcomes") +
+  theme(plot.title = element_text(hjust = 0)) +
+  theme(legend.position = "right")
+test_outcomes_pos
+
+saveRDS(test_outcomes, file = paste0(".\\plots\\",dat,"\\test_outcomes_share_Sdropout_positives only.rds"))
+graph2ppt(file=paste0(".\\plots\\",dat,"\\test_outcomes_share_Sdropout_positives only.pptx"), width=7, height=5)
+ggsave(file=paste0(".\\plots\\",dat,"\\test_outcomes_share_Sdropout_positives only.png"), width=7, height=5)
+ggsave(file=paste0(".\\plots\\",dat,"\\test_outcomes_share_Sdropout_positives only.pdf"), width=7, height=5)
 
 
 # multinomial spline fit on test outcome data (negative / positive wild type / positive B.1.1.7
-# to be able to estimate Rt of B.1.1.7 and wild type separately
+# to be able to estimate growth rate and Rt of B.1.1.7 and wild type separately
 
 set.seed(1)
 library(nnet)
-mfit1 = multinom(outcome~ns(collection_date_num, df=5)+LABORATORY, weights=count, data=data_ag_long, maxit=1000) 
-mfit2 = multinom(outcome~ns(collection_date_num, df=5)*LABORATORY, weights=count, data=data_ag_long, maxit=1000) 
-BIC(mfit1,mfit2) # mfit2 fits best, df splines tuned based on BIC
+mfit0 = multinom(outcome~ns(collection_date_num, df=5) + LABORATORY, weights=count, data=data_ag_long, maxit=1000) 
+mfit1 = multinom(outcome~ns(collection_date_num, df=5) + LABORATORY, weights=count, data=data_ag_long, maxit=1000) 
+mfit2 = multinom(outcome~ns(collection_date_num, df=5) * LABORATORY, weights=count, data=data_ag_long, maxit=1000) 
+BIC(mfit0, mfit1,mfit2) # mfit2 fits best, df splines tuned based on BIC
 #       df      BIC
 # mfit1 24 191041.3
 # mfit2 84 190729.9
@@ -965,7 +986,7 @@ library(effects)
 plot(allEffects(mfit1), style="stacked")
 
 # average growth rates of S-positive/wild type & S dropout/B.1.1.7 cases over period from jan 1 till now
-emtrends(mfit2, ~outcome|1, var="collection_date_num",  mode="latent")
+emtrends(mfit1, ~outcome|1, var="collection_date_num",  mode="latent")
 # outcome collection_date_num.trend      SE df lower.CL upper.CL
 # n_neg                     -0.0568 0.00287 84  -0.0625  -0.0511
 # n_spos                    -0.0217 0.00503 84  -0.0317  -0.0116
@@ -974,7 +995,7 @@ R.from.r(-0.0217) # Rt of S-positive/wild type = 0.9012047
 R.from.r(0.0785) # Rt of S dropout/B.1.1.7 variant = 1.412321
 R.from.r(0.0785)/R.from.r(-0.0217) # Rt of B.1.1.7 = 1.567148x times higher than of wild type
 
-# growth rate & transmission advantage
+# implied growth rate & transmission advantage + 95% CLs
 delta_r = data.frame(confint(contrast(emtrends(mfit2, ~outcome|1, var="collection_date_num",  
                                                at=list(outcome=c("n_spos","n_b117")), mode="latent"), method="revpairwise")))[,c(2,5,6)]
 delta_r # growth advantage
@@ -997,7 +1018,7 @@ R.from.r(-0.0355)/R.from.r(-0.0758) # Rt of B.1.1.7 = 1.234257x times higher tha
 # PS recent shift from active surveillance for B.1.1.7 in beginning of january to random sampling
 # right now might introduce downward bias though
 
-# growth rate & transmission advantage
+# implied growth rate & transmission advantage
 delta_r = data.frame(confint(contrast(emtrends(mfit2, ~outcome|1, var="collection_date_num",  
                                                at=list(outcome=c("n_spos","n_b117"),
                                                        collection_date_num=today_num), mode="latent"), method="revpairwise")))[,c(2,5,6)]
@@ -1009,6 +1030,69 @@ exp(delta_r*4.7) # transmission advantage
 # 1 1.208463 0.8149553 1.791979
 
 
+# growth rates and Re values of the B.1.1.7 variant and the wild type calculated over time
+extrapolate = 0
+r_and_Re_B117_wildtype = data.frame(emtrends(mfit0, ~outcome|1, var="collection_date_num", by="collection_date_num",  
+                                  at=list(collection_date_num=seq(min(data_ag_long$collection_date_num),
+                                                                  today_num+extrapolate),
+                                          outcome=c("n_spos","n_b117")), mode="latent"))
+r_and_Re_B117_wildtype$collection_date = as.Date(r_and_Re_B117_wildtype$collection_date_num, origin="1970-01-01")
+colnames(r_and_Re_B117_wildtype)[colnames(r_and_Re_B117_wildtype) %in% c("collection_date_num.trend","lower.CL","upper.CL")] = c("r","r.LCL","r.UCL")
+r_and_Re_B117_wildtype$Re = R.from.r(r_and_Re_B117_wildtype$r)
+r_and_Re_B117_wildtype$Re.LCL = R.from.r(r_and_Re_B117_wildtype$r.LCL)
+r_and_Re_B117_wildtype$Re.UCL = R.from.r(r_and_Re_B117_wildtype$r.UCL)
+
+plot_Re_B117_WT = qplot(data=r_and_Re_B117_wildtype, x=collection_date, y=Re, ymin=Re.LCL, ymax=Re.UCL, geom="ribbon", alpha=I(0.5), 
+      fill=outcome , colour=NULL, group=outcome ) +
+  geom_line(aes(colour=outcome )) + theme_hc() + xlab("") +
+  # scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01")),
+  #                   labels=c("M","A","M","J","J","A","S","O","N","D","J","F")) +
+  scale_y_continuous(trans="log2", breaks=c(1/seq(3,1),seq(1,4)),
+                     labels=round(c(1/seq(3,1),seq(1,4)),2)) +
+  coord_cartesian(ylim=c(1/3,3), expand=c(0,0)) +
+  geom_hline(yintercept=1, colour=alpha(I("black"),0.2)) +
+  # theme(legend.position = "none") +
+  ggtitle("Re of B.1.1.7 and WT") +
+  guides(colour=FALSE) +
+  scale_colour_manual("", values=c("steelblue","lightcoral")) +
+  scale_fill_manual("", values=c("steelblue","lightcoral"), labels=c("S positive (wild type)","S dropout (B.1.1.7)")) +
+  theme(legend.position = "bottom")
+  # labs(tag = tag) +
+  # theme(plot.tag.position = "bottomright",
+  #      plot.tag = element_text(vjust = 1, hjust = 1, size=8))
+plot_Re_B117_WT
+
+# implied growth rate advantage + 95% CLs over time
+extrapolate = 0
+growthadvantage = data.frame(confint(contrast(emtrends(mfit0, ~outcome|1, var="collection_date_num", by="collection_date_num", 
+                                               at=list(outcome=c("n_spos","n_b117"),
+                                                       collection_date_num=seq(min(data_ag_long$collection_date_num),
+                                                                               today_num+extrapolate)), 
+                                               mode="latent"), method="revpairwise")))
+colnames(growthadvantage)[colnames(growthadvantage) %in% c("estimate","lower.CL","upper.CL")] = c("delta_r","delta_r.LCL","delta_r.UCL")
+growthadvantage$transmadv = (exp(4.7*growthadvantage$delta_r)-1)*100
+growthadvantage$transmadv.LCL = (exp(4.7*growthadvantage$delta_r.LCL)-1)*100
+growthadvantage$transmadv.UCL = (exp(4.7*growthadvantage$delta_r.UCL)-1)*100
+growthadvantage$collection_date = as.Date(growthadvantage$collection_date_num, origin="1970-01-01")
+
+plot_growthadvB117 = qplot(data=growthadvantage, x=collection_date, y=transmadv, 
+                            ymin=transmadv.LCL, ymax=transmadv.UCL, geom="ribbon", alpha=I(0.5), 
+      fill=I("lightcoral") , colour=NULL ) +
+  geom_line(aes(colour=I("lightcoral"))) + theme_hc() + xlab("") + ylab("Transmission advantage of B.1.1.7 (%)") +
+  geom_hline(yintercept=0, colour=alpha(I("black"),0.2)) +
+  ggtitle("Transmission advantage of B.1.1.7 over WT")
+# labs(tag = tag) +
+# theme(plot.tag.position = "bottomright",
+#      plot.tag = element_text(vjust = 1, hjust = 1, size=8))
+plot_growthadvB117
+
+multipanel_Re_growthadv_multinom = ggarrange(plot_Re_B117_WT, plot_growthadvB117, ncol=1)
+multipanel_Re_growthadv_multinom
+
+saveRDS(multipanel_Re_growthadv_multinom, file = paste0(".\\plots\\",dat,"\\multinomial_Re_growthadv_B117_WT.rds"))
+graph2ppt(file=paste0(".\\plots\\",dat,"\\multinomial_Re_growthadv_B117_WT.pptx"), width=7, height=8)
+ggsave(file=paste0(".\\plots\\",dat,"\\multinomial_Re_growthadv_B117_WT.png"), width=7, height=8)
+ggsave(file=paste0(".\\plots\\",dat,"\\multinomial_Re_growthadv_B117_WT.pdf"), width=7, height=8)
 
 
 
