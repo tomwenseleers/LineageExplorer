@@ -651,11 +651,6 @@ data_ag_byday_wide$obs = factor(1:nrow(data_ag_byday_wide))
 head(data_ag_byday_wide)
 
 
-sum(tail(data_ag_byday_wide$estB117, 14))/sum(tail(data_ag_byday_wide$n_pos,14)) 
-# 30.8% of the samples of last 2 weeks estimated to be by British variant
-# PS: with data 31/1 this was 15.4%  
-# note: this is not the same as the estimated prop of the new infections or new diagnoses today that are of the British
-# variant, which are much higher, see below)
 
 
 # fit common-slope and separate-slopes binomial GLM
@@ -785,6 +780,13 @@ fit1_preds[fit1_preds$collection_date==today,]
 fit1_preds[fit1_preds$collection_date==(today+7),]
 #    collection_date_num     prob         SE  df asymp.LCL asymp.UCL collection_date
 # 34               18674 0.6131542 0.02641399 Inf  0.560443 0.6636623      2021-02-16
+
+sum(tail(data_ag_byday_wide$estB117, 14))/sum(tail(data_ag_byday_wide$n_pos,14)) 
+# 30.8% of the samples of last 2 weeks estimated to be by British variant
+# PS: with data 31/1 this was 15.4%  
+# note: this is not the same as the estimated prop of the new infections or new diagnoses today that are of the British
+# variant, which are much higher, see below)
+
 
 # taking into account time from infection to diagnosis of ca 7 days this is 
 # the time at which new infections would be by more then 50%, 75% 90% by B.1.1.7 :
@@ -1789,8 +1791,8 @@ ggsave(file=paste0(".\\plots\\",dat,"\\binomGLMM_B117_fits_UK_CH_DK_response.pdf
 plot_us2 = plot_us + coord_cartesian(xlim=c(as.Date("2020-11-01"), as.Date("2021-03-31")),
                           ylim=c(0.001,99.9), expand=c(0,0)) + ggtitle("SPREAD OF VARIANT B.1.1.7 IN THE US")
 plot_us2
-saveRDS(plot_us2, file = paste0(".\\plots\\",dat,"\\binomGLMM_B117_fit_US.rds"))
-graph2ppt(file=paste0(".\\plots\\",dat,"\\binomGLMM_B117_fit_US.pptx"), width=7, height=8)
-ggsave(file=paste0(".\\plots\\",dat,"\\binomGLMM_B117_fit_US.png"), width=7, height=8)
-ggsave(file=paste0(".\\plots\\",dat,"\\binomGLMM_B117_fit_US.pdf"), width=7, height=8)
+saveRDS(plot_us2, file = paste0(".\\plots\\",dat,"\\Fig7_binomGLMM_B117_fit_US.rds"))
+graph2ppt(file=paste0(".\\plots\\",dat,"\\Fig7_binomGLMM_B117_fit_US.pptx"), width=7, height=8)
+ggsave(file=paste0(".\\plots\\",dat,"\\Fig7_binomGLMM_B117_fit_US.png"), width=7, height=8)
+ggsave(file=paste0(".\\plots\\",dat,"\\Fig7_binomGLMM_B117_fit_US.pdf"), width=7, height=8)
 
