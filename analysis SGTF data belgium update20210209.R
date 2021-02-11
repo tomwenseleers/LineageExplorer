@@ -673,9 +673,9 @@ fit1 = glmer(cbind(estB117, n_pos-estB117) ~ (1|obs)+scale(collection_date_num)+
 fit2 = glmer(cbind(estB117, n_pos-estB117) ~ (1|obs)+scale(collection_date_num)*LABORATORY, family=binomial(logit), 
              data=data_ag_wide, subset=data_ag_wide$n_pos>0, control=glmersettings) # separate slopes model, with lab coded as fixed factor
 BIC(fit1,fit2) 
-#      df      BIC
-# fit1 10 1709.339
-# fit2 17 1734.279
+# df      BIC
+# fit1  9 1660.284
+# fit2 15 1684.502
 
 
 # common-slope model fit1 fits best, i.e. rate at which B.1.1.7 is displacing other strains constant across regions/labs
@@ -683,21 +683,19 @@ BIC(fit1,fit2)
 summary(fit1)
 # Random effects:
 #   Groups Name        Variance Std.Dev.
-# obs    (Intercept) 0.3744   0.6119  
-# Number of obs: 312, groups:  obs, 312
+# obs    (Intercept) 0.3587   0.599   
+# Number of obs: 272, groups:  obs, 272
 # 
 # Fixed effects:
 #   Estimate Std. Error z value Pr(>|z|)    
-# (Intercept)                -1.94901    0.06394 -30.480  < 2e-16 ***
-#   scale(collection_date_num)  0.99080    0.05321  18.619  < 2e-16 ***
-#   LABORATORY1                -0.37981    0.12797  -2.968 0.002998 ** 
-#   LABORATORY2                 0.38405    0.11554   3.324 0.000887 ***
-#   LABORATORY3                 0.45376    0.11587   3.916    9e-05 ***
-#   LABORATORY4                 0.11437    0.28974   0.395 0.693044    
-#   LABORATORY5                -1.25919    0.13823  -9.109  < 2e-16 ***
-#   LABORATORY6                 0.45099    0.12280   3.673 0.000240 ***
-#   LABORATORY7                -0.12825    0.11918  -1.076 0.281889    
-
+#   (Intercept)                -1.95620    0.05024 -38.941  < 2e-16 ***
+#   scale(collection_date_num)  0.98949    0.05210  18.991  < 2e-16 ***
+#   LABORATORY1                -0.36388    0.11878  -3.063 0.002188 ** 
+#   LABORATORY2                 0.39724    0.10563   3.761 0.000169 ***
+#   LABORATORY3                 0.46787    0.10604   4.412 1.02e-05 ***
+#   LABORATORY4                -1.24139    0.12934  -9.598  < 2e-16 ***
+#   LABORATORY5                 0.47187    0.11385   4.145 3.40e-05 ***
+#   LABORATORY6                -0.11064    0.10973  -1.008 0.313347  
 
 # growth rate advantage (differences in growth rate between B.1.1.7 and old strains):
 # results common-slope model
@@ -705,24 +703,24 @@ fit1_emtrends = as.data.frame(emtrends(fit1, revpairwise ~ 1, var="collection_da
                                        at=list(collection_date_num=today_num), mode="link", adjust="Tukey")$emtrends)
 fit1_emtrends[,c(2,5,6)]
 #   collection_date_num.trend asymp.LCL  asymp.UCL
-# 1                0.08816107 0.0790066 0.09731553
+# 1                0.08805851 0.07897028 0.09714673
 
 # with a generation time of 4.7 days this would translate in an increased 
 # infectiousness (multiplicative effect on Rt) of
 exp(fit1_emtrends[,c(2,5,6)]*4.7) 
 # collection_date_num.trend asymp.LCL asymp.UCL
-# 1                  1.513397  1.449663  1.579934
+# 1                  1.512668  1.449415  1.578681
 
 # tests for differences in date of introduction
 emmeans(fit1,eff~LABORATORY)$contrasts # UCL, ULB, Ghent & UZA earlier than avg (FDR p<0.01), Namur & Mons later than avg (FDR p<0.01 & p<0.0001)
 # contrast                  estimate    SE  df z.ratio p.value
-# Namur effect                -0.364 0.119 Inf -3.052  0.0027 
-# (Saint LUC - UCL) effect     0.398 0.106 Inf  3.753  0.0003 
-# ULB effect                   0.468 0.106 Inf  4.398  <.0001 
-# (UMons - Jolimont) effect   -1.242 0.130 Inf -9.546  <.0001 
-# UZ Gent effect               0.472 0.114 Inf  4.124  0.0001 
-# UZ leuven effect            -0.111 0.110 Inf -1.005  0.3151 
-# UZA effect                   0.379 0.106 Inf  3.571  0.0005
+# Namur effect                -0.364 0.119 Inf -3.063  0.0026 
+# (Saint LUC - UCL) effect     0.397 0.106 Inf  3.761  0.0003 
+# ULB effect                   0.468 0.106 Inf  4.412  <.0001 
+# (UMons - Jolimont) effect   -1.241 0.129 Inf -9.598  <.0001 
+# UZ Gent effect               0.472 0.114 Inf  4.145  0.0001 
+# UZ leuven effect            -0.111 0.110 Inf -1.008  0.3133 
+# UZA effect                   0.379 0.106 Inf  3.582  0.0005 
 # 
 # Results are given on the log odds ratio (not the response) scale. 
 # P value adjustment: fdr method for 8 tests
@@ -731,25 +729,25 @@ emmeans(fit1,eff~LABORATORY)$contrasts # UCL, ULB, Ghent & UZA earlier than avg 
 fit2_emtrends = emtrends(fit2, revpairwise ~ LABORATORY, var="collection_date_num", mode="link", adjust="Tukey")$emtrends
 fit2_emtrends
 # LABORATORY       collection_date_num.trend     SE  df asymp.LCL asymp.UCL
-# Namur                               0.0717 0.0132 Inf    0.0459    0.0976
-# Saint LUC - UCL                     0.0746 0.0106 Inf    0.0538    0.0955
-# ULB                                 0.0823 0.0108 Inf    0.0612    0.1035
-# UMons - Jolimont                    0.1062 0.0169 Inf    0.0732    0.1393
-# UZ Gent                             0.1074 0.0133 Inf    0.0813    0.1335
-# UZ leuven                           0.1061 0.0120 Inf    0.0826    0.1297
-# UZA                                 0.0812 0.0110 Inf    0.0597    0.1026
+# Namur                               0.0716 0.0131 Inf    0.0459    0.0972
+# Saint LUC - UCL                     0.0746 0.0106 Inf    0.0538    0.0953
+# ULB                                 0.0823 0.0107 Inf    0.0612    0.1034
+# UMons - Jolimont                    0.1061 0.0168 Inf    0.0733    0.1389
+# UZ Gent                             0.1072 0.0132 Inf    0.0813    0.1332
+# UZ leuven                           0.1060 0.0119 Inf    0.0826    0.1293
+# UZA                                 0.0811 0.0109 Inf    0.0597    0.1024
 
 # for none of the labs/regions we observe a sign above-average rate of spread
 fit2_contrasts = emtrends(fit2, eff ~ LABORATORY, var="collection_date_num", mode="link", adjust="Tukey")$contrasts
 fit2_contrasts
 # contrast                  estimate     SE  df z.ratio p.value
-# Namur effect              -0.01822 0.0121 Inf -1.506  0.6293 
-# (Saint LUC - UCL) effect  -0.01532 0.0102 Inf -1.503  0.6315 
-# ULB effect                -0.00759 0.0103 Inf -0.734  0.9871 
-# (UMons - Jolimont) effect  0.01629 0.0150 Inf  1.084  0.8981 
-# UZ Gent effect             0.01744 0.0122 Inf  1.431  0.6860 
-# UZ leuven effect           0.01618 0.0112 Inf  1.445  0.6752 
-# UZA effect                -0.00878 0.0104 Inf -0.844  0.9715 
+# Namur effect              -0.01827 0.0120 Inf -1.519  0.6188 
+# (Saint LUC - UCL) effect  -0.01524 0.0101 Inf -1.503  0.6310 
+# ULB effect                -0.00755 0.0103 Inf -0.734  0.9871 
+# (UMons - Jolimont) effect  0.01627 0.0149 Inf  1.090  0.8955 
+# UZ Gent effect             0.01740 0.0121 Inf  1.437  0.6813 
+# UZ leuven effect           0.01615 0.0111 Inf  1.452  0.6698 
+# UZA effect                -0.00877 0.0103 Inf -0.848  0.9709
 # 
 # P value adjustment: sidak method for 7 tests 
 
@@ -786,11 +784,11 @@ fit1_preds_bylab$LABORATORY = factor(fit1_preds_bylab$LABORATORY,
 # estimated share of B.1.1.7 among currently diagnosed infections based on fit1
 fit1_preds[fit1_preds$collection_date==today,]
 #    collection_date_num     prob         SE  df asymp.LCL asymp.UCL collection_date
-# 27              18667 0.4744899 0.02093081 Inf 0.4336906 0.5155814      2021-02-09
+# 27              18667 0.4742744 0.02086088 Inf 0.4336118 0.5152299      2021-02-09
 # estimated share of B.1.1.7 among new infections (assuming time between infection & diagnosis of 7 days)
 fit1_preds[fit1_preds$collection_date==(today+7),]
 #    collection_date_num     prob         SE  df asymp.LCL asymp.UCL collection_date
-# 34               18674 0.6131542 0.02641399 Inf  0.560443 0.6636623      2021-02-16
+# 34               18674 0.6128499 0.0263124 Inf 0.5603468 0.6631713      2021-02-16
 
 sum(tail(data_ag_byday_wide$estB117, 14))/sum(tail(data_ag_byday_wide$n_pos,14)) 
 # 30.8% of the samples of last 2 weeks estimated to be by British variant
@@ -911,18 +909,82 @@ ggsave(file=paste0(".\\plots\\",dat,"\\Fig5_fit1_binomGLMM_B117_Belgium by lab.p
 
 # 3.2 ESTIMATE GROWTH RATE & R VALUE OF B.1.1.7 & WILD TYPE STRAINS SEPARATELY USING MULTINOMIAL MODEL ####
 
+# Function to recalculate Malthusian growth rate to effective reproduction number Rt
+# (assuming generation time is gamma distributed)
+# Ref: Park et al. 2020, https://royalsocietypublishing.org/doi/10.1098/rsif.2020.0144
+R.from.r <- function(r, gamma_mean=4.7, gamma_sd=2.9) {
+  k = (gamma_sd / gamma_mean)^2
+  R = (1 + k * r * gamma_mean)^(1 / k)
+  return(R)
+}
+
 data_ag_wide2 = data_ag_wide 
-data_ag_wide2$
-data_ag_wide2 = data_ag_wide2[,c("collection_date","LABORATORY","n_neg",)]
+data_ag_wide2$n_b117 = round(data_ag_wide2$estB117, 0)
+data_ag_wide2$n_spos = data_ag_wide2$n_pos-data_ag_wide2$n_b117
+(data_ag_wide2$n_neg+data_ag_wide2$n_spos+data_ag_wide2$n_b117)==data_ag_wide2$total # check
+data_ag_wide2 = data_ag_wide2[,c("collection_date","LABORATORY","n_neg","n_spos","n_b117")]
 head(data_ag_wide2)
-data_ag_wide_long = 
+data_ag_long = gather(data_ag_wide2, outcome, count, n_neg:n_b117, factor_key=TRUE)
+data_ag_long$outcome = factor(data_ag_long$outcome, levels=c("n_neg","n_spos","n_b117"))
+data_ag_long$collection_date_num = as.numeric(data_ag_long$collection_date)
+
+test_outcomes = ggplot(data=data_ag_long, 
+      aes(x=collection_date, 
+      y=count, fill=outcome, group=outcome)) +
+  facet_wrap(~LABORATORY) +
+  geom_area(aes(fill=outcome), position = position_fill(reverse = TRUE)) +
+  theme_hc() +
+  scale_fill_manual("test outcome", values=c("darkgrey","steelblue","lightcoral"), labels=c("negative","S positive","S dropout")) +
+  ylab("Share") +
+  xlab("Collection date") +
+  theme(axis.text.x = element_text(angle = 90, vjust=0.5)) +
+  # ggtitle("Test outcomes") +
+  theme(plot.title = element_text(hjust = 0)) +
+  theme(legend.position = "right")
+test_outcomes
+
+saveRDS(test_outcomes, file = paste0(".\\plots\\",dat,"\\test_outcomes_for_multinomial spline fit.rds"))
+graph2ppt(file=paste0(".\\plots\\",dat,"\\test_outcomes_for_multinomial spline fit.pptx"), width=7, height=8)
+ggsave(file=paste0(".\\plots\\",dat,"\\test_outcomes_for_multinomial spline fit.png"), width=7, height=8)
+ggsave(file=paste0(".\\plots\\",dat,"\\test_outcomes_for_multinomial spline fit.pdf"), width=7, height=8)
+
+
+# multinomial spline fit on test outcome data (negative / positive wild type / positive B.1.1.7
+# to be able to estimate Rt of B.1.1.7 and wild type separately
 
 set.seed(1)
-mfit1 = multinom(variant~sample_date_num+nhs_name, data = data, maxit=1000) # multinomial common slopes model
-mfit2 = multinom(variant~sample_date_num*nhs_name, data = data, maxit=10000) # multinomial separate-slopes model
-mfit3 = multinom(variant~ns(sample_date_num, df=2)+nhs_name, data = data, maxit=1000) # with 2-knot nat cubic splines ifo time
-mfit4 = multinom(variant~ns(sample_date_num, df=2)*nhs_name, data = data, maxit=10000) # with 2-knot nat cubic splines ifo time
+library(nnet)
+mfit1 = multinom(outcome~ns(collection_date_num, df=5)+LABORATORY, weights=count, data=data_ag_long, maxit=1000) 
+mfit2 = multinom(outcome~ns(collection_date_num, df=5)*LABORATORY, weights=count, data=data_ag_long, maxit=1000) 
+BIC(mfit1,mfit2) # mfit2 fits best, df splines tuned based on BIC
+#       df      BIC
+# mfit1 24 191041.3
+# mfit2 84 190729.9
 
+library(effects)
+plot(allEffects(mfit1), style="stacked")
+
+# average growth rates of S-positive/wild type & S dropout/B.1.1.7 cases over period from jan 1 till now
+emtrends(mfit2, ~outcome|1, var="collection_date_num",  mode="latent")
+# outcome collection_date_num.trend      SE df lower.CL upper.CL
+# n_neg                     -0.0568 0.00287 84  -0.0625  -0.0511
+# n_spos                    -0.0217 0.00503 84  -0.0317  -0.0116
+# n_b117                     0.0785 0.00509 84   0.0684   0.0886
+R.from.r(-0.0217) # Rt of S-positive/wild type = 0.9012047
+R.from.r(0.0785) # Rt of S dropout/B.1.1.7 variant = 1.412321
+R.from.r(0.0785)/R.from.r(-0.0217) # Rt of B.1.1.7 = 1.567148x times higher than of wild type
+
+# average growth rates of S-positive/wild type & S dropout/B.1.1.7 cases evaluated today
+emtrends(mfit2, ~outcome|1, var="collection_date_num",  at=list(collection_date_num=today_num), mode="latent")
+# outcome collection_date_num.trend     SE df lower.CL upper.CL
+# n_neg                      0.1113 0.0141 84   0.0833  0.13921
+# n_spos                    -0.0758 0.0249 84  -0.1254 -0.02621
+# n_b117                    -0.0355 0.0191 84  -0.0735  0.00253
+R.from.r(-0.0758) # 0.6819121
+R.from.r(-0.0355) # 0.841655
+R.from.r(-0.0355)/R.from.r(-0.0758) # Rt of B.1.1.7 = 1.234257x times higher than of wild type
+# PS recent shift from active surveillance for B.1.1.7 in beginning of january to random sampling
+# right now might introduce downward bias though
 
 
 
