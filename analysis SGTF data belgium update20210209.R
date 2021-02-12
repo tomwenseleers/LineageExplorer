@@ -15,11 +15,13 @@ library(lme4)
 library(splines)
 library(purrr)
 library(readxl)
-library(emmeans)
+library(emmeans) # install latest 1.5.4 version - this had a multinomial model bug fix & support for quantile regression models !
 library(effects)
 library(ggplot2)
 library(ggthemes)
 library(ggpubr)
+library(dplyr)
+library(tidyr)
 library(scales)
 library(quantreg)
 library(gamm4)
@@ -30,25 +32,26 @@ library(export)
 library(afex)
 library(dfoptim)
 library(optimx)
+library(nnet)
 library(mclogit)
-library(tidyverse)
 library(lubridate)
 library(zoo)
 library(gridExtra)
 library(sf)
 
-# define emm_basis method to have emmeans support mblogit multinomial mixed models
-# cf https://cran.r-project.org/web/packages/emmeans/vignettes/xtending.html
-emm_basis.mblogit = function(object, ...) {
-  object$coefficients = object$coefmat
-  object$lev = levels(object$model[[1]])
-  object$edf = Inf
-  emmeans:::emm_basis.multinom(object, ...)
-}
+# # define emm_basis method to have emmeans support mblogit multinomial mixed models
+# # cf https://cran.r-project.org/web/packages/emmeans/vignettes/xtending.html
+# # PS no longer necessary if you have emmeans 1.5.4 loaded
+# emm_basis.mblogit = function(object, ...) {
+#   object$coefficients = object$coefmat
+#   object$lev = levels(object$model[[1]])
+#   object$edf = Inf
+#   emmeans:::emm_basis.multinom(object, ...)
+# }
 
 dat="2021_02_09" # desired file version for Belgian data (date/path in //data)
 suppressWarnings(dir.create(paste0(".//plots//",dat)))
-today = as.Date(gsub("_","-",dat))
+today = as.Date(gsub("_","-",dat)) # we use the file date version as our definition of "today"
 today_num = as.numeric(today)
 
 
@@ -401,42 +404,57 @@ ggsave(file=paste0(".\\plots\\",dat,"\\dataBE_Ct values_raw data_temporal.pdf"),
 
 
 # quantile/median regression to compare median Ct values of both genes across S dropout & non-S dropout samples in the different labs
-qr_bothgenes0 = rq(ORF1_cq ~ Ggene + S_dropout + Laboratory, data=ctdata_onlypos_subs_bothgenes, tau=0.5)
-qr_bothgenes1 = rq(ORF1_cq ~ Gene * S_dropout + Laboratory, data=ctdata_onlypos_subs_bothgenes, tau=0.5)
-qr_bothgenes2 = rq(ORF1_cq ~ Gene + S_dropout * Laboratory, data=ctdata_onlypos_subs_bothgenes, tau=0.5)
-qr_bothgenes3 = rq(ORF1_cq ~ Gene * Laboratory + S_dropout, data=ctdata_onlypos_subs_bothgenes, tau=0.5)
-qr_bothgenes4 = rq(ORF1_cq ~ (Gene + Laboratory + S_dropout)^2, data=ctdata_onlypos_subs_bothgenes, tau=0.5)
-qr_bothgenes5 = rq(ORF1_cq ~ Gene * Laboratory * S_dropout, data=ctdata_onlypos_subs_bothgenes, tau=0.5)
-AIC(qr_bothgenes0, k=-1) # 138099.4
-AIC(qr_bothgenes1, k=-1) # 138109.3
-AIC(qr_bothgenes2, k=-1) # 138020.9 # fits data best based on BIC criterion (PS: here AIC with k<0 returns BIC)
-AIC(qr_bothgenes3, k=-1) # 138129.2
-AIC(qr_bothgenes4, k=-1) # 138060.7
-AIC(qr_bothgenes5, k=-1) # 138090.5
+qr_bothgenes0 = rq(Ct ~ Gene + S_dropout + Laboratory, data=ctdata_onlypos_subs_bothgenes, tau=0.5)
+qr_bothgenes1 = rq(Ct ~ Gene * S_dropout + Laboratory, data=ctdata_onlypos_subs_bothgenes, tau=0.5)
+qr_bothgenes2 = rq(Ct ~ Gene + S_dropout * Laboratory, data=ctdata_onlypos_subs_bothgenes, tau=0.5)
+qr_bothgenes3 = rq(Ct ~ Gene * Laboratory + S_dropout, data=ctdata_onlypos_subs_bothgenes, tau=0.5)
+qr_bothgenes4 = rq(Ct ~ (Gene + Laboratory + S_dropout)^2, data=ctdata_onlypos_subs_bothgenes, tau=0.5)
+qr_bothgenes5 = rq(Ct ~ Gene * Laboratory * S_dropout, data=ctdata_onlypos_subs_bothgenes, tau=0.5)
+AIC(qr_bothgenes0, k=-1) # 138993.5
+AIC(qr_bothgenes1, k=-1) # 138983.3
+AIC(qr_bothgenes2, k=-1) # 138918.8 # fits data best based on BIC criterion (PS: here AIC with k<0 returns BIC)
+AIC(qr_bothgenes3, k=-1) # 139006
+AIC(qr_bothgenes4, k=-1) # 138920 # this could be a good model also, slightly more general
+AIC(qr_bothgenes5, k=-1) # 138948.3
 
-summary(qr_bothgenes)
-qr_emmeans_bylab99 = data.frame(emmeans(qr_bothgenes2, ~ Laboratory + Gene + S_dropout, level=0.99)) # median Ct values + 99% CLs
+summary(qr_bothgenes3)
+# tau: [1] 0.5
+# 
+# Coefficients:
+#   Value     Std. Error t value   Pr(>|t|) 
+# (Intercept)                                18.23510   0.22227   82.04069   0.00000
+# GeneORF1ab gene                             0.86340   0.28970    2.98029   0.00288
+# LaboratorySaint LUC - UCL                   0.35220   0.30991    1.13645   0.25578
+# LaboratoryULB                              -0.57680   0.28173   -2.04739   0.04063
+# LaboratoryUZ leuven                         2.90880   0.30326    9.59168   0.00000
+# S_dropout1                                 -2.23110   0.15018  -14.85570   0.00000
+# GeneORF1ab gene:LaboratorySaint LUC - UCL   0.22360   0.43673    0.51198   0.60867
+# GeneORF1ab gene:LaboratoryULB               1.10360   0.38943    2.83391   0.00460
+# GeneORF1ab gene:LaboratoryUZ leuven         0.26440   0.41269    0.64067   0.52174
+
+qr_emmeans_bylab99 = data.frame(emmeans(qr_bothgenes3, ~ Laboratory + Gene + S_dropout, level=0.99)) # median Ct values + 99% CLs
 qr_emmeans_bylab99
-qr_emmeans99 = data.frame(emmeans(qr_bothgenes2, ~ Gene + S_dropout, level=0.99)) # median Ct values + 99% CLs
+qr_emmeans99 = data.frame(emmeans(qr_bothgenes3, ~ Gene + S_dropout, level=0.99)) # median Ct values + 99% CLs
 qr_emmeans99
-qr_emmeans = data.frame(emmeans(qr_bothgenes2, ~ Gene + S_dropout, level=0.95)) # median Ct values + 95% CLs
+qr_emmeans = data.frame(emmeans(qr_bothgenes3, ~ Gene + S_dropout, level=0.95)) # median Ct values + 95% CLs
 qr_emmeans
 # Gene S_dropout   emmean        SE    df lower.CL upper.CL
-# 1      N gene         0 20.00580 0.1213226 20825 19.76800 20.24360
-# 2 ORF1ab gene         0 20.00580 0.1213226 20825 19.76800 20.24360
-# 3      N gene         1 18.25605 0.1406013 20825 17.98046 18.53164
-# 4 ORF1ab gene         1 18.25605 0.1406013 20825 17.98046 18.53164
-contrast(emmeans(qr_bothgenes2, ~ S_dropout, level=0.95), method="pairwise") # difference in median Ct value highly significant across both genes: p<0.0001
+# 1      N gene         0 18.90615 0.1175157 20825 18.67581 19.13649
+# 2 ORF1ab gene         0 20.16745 0.1185207 20825 19.93514 20.39976
+# 3      N gene         1 16.67505 0.1387765 20825 16.40304 16.94706
+# 4 ORF1ab gene         1 17.93635 0.1396734 20825 17.66258 18.21012
+contrast(emmeans(qr_bothgenes3, ~ S_dropout, level=0.95), method="pairwise") # difference in median Ct value highly significant across both genes: p<0.0001
 # contrast estimate    SE    df t.ratio p.value
-# 0 - 1        1.75 0.153 20825 11.456  <.0001 
-confint(contrast(emmeans(qr_bothgenes2, ~ S_dropout|Gene, level=0.95), method="pairwise"))
-# gene = N gene:
-#   contrast estimate    SE    df lower.CL upper.CL
-# 0 - 1        1.75 0.153 20825     1.45     2.05
+# 0 - 1        2.23 0.15 20825 14.856  <.0001 
+confint(contrast(emmeans(qr_bothgenes3, ~ S_dropout|Gene, level=0.95), method="pairwise"))
+# PS with the fittest best model the shift in median Ct value is identical for both genes
+# Gene = N gene:
+#   contrast estimate   SE    df lower.CL upper.CL
+# 0 - 1        2.23 0.15 20825     1.94     2.53
 # 
-# gene = ORF1ab gene:
-#   contrast estimate    SE    df lower.CL upper.CL
-# 0 - 1        1.75 0.153 20825     1.45     2.05
+# Gene = ORF1ab gene:
+#   contrast estimate   SE    df lower.CL upper.CL
+# 0 - 1        2.23 0.15 20825     1.94     2.53
 # 
 # Results are averaged over the levels of: Laboratory 
 # Confidence level used: 0.95 
@@ -452,7 +470,7 @@ confint(contrast(emmeans(qr_bothgenes2, ~ S_dropout|Gene, level=0.95), method="p
 
 # violin plots by gene & lab & S dropout with expected marginal means+99% CLs of best fitting median regression model
 ctviolinplots_bylab = ggplot(data=ctdata_onlypos_subs_bothgenes, aes(x=factor(S_dropout), y=Ct, fill=factor(S_dropout))) +
-  geom_violin(alpha=1, colour=NA, trim=FALSE, draw_quantiles=TRUE, adjust=2, scale="width") +
+  geom_violin(alpha=1, colour=NA, trim=TRUE, draw_quantiles=TRUE, adjust=2, scale="width") +
   geom_crossbar(data=qr_emmeans_bylab99, aes(x=factor(S_dropout), y=emmean, ymin=lower.CL, ymax=upper.CL, group=Gene)) +
   # stat_summary(fun.data=data_summary,  
   #             geom="pointrange", aes(color=factor(S_dropout))) +
@@ -474,7 +492,7 @@ ggsave(file=paste0(".\\plots\\",dat,"\\Ct values_violin plots_by lab.pdf"), widt
 
 # violin plots by gene & S dropout with expected marginal means+99% CLs of best fitting median regression model
 ctviolinplots = ggplot(data=ctdata_onlypos_subs_bothgenes, aes(x=factor(S_dropout), y=Ct, fill=factor(S_dropout))) +
-  geom_violin(alpha=1, colour=NA, trim=FALSE, draw_quantiles=TRUE, adjust=2, scale="width") +
+  geom_violin(alpha=1, colour=NA, trim=TRUE, draw_quantiles=TRUE, adjust=2, scale="width") +
   geom_crossbar(data=qr_emmeans99, aes(x=factor(S_dropout), y=emmean, ymin=lower.CL, ymax=upper.CL, group=Gene, lwd=I(0.1))) +
   # stat_summary(fun.data=data_summary,  
   #             geom="pointrange", aes(color=factor(S_dropout))) +
@@ -488,6 +506,11 @@ ctviolinplots = ggplot(data=ctdata_onlypos_subs_bothgenes, aes(x=factor(S_dropou
   scale_x_discrete(breaks=c("0","1"), labels=c("S pos","S dropout")) +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 ctviolinplots
+
+saveRDS(ctviolinplots, file = paste0(".\\plots\\",dat,"\\Ct values_violin plots.rds"))
+graph2ppt(file=paste0(".\\plots\\",dat,"\\Ct values_violin plots.pptx"), width=6, height=6)
+ggsave(file=paste0(".\\plots\\",dat,"\\Ct values_violin plots.png"), width=6, height=6)
+ggsave(file=paste0(".\\plots\\",dat,"\\Ct values_violin plots.pdf"), width=6, height=6)
 
 
 
@@ -545,8 +568,13 @@ confint(contrast(emmeans(fitct_highvirload_0B, ~ S_dropout, type="response"), me
 
 # odds ratio = 1.56 [1.43-1.71] for N gene & 1.15 [1.05-1.26] for ORF1ab gene 
 confint(contrast(emmeans(fitct_highvirload_0B, ~ S_dropout|Gene, type="response"), method="revpairwise", type="response"))
-# contrast odds.ratio    SE  df asymp.LCL asymp.UCL
-# 1 / 0          1.15 0.055 Inf      1.04      1.26
+# Gene = N gene:
+#   contrast odds.ratio     SE  df asymp.LCL asymp.UCL
+# 1 / 0          1.56 0.0716 Inf      1.43      1.71
+# 
+# Gene = ORF1ab gene:
+#   contrast odds.ratio     SE  df asymp.LCL asymp.UCL
+# 1 / 0          1.15 0.0548 Inf      1.05      1.26
 
 fitct_highvirload_emmeans = as.data.frame(emmeans(fitct_highvirload_0B, ~ S_dropout+Gene, type="response"))
 fitct_highvirload_emmeans$S_dropout = factor(fitct_highvirload_emmeans$S_dropout)
@@ -623,8 +651,8 @@ fitseq_preds$collection_date = as.Date(fitseq_preds$collection_date_num, origin=
 # prob that S dropout was B.1.1.7 / 501Y.V1
 data_ag_wide$TRUEPOS = fitseq_preds$prob[match(data_ag_wide$collection_date, fitseq_preds$collection_date)] 
 # estimated count of 501Y.V1, we adjust numerator of binomial GLMM to take into account true positive rate
-data_ag_wide$estB117 = data_ag_wide$n_sgtf * data_ag_wide$TRUEPOS 
-data_ag_wide$propB117 = data_ag_wide$estB117 / data_ag_wide$n_pos
+data_ag_wide$est_n_B117 = data_ag_wide$n_sgtf * data_ag_wide$TRUEPOS 
+data_ag_wide$propB117 = data_ag_wide$est_n_B117 / data_ag_wide$n_pos
 data_ag_wide$obs = factor(1:nrow(data_ag_wide))
 data_ag_wide = data_ag_wide[data_ag_wide$total != 0, ]
 head(data_ag_wide)
@@ -652,8 +680,8 @@ fitseq_preds$collection_date = as.Date(fitseq_preds$collection_date_num, origin=
 # prob that S dropout was B.1.1.7 / 501Y.V1
 data_ag_byday_wide$TRUEPOS = fitseq_preds$prob[match(data_ag_byday_wide$collection_date, fitseq_preds$collection_date)] 
 # estimated count of 501Y.V1, we adjust numerator of binomial GLMM to take into account true positive rate
-data_ag_byday_wide$estB117 = data_ag_byday_wide$n_sgtf * data_ag_byday_wide$TRUEPOS
-data_ag_byday_wide$propB117 = data_ag_byday_wide$estB117 / data_ag_byday_wide$n_pos
+data_ag_byday_wide$est_n_B117 = data_ag_byday_wide$n_sgtf * data_ag_byday_wide$TRUEPOS
+data_ag_byday_wide$propB117 = data_ag_byday_wide$est_n_B117 / data_ag_byday_wide$n_pos
 data_ag_byday_wide$obs = factor(1:nrow(data_ag_byday_wide))
 data_ag_byday_wide = data_ag_byday_wide[data_ag_byday_wide$total != 0, ]
 head(data_ag_byday_wide)
@@ -668,9 +696,9 @@ write.csv(data_ag_byday_wide, file=".\\data\\be_latest\\be_B117_total.csv", row.
 set_sum_contrasts()
 glmersettings = glmerControl(optimizer="optimx", optCtrl=list(method="nlminb")) # PS : to try all optimizer run all_fit(fit1)
 glmersettings2 = glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=1E4)) # PS : to try all optimizer run all_fit(fit1)
-fit1 = glmer(cbind(estB117, n_pos-estB117) ~ (1|obs)+scale(collection_date_num)+LABORATORY, family=binomial(logit), 
+fit1 = glmer(cbind(est_n_B117, n_pos-est_n_B117) ~ (1|obs)+scale(collection_date_num)+LABORATORY, family=binomial(logit), 
              data=data_ag_wide, subset=data_ag_wide$n_pos>0, control=glmersettings)  # common slope model, with lab coded as fixed factor
-fit2 = glmer(cbind(estB117, n_pos-estB117) ~ (1|obs)+scale(collection_date_num)*LABORATORY, family=binomial(logit), 
+fit2 = glmer(cbind(est_n_B117, n_pos-est_n_B117) ~ (1|obs)+scale(collection_date_num)*LABORATORY, family=binomial(logit), 
              data=data_ag_wide, subset=data_ag_wide$n_pos>0, control=glmersettings) # separate slopes model, with lab coded as fixed factor
 BIC(fit1,fit2) 
 # df      BIC
@@ -790,7 +818,7 @@ fit1_preds[fit1_preds$collection_date==(today+7),]
 #    collection_date_num     prob         SE  df asymp.LCL asymp.UCL collection_date
 # 34               18674 0.6128499 0.0263124 Inf 0.5603468 0.6631713      2021-02-16
 
-sum(tail(data_ag_byday_wide$estB117, 14))/sum(tail(data_ag_byday_wide$n_pos,14)) 
+sum(tail(data_ag_byday_wide$est_n_B117, 14))/sum(tail(data_ag_byday_wide$n_pos,14)) 
 # 30.8% of the samples of last 2 weeks estimated to be by British variant
 # PS: with data 31/1 this was 15.4%  
 # note: this is not the same as the estimated prop of the new infections or new diagnoses today that are of the British
@@ -860,6 +888,7 @@ graph2ppt(file=paste0(".\\plots\\",dat,"\\Fig4_fit1_binomGLMM_B117_Belgium_respo
 ggsave(file=paste0(".\\plots\\",dat,"\\Fig4_fit1_binomGLMM_B117_Belgium_response scale.png"), width=8, height=6)
 ggsave(file=paste0(".\\plots\\",dat,"\\Fig4_fit1_binomGLMM_B117_Belgium_response scale.pdf"), width=8, height=6)
 
+
 # plot per lab on logit scale:
 plot_fit1 = qplot(data=fit1_preds_bylab, x=collection_date, y=prob, geom="blank") +
   facet_wrap(~LABORATORY) +
@@ -919,7 +948,7 @@ R.from.r <- function(r, gamma_mean=4.7, gamma_sd=2.9) {
 }
 
 data_ag_wide2 = data_ag_wide 
-data_ag_wide2$n_b117 = round(data_ag_wide2$estB117, 0)
+data_ag_wide2$n_b117 = round(data_ag_wide2$est_n_B117, 0)
 data_ag_wide2$n_spos = data_ag_wide2$n_pos-data_ag_wide2$n_b117
 (data_ag_wide2$n_neg+data_ag_wide2$n_spos+data_ag_wide2$n_b117)==data_ag_wide2$total # check
 data_ag_wide2 = data_ag_wide2[,c("collection_date","LABORATORY","n_neg","n_spos","n_b117")]
@@ -973,67 +1002,101 @@ ggsave(file=paste0(".\\plots\\",dat,"\\test_outcomes_share_Sdropout_positives on
 # to be able to estimate growth rate and Rt of B.1.1.7 and wild type separately
 
 set.seed(1)
-library(nnet)
-mfit0 = multinom(outcome~ns(collection_date_num, df=5) + LABORATORY, weights=count, data=data_ag_long, maxit=1000) 
-mfit1 = multinom(outcome~ns(collection_date_num, df=5) + LABORATORY, weights=count, data=data_ag_long, maxit=1000) 
-mfit2 = multinom(outcome~ns(collection_date_num, df=5) * LABORATORY, weights=count, data=data_ag_long, maxit=1000) 
-BIC(mfit0, mfit1,mfit2) # mfit2 fits best, df splines tuned based on BIC
-#       df      BIC
-# mfit1 24 191041.3
-# mfit2 84 190729.9
+# we use data from the 14th of Jan onwards, as data has been approx randomly sampled from then on
+sel_labs = unique(data_ag_long$LABORATORY)
+date.from = as.Date("2021-01-14")
+data_ag_long_subs = data_ag_long[(data_ag_long$LABORATORY %in% sel_labs)&(data_ag_long$collection_date>=date.from),]
+data_ag_long_subs$LABORATORY = droplevels(data_ag_long_subs$LABORATORY)
 
-library(effects)
-plot(allEffects(mfit1), style="stacked")
+mfit0 = multinom(outcome ~ scale(collection_date_num) + LABORATORY, weights=count, data=data_ag_long_subs, maxit=1000)
+mfit1 = multinom(outcome ~ scale(collection_date_num) * LABORATORY, weights=count, data=data_ag_long_subs, maxit=1000)
+mfit2 = multinom(outcome ~ ns(collection_date_num, df=2) + LABORATORY, weights=count, data=data_ag_long_subs, maxit=1000) 
+mfit3 = multinom(outcome ~ ns(collection_date_num, df=3) * LABORATORY, weights=count, data=data_ag_long_subs, maxit=1000) 
+BIC(mfit0, mfit1, mfit2, mfit3) # mfit3 fits best, df splines tuned based on BIC
+#       df      BIC
+# mfit0 16 150913.8
+# mfit1 28 150894.7
+# mfit2 18 149513.9
+# mfit3 56 149434.8
+summary(mfit3)
+
+plot(Effect("collection_date_num",mfit3), style="stacked")
+
+
+# mblogit mulinomial fit with correction for overdispersion
+# should be better, but I still have to update my emmeans analyses below to use these models instead
+# lab can also be coded as a random factor here
+mclogitfit0 = mblogit(outcome ~ scale(collection_date_num) + LABORATORY, weights=count, data=data_ag_long_subs, 
+                      dispersion=TRUE, from.table=FALSE)
+mclogitfit1 = mblogit(outcome ~ scale(collection_date_num) * LABORATORY, weights=count, data=data_ag_long_subs, 
+                      dispersion=TRUE, from.table=FALSE)
+mclogitfit2 = mblogit(outcome ~ ns(collection_date_num, df=2) * LABORATORY, weights=count, data=data_ag_long_subs, 
+                      dispersion=TRUE, from.table=FALSE)
+mclogitfit3 = mblogit(outcome ~ ns(collection_date_num, df=3) * LABORATORY, weights=count, data=data_ag_long_subs, 
+                      dispersion=TRUE, from.table=FALSE)
+BIC(mclogitfit0, mclogitfit1, mclogitfit2, mclogitfit3)
+#             df      BIC
+# mclogitfit0 16 150913.8
+# mclogitfit1 28 150870.9
+# mclogitfit2 42 149479.6
+# mclogitfit3 56 149434.8
+summary(mclogitfit3)
+dispersion(mclogitfit3, method="Afroz") # 31.68, i.e. >>1, there is overdispersion in the data
+
+
 
 # average growth rates of S-positive/wild type & S dropout/B.1.1.7 cases over period from jan 1 till now
-emtrends(mfit1, ~outcome|1, var="collection_date_num",  mode="latent")
+emtrends(mfit3, ~outcome|1, var="collection_date_num",  mode="latent")
+# PS emtrends(mclogitfit3, ~outcome|1, var="collection_date_num",  mode="latent") gives Error in qr.default(t(const)) : NA/NaN/Inf in foreign function call (arg 1)
+# emmeans_1.5.3 output:
 # outcome collection_date_num.trend      SE df lower.CL upper.CL
-# n_neg                     -0.0568 0.00287 84  -0.0625  -0.0511
-# n_spos                    -0.0217 0.00503 84  -0.0317  -0.0116
-# n_b117                     0.0785 0.00509 84   0.0684   0.0886
-R.from.r(-0.0217) # Rt of S-positive/wild type = 0.9012047
-R.from.r(0.0785) # Rt of S dropout/B.1.1.7 variant = 1.412321
-R.from.r(0.0785)/R.from.r(-0.0217) # Rt of B.1.1.7 = 1.567148x times higher than of wild type
+# n_neg                     0.00392 0.00394 56 -0.00396   0.0118
+# n_spos                   -0.02795 0.00598 56 -0.03992  -0.0160
+# n_b117                    0.02403 0.00412 56  0.01578   0.0323
+R.from.r(-0.02795) # Rt of S-positive/wild type = 0.87
+R.from.r(0.02403) # Rt of S dropout/B.1.1.7 variant = 1.12
+R.from.r(0.02403)/R.from.r(-0.02795) # Rt of B.1.1.7 = 1.28x times higher than of wild type
 
 # implied growth rate & transmission advantage + 95% CLs
-delta_r = data.frame(confint(contrast(emtrends(mfit2, ~outcome|1, var="collection_date_num",  
+delta_r = data.frame(confint(contrast(emtrends(mfit3, ~outcome|1, var="collection_date_num",  
                                                at=list(outcome=c("n_spos","n_b117")), mode="latent"), method="revpairwise")))[,c(2,5,6)]
 delta_r # growth advantage
 #    estimate lower.CL  upper.CL
-# 1 0.1001354 0.080826 0.1194448
+# 1 0.05197395 0.03298562 0.07096228
 exp(delta_r*4.7) # transmission advantage
 #    estimate lower.CL upper.CL
-# 1 1.601013 1.462112 1.753109
+# 1 1.276699 1.167696 1.395877
 
 
 # average growth rates of S-positive/wild type & S dropout/B.1.1.7 cases evaluated today
-emtrends(mfit2, ~outcome|1, var="collection_date_num",  at=list(collection_date_num=today_num), mode="latent")
-# outcome collection_date_num.trend     SE df lower.CL upper.CL
-# n_neg                      0.1113 0.0141 84   0.0833  0.13921
-# n_spos                    -0.0758 0.0249 84  -0.1254 -0.02621
-# n_b117                    -0.0355 0.0191 84  -0.0735  0.00253
-R.from.r(-0.0758) # 0.6819121
-R.from.r(-0.0355) # 0.841655
-R.from.r(-0.0355)/R.from.r(-0.0758) # Rt of B.1.1.7 = 1.234257x times higher than of wild type
-# PS recent shift from active surveillance for B.1.1.7 in beginning of january to random sampling
-# right now might introduce downward bias though
+emtrends(mfit3, ~outcome|1, var="collection_date_num",  at=list(collection_date_num=today_num), mode="latent")
+# emmeans_1.5.3 output:
+# outcome collection_date_num.trend      SE df lower.CL upper.CL
+# n_neg                      0.1027 0.00562 56   0.0914   0.1140
+# n_spos                    -0.0725 0.00741 56  -0.0873  -0.0576
+# n_b117                    -0.0302 0.00982 56  -0.0499  -0.0106
+R.from.r(-0.0725) # Rt S pos / wild type = 0.69
+R.from.r(-0.0302) # Rt of S dropout = 0.86
+R.from.r(-0.0302)/R.from.r(-0.0725) # Rt of B.1.1.7 = 1.24x times higher than of wild type
+# PS recent shift from active surveillance for B.1.1.7 in beginning of January to random sampling
+# right now might introduce a downward bias here though
 
 # implied growth rate & transmission advantage
-delta_r = data.frame(confint(contrast(emtrends(mfit2, ~outcome|1, var="collection_date_num",  
+delta_r = data.frame(confint(contrast(emtrends(mfit3, ~outcome|1, var="collection_date_num",  
                                                at=list(outcome=c("n_spos","n_b117"),
                                                        collection_date_num=today_num), mode="latent"), method="revpairwise")))[,c(2,5,6)]
 delta_r # growth advantage
 #       estimate lower.CL  upper.CL
-# 1 0.04028708 -0.0435366 0.1241108
+# 1 0.04222412 0.01009232 0.07435591
 exp(delta_r*4.7) # transmission advantage
 #    estimate lower.CL upper.CL
-# 1 1.208463 0.8149553 1.791979
+# 1 1.219515 1.048577  1.41832
 
 
 # growth rates and Re values of the B.1.1.7 variant and the wild type calculated over time
 extrapolate = 0
-r_and_Re_B117_wildtype = data.frame(emtrends(mfit0, ~outcome|1, var="collection_date_num", by="collection_date_num",  
-                                  at=list(collection_date_num=seq(min(data_ag_long$collection_date_num),
+r_and_Re_B117_wildtype = data.frame(emtrends(mfit3, ~outcome|1, var="collection_date_num", by=c("collection_date_num"), # by=c("collection_date_num","LABORATORY"),  
+                                  at=list(collection_date_num=seq(min(data_ag_long_subs$collection_date_num),
                                                                   today_num+extrapolate),
                                           outcome=c("n_spos","n_b117")), mode="latent"))
 r_and_Re_B117_wildtype$collection_date = as.Date(r_and_Re_B117_wildtype$collection_date_num, origin="1970-01-01")
@@ -1044,15 +1107,19 @@ r_and_Re_B117_wildtype$Re.UCL = R.from.r(r_and_Re_B117_wildtype$r.UCL)
 
 plot_Re_B117_WT = qplot(data=r_and_Re_B117_wildtype, x=collection_date, y=Re, ymin=Re.LCL, ymax=Re.UCL, geom="ribbon", alpha=I(0.5), 
       fill=outcome , colour=NULL, group=outcome ) +
+  # facet_wrap(~LABORATORY) +
   geom_line(aes(colour=outcome )) + theme_hc() + xlab("") +
   # scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01")),
   #                   labels=c("M","A","M","J","J","A","S","O","N","D","J","F")) +
   scale_y_continuous(trans="log2", breaks=c(1/seq(3,1),seq(1,4)),
                      labels=round(c(1/seq(3,1),seq(1,4)),2)) +
-  coord_cartesian(ylim=c(1/3,3), expand=c(0,0)) +
+  coord_cartesian(xlim=c(min(data_ag_long_subs$collection_date),
+                         max(r_and_Re_B117_wildtype$collection_date)), 
+                  ylim=c(1/2,2), 
+                  expand=c(0,0)) +
   geom_hline(yintercept=1, colour=alpha(I("black"),0.2)) +
   # theme(legend.position = "none") +
-  ggtitle("Re of B.1.1.7 and WT") +
+  ggtitle("Effective reproduction nr. Re of B.1.1.7 and wild type") +
   guides(colour=FALSE) +
   scale_colour_manual("", values=c("steelblue","lightcoral")) +
   scale_fill_manual("", values=c("steelblue","lightcoral"), labels=c("S positive (wild type)","S dropout (B.1.1.7)")) +
@@ -1064,7 +1131,7 @@ plot_Re_B117_WT
 
 # implied growth rate advantage + 95% CLs over time
 extrapolate = 0
-growthadvantage = data.frame(confint(contrast(emtrends(mfit0, ~outcome|1, var="collection_date_num", by="collection_date_num", 
+growthadvantage = data.frame(confint(contrast(emtrends(mfit3, ~outcome|1, var="collection_date_num", by="collection_date_num", 
                                                at=list(outcome=c("n_spos","n_b117"),
                                                        collection_date_num=seq(min(data_ag_long$collection_date_num),
                                                                                today_num+extrapolate)), 
@@ -1078,9 +1145,12 @@ growthadvantage$collection_date = as.Date(growthadvantage$collection_date_num, o
 plot_growthadvB117 = qplot(data=growthadvantage, x=collection_date, y=transmadv, 
                             ymin=transmadv.LCL, ymax=transmadv.UCL, geom="ribbon", alpha=I(0.5), 
       fill=I("lightcoral") , colour=NULL ) +
-  geom_line(aes(colour=I("lightcoral"))) + theme_hc() + xlab("") + ylab("Transmission advantage of B.1.1.7 (%)") +
+  geom_line(aes(colour=I("lightcoral"))) + theme_hc() + xlab("") + ylab("Transmission advantage (%)") +
   geom_hline(yintercept=0, colour=alpha(I("black"),0.2)) +
-  ggtitle("Transmission advantage of B.1.1.7 over WT")
+  ggtitle("Transmission advantage of B.1.1.7 over wild type") +
+  coord_cartesian(xlim=c(min(data_ag_long_subs$collection_date),
+                         max(r_and_Re_B117_wildtype$collection_date)), 
+                  expand=c(0,0))
 # labs(tag = tag) +
 # theme(plot.tag.position = "bottomright",
 #      plot.tag = element_text(vjust = 1, hjust = 1, size=8))
@@ -1111,16 +1181,16 @@ sgtfdata_uk_truepos = read.csv(".//data//uk//sgtf_pillar2_UK-2021-01-25_nick dav
 # PS this could also be estimated from the COG-UK data based on the presence of deletion 69/70, which is S dropout
 sgtfdata_uk$TRUEPOS = sgtfdata_uk_truepos$sgtfv[match(interaction(sgtfdata_uk$REGION, sgtfdata_uk$collection_date),
                                                       interaction(sgtfdata_uk_truepos$group, sgtfdata_uk_truepos$date))] # modelled proportion of S dropout samples that were actually the VOC
-sgtfdata_uk$estB117 = sgtfdata_uk$SGTF * sgtfdata_uk$TRUEPOS
+sgtfdata_uk$est_n_B117 = sgtfdata_uk$SGTF * sgtfdata_uk$TRUEPOS
 sgtfdata_uk$COUNTRY = "UK"
-sgtfdata_uk = sgtfdata_uk[,c("collection_date","COUNTRY","REGION","estB117","TOTAL")]
+sgtfdata_uk = sgtfdata_uk[,c("collection_date","COUNTRY","REGION","est_n_B117","TOTAL")]
 colnames(sgtfdata_uk)[which(colnames(sgtfdata_uk)=="TOTAL")] = "n_pos"
 range(sgtfdata_uk$collection_date) # "2020-10-01" "2021-01-24"
 sgtfdata_uk$collection_date = as.Date(sgtfdata_uk$collection_date)
 sgtfdata_uk$collection_date_num = as.numeric(sgtfdata_uk$collection_date)
 sgtfdata_uk$REGION = factor(sgtfdata_uk$REGION, levels=levels_UKregions)
 sgtfdata_uk$obs = factor(1:nrow(sgtfdata_uk))
-sgtfdata_uk$propB117 = sgtfdata_uk$estB117 / sgtfdata_uk$n_pos
+sgtfdata_uk$propB117 = sgtfdata_uk$est_n_B117 / sgtfdata_uk$n_pos
 head(sgtfdata_uk)
 
 set_sum_contrasts()
@@ -1128,13 +1198,13 @@ glmersettings = glmerControl(optimizer="Nelder_Mead", optCtrl=list(maxfun=1e5)) 
 glmersettings2 = glmerControl(optimizer="optimx", optCtrl=list(method="L-BFGS-B"))
 glmersettings3 = glmerControl(optimizer="optimx", optCtrl=list(method="nlminb"))
 glmersettings4 = glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=1e5))
-fit_ukSGTF_1 = glmer(cbind(estB117, n_pos-estB117 ) ~ (1|obs)+scale(collection_date_num)+REGION, family=binomial(logit), 
+fit_ukSGTF_1 = glmer(cbind(est_n_B117, n_pos-est_n_B117 ) ~ (1|obs)+scale(collection_date_num)+REGION, family=binomial(logit), 
                      data=sgtfdata_uk, control=glmersettings)  # common slope model for country
-fit_ukSGTF_2 = glmer(cbind(estB117, n_pos-estB117) ~ (1|obs)+scale(collection_date_num)*REGION, family=binomial(logit), 
+fit_ukSGTF_2 = glmer(cbind(est_n_B117, n_pos-est_n_B117) ~ (1|obs)+scale(collection_date_num)*REGION, family=binomial(logit), 
                      data=sgtfdata_uk, control=glmersettings) # separate slopes model for country
-fit_ukSGTF_3 = glmer(cbind(estB117, n_pos-estB117) ~ (1|obs)+ns(collection_date_num,df=3)+REGION, family=binomial(logit), 
+fit_ukSGTF_3 = glmer(cbind(est_n_B117, n_pos-est_n_B117) ~ (1|obs)+ns(collection_date_num,df=3)+REGION, family=binomial(logit), 
                      data=sgtfdata_uk, control=glmersettings) # with additive spline term
-fit_ukSGTF_4 = glmer(cbind(estB117, n_pos-estB117) ~ (1|obs)+ns(collection_date_num,df=3)*REGION, family=binomial(logit), 
+fit_ukSGTF_4 = glmer(cbind(est_n_B117, n_pos-est_n_B117) ~ (1|obs)+ns(collection_date_num,df=3)*REGION, family=binomial(logit), 
                      data=sgtfdata_uk, control=glmersettings3) # with spline term in interaction with region
 BIC(fit_ukSGTF_1, fit_ukSGTF_2, fit_ukSGTF_3, fit_ukSGTF_4) 
 # separate-slopes 3 df spline model fit_be_uk2_4 best
@@ -1676,11 +1746,11 @@ exp(4.7*as.data.frame(emtrends(fit_us_propB117amongSGTF, ~ 1, var="collection_da
 fitted_truepos = predict(fit_us_propB117amongSGTF, newdat=helix_sgtf, type="response") 
 # fitted true positive rate, ie prop of S dropout samples that are B.1.1.7 for dates & states in helix_sgtf
 
-helix_sgtf$estB117 = helix_sgtf$n_sgtf*fitted_truepos # estimated nr of B.1.1.7 samples
-helix_sgtf$propB117 = helix_sgtf$estB117/helix_sgtf$n 
-fit_us = glmer(cbind(estB117, n-estB117) ~ (1|state/obs)+scale(collection_date_num), 
+helix_sgtf$est_n_B117 = helix_sgtf$n_sgtf*fitted_truepos # estimated nr of B.1.1.7 samples
+helix_sgtf$propB117 = helix_sgtf$est_n_B117/helix_sgtf$n 
+fit_us = glmer(cbind(est_n_B117, n-est_n_B117) ~ (1|state/obs)+scale(collection_date_num), 
                family=binomial(logit), data=helix_sgtf) # random intercepts by state
-fit_us2 = glmer(cbind(estB117, n-estB117) ~ (collection_date_num||state/obs)+scale(collection_date_num), 
+fit_us2 = glmer(cbind(est_n_B117, n-est_n_B117) ~ (collection_date_num||state/obs)+scale(collection_date_num), 
                family=binomial(logit), data=helix_sgtf) # random intercepts+slopes by state, with uncorrelated intercepts & slopes
 BIC(fit_us, fit_us2) # random intercept model is best
 # df      BIC
