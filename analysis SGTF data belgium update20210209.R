@@ -22,6 +22,7 @@ library(ggthemes)
 library(ggpubr)
 library(dplyr)
 library(tidyr)
+library(readr)
 library(scales)
 library(quantreg)
 library(gamm4)
@@ -784,13 +785,14 @@ fit2_contrasts
 # PLOT MODEL FIT
 
 # for best fitting common slope model fit1
+date.from = as.numeric(as.Date("2020-09-01"))
 date.to = as.numeric(as.Date("2021-05-01")) # date to extrapolate to
 total.SD = sqrt(sum(sapply(as.data.frame(VarCorr(fit1))$sdcor, function (x) x^2))) 
 # bias correction for random effects in marginal means, see https://cran.r-project.org/web/packages/emmeans/vignettes/transformations.html#bias-adj
 fit1_preds = as.data.frame(emmeans(fit1, ~ collection_date_num, 
                                          # by="LABORATORY", 
-                                         at=list(collection_date_num=seq(as.numeric(min(data_ag_byday_wide$collection_date)),
-                                                                     date.to)), 
+                                         at=list(collection_date_num=seq(date.from,
+                                                                         date.to)), 
                                          type="response"), bias.adjust = TRUE, sigma = total.SD)
 fit1_preds$collection_date = as.Date(fit1_preds$collection_date_num, origin="1970-01-01")
 
@@ -798,7 +800,7 @@ fit1_preds$collection_date = as.Date(fit1_preds$collection_date_num, origin="197
 total.SD = sqrt(sum(sapply(as.data.frame(VarCorr(fit1))$sdcor, function (x) x^2))) 
 fit1_preds_bylab = as.data.frame(emmeans(fit1, ~ collection_date_num, 
                                    by="LABORATORY", 
-                                   at=list(collection_date_num=seq(as.numeric(min(data_ag_byday_wide$collection_date)),
+                                   at=list(collection_date_num=seq(date.from,
                                                                date.to)), 
                                     type="response"), bias.adjust = TRUE, sigma = total.SD)
 fit1_preds_bylab$collection_date = as.Date(fit1_preds_bylab$collection_date_num, origin="1970-01-01")
@@ -1237,12 +1239,13 @@ exp(fit_ukSGTF_4_emtrends[,c(2,5,6)]*4.7)
 # PLOT MODEL FIT
 
 # spline model fit_ukSGTF_4
+date.from = as.numeric(as.Date("2020-09-01"))
 date.to = as.numeric(as.Date("2021-03-01")) # date to extrapolate to
 total.SD = sqrt(sum(sapply(as.data.frame(VarCorr(fit_ukSGTF_4))$sdcor, function (x) x^2))) 
 # bias correction for random effects in marginal means, see https://cran.r-project.org/web/packages/emmeans/vignettes/transformations.html#bias-adj
 fit_ukSGTF_4_preds = as.data.frame(emmeans(fit_ukSGTF_4, ~ collection_date_num, 
                                            by=c("REGION"), 
-                                           at=list(collection_date_num=seq(as.numeric(min(sgtfdata_uk$collection_date)),
+                                           at=list(collection_date_num=seq(date.from,
                                                                        date.to)), 
                                            type="response"), bias.adjust = TRUE, sigma = total.SD)
 fit_ukSGTF_4_preds$collection_date = as.Date(fit_ukSGTF_4_preds$collection_date_num, origin="1970-01-01")
@@ -1342,16 +1345,12 @@ plot_UK_SGTF_response
 
 
 # 6.2. DATA UK: COG-UK SEQUENCING DATA ####
-# (NOT UPDATED YET & NOT INCLUDED IN REPORT)
+# (TO DO - THIS HAS NOT BEEN UPDATED YET)
 
 data_uk = read.csv(".//data//uk//COGUKdata_agbydayregion.csv") 
 data_uk = data_uk[data_uk$variant=="VOC 202012/01",]
 # COG-UK sequencing data, aggregated by NHS region, from https://github.com/nicholasdavies/newcovid/tree/master/multinomial_logistic_fits/data
 head(data_uk)
-data_be = data_ag
-colnames(data_be)[2] = "REGION"
-data_be$COUNTRY = "Belgium"
-data_be = data_be[,c("collection_date","COUNTRY","REGION","VOC","TOTAL")]
 data_uk$COUNTRY = "UK"
 data_uk = data_uk[,c("collection_date","COUNTRY","nhs_name","count","total")]
 colnames(data_uk) = c("collection_date","COUNTRY","REGION","VOC","TOTAL")
@@ -1374,6 +1373,12 @@ data_zurich$date = as.Date(data_zurich$date)
 data_zurich$lab = "Zürich"
 colnames(data_zurich)[colnames(data_zurich) %in% c("N501Y")] = c("n_B117")
 head(data_zurich)
+data_bern = read.csv("https://ispmbern.github.io/covid-19/variants/data/variants_BE.csv")
+data_bern$date = as.Date(data_bern$date)
+data_bern$lab = "Bern"
+colnames(data_bern)[colnames(data_bern) %in% c("N501Y")] = c("n_B117")
+head(data_bern)
+
 data_viollier_risch = read.csv("https://github.com/covid-19-Re/variantPlot/raw/master/data/data.csv")
 data_viollier_risch[is.na(data_viollier_risch)] = 0
 data_viollier_risch$date = as.Date(NA)
@@ -1383,9 +1388,10 @@ data_viollier_risch$date[data_viollier_risch$week<51] = lubridate::ymd( "2021-01
   lubridate::weeks( data_viollier_risch$week[data_viollier_risch$week<51] - 1 ) + 6 # PS dates were made to match the ones given in https://ispmbern.github.io/covid-19/variants/data/variants_CH.csv
 colnames(data_viollier_risch)[colnames(data_viollier_risch) %in% c("n","b117")] = c("total","n_B117")
 data_viollier_risch = data_viollier_risch[,c("date","total","n_B117","lab")]
-data_switzerland = rbind(data_geneva, data_zurich, data_viollier_risch)[,c("date","lab","n_B117","total")]
-data_switzerland$lab = factor(data_switzerland$lab, levels=c("Geneva","Zürich","Viollier","Risch"),
-                                 labels=c("Geneva University Hospitals","University Hospital Zürich","Viollier lab","Risch lab"))
+
+data_switzerland = rbind(data_geneva, data_zurich, data_bern, data_viollier_risch)[,c("date","lab","n_B117","total")]
+data_switzerland$lab = factor(data_switzerland$lab, levels=c("Geneva","Zürich","Bern","Viollier","Risch"),
+                                 labels=c("Geneva University Hospitals","University Hospital Zürich","University of Bern","Viollier lab","Risch lab"))
 data_switzerland$date_num = as.numeric(data_switzerland$date)
 data_switzerland$obs = factor(1:nrow(data_switzerland))
 data_switzerland$propB117 = data_switzerland$n_B117 / data_switzerland$total
@@ -1400,13 +1406,13 @@ fit_switzerland_emtrends = as.data.frame(emtrends(fit_switerland, revpairwise ~ 
                                                mode="link", adjust="Tukey")$emtrends)
 fit_switzerland_emtrends[,c(2,5,6)]
 #   collection_date_num.trend asymp.LCL asymp.UCL
-# 1                 0.108048 0.09565667 0.1204394
+# 1                 0.1050824 0.09580577  0.114359
 
 # with a generation time of 4.7 days this would translate in an increased 
 # infectiousness (multiplicative effect on Rt) of
 exp(fit_switzerland_emtrends[,c(2,5,6)]*4.7) 
 #   date_num.trend asymp.LCL asymp.UCL
-# 1       1.661674  1.567664  1.761323
+# 1       1.638674  1.568763  1.711701
 
 
 # PS: note that the effect on Rt is in https://ispmbern.github.io/covid-19/variants/
@@ -1420,14 +1426,14 @@ exp(fit_switzerland_emtrends[,c(2,5,6)]*4.7)
 
 
 # PLOT MODEL FIT
-
+date.from = as.numeric(as.Date("2020-09-01"))
 date.to = as.numeric(as.Date("2021-03-01")) # date to extrapolate to
 total.SD = sqrt(sum(sapply(as.data.frame(VarCorr(fit_switerland))$sdcor, function (x) x^2))) 
 # bias correction for random effects in marginal means, see https://cran.r-project.org/web/packages/emmeans/vignettes/transformations.html#bias-adj
 fit_switzerland_preds = as.data.frame(emmeans(fit_switerland, ~ date_num, 
                                               by=c("lab"), 
-                                              at=list(date_num=seq(as.numeric(min(data_switzerland$date)),
-                                                                              date.to)), 
+                                              at=list(date_num=seq(date.from,
+                                                                   date.to)), 
                                               type="response"), bias.adjust = TRUE, sigma = total.SD)
 fit_switzerland_preds$date = as.Date(fit_switzerland_preds$date_num, origin="1970-01-01")
 
@@ -1455,7 +1461,7 @@ plot_switzerland = qplot(data=fit_switzerland_preds, x=date, y=prob, geom="blank
   scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
                       labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
   coord_cartesian(# xlim=c(as.Date("2020-09-01"),as.Date("2021-02-01")), 
-    # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")), 
+    xlim=c(as.Date("2020-11-01"),as.Date("2021-03-01")), 
     ylim=c(0.001,99.9), expand=c(0,0)) +
   scale_color_manual("", values=reg_cols) +
   scale_fill_manual("", values=reg_cols) +
@@ -1498,7 +1504,7 @@ plot_switzerland_response = qplot(data=fit_switzerland_preds, x=date, y=prob*100
   # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
   #                    labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
   coord_cartesian(# xlim=c(as.Date("2020-09-01"),as.Date("2021-02-01")), 
-    # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")), 
+    xlim=c(as.Date("2020-11-01"),as.Date("2021-03-01")), 
     ylim=c(0,100), expand=c(0,0)) +
   scale_color_manual("", values=reg_cols) +
   scale_fill_manual("", values=reg_cols) +
@@ -1591,13 +1597,13 @@ emmeans(fit_denmark, revpairwise ~ 1, at=list(date_num=today_num+7), type="respo
 
 
 # PLOT MODEL FIT
-
+date.from = as.numeric(as.Date("2020-09-01"))
 date.to = as.numeric(as.Date("2021-03-01")) # date to extrapolate to
 total.SD = sqrt(sum(sapply(as.data.frame(VarCorr(fit_denmark))$sdcor, function (x) x^2))) 
 # bias correction for random effects in marginal means, see https://cran.r-project.org/web/packages/emmeans/vignettes/transformations.html#bias-adj
 fit_denmark_preds = as.data.frame(emmeans(fit_denmark, ~ date_num, 
                                               by=c("Region"), 
-                                              at=list(date_num=seq(as.numeric(min(data_denmark$date)),
+                                              at=list(date_num=seq(date.from,
                                                                    date.to)), 
                                               type="response"), bias.adjust = TRUE, sigma = total.SD)
 fit_denmark_preds$date = as.Date(fit_denmark_preds$date_num, origin="1970-01-01")
@@ -1626,7 +1632,7 @@ plot_denmark = qplot(data=fit_denmark_preds, x=date, y=prob, geom="blank") +
   scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
                       labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
   coord_cartesian(# xlim=c(as.Date("2020-09-01"),as.Date("2021-02-01")), 
-    # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")), 
+    xlim=c(as.Date("2020-10-01"),as.Date("2021-03-01")), 
     ylim=c(0.001,99.9), expand=c(0,0)) +
   scale_color_manual("", values=reg_cols) +
   scale_fill_manual("", values=reg_cols) +
@@ -1669,7 +1675,7 @@ plot_denmark_response = qplot(data=fit_denmark_preds, x=date, y=prob*100, geom="
   # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
   #                    labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
   coord_cartesian(# xlim=c(as.Date("2020-09-01"),as.Date("2021-02-01")), 
-    # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")), 
+    xlim=c(as.Date("2020-10-01"),as.Date("2021-03-01")), 
     ylim=c(0,100), expand=c(0,0)) +
   scale_color_manual("", values=reg_cols) +
   scale_fill_manual("", values=reg_cols) +
@@ -1870,7 +1876,7 @@ plot_us_response = qplot(data=fit_us_preds2, x=collection_date, y=prob*100, geom
   #                   labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
   # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
   #                    labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
-  coord_cartesian(xlim=c(min(fit_calfl2_preds$collection_date), as.Date("2021-04-01")), 
+  coord_cartesian(xlim=c(min(fit_us_preds2$collection_date), as.Date("2021-04-01")), 
                   # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")), 
                   ylim=c(0,100), expand=c(0,0)) +
   scale_color_discrete("state", h=c(0, 240), c=120, l=50) +
@@ -1882,7 +1888,7 @@ plot_us_response = qplot(data=fit_us_preds2, x=collection_date, y=prob*100, geom
              # colour=I("steelblue"), 
              alpha=I(0.3)) +
   scale_size_continuous("number of\npositive tests", trans="log10", 
-                        range=c(1, 4), limits=c(1,10^(round(log10(max(helix_sgtf_subs2$n)),0)+1)), breaks=c(10,100,1000)) +
+                        range=c(1, 4), limits=c(1,10^(round(log10(max(helix_sgtf$n)),0)+1)), breaks=c(10,100,1000)) +
   # guides(fill=FALSE) + 
   # guides(colour=FALSE) + 
   theme(legend.position = "right") +
@@ -1905,37 +1911,74 @@ fit_uk_preds2$country = "UK"
 colnames(fit_uk_preds2)[2] = "REGION"
 colnames(fit_uk_preds2)[1] = "date_num"
 colnames(fit_uk_preds2)[8] = "date"
+fit_belgium_preds2 = fit1_preds
+fit_belgium_preds2$country = "Belgium"
+fit_belgium_preds2$REGION = "Belgium"
+colnames(fit_belgium_preds2)[1] = "date_num"
+colnames(fit_belgium_preds2)[7] = "date"
 fit_switzerland_preds2 = fit_switzerland_preds
 fit_switzerland_preds2$country = "Switzerland"
 colnames(fit_switzerland_preds2)[2] = "REGION"
 colnames(fit_switzerland_preds2)[1] = "date_num"
 colnames(fit_switzerland_preds2)[8] = "date"
+fit_switzerland_preds2$REGION = factor(fit_switzerland_preds2$REGION, 
+                                  levels=c("Geneva University Hospitals","University Hospital Zürich","University of Bern","Viollier lab","Risch lab"),
+                                  labels=c("Geneva","Zürich","Bern","Swiss Viollier lab","Swiss Risch lab"))
 fit_denmark_preds2 = fit_denmark_preds
 fit_denmark_preds2$country = "Denmark"
 colnames(fit_denmark_preds2)[2] = "REGION"
 colnames(fit_denmark_preds2)[1] = "date_num"
 colnames(fit_denmark_preds2)[8] = "date"
+fit_us_preds3 = fit_us_preds2
+fit_us_preds3$country = "USA"
+fit_us_preds3 = fit_us_preds3[,-which(colnames(fit_us_preds3) %in% c("asymp.LCL","asymp.UCL"))]
+colnames(fit_us_preds3)[1] = "REGION"
+colnames(fit_us_preds3)[2] = "date_num"
+colnames(fit_us_preds3)[6] = "date"
+colnames(fit_us_preds3)[9] = "asymp.LCL"
+colnames(fit_us_preds3)[10] = "asymp.UCL"
+fit_us_preds3 = fit_us_preds3[fit_us_preds3$REGION %in% c("FL","CA"),]
+fit_us_preds3$REGION = factor(fit_us_preds3$REGION, levels=c("FL","CA"), labels=c("Florida","California"))
+fit_us_preds3 = fit_us_preds3[,c("date_num","REGION","prob","SE","df","asymp.LCL","asymp.UCL","date","country")]
 
-fits_international = rbind(fit_uk_preds2,fit_switzerland_preds2,fit_denmark_preds2)
-fits_international$country = factor(fits_international$country, levels=c("UK","Switzerland","Denmark"))
+fits_international = rbind(fit_uk_preds2,fit_denmark_preds2,fit_belgium_preds2,fit_switzerland_preds2,fit_us_preds3)
+fits_international$country = factor(fits_international$country, levels=c("UK","Denmark","Belgium","Switzerland","USA"))
 
 sgtfdata_uk2 = sgtfdata_uk
 sgtfdata_uk2$country = "UK"
 colnames(sgtfdata_uk2)[colnames(sgtfdata_uk2) %in% c("collection_date","n_pos")] = c("date","total")
 sgtfdata_uk2 = sgtfdata_uk2[,c("date","country","REGION","propB117","total")]
 
+data_belgium2 = data_ag_byday_wide
+data_belgium2$country = "Belgium"
+data_belgium2$REGION = "Belgium"
+colnames(data_belgium2)[colnames(data_belgium2) %in% c("collection_date","n_pos")] = c("date","total")
+data_belgium2 = data_belgium2[,c("date","country","REGION","propB117","total")]
+
 data_switzerland2 = data_switzerland
 data_switzerland2$country = "Switzerland"
 colnames(data_switzerland2)[colnames(data_switzerland2) %in% c("lab")] = c("REGION")
 data_switzerland2 = data_switzerland2[,c("date","country","REGION","propB117","total")]
+data_switzerland2$REGION = factor(data_switzerland2$REGION, 
+                                  levels=c("Geneva University Hospitals","University Hospital Zürich","University of Bern","Viollier lab","Risch lab"),
+                                  labels=c("Geneva","Zürich","Bern","Swiss Viollier lab","Swiss Risch lab"))
 
 data_denmark2 = data_denmark
 data_denmark2$country = "Denmark"
 colnames(data_denmark2)[colnames(data_denmark2) %in% c("Region")] = c("REGION")
 data_denmark2 = data_denmark2[,c("date","country","REGION","propB117","total")]
 
-data_international = rbind(sgtfdata_uk2, data_switzerland2, data_denmark2)
-data_international$country = factor(data_international$country, levels=c("UK","Switzerland","Denmark"))
+data_us2 = data.frame(helix_sgtf)
+data_us2$country = "USA"
+colnames(data_us2)[1] = "REGION"
+colnames(data_us2)[2] = "date"
+colnames(data_us2)[3] = "total"
+data_us2 = data_us2[,c("date","country","REGION","propB117","total")]
+data_us2 = data_us2[data_us2$REGION %in% c("FL","CA"),]
+data_us2$REGION = factor(data_us2$REGION, levels=c("FL","CA"), labels=c("Florida","California"))
+
+data_international = rbind(sgtfdata_uk2, data_denmark2, data_belgium2, data_switzerland2, data_us2)
+data_international$country = factor(data_international$country, levels=c("UK","Denmark","Belgium","Switzerland","USA"))
 
 # n1 = length(levels(fit_uk_preds2$REGION))
 # n2 = length(levels(fit_switzerland_preds2$REGION))
@@ -1943,9 +1986,16 @@ data_international$country = factor(data_international$country, levels=c("UK","S
 # reg_cols = c(hcl(h = seq(290, 0, length = n1), l = 50, c = 255),
 #              muted(hcl(h = seq(290, 0, length = n2+n3), l = 50, c = 255), c=200, l=40))
 
+ymin = 0.001
+ymax = 0.999
+data_international$propB117[data_international$propB117>ymax] = ymax
+fits_international$prob[fits_international$prob>ymax] = ymax
+fits_international$asymp.LCL[fits_international$asymp.LCL>ymax] = ymax
+fits_international$asymp.UCL[fits_international$asymp.UCL>ymax] = ymax
+
 # PLOT MODEL FITS (response scale)
 plot_international = qplot(data=fits_international, x=date, y=prob, geom="blank") +
-  facet_wrap(~country, ncol=1) +
+  facet_wrap(~country, ncol=1, scales="fixed") +
   geom_ribbon(aes(y=prob, ymin=asymp.LCL, ymax=asymp.UCL, colour=NULL, 
                   fill=REGION
   ), 
@@ -1962,10 +2012,8 @@ plot_international = qplot(data=fits_international, x=date, y=prob, geom="blank"
   # scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
   #                   labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
   scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
-                      labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
-  coord_cartesian(# xlim=c(as.Date("2020-09-01"),as.Date("2021-02-01")), 
-    # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")), 
-    ylim=c(0.001,99.9), expand=c(0,0)) +
+                      labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9"),
+                      limits = c(ymin,ymax)) +
   # scale_color_manual("", values=reg_cols) +
   # scale_fill_manual("", values=reg_cols) +
   scale_color_discrete("region", h=c(0, 240), c=250, l=50) +
@@ -1974,12 +2022,13 @@ plot_international = qplot(data=fits_international, x=date, y=prob, geom="blank"
   # scale_fill_discrete("", h=c(0, 280), c=200) +
   geom_point(data=data_international, 
              aes(x=date, y=propB117, size=total, shape=country,
-                 colour=REGION
+                 colour=REGION, fill=REGION
              ), 
              # colour=I("steelblue"), 
              alpha=I(0.5)) +
   scale_size_continuous("total n", trans="sqrt", 
-                        range=c(1, 4), limits=c(1,10000), breaks=c(100,1000,10000)) +
+                        range=c(1, 4), limits=c(10,10000), breaks=c(100,1000,10000)) +
+  scale_shape_manual(values=21:25) +
   # guides(fill=FALSE) + 
   # guides(colour=FALSE) + 
   theme(legend.position = "right") +
@@ -1989,15 +2038,19 @@ plot_international = qplot(data=fits_international, x=date, y=prob, geom="blank"
     color = guide_legend(order = 2),
     fill = guide_legend(order = 2),
     size = guide_legend(order = 3)
-  ) # +
+  ) + 
+  coord_cartesian( 
+    xlim=c(as.Date("2020-09-01"),as.Date("2021-03-01")),
+    ylim=c(ymin,ymax), 
+    expand=FALSE)
   # ggtitle("INTERNATIONAL SPREAD OF SARS-CoV2 VARIANT B.1.1.7") +
   # theme(plot.title = element_text(hjust = 0.5))
 plot_international
 
-saveRDS(plot_international, file = paste0(".\\plots\\",dat,"\\Fig6_binomGLMM_B117_fits_UK_CH_DK.rds"))
-graph2ppt(file=paste0(".\\plots\\",dat,"\\Fig6_binomGLMM_B117_fits_UK_CH_DK.pptx"), width=7, height=8)
-ggsave(file=paste0(".\\plots\\",dat,"\\Fig6_binomGLMM_B117_fits_UK_CH_DK.png"), width=7, height=8)
-ggsave(file=paste0(".\\plots\\",dat,"\\Fig6_binomGLMM_B117_fits_UK_CH_DK.pdf"), width=7, height=8)
+saveRDS(plot_international, file = paste0(".\\plots\\",dat,"\\Fig6_binomGLMM_B117_fits_UK_DK_BE_CH_USA.rds"))
+graph2ppt(file=paste0(".\\plots\\",dat,"\\Fig6_binomGLMM_B117_fits_UK_DK_BE_CH_USA.pptx"), width=7, height=8)
+ggsave(file=paste0(".\\plots\\",dat,"\\Fig6_binomGLMM_B117_fits_UK_DK_BE_CH_USA.png"), width=7, height=8)
+ggsave(file=paste0(".\\plots\\",dat,"\\Fig6_binomGLMM_B117_fits_UK_DK_BE_CH_USA.pdf"), width=7, height=8)
 
 
 
@@ -2022,9 +2075,6 @@ plot_international_response = qplot(data=fits_international, x=date, y=prob*100,
   #                   labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
   # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
   #                    labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
-  coord_cartesian(# xlim=c(as.Date("2020-09-01"),as.Date("2021-02-01")), 
-    # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")), 
-    ylim=c(0,100), expand=c(0,0)) +
   scale_color_discrete("region", h=c(0, 240), c=120, l=50) +
   scale_fill_discrete("region", h=c(0, 240), c=120, l=50) +
 #   scale_color_manual("", values=reg_cols) +
@@ -2033,12 +2083,13 @@ plot_international_response = qplot(data=fits_international, x=date, y=prob*100,
   # scale_fill_discrete("", h=c(0, 280), c=200) +
   geom_point(data=data_international, 
              aes(x=date, y=propB117*100, size=total, shape=country,
-                 colour=REGION
+                 colour=REGION, fill=REGION
              ), 
              # colour=I("steelblue"), 
              alpha=I(0.5)) +
   scale_size_continuous("total n", trans="sqrt", 
-                        range=c(1, 4), limits=c(1,10000), breaks=c(100,1000,10000)) +
+                        range=c(1, 4), limits=c(10,10000), breaks=c(100,1000,10000)) +
+  scale_shape_manual(values=21:25) +
   # guides(fill=FALSE) + 
   # guides(colour=FALSE) + 
   theme(legend.position = "right") +
@@ -2048,15 +2099,19 @@ plot_international_response = qplot(data=fits_international, x=date, y=prob*100,
   color = guide_legend(order = 2),
   fill = guide_legend(order = 2),
   size = guide_legend(order = 3)
-) # +
+) +
+  coord_cartesian( 
+    xlim=c(as.Date("2020-09-01"),as.Date("2021-03-01")),
+    ylim=c(0,100), expand=c(0,0))
+# +
   # ggtitle("INTERNATIONAL SPREAD OF SARS-CoV2 VARIANT B.1.1.7") +
   # theme(plot.title = element_text(hjust = 0.5))
 plot_international_response
 
-saveRDS(plot_international_response, file = paste0(".\\plots\\",dat,"\\binomGLMM_B117_fits_UK_CH_DK_response.rds"))
-graph2ppt(file=paste0(".\\plots\\",dat,"\\binomGLMM_B117_fits_UK_CH_DK_response.pptx"), width=7, height=8)
-ggsave(file=paste0(".\\plots\\",dat,"\\binomGLMM_B117_fits_UK_CH_DK_response.png"), width=7, height=8)
-ggsave(file=paste0(".\\plots\\",dat,"\\binomGLMM_B117_fits_UK_CH_DK_response.pdf"), width=7, height=8)
+saveRDS(plot_international_response, file = paste0(".\\plots\\",dat,"\\binomGLMM_B117_fits_UK_DK_BE_CH_USA_response.rds"))
+graph2ppt(file=paste0(".\\plots\\",dat,"\\binomGLMM_B117_fits_UK_DK_BE_CH_USA_response.pptx"), width=7, height=8)
+ggsave(file=paste0(".\\plots\\",dat,"\\binomGLMM_B117_fits_UK_DK_BE_CH_USA_response.png"), width=7, height=8)
+ggsave(file=paste0(".\\plots\\",dat,"\\binomGLMM_B117_fits_UK_DK_BE_CH_USA_response.pdf"), width=7, height=8)
 
 
 plot_us2 = plot_us + coord_cartesian(xlim=c(as.Date("2020-11-01"), as.Date("2021-03-31")),
