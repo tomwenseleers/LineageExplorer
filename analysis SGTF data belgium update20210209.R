@@ -1,5 +1,6 @@
 # ANALYSIS OF S-GENE TARGET FAILURE (S DROPOUT) DATA FROM BELGIUM TO INFER CONTAGIOUSNESS OF NEW VARIANT OF CONCERN B.1.1.7 / 501Y.V1 ####
 # PLUS INTERNATIONAL COMPARISON (USING DATA FROM THE UK, DENMARK, SWITZERLAND & THE US)
+# AND PRELIMINARY INFERENCE OF GROWTH ADVANTAGE OF THE SOUTH AFRICAN VOC 501Y.V2 BASED ON SEQUENCING DATA
 # T. Wenseleers & N. Hens
 
 # Data provided by Emmanuel André (BE), COG-UK, PHE & N. Davies (UK), 
@@ -9,7 +10,7 @@
 # https://ispmbern.github.io/covid-19/variants/data & https://github.com/covid-19-Re/variantPlot/raw/master/data/data.csv)
 # and Helix, San Mateo, CA, Karthik Gangavarapu & Kristian G. Andersen (US, https://github.com/andersen-lab/paper_2021_early-b117-usa/tree/master/b117_frequency/data, https://www.medrxiv.org/content/10.1101/2021.02.06.21251159v1)
 
-# last update 11 FEBR. 2021
+# last update 13 FEBR. 2021
 
 library(lme4)
 library(splines)
@@ -39,16 +40,17 @@ library(lubridate)
 library(zoo)
 library(gridExtra)
 library(sf)
+library(broom)
 
 # # define emm_basis method to have emmeans support mblogit multinomial mixed models
 # # cf https://cran.r-project.org/web/packages/emmeans/vignettes/xtending.html
 # # PS no longer necessary if you have emmeans 1.5.4 loaded
-# emm_basis.mblogit = function(object, ...) {
-#   object$coefficients = object$coefmat
-#   object$lev = levels(object$model[[1]])
-#   object$edf = Inf
-#   emmeans:::emm_basis.multinom(object, ...)
-# }
+emm_basis.mblogit = function(object, ...) {
+  object$coefficients = object$coefmat
+  object$lev = levels(object$model[[1]])
+  object$edf = Inf
+  emmeans:::emm_basis.multinom(object, ...)
+}
 
 dat="2021_02_09" # desired file version for Belgian data (date/path in //data)
 suppressWarnings(dir.create(paste0(".//plots//",dat)))
@@ -1168,6 +1170,278 @@ ggsave(file=paste0(".\\plots\\",dat,"\\multinomial_Re_growthadv_B117_WT.pdf"), w
 
 
 
+# 3.3 PRELIMINARY ASSESSMENT OF GROWTH RATE ADVANTAGE OF THE SOUTH AFRICAN VOC 501Y.V2 IN BELGIUM BASED ON SEQUENCING DATA ####
+
+# data taken from latest Sciensano weekly report "COVID 19 WEKELIJKS EPIDEMIOLOGISCH BULLETIN (12 FEBRUARI 2021), p. 23"
+# https://covid-19.sciensano.be/nl/covid-19-epidemiologische-situatie
+
+be_seqdata = read.csv(".\\data\\be_latest\\sequencing_501YV1_501YV2.csv")
+# data is split up in baseline surveillance (randomly sampled) and active surveillance (from travellers, known outbreaks &
+# S dropout sequencing), below I will use the randomly sampled baseline surveillance part
+be_seqdata$collection_date = as.Date(be_seqdata$collection_date)
+be_seqdata$baselinesurv_n_wild_type = be_seqdata$baselinesurv_total_sequenced-be_seqdata$baselinesurv_n_501Y.V1-be_seqdata$baselinesurv_n_501Y.V2
+be_seqdata$baselinesurv_prop501YV1 = be_seqdata$baselinesurv_n_501Y.V1 / be_seqdata$baselinesurv_total_sequenced
+be_seqdata$baselinesurv_prop501YV2 = be_seqdata$baselinesurv_n_501Y.V2 / be_seqdata$baselinesurv_total_sequenced
+head(be_seqdata)
+
+be_seqdata_long = gather(be_seqdata[,c("collection_date",
+                                       "baselinesurv_n_wild_type",
+                                       "baselinesurv_n_501Y.V1",
+                                       "baselinesurv_n_501Y.V2",
+                                       "baselinesurv_total_sequenced")], 
+                         variant, count, c("baselinesurv_n_wild_type",
+                                           "baselinesurv_n_501Y.V1",
+                                           "baselinesurv_n_501Y.V2"), factor_key=TRUE)
+be_seqdata_long$variant = factor(be_seqdata_long$variant, levels=c("baselinesurv_n_wild_type","baselinesurv_n_501Y.V1","baselinesurv_n_501Y.V2"), 
+                                 labels=c("wild type", "501Y.V1", "501Y.V2"))
+be_seqdata_long$collection_date_num = as.numeric(be_seqdata_long$collection_date)
+be_seqdata_long$prop = be_seqdata_long$count / be_seqdata_long$baselinesurv_total_sequenced
+
+baseline_sequencing = ggplot(data=be_seqdata_long, 
+                       aes(x=collection_date, 
+                           y=count, fill=variant, group=variant)) +
+  # facet_wrap(~LABORATORY) +
+  geom_area(aes(fill=variant), position = position_fill(reverse = FALSE)) +
+  theme_hc() +
+  scale_fill_manual("variant", values=c("darkgrey","lightcoral","red"), labels=c("wild type","501Y.V1 (British)","501Y.V2 (South African)")) +
+  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
+                     labels=substring(months(as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01"))),1,1),
+                     limits=as.Date(c("2020-12-01","2021-03-01")), expand=c(0,0)) +
+  ylab("Share among newly diagnosed infections") +
+  xlab("Collection date") +
+  # ggtitle("Test outcomes") +
+  theme(plot.title = element_text(hjust = 0)) +
+  theme(legend.position = "right")
+baseline_sequencing
+
+saveRDS(baseline_sequencing, file = paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2.rds"))
+graph2ppt(file=paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2.pptx"), width=7, height=5)
+ggsave(file=paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2.png"), width=7, height=5)
+ggsave(file=paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2.pdf"), width=7, height=5)
+
+
+# multinomial spline fit on share of each type (wild type / British / SA
+# to be able to estimate growth rate advantage of each type compared to wild type
+
+set.seed(1)
+be_seq_mfit0 = nnet::multinom(variant ~ scale(collection_date_num), weights=count, data=be_seqdata_long, maxit=1000)
+be_seq_mfit1 = nnet::multinom(variant ~ scale(ns(collection_date_num, df=2)), weights=count, data=be_seqdata_long, maxit=1000) 
+BIC(be_seq_mfit0, be_seq_mfit1) # mfit0 fits best
+#              df      BIC
+# be_seq_mfit0  4 1215.401
+# be_seq_mfit1  6 1228.376
+summary(be_seq_mfit0)
+
+# growth rate advantage compared to wild type based on multinomial coefficients in function of time
+delta_r_501V1_501YV2 = data.frame(tidy(be_seq_mfit0,conf.int=TRUE))[c(2,4),c("estimate","conf.low","conf.high")] / attr(scale(be_seqdata_long$collection_date_num),"scaled:scale")
+colnames(delta_r_501V1_501YV2) = c("delta_r","2.5 %","97.5 %")
+rownames(delta_r_501V1_501YV2) = levels(be_seqdata_long$variant)[-1]
+delta_r_501V1_501YV2
+#           delta_r      2.5 %    97.5 %
+#   501Y.V1 0.08127892 0.06130512 0.1012527
+#   501Y.V2 0.10476187 0.04875484 0.1607689
+
+exp(delta_r_501V1_501YV2*4.7) # implied transmission advantage (assuming no immune evasion advantage of 501Y.V2, if there is such an advantage, transm advantage would be less)
+#            delta_r    2.5 %   97.5 %
+#   501Y.V1 1.465228 1.331174 1.612782
+#   501Y.V2 1.636207 1.250240 2.141327
+
+# PS confidence intervals returned by emmeans 1.5.4 are wrong though, as they don't match the CIs above, which here they should
+# check with Russ Length
+confint(contrast(emtrends(be_seq_mfit0, ~ variant|1, var="collection_date_num",  mode="latent"), method="trt.vs.ctrl", adjust="none"))
+# contrast            estimate     SE df lower.CL upper.CL
+# 501Y.V1 - wild type   0.0813 0.0340  4  -0.0130    0.176
+# 501Y.V2 - wild type   0.1048 0.0286  4   0.0254    0.184
+
+
+plot(Effect("collection_date_num",be_seq_mfit0), style="stacked")
+plot(Effect("collection_date_num",be_seq_mfit0)) # confidence look sensible here
+
+
+# plot multinomial model fit
+extrapolate = 30
+date.from = as.numeric(as.Date("2020-12-01")) # min(be_seqdata_long$collection_date_num)
+date.to = max(be_seqdata_long$collection_date_num)+extrapolate
+
+be_seq_mfit0_preds = data.frame(emmeans(be_seq_mfit0, ~ variant+collection_date_num, at=list(collection_date_num=seq(date.from, date.to)), mode="prob"))
+be_seq_mfit0_preds$collection_date = as.Date(be_seq_mfit0_preds$collection_date_num, origin="1970-01-01")
+be_seq_mfit0_preds$variant = factor(be_seq_mfit0_preds$variant, levels=c("wild type","501Y.V1","501Y.V2"),
+                                    labels=c("wild type","501Y.V1 (British)","501Y.V2 (South African)"))
+be_seqdata_long2 = be_seqdata_long[be_seqdata_long$variant!="wild type",]
+be_seqdata_long2$variant = droplevels(be_seqdata_long2$variant) 
+be_seqdata_long2$variant = factor(be_seqdata_long2$variant, levels=c("501Y.V1","501Y.V2"),
+                                  labels=c("501Y.V1 (British)","501Y.V2 (South African)"))
+
+muller_be_seq_mfit0 = ggplot(data=be_seq_mfit0_preds, 
+                     aes(x=collection_date, y=prob, group=variant)) + 
+  # facet_wrap(~LABORATORY) +
+  geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant), position="stack") +
+  annotate("rect", xmin=max(be_seqdata_long$collection_date)+1, 
+                   xmax=as.Date("2021-03-01"), ymin=0, ymax=1, alpha=0.3, fill="white") + # extrapolated part
+  scale_fill_manual("variant", values=c("darkgrey","lightcoral","red")) +
+  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
+                     labels=substring(months(as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01"))),1,1),
+                     limits=as.Date(c("2020-12-01","2021-03-01")), expand=c(0,0)) +
+  # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
+  theme_hc() + theme(legend.position="right", 
+                     axis.title.x=element_blank()) + 
+  # labs(title = "MAIN SARS-CoV2 VARIANT LINEAGES IN THE UK") +
+  ylab("Relative abundance") +
+  ggtitle("Spread of the British & South African SARS-CoV2 variants in Belgium")
+muller_be_seq_mfit0
+
+saveRDS(muller_be_seq_mfit0, file = paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2_multinomial fit.rds"))
+graph2ppt(file=paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2_multinomial fit.pptx"), width=7, height=5)
+ggsave(file=paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2_multinomial fit.png"), width=7, height=5)
+ggsave(file=paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2_multinomial fit.pdf"), width=7, height=5)
+
+multinom_501YV1_501YV2 = ggarrange(baseline_sequencing+ggtitle("Spread of the British & South African SARS-CoV2 variants in Belgium")+xlab("")+ylab("Share"), 
+          muller_be_seq_mfit0+ggtitle("Multinomial fit plus extrapolation")+ylab("Share"), ncol=1, 
+          common.legend = TRUE, legend="bottom")
+multinom_501YV1_501YV2
+saveRDS(multinom_501YV1_501YV2, file = paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2_multinomial fit_multipanel.rds"))
+graph2ppt(file=paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2_multinomial fit_multipanel.pptx"), width=7, height=7)
+ggsave(file=paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2_multinomial fit_multipanel.png"), width=7, height=7)
+ggsave(file=paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2_multinomial fit_multipanel.pdf"), width=7, height=7)
+
+
+# PLOT MODEL FIT WITH DATA & CONFIDENCE INTERVALS
+be_seq_mfit0_preds2 = be_seq_mfit0_preds[be_seq_mfit0_preds$variant!="wild type",]
+be_seq_mfit0_preds2$variant = droplevels(be_seq_mfit0_preds2$variant)
+
+
+# on response scale:
+plot_multinom_501YV1_501YV2_response = qplot(data=be_seq_mfit0_preds2, x=collection_date, y=100*prob, geom="blank") +
+  geom_ribbon(aes(y=100*prob, ymin=100*lower.CL, ymax=100*upper.CL, colour=NULL,
+                  fill=variant
+  ), alpha=I(0.3)) +
+  geom_line(aes(y=100*prob,
+                colour=variant
+  ), alpha=I(1)) +
+  ylab("Share of new infections (%)") +
+  theme_hc() + xlab("") +
+  ggtitle("Spread of the British & South African SARS-CoV2 variants in Belgium") +
+  # scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
+  #                   labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
+  # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
+  #                     labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
+  coord_cartesian(xlim=c(min(be_seqdata_long2$collection_date), as.Date("2021-03-01")),
+                  # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")),
+                  ylim=c(0,100), expand=c(0,0)) +
+  # scale_color_discrete("", h=c(0, 280), c=200) +
+  # scale_fill_discrete("", h=c(0, 280), c=200) +
+  scale_fill_manual("variant", values=c("blue","red")) +
+  scale_colour_manual("variant", values=c("blue","red")) +
+  geom_point(data=be_seqdata_long2,
+             aes(x=collection_date, y=100*prop, size=baselinesurv_total_sequenced,
+                 colour=variant
+             ),
+             alpha=I(1)) +
+  scale_size_continuous("number\nsequenced", trans="sqrt",
+                        range=c(1, 4), limits=c(10,10^round(log10(max(be_seqdata_long[be_seqdata_long$variant!="wild type","baselinesurv_total_sequenced"])),0)), breaks=c(10,100,1000)) +
+  # guides(fill=FALSE) +
+  # guides(colour=FALSE) +
+  theme(legend.position = "right") +
+  xlab("Collection date")
+plot_multinom_501YV1_501YV2_response
+
+saveRDS(plot_multinom_501YV1_501YV2_response, file = paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2_multinomial fit_model preds_response.rds"))
+graph2ppt(file=paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2_multinomial fit_model preds_response.pptx"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2_multinomial fit_model preds_response.png"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2_multinomial fit_model preds_response.pdf"), width=8, height=6)
+
+
+# on logit scale:
+
+be_seq_mfit0_preds3 = be_seq_mfit0_preds2
+ymin = 0.001
+ymax = 99.9
+be_seq_mfit0_preds3$lower.CL[be_seq_mfit0_preds3$lower.CL<ymin] = ymin
+be_seq_mfit0_preds3$upper.CL[be_seq_mfit0_preds3$upper.CL>ymax] = ymax
+
+plot_multinom_501YV1_501YV2 = qplot(data=be_seq_mfit0_preds3, x=collection_date, y=prob, geom="blank") +
+  geom_ribbon(aes(y=prob, ymin=lower.CL, ymax=upper.CL, colour=NULL,
+                  fill=variant
+  ), alpha=I(0.3)) +
+  geom_line(aes(y=prob,
+                colour=variant
+  ), alpha=I(1)) +
+  ylab("Share of new infections (%)") +
+  theme_hc() + xlab("") +
+  ggtitle("Spread of the British & South African SARS-CoV2 variants in Belgium") +
+  # scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
+  #                   labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
+  scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
+                     labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
+  coord_cartesian(xlim=c(min(be_seqdata_long2$collection_date), 
+                         # as.Date("2021-01-15"),
+                         as.Date("2021-03-01")),
+                  # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")),
+                  ylim=c(0.001,99.9), expand=c(0,0)) +
+  # scale_color_discrete("", h=c(0, 280), c=200) +
+  # scale_fill_discrete("", h=c(0, 280), c=200) +
+  scale_fill_manual("variant", values=c("blue","red")) +
+  scale_colour_manual("variant", values=c("blue","red")) +
+  geom_point(data=be_seqdata_long2,
+             aes(x=collection_date, y=prop, size=baselinesurv_total_sequenced,
+                 colour=variant
+             ),
+             alpha=I(1)) +
+  scale_size_continuous("total number\nsequenced", trans="sqrt",
+                        range=c(1, 4), limits=c(10,10^round(log10(max(be_seqdata_long[be_seqdata_long$variant!="wild type","baselinesurv_total_sequenced"])),0)), breaks=c(10,100,1000)) +
+  # guides(fill=FALSE) +
+  # guides(colour=FALSE) +
+  theme(legend.position = "right") +
+  xlab("Collection date")
+plot_multinom_501YV1_501YV2
+
+saveRDS(plot_multinom_501YV1_501YV2, file = paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2_multinomial fit_model preds.rds"))
+graph2ppt(file=paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2_multinomial fit_model preds.pptx"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2_multinomial fit_model preds.png"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2_multinomial fit_model preds.pdf"), width=8, height=6)
+
+
+
+# check for overdispersion using mblogit mulinomial fit
+be_seq_mclogitfit0 = mblogit(variant ~ scale(collection_date_num), weights=count, data=be_seqdata_long, 
+                      dispersion=FALSE, from.table=FALSE)
+be_seq_mclogitfit1 = mblogit(variant ~ scale(ns(collection_date_num, df=2)), weights=count, data=be_seqdata_long, 
+                      dispersion=FALSE, from.table=FALSE)
+BIC(be_seq_mclogitfit0, be_seq_mclogitfit1)
+#                    df      BIC
+# be_seq_mclogitfit0  4 1215.401
+# be_seq_mclogitfit1  6 1228.368
+summary(be_seq_mclogitfit0)
+dispersion(be_seq_mclogitfit0, method="Afroz") # 0.14, <1, no overdispersion in the data, so multinom fit was OK
+
+
+# growth rate advantage compared to wild type based on multinomial coefficients in function of time
+delta_r_501V1_501YV2 = data.frame(tidy(be_seq_mclogitfit0,conf.int=TRUE))[c(3,4),c("estimate","conf.low","conf.high")] / attr(scale(be_seqdata_long$collection_date_num),"scaled:scale")
+colnames(delta_r_501V1_501YV2) = c("delta_r","2.5 %","97.5 %")
+rownames(delta_r_501V1_501YV2) = levels(be_seqdata_long$variant)[-1]
+delta_r_501V1_501YV2
+# delta_r      2.5 %    97.5 %
+#  501Y.V1 0.08127892 0.06086410 0.1016937
+#  501Y.V2 0.10476182 0.04751815 0.1620055
+# result matches quite closely that of multinom (with dispersion=T conf lims are more narrow, because there is underdispersion)
+
+# both estimates & confidence intervals returned by emmeans 1.5.4 are wrong though, as they don't match the coefficients & CIs above, which here they should
+# check with Russ Length
+confint(contrast(emtrends(be_seq_mclogitfit0, ~ variant|1, var="collection_date_num",  mode="latent"), method="trt.vs.ctrl", adjust="none"))
+# output of emmeans v 1.5.4: (neither estimates or CLs make sense)
+# contrast            estimate    SE  df asymp.LCL asymp.UCL
+# 501Y.V1 - wild type     37.3  4.68 Inf      28.1      46.5
+# 501Y.V2 - wild type     48.1 13.12 Inf      22.4      73.8
+
+# output of emmeans v 1.5.3: (neither estimates or CLs make sense)
+# contrast            estimate    SE  df asymp.LCL asymp.UCL
+# 501Y.V1 - wild type     37.3 15.6 Inf      6.75      67.9
+# 501Y.V2 - wild type     48.1 13.1 Inf     22.38      73.8
+
+
+
+
+
 # 6. SOME INTERNATIONAL COMPARISONS ####
 
 # 6.1. DATA UK: PILLAR 2 SGTF DATA ####
@@ -2013,7 +2287,7 @@ plot_international = qplot(data=fits_international, x=date, y=prob, geom="blank"
   #                   labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
   scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
                       labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9"),
-                      limits = c(ymin,ymax)) +
+                      limits = c(ymin,ymax+1E-7)) +
   # scale_color_manual("", values=reg_cols) +
   # scale_fill_manual("", values=reg_cols) +
   scale_color_discrete("region", h=c(0, 240), c=250, l=50) +
@@ -2041,7 +2315,7 @@ plot_international = qplot(data=fits_international, x=date, y=prob, geom="blank"
   ) + 
   coord_cartesian( 
     xlim=c(as.Date("2020-09-01"),as.Date("2021-03-01")),
-    ylim=c(ymin,ymax), 
+    ylim=c(ymin,ymax+1E-7), 
     expand=FALSE)
   # ggtitle("INTERNATIONAL SPREAD OF SARS-CoV2 VARIANT B.1.1.7") +
   # theme(plot.title = element_text(hjust = 0.5))
