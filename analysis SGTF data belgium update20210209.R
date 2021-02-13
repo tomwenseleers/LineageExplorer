@@ -1203,7 +1203,7 @@ baseline_sequencing = ggplot(data=be_seqdata_long,
   # facet_wrap(~LABORATORY) +
   geom_area(aes(fill=variant), position = position_fill(reverse = FALSE)) +
   theme_hc() +
-  scale_fill_manual("variant", values=c("darkgrey","lightcoral","red"), labels=c("wild type","501Y.V1 (British)","501Y.V2 (South African)")) +
+  scale_fill_manual("variant", values=c("darkgrey","blue","red"), labels=c("wild type","501Y.V1 (British)","501Y.V2 (South African)")) +
   scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
                      labels=substring(months(as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01"))),1,1),
                      limits=as.Date(c("2020-12-01","2021-03-01")), expand=c(0,0)) +
@@ -1278,7 +1278,7 @@ muller_be_seq_mfit0 = ggplot(data=be_seq_mfit0_preds,
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant), position="stack") +
   annotate("rect", xmin=max(be_seqdata_long$collection_date)+1, 
                    xmax=as.Date("2021-03-01"), ymin=0, ymax=1, alpha=0.3, fill="white") + # extrapolated part
-  scale_fill_manual("variant", values=c("darkgrey","lightcoral","red")) +
+  scale_fill_manual("variant", values=c("darkgrey","blue","red")) +
   scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
                      labels=substring(months(as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01"))),1,1),
                      limits=as.Date(c("2020-12-01","2021-03-01")), expand=c(0,0)) +
@@ -1300,9 +1300,9 @@ multinom_501YV1_501YV2 = ggarrange(baseline_sequencing+ggtitle("Spread of the Br
           common.legend = TRUE, legend="bottom")
 multinom_501YV1_501YV2
 saveRDS(multinom_501YV1_501YV2, file = paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2_multinomial fit_multipanel.rds"))
-graph2ppt(file=paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2_multinomial fit_multipanel.pptx"), width=7, height=7)
-ggsave(file=paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2_multinomial fit_multipanel.png"), width=7, height=7)
-ggsave(file=paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2_multinomial fit_multipanel.pdf"), width=7, height=7)
+graph2ppt(file=paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2_multinomial fit_multipanel.pptx"), width=7, height=10)
+ggsave(file=paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2_multinomial fit_multipanel.png"), width=7, height=10)
+ggsave(file=paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2_multinomial fit_multipanel.pdf"), width=7, height=10)
 
 
 # PLOT MODEL FIT WITH DATA & CONFIDENCE INTERVALS
