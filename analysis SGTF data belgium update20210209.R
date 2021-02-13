@@ -16,7 +16,9 @@ library(lme4)
 library(splines)
 library(purrr)
 library(readxl)
-library(emmeans) # install latest 1.5.4 version - this had a multinomial model bug fix & support for quantile regression models !
+library(emmeans) 
+# quantile regression emmeans models below have to be run with emmeans version 1.5.4, 
+# latest 1.5.4 version introduced some bugs for multinom models though, so those need to be run with emmeans version 1.5.3
 library(effects)
 library(ggplot2)
 library(ggthemes)
@@ -34,23 +36,14 @@ library(export)
 library(afex)
 library(dfoptim)
 library(optimx)
-library(nnet)
 library(mclogit)
 library(lubridate)
 library(zoo)
 library(gridExtra)
 library(sf)
 library(broom)
+library(nnet)
 
-# # define emm_basis method to have emmeans support mblogit multinomial mixed models
-# # cf https://cran.r-project.org/web/packages/emmeans/vignettes/xtending.html
-# # PS no longer necessary if you have emmeans 1.5.4 loaded
-emm_basis.mblogit = function(object, ...) {
-  object$coefficients = object$coefmat
-  object$lev = levels(object$model[[1]])
-  object$edf = Inf
-  emmeans:::emm_basis.multinom(object, ...)
-}
 
 dat="2021_02_09" # desired file version for Belgian data (date/path in //data)
 suppressWarnings(dir.create(paste0(".//plots//",dat)))
@@ -434,6 +427,12 @@ summary(qr_bothgenes3)
 # GeneORF1ab gene:LaboratorySaint LUC - UCL   0.22360   0.43673    0.51198   0.60867
 # GeneORF1ab gene:LaboratoryULB               1.10360   0.38943    2.83391   0.00460
 # GeneORF1ab gene:LaboratoryUZ leuven         0.26440   0.41269    0.64067   0.52174
+
+# latest emmeans version 1.5.4 required here
+unloadNamespace("emmeans")
+require(devtools)
+install_version("emmeans", version = "1.5.4", repos = "http://cran.us.r-project.org")
+library(emmeans)
 
 qr_emmeans_bylab99 = data.frame(emmeans(qr_bothgenes3, ~ Laboratory + Gene + S_dropout, level=0.99)) # median Ct values + 99% CLs
 qr_emmeans_bylab99
@@ -1012,10 +1011,10 @@ date.from = as.Date("2021-01-14")
 data_ag_long_subs = data_ag_long[(data_ag_long$LABORATORY %in% sel_labs)&(data_ag_long$collection_date>=date.from),]
 data_ag_long_subs$LABORATORY = droplevels(data_ag_long_subs$LABORATORY)
 
-mfit0 = multinom(outcome ~ scale(collection_date_num) + LABORATORY, weights=count, data=data_ag_long_subs, maxit=1000)
-mfit1 = multinom(outcome ~ scale(collection_date_num) * LABORATORY, weights=count, data=data_ag_long_subs, maxit=1000)
-mfit2 = multinom(outcome ~ ns(collection_date_num, df=2) + LABORATORY, weights=count, data=data_ag_long_subs, maxit=1000) 
-mfit3 = multinom(outcome ~ ns(collection_date_num, df=3) * LABORATORY, weights=count, data=data_ag_long_subs, maxit=1000) 
+mfit0 = nnet::multinom(outcome ~ scale(collection_date_num) + LABORATORY, weights=count, data=data_ag_long_subs, maxit=1000)
+mfit1 = nnet::multinom(outcome ~ scale(collection_date_num) * LABORATORY, weights=count, data=data_ag_long_subs, maxit=1000)
+mfit2 = nnet::multinom(outcome ~ ns(collection_date_num, df=2) + LABORATORY, weights=count, data=data_ag_long_subs, maxit=1000) 
+mfit3 = nnet::multinom(outcome ~ ns(collection_date_num, df=3) * LABORATORY, weights=count, data=data_ag_long_subs, maxit=1000) 
 BIC(mfit0, mfit1, mfit2, mfit3) # mfit3 fits best, df splines tuned based on BIC
 #       df      BIC
 # mfit0 16 150913.8
@@ -1025,51 +1024,131 @@ BIC(mfit0, mfit1, mfit2, mfit3) # mfit3 fits best, df splines tuned based on BIC
 summary(mfit3)
 
 plot(Effect("collection_date_num",mfit3), style="stacked")
+plot(Effect("collection_date_num",mfit3), confint=list(style="bands"), rug=FALSE)
 
 
-# mblogit mulinomial fit with correction for overdispersion
+# mblogit mulinomial fit with possible orrections for overdispersion
 # should be better, but I still have to update my emmeans analyses below to use these models instead
-# lab can also be coded as a random factor here
-mclogitfit0 = mblogit(outcome ~ scale(collection_date_num) + LABORATORY, weights=count, data=data_ag_long_subs, 
-                      dispersion=TRUE, from.table=FALSE)
-mclogitfit1 = mblogit(outcome ~ scale(collection_date_num) * LABORATORY, weights=count, data=data_ag_long_subs, 
-                      dispersion=TRUE, from.table=FALSE)
-mclogitfit2 = mblogit(outcome ~ ns(collection_date_num, df=2) * LABORATORY, weights=count, data=data_ag_long_subs, 
-                      dispersion=TRUE, from.table=FALSE)
-mclogitfit3 = mblogit(outcome ~ ns(collection_date_num, df=3) * LABORATORY, weights=count, data=data_ag_long_subs, 
-                      dispersion=TRUE, from.table=FALSE)
-BIC(mclogitfit0, mclogitfit1, mclogitfit2, mclogitfit3)
+# and right now emmeans only has experimental support for mblogit models
+# PS lab can also be coded as a random factor here
+mblogitfit0 = mblogit(outcome ~ scale(collection_date_num) + LABORATORY, weights=count, data=data_ag_long_subs, 
+                      dispersion=FALSE, control=mclogit.control(maxit = 100, trace=TRUE))
+mblogitfit1 = mblogit(outcome ~ scale(collection_date_num) * LABORATORY, weights=count, data=data_ag_long_subs, 
+                      dispersion=FALSE)
+mblogitfit2 = mblogit(outcome ~ ns(collection_date_num, df=2) * LABORATORY, weights=count, data=data_ag_long_subs, 
+                      dispersion=FALSE)
+mblogitfit3 = mblogit(outcome ~ ns(collection_date_num, df=3) * LABORATORY, weights=count, data=data_ag_long_subs, 
+                      dispersion=FALSE)
+BIC(mblogitfit0, mblogitfit1, mblogitfit2, mblogitfit3)
 #             df      BIC
-# mclogitfit0 16 150913.8
-# mclogitfit1 28 150870.9
-# mclogitfit2 42 149479.6
-# mclogitfit3 56 149434.8
-summary(mclogitfit3)
-dispersion(mclogitfit3, method="Afroz") # 31.68, i.e. >>1, there is overdispersion in the data
+# mblogitfit0 16 150913.8
+# mblogitfit1 28 150870.9
+# mblogitfit2 42 149479.6
+# mblogitfit3 56 149434.8
+summary(mblogitfit3)
+dispersion(mblogitfit0, method="Afroz") # 36.85, i.e. >>1, there is overdispersion in the data
+dispersion(mblogitfit3, method="Afroz") # 31.68, i.e. >>1, there is overdispersion in the data
 
 
+# coefs & conf intervals of both models are almost identical as should be the case
+mfit0_coefs = data.frame(tidy(mfit0, conf.int=TRUE))[,c("term","estimate","conf.low","conf.high")]
+rownames(mfit0_coefs) = paste0(rep(mfit0$lab[-1],each=nrow(mfit0_coefs)/length(mfit0$lab[-1])),"~",mfit0_coefs$term) 
+mfit0_coefs[,c("term")] = NULL
+mfit0_coefs = mfit0_coefs[grepl("date",rownames(mfit0_coefs)),]
+mfit0_coefs = mfit0_coefs / attr(scale(data_ag_long_subs$collection_date_num),"scaled:scale")
+mfit0_coefs
+#                                      estimate    conf.low   conf.high
+# n_spos~scale(collection_date_num) -0.03388852 -0.03642875 -0.03134829
+# n_b117~scale(collection_date_num)  0.01453788  0.01036944  0.01870632
 
-# average growth rates of S-positive/wild type & S dropout/B.1.1.7 cases over period from jan 1 till now
-emtrends(mfit3, ~outcome|1, var="collection_date_num",  mode="latent")
-# PS emtrends(mclogitfit3, ~outcome|1, var="collection_date_num",  mode="latent") gives Error in qr.default(t(const)) : NA/NaN/Inf in foreign function call (arg 1)
-# emmeans_1.5.3 output:
+
+mblogitfit_coefs = data.frame(tidy(mblogitfit0, conf.int=TRUE))[,c("term","estimate","conf.low","conf.high")]
+rownames(mblogitfit_coefs) = mblogitfit_coefs$term
+mblogitfit_coefs[,c("term")] = NULL
+mblogitfit_coefs = mblogitfit_coefs[grepl("date",rownames(mblogitfit_coefs)),]
+mblogitfit_coefs = mblogitfit_coefs / attr(scale(data_ag_long_subs$collection_date_num),"scaled:scale")
+mblogitfit_coefs
+#                                    estimate    conf.low   conf.high
+# n_spos~scale(collection_date_num) -0.03388029 -0.03642333 -0.03133724
+# n_b117~scale(collection_date_num)  0.01454377  0.01037025  0.01871729
+
+
+# output of emmeans 1.5.4 :: emtrends gives confidence intervals that deviate from the ones given by multinom itself
+# emmeans 1.5.4 gives nonsensical results for mblogit model:
+
+unloadNamespace("emmeans")
+require(devtools)
+install_version("emmeans", version = "1.5.4", repos = "http://cran.us.r-project.org")
+library(emmeans)
+
+confint(emtrends(mfit0, trt.vs.ctrl~outcome|1, var="collection_date_num",  mode="latent", adjust="none"))$contrasts
+# contrast       estimate      SE df lower.CL upper.CL
+# n_spos - n_neg  -0.0339 0.00337 16 -0.04103  -0.0267
+# n_b117 - n_neg   0.0145 0.00295 16  0.00828   0.0208
+
+confint(emtrends(mblogitfit0, trt.vs.ctrl~outcome|1, var="collection_date_num",  mode="latent", adjust="none"))$contrasts
+# contrast       estimate    SE  df asymp.LCL asymp.UCL
+# n_spos - n_neg   -19.64 0.751 Inf    -21.11     -18.2
+# n_b117 - n_neg     8.43 1.233 Inf      6.01      10.8
+# these numbers do not make sense
+
+# output of emmeans 1.5.3: confidence intervals here match the ones given by multinom itself
+unloadNamespace("emmeans")
+require(devtools)
+install_version("emmeans", version = "1.5.3", repos = "http://cran.us.r-project.org")
+library(emmeans)
+
+confint(emtrends(mfit0, trt.vs.ctrl~outcome|1, var="collection_date_num",  mode="latent", adjust="none"))$contrasts
+# contrast       estimate      SE df lower.CL upper.CL
+# n_spos - n_neg  -0.0339 0.00130 16  -0.0366  -0.0311
+# n_b117 - n_neg   0.0145 0.00213 16   0.0100   0.0190
+
+
+# emmeans 1.5.3 gives nonsensical results for mblogit model:
+
+# # define emm_basis method to have emmeans support mclogit::mblogit multinomial mixed models
+# # cf https://cran.r-project.org/web/packages/emmeans/vignettes/xtending.html
+# # PS not required if you have emmeans 1.5.4 loaded
+emm_basis.mblogit = function(object, ...) {
+  object$coefficients = object$coefmat
+  object$lev = levels(object$model[[1]])
+  object$edf = Inf
+  emmeans:::emm_basis.multinom(object, ...)
+}
+confint(emtrends(mblogitfit0, trt.vs.ctrl~outcome|1, var="collection_date_num",  mode="latent", adjust="none"))$contrasts
+# contrast       estimate   SE  df asymp.LCL asymp.UCL
+# n_spos - n_neg   -19.64 1.37 Inf    -22.33     -16.9
+# n_b117 - n_neg     8.43 2.80 Inf      2.94      13.9
+# 
+# Results are averaged over the levels of: LABORATORY 
+# Confidence level used: 0.95 
+
+# since emmeans 1.5.3 gives sensible results for the multinom fits, we continue with that version
+
+
+# average growth rates of S-positive/wild type & S dropout/B.1.1.7 cases over period from Jan 14 till now
+emtrends(mfit3, ~outcome|1, var="collection_date_num",   mode="latent")
+# PS emtrends(mblogitfit3, ~outcome|1, var="collection_date_num",  mode="latent") gives Error in qr.default(t(const)) : NA/NaN/Inf in foreign function call (arg 1)
+# emmeans_1.5.4 output:
 # outcome collection_date_num.trend      SE df lower.CL upper.CL
-# n_neg                     0.00392 0.00394 56 -0.00396   0.0118
-# n_spos                   -0.02795 0.00598 56 -0.03992  -0.0160
-# n_b117                    0.02403 0.00412 56  0.01578   0.0323
+# n_neg                     0.00392 0.00322 56 -0.00253   0.0104
+# n_spos                   -0.02795 0.00396 56 -0.03589  -0.0200
+# n_b117                    0.02403 0.00579 56  0.01244   0.0356
+
 R.from.r(-0.02795) # Rt of S-positive/wild type = 0.87
 R.from.r(0.02403) # Rt of S dropout/B.1.1.7 variant = 1.12
 R.from.r(0.02403)/R.from.r(-0.02795) # Rt of B.1.1.7 = 1.28x times higher than of wild type
 
-# implied growth rate & transmission advantage + 95% CLs
+
+# implied growth rate & transmission advantage of B.1.1.7 vs wild type + 95% CLs
 delta_r = data.frame(confint(contrast(emtrends(mfit3, ~outcome|1, var="collection_date_num",  
                                                at=list(outcome=c("n_spos","n_b117")), mode="latent"), method="revpairwise")))[,c(2,5,6)]
 delta_r # growth advantage
 #    estimate lower.CL  upper.CL
-# 1 0.05197395 0.03298562 0.07096228
+# 1 0.05197395 0.03317961 0.07076829
 exp(delta_r*4.7) # transmission advantage
 #    estimate lower.CL upper.CL
-# 1 1.276699 1.167696 1.395877
+# 1 1.276699 1.168761 1.394605
 
 
 # average growth rates of S-positive/wild type & S dropout/B.1.1.7 cases evaluated today
@@ -1080,7 +1159,14 @@ emtrends(mfit3, ~outcome|1, var="collection_date_num",  at=list(collection_date_
 # n_spos                    -0.0725 0.00741 56  -0.0873  -0.0576
 # n_b117                    -0.0302 0.00982 56  -0.0499  -0.0106
 R.from.r(-0.0725) # Rt S pos / wild type = 0.69
+R.from.r(-0.0873) # Rt S pos / wild type LCL = 0.64
+R.from.r(-0.0576) # Rt S pos / wild type UCL = 0.75
+
 R.from.r(-0.0302) # Rt of S dropout = 0.86
+R.from.r(-0.0499) # Rt of S dropout = 0.78
+R.from.r(-0.0106) # Rt of S dropout = 0.95
+
+
 R.from.r(-0.0302)/R.from.r(-0.0725) # Rt of B.1.1.7 = 1.24x times higher than of wild type
 # PS recent shift from active surveillance for B.1.1.7 in beginning of January to random sampling
 # right now might introduce a downward bias here though
@@ -1091,10 +1177,10 @@ delta_r = data.frame(confint(contrast(emtrends(mfit3, ~outcome|1, var="collectio
                                                        collection_date_num=today_num), mode="latent"), method="revpairwise")))[,c(2,5,6)]
 delta_r # growth advantage
 #       estimate lower.CL  upper.CL
-# 1 0.04222412 0.01009232 0.07435591
+# 1 0.04222412 0.009238266 0.07520997
 exp(delta_r*4.7) # transmission advantage
 #    estimate lower.CL upper.CL
-# 1 1.219515 1.048577  1.41832
+# 1 1.219515 1.044376 1.424024
 
 
 # growth rates and Re values of the B.1.1.7 variant and the wild type calculated over time
@@ -1175,6 +1261,23 @@ ggsave(file=paste0(".\\plots\\",dat,"\\multinomial_Re_growthadv_B117_WT.pdf"), w
 # data taken from latest Sciensano weekly report "COVID 19 WEKELIJKS EPIDEMIOLOGISCH BULLETIN (12 FEBRUARI 2021), p. 23"
 # https://covid-19.sciensano.be/nl/covid-19-epidemiologische-situatie
 
+unloadNamespace("emmeans")
+require(devtools)
+install_version("emmeans", version = "1.5.3", repos = "http://cran.us.r-project.org")
+library(emmeans)
+
+# # define emm_basis method to have emmeans support mclogit::mblogit multinomial mixed models
+# # cf https://cran.r-project.org/web/packages/emmeans/vignettes/xtending.html
+# # PS not required if you have emmeans 1.5.4 loaded
+emm_basis.mblogit = function(object, ...) {
+  object$coefficients = object$coefmat
+  object$lev = levels(object$model[[1]])
+  object$edf = Inf
+  emmeans:::emm_basis.multinom(object, ...)
+}
+
+
+
 be_seqdata = read.csv(".\\data\\be_latest\\sequencing_501YV1_501YV2.csv")
 # data is split up in baseline surveillance (randomly sampled) and active surveillance (from travellers, known outbreaks &
 # S dropout sequencing), below I will use the randomly sampled baseline surveillance part
@@ -1229,7 +1332,7 @@ be_seq_mfit1 = nnet::multinom(variant ~ scale(ns(collection_date_num, df=2)), we
 BIC(be_seq_mfit0, be_seq_mfit1) # mfit0 fits best
 #              df      BIC
 # be_seq_mfit0  4 1215.401
-# be_seq_mfit1  6 1228.376
+# be_seq_mfit1  6 1228.368
 summary(be_seq_mfit0)
 
 # growth rate advantage compared to wild type based on multinomial coefficients in function of time
@@ -1237,20 +1340,19 @@ delta_r_501V1_501YV2 = data.frame(tidy(be_seq_mfit0,conf.int=TRUE))[c(2,4),c("es
 colnames(delta_r_501V1_501YV2) = c("delta_r","2.5 %","97.5 %")
 rownames(delta_r_501V1_501YV2) = levels(be_seqdata_long$variant)[-1]
 delta_r_501V1_501YV2
-#           delta_r      2.5 %    97.5 %
+#              delta_r      2.5 %    97.5 %
 #   501Y.V1 0.08127892 0.06130512 0.1012527
 #   501Y.V2 0.10476187 0.04875484 0.1607689
 
 exp(delta_r_501V1_501YV2*4.7) # implied transmission advantage (assuming no immune evasion advantage of 501Y.V2, if there is such an advantage, transm advantage would be less)
 #            delta_r    2.5 %   97.5 %
-#   501Y.V1 1.465228 1.331174 1.612782
-#   501Y.V2 1.636207 1.250240 2.141327
+#   501Y.V1 1.465228 1.333936 1.609442
+#   501Y.V2 1.636207 1.257528 2.128918
 
-# PS confidence intervals returned by emmeans 1.5.4 are wrong though, as they don't match the CIs above, which here they should
-# check with Russ Length
+# PS confidence intervals returned by emmeans 1.5.3 only approximately match the conf intervals above though
 confint(contrast(emtrends(be_seq_mfit0, ~ variant|1, var="collection_date_num",  mode="latent"), method="trt.vs.ctrl", adjust="none"))
 # contrast            estimate     SE df lower.CL upper.CL
-# 501Y.V1 - wild type   0.0813 0.0340  4  -0.0130    0.176
+# 501Y.V1 - wild type   0.0813 0.0102  4   0.0530    0.110
 # 501Y.V2 - wild type   0.1048 0.0286  4   0.0254    0.184
 
 
@@ -1355,7 +1457,7 @@ ggsave(file=paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2_multino
 
 be_seq_mfit0_preds3 = be_seq_mfit0_preds2
 ymin = 0.001
-ymax = 99.9
+ymax = 90
 be_seq_mfit0_preds3$lower.CL[be_seq_mfit0_preds3$lower.CL<ymin] = ymin
 be_seq_mfit0_preds3$upper.CL[be_seq_mfit0_preds3$upper.CL>ymax] = ymax
 
@@ -1403,20 +1505,20 @@ ggsave(file=paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2_multino
 
 
 # check for overdispersion using mblogit mulinomial fit
-be_seq_mclogitfit0 = mblogit(variant ~ scale(collection_date_num), weights=count, data=be_seqdata_long, 
+be_seq_mblogitfit = mblogit(variant ~ scale(collection_date_num), weights=count, data=be_seqdata_long, 
                       dispersion=FALSE, from.table=FALSE)
-be_seq_mclogitfit1 = mblogit(variant ~ scale(ns(collection_date_num, df=2)), weights=count, data=be_seqdata_long, 
+be_seq_mblogitfit1 = mblogit(variant ~ scale(ns(collection_date_num, df=2)), weights=count, data=be_seqdata_long, 
                       dispersion=FALSE, from.table=FALSE)
-BIC(be_seq_mclogitfit0, be_seq_mclogitfit1)
+BIC(be_seq_mblogitfit, be_seq_mblogitfit1)
 #                    df      BIC
-# be_seq_mclogitfit0  4 1215.401
-# be_seq_mclogitfit1  6 1228.368
-summary(be_seq_mclogitfit0)
-dispersion(be_seq_mclogitfit0, method="Afroz") # 0.14, <1, no overdispersion in the data, so multinom fit was OK
+# be_seq_mblogitfit   4 1215.401
+# be_seq_mblogitfit1  6 1228.368
+summary(be_seq_mblogitfit)
+dispersion(be_seq_mblogitfit, method="Afroz") # 0.14, <1, no overdispersion in the data, so multinom fit was OK
 
 
 # growth rate advantage compared to wild type based on multinomial coefficients in function of time
-delta_r_501V1_501YV2 = data.frame(tidy(be_seq_mclogitfit0,conf.int=TRUE))[c(3,4),c("estimate","conf.low","conf.high")] / attr(scale(be_seqdata_long$collection_date_num),"scaled:scale")
+delta_r_501V1_501YV2 = data.frame(tidy(be_seq_mblogitfit,conf.int=TRUE))[c(3,4),c("estimate","conf.low","conf.high")] / attr(scale(be_seqdata_long$collection_date_num),"scaled:scale")
 colnames(delta_r_501V1_501YV2) = c("delta_r","2.5 %","97.5 %")
 rownames(delta_r_501V1_501YV2) = levels(be_seqdata_long$variant)[-1]
 delta_r_501V1_501YV2
@@ -1427,7 +1529,7 @@ delta_r_501V1_501YV2
 
 # both estimates & confidence intervals returned by emmeans 1.5.4 are wrong though, as they don't match the coefficients & CIs above, which here they should
 # check with Russ Length
-confint(contrast(emtrends(be_seq_mclogitfit0, ~ variant|1, var="collection_date_num",  mode="latent"), method="trt.vs.ctrl", adjust="none"))
+confint(contrast(emtrends(be_seq_mblogitfit, ~ variant|1, var="collection_date_num",  mode="latent"), method="trt.vs.ctrl", adjust="none"))
 # output of emmeans v 1.5.4: (neither estimates or CLs make sense)
 # contrast            estimate    SE  df asymp.LCL asymp.UCL
 # 501Y.V1 - wild type     37.3  4.68 Inf      28.1      46.5
