@@ -621,6 +621,12 @@ sel_labs = setdiff(unique(ctdata$Laboratory), c("ULG - FF 3.x"))  # unique(ctdat
 # setdiff(unique(ctdata$Laboratory), c("UMons - Jolimont", "ULG - FF 3.x", "UZ Gent", "UZA")) 
 # setdiff(unique(ctdata$Laboratory), c("UMons - Jolimont", "UZ Gent","UZA","ULG - FF 3.x")) 
 sel_labs  
+pos_ctbelow30 = (ctdata$Laboratory %in% sel_labs) & (((ctdata$Outcome=="Positive")&(ctdata$N_cq<30)&(ctdata$ORF1_cq<30)))
+pos_ctbelow30 = pos_ctbelow30[!is.na(pos_ctbelow30)]
+pos_ctabove30 = (ctdata$Laboratory %in% sel_labs) & (((ctdata$Outcome=="Positive")&(ctdata$N_cq>=30)|(ctdata$ORF1_cq>=30)))
+pos_ctabove30 = pos_ctabove30[!is.na(pos_ctabove30)]
+100*sum(pos_ctabove30) / (sum(pos_ctabove30)+sum(pos_ctbelow30)) # 26%
+
 subs = which((ctdata$Laboratory %in% sel_labs) & (((ctdata$Outcome=="Positive")&(ctdata$N_cq<30)&(ctdata$ORF1_cq<30))|
                                             (ctdata$Outcome=="Negative")))
 ctdata_subs = ctdata
