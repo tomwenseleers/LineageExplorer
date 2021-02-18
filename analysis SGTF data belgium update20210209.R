@@ -18,7 +18,7 @@ library(purrr)
 library(readxl)
 # unloadNamespace("emmeans")
 require(devtools)
-remotes::install_github("rvlenth/emmeans") # we use the development version 1.5.4-09001 as the 1.5.4 version on CRAN had a bug resulting in incorrect results for multinom models
+# remotes::install_github("rvlenth/emmeans") # we use the development version 1.5.4-09001 as the 1.5.4 version on CRAN had a bug resulting in incorrect results for multinom models
 library(emmeans)
 library(effects)
 library(ggplot2)
@@ -48,7 +48,9 @@ library(nnet)
 
 dat="2021_02_09" # desired file version for Belgian data (date/path in //data)
 suppressWarnings(dir.create(paste0(".//plots//",dat)))
-today = as.Date(gsub("_","-",dat)) # we use the file date version as our definition of "today"
+filedate = as.Date(gsub("_","-",dat)) # file date
+filedate_num = as.numeric(filedate)
+today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
 today_num = as.numeric(today)
 
 
@@ -82,7 +84,7 @@ exp(4.7*as.data.frame(emtrends(fit_seq, ~ 1, var="collection_date_num"))[,c(2,5,
 plot(fit_seq)
 
 # PLOT MODEL FIT
-extrapolate = 30 # nr of days to extrapolate fit into the future
+extrapolate = 60 # nr of days to extrapolate fit into the future
 total.SD = sqrt(sum(sapply(as.data.frame(VarCorr(fit_seq))$sdcor, function (x) x^2))) 
 # bias correction for random effects in marginal means, see https://cran.r-project.org/web/packages/emmeans/vignettes/transformations.html#bias-adj
 fitseq_preds = as.data.frame(emmeans(fit_seq, ~ collection_date_num, 
@@ -94,12 +96,12 @@ fitseq_preds$collection_date = as.Date(fitseq_preds$collection_date_num, origin=
 # prop of S dropout samples among newly diagnosed infections that are now estimated to be B.1.1.7 / 501Y.V1
 fitseq_preds[fitseq_preds$collection_date==today,]
 #    collection_date_num      prob         SE  df asymp.LCL asymp.UCL collection_date
-# 62           18667 0.9883506 0.006573705 Inf 0.9651977  0.996167      2021-02-09
+# 62           18676 0.9956677 0.003078826 Inf 0.9826895 0.9989273      2021-02-18
 
 # prop of S dropout samples among new infections that are now estimated to be B.1.1.7 / 501Y.V1 (using 7 days for time from infection to diagnosis)
 fitseq_preds[fitseq_preds$collection_date==(today+7),]
 #    collection_date_num     prob          SE  df asymp.LCL asymp.UCL collection_date
-# 69           18674 0.9945993 0.003662389 Inf 0.9797699 0.9985754      2021-02-16
+# 69           18683 0.9980001 0.001648969 Inf 0.9899868 0.9996034      2021-02-25
 
 # from 13th of Jan 2021 >80% of all S dropout samples were indeed B.1.1.7 / 501Y.V1
 fitseq_preds[fitseq_preds$prob>0.80,"collection_date"][1]
@@ -620,7 +622,7 @@ pos_ctbelow30 = (ctdata$Laboratory %in% sel_labs) & (((ctdata$Outcome=="Positive
 pos_ctbelow30 = pos_ctbelow30[!is.na(pos_ctbelow30)]
 pos_ctabove30 = (ctdata$Laboratory %in% sel_labs) & (((ctdata$Outcome=="Positive")&(ctdata$N_cq>=30)|(ctdata$ORF1_cq>=30)))
 pos_ctabove30 = pos_ctabove30[!is.na(pos_ctabove30)]
-100*sum(pos_ctabove30) / (sum(pos_ctabove30)+sum(pos_ctbelow30)) # 26%
+100*sum(pos_ctabove30) / (sum(pos_ctabove30)+sum(pos_ctbelow30)) # 26% of positives have Ct > 30
 
 subs = which((ctdata$Laboratory %in% sel_labs) & (((ctdata$Outcome=="Positive")&(ctdata$N_cq<30)&(ctdata$ORF1_cq<30))|
                                             (ctdata$Outcome=="Negative")))
@@ -704,7 +706,7 @@ fit1 = glmer(cbind(est_n_B117, n_pos-est_n_B117) ~ (1|obs)+scale(collection_date
 fit2 = glmer(cbind(est_n_B117, n_pos-est_n_B117) ~ (1|obs)+scale(collection_date_num)*LABORATORY, family=binomial(logit), 
              data=data_ag_wide, subset=data_ag_wide$n_pos>0, control=glmersettings) # separate slopes model, with lab coded as fixed factor
 BIC(fit1,fit2) 
-# df      BIC
+#  df      BIC
 # fit1  9 1660.284
 # fit2 15 1684.502
 
@@ -719,14 +721,14 @@ summary(fit1)
 # 
 # Fixed effects:
 #   Estimate Std. Error z value Pr(>|z|)    
-#   (Intercept)                -1.95620    0.05024 -38.941  < 2e-16 ***
+# (Intercept)                -1.95620    0.05024 -38.941  < 2e-16 ***
 #   scale(collection_date_num)  0.98949    0.05210  18.991  < 2e-16 ***
 #   LABORATORY1                -0.36388    0.11878  -3.063 0.002188 ** 
 #   LABORATORY2                 0.39724    0.10563   3.761 0.000169 ***
 #   LABORATORY3                 0.46787    0.10604   4.412 1.02e-05 ***
 #   LABORATORY4                -1.24139    0.12934  -9.598  < 2e-16 ***
 #   LABORATORY5                 0.47187    0.11385   4.145 3.40e-05 ***
-#   LABORATORY6                -0.11064    0.10973  -1.008 0.313347  
+#   LABORATORY6                -0.11064    0.10973  -1.008 0.313347    
 
 # growth rate advantage (differences in growth rate between B.1.1.7 and old strains):
 # results common-slope model
@@ -816,17 +818,81 @@ fit1_preds_bylab$LABORATORY = factor(fit1_preds_bylab$LABORATORY,
 # estimated share of B.1.1.7 among currently diagnosed infections based on fit1
 fit1_preds[fit1_preds$collection_date==today,]
 #    collection_date_num     prob         SE  df asymp.LCL asymp.UCL collection_date
-# 27              18667 0.4742744 0.02086088 Inf 0.4336118 0.5152299      2021-02-09
+# 27              18676 0.6505028 0.02715375 Inf 0.5958211 0.7019119      2021-02-18
+
 # estimated share of B.1.1.7 among new infections (assuming time between infection & diagnosis of 7 days)
 fit1_preds[fit1_preds$collection_date==(today+7),]
 #    collection_date_num     prob         SE  df asymp.LCL asymp.UCL collection_date
-# 34               18674 0.6128499 0.0263124 Inf 0.5603468 0.6631713      2021-02-16
+# 34               18683 0.7678727 0.02696891 Inf 0.7112866 0.8167795      2021-02-25
+
 
 sum(tail(data_ag_byday_wide$est_n_B117, 14))/sum(tail(data_ag_byday_wide$n_pos,14)) 
-# 30.8% of the samples of last 2 weeks estimated to be by British variant
+# 30.8% of the samples of last 2 weeks in the dataset were estimated to be by British variant
 # PS: with data 31/1 this was 15.4%  
 # note: this is not the same as the estimated prop of the new infections or new diagnoses today that are of the British
-# variant, which are much higher, see below)
+# variant, which are much higher, see above)
+
+
+# implied Re of wild type and B.1.1.7 given this predicted share of B.1.1.7 among all infections
+# under a particular fitted transmission advantage
+# based on the fact that the overall Re is a weighted average of the Re of the individual variants
+# functions to calculate Re of wild type and of B.1.1.7 based on overall Re value and prop of positives that is B.1.1.7 propB117
+# and transmission advantage of B.1.1.7 M
+Re_wild_type = function (Re, propB117, M=1.5) {
+  Re / (1-propB117+M*propB117)
+}
+Re_B117 = function (Re, propB117, M=1.5) {
+  M*Re / (1-propB117+M*propB117)
+}
+
+Re_cases = read.csv(".//Re_fits//Re_cases.csv") 
+# Re values calculated from instantaneous growth rate in nr of new cases 
+# with instant growth rate = derivative/emtrends in function of sample date of GAM fit on new cases 
+# gam(cbind(NEWCASES, totpop-NEWCASES) ~ s(DATE_NUM, bs="cs", k=23, fx=F) + WEEKDAY + s(log(TESTS_ALL), bs="cs", k=5, fx=F), family=binomial(cloglog), data=cases_tot) 
+# and with Re calculated using R.from.r with gamma_mean=4.7, gamma_sd=2.9
+Re_cases$DATE = as.Date(Re_cases$DATE_NUM, origin="1970-01-01")
+Re_cases$collection_date_num = Re_cases$DATE_NUM
+Re_cases$propB117 = as.data.frame(emmeans(fit1, ~ collection_date_num, 
+                      # by="LABORATORY", 
+                      at=list(collection_date_num=seq(min(Re_cases$collection_date_num),
+                                                      max(Re_cases$collection_date_num))), 
+                      type="response"), bias.adjust = TRUE, sigma = total.SD)$prob
+
+head(Re_cases)
+Re_cases$Re_WT = Re_wild_type(Re=Re_cases$Re, propB117=Re_cases$propB117, M=1.5)
+Re_cases$Re_WT_LOWER = Re_wild_type(Re=Re_cases$Re_LOWER, propB117=Re_cases$propB117, M=1.5)
+Re_cases$Re_WT_UPPER = Re_wild_type(Re=Re_cases$Re_UPPER, propB117=Re_cases$propB117, M=1.5)
+Re_cases$Re_B117 = Re_B117(Re=Re_cases$Re, propB117=Re_cases$propB117, M=1.5)
+Re_cases$Re_B117_LOWER = Re_B117(Re=Re_cases$Re_LOWER, propB117=Re_cases$propB117, M=1.5)
+Re_cases$Re_B117_UPPER = Re_B117(Re=Re_cases$Re_UPPER, propB117=Re_cases$propB117, M=1.5)
+
+# d = as.Date(max(Re_cases$DATE))
+# tag = paste("@TWenseleers\n",dat)
+
+qplot(data=Re_cases, x=DATE, y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribbon", alpha=I(0.5), fill=I("grey")) +
+  geom_line() + theme_hc() + xlab("") +
+  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01")),
+                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F")) +
+  # scale_y_continuous(limits=c(1/3,3), trans="log2") +
+  geom_hline(yintercept=1, colour=I("red")) +
+  ggtitle("Re OF B.1.1.7 (red) AND WILD TYPE (blue) IN BELGIUM\nBASED ON NEW CONFIRMED CASES AND\nB.1.1.7 TRANSMISSION ADVANTAGE OF 50%") +
+  # labs(tag = tag) +
+  # theme(plot.margin = margin(t = 20, r = 10, b = 20, l = 0)) +
+  theme(plot.tag.position = "bottomright",
+        plot.tag = element_text(vjust = 1, hjust = 1, size=8)) +
+  geom_ribbon(aes(y=Re_WT, ymin=Re_WT_LOWER, ymax=Re_WT_UPPER), fill=I("blue"), alpha=I(0.5)) +
+  geom_line(aes(y=Re_WT), fill=I("blue"), alpha=I(0.8)) +
+  geom_ribbon(data=Re_cases[Re_cases$DATE>=as.Date("2021-01-01"),], 
+              aes(y=Re_B117, ymin=Re_B117_LOWER, ymax=Re_B117_UPPER), fill=I("red"), alpha=I(0.5)) +
+  geom_line(data=Re_cases[Re_cases$DATE>=as.Date("2021-01-01"),],
+            aes(y=Re_B117), fill=I("blue"), alpha=I(0.8)) +
+  coord_cartesian(xlim=c(as.Date("2020-09-01"),max(Re_cases$DATE)),
+                  ylim=c(0.5,1.5))
+ggsave(file=paste0(".//plots//Re",dat,"_cases_Re_B117_Re_wildtype.png"), width=7, height=5)
+
+
+
+
 
 
 # taking into account time from infection to diagnosis of ca 7 days this is 
