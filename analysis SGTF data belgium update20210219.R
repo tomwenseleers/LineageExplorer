@@ -823,12 +823,12 @@ fit1_preds_bylab$LABORATORY = factor(fit1_preds_bylab$LABORATORY,
 # estimated share of B.1.1.7 among currently diagnosed infections based on fit1
 fit1_preds[fit1_preds$collection_date==today,]
 #    collection_date_num     prob         SE  df asymp.LCL asymp.UCL collection_date
-# 27              18676 0.6505028 0.02715375 Inf 0.5958211 0.7019119      2021-02-18
+# 27              18678 0.6865762 0.02760073 Inf 0.6304152 0.7382495      2021-02-20
 
 # estimated share of B.1.1.7 among new infections (assuming time between infection & diagnosis of 7 days)
 fit1_preds[fit1_preds$collection_date==(today+7),]
 #    collection_date_num     prob         SE  df asymp.LCL asymp.UCL collection_date
-# 34               18683 0.7678727 0.02696891 Inf 0.7112866 0.8167795      2021-02-25
+# 34               18685 0.7962845 0.02608213 Inf  0.740796 0.8429371      2021-02-27
 
 
 sum(tail(data_ag_byday_wide$est_n_B117, 14))/sum(tail(data_ag_byday_wide$n_pos,14)) 
