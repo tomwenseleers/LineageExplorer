@@ -1435,7 +1435,7 @@ delta_r_allVOCs
 # implied transmission advantage (assuming no immune evasion advantage of 501Y.V2, if there is such an advantage, transm advantage would be less)
 exp(delta_r_allVOCs*4.7) 
 #                             estimate asymp.LCL asymp.UCL
-# (501Y.V1+V2+V3) - wild type 1.475293  1.388174   1.56788
+# (501Y.V1+V2+V3) - wild type   1.475293  1.388174   1.56788
 
 
 
@@ -1462,7 +1462,7 @@ dispersion(mblogit(variant ~ scale(collection_date_num, center=TRUE, scale=FALSE
                    subset = be_basseqdata_long$variant=="wild type"|be_basseqdata_long$variant=="501Y.V1+V2+V3",
                    dispersion = TRUE), method="Afroz") # dispersion coefficient = 3.2
 
-# growth rate advantage compared to wild type based on multinomial coefficients in function of time
+# growth rate advantage compared to wild type
 delta_r_501V1_501YV2_501YV3 = data.frame(confint(emtrends(be_seq_mblogitfit, trt.vs.ctrl ~ variant|1, var="collection_date_num",  mode="latent", df=NA), adjust="none", df=NA)$contrasts)[,-c(3,4)]
 rownames(delta_r_501V1_501YV2_501YV3) = delta_r_501V1_501YV2_501YV3[,"contrast"]
 delta_r_501V1_501YV2_501YV3 = delta_r_501V1_501YV2_501YV3[,-1]
@@ -1626,6 +1626,57 @@ saveRDS(plot_multinom_501YV1_501YV2_501YV3, file = paste0(".\\plots\\",dat,"\\ba
 graph2ppt(file=paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2 501YV3_multinomial fit_model preds.pptx"), width=8, height=6)
 ggsave(file=paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2 501YV3_multinomial fit_model preds.png"), width=8, height=6)
 ggsave(file=paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2 501YV3_multinomial fit_model preds.pdf"), width=8, height=6)
+
+
+# estimated proportion of 501Y.V1 among new lab diagnoses today
+be_seq_mfit0_preds2[be_seq_mfit0_preds2$collection_date==today&
+                      be_seq_mfit0_preds2$variant=="501Y.V1 (British)",]
+#            variant collection_date_num      prob       SE df asymp.LCL asymp.UCL collection_date
+# 501Y.V1 (British)               18678 0.5937361 0.05109728 NA 0.4935873 0.6938849      2021-02-20
+
+# estimated proportion of 501Y.V1 among new infections today (counted one week before lab diagnosis)
+be_seq_mfit0_preds2[be_seq_mfit0_preds2$collection_date==(today+7)&
+                      be_seq_mfit0_preds2$variant=="501Y.V1 (British)",]
+#            variant collection_date_num      prob       SE df asymp.LCL asymp.UCL collection_date
+# 501Y.V1 (British)               18685 0.6500041 0.1175849 NA 0.4195419 0.8804663      2021-02-27
+
+# estimated proportion of 501Y.V2 among new lab diagnoses today
+be_seq_mfit0_preds2[be_seq_mfit0_preds2$collection_date==today&
+                      be_seq_mfit0_preds2$variant=="501Y.V2 (South African)",]
+#            variant collection_date_num      prob       SE df asymp.LCL asymp.UCL collection_date
+# 501Y.V2 (South African)               18678 0.08207829 0.02675573 NA 0.02963803 0.1345186      2021-02-20
+
+# estimated proportion of 501Y.V2 among new infections today (counted one week before lab diagnosis)
+be_seq_mfit0_preds2[be_seq_mfit0_preds2$collection_date==(today+7)&
+                      be_seq_mfit0_preds2$variant=="501Y.V2 (South African)",]
+#            variant collection_date_num      prob       SE df asymp.LCL asymp.UCL collection_date
+# 501Y.V2 (South African)               18685 0.0861002 0.03854629 NA 0.01055087 0.1616495      2021-02-27
+
+# estimated proportion of 501Y.V3 among new lab diagnoses today
+be_seq_mfit0_preds2[be_seq_mfit0_preds2$collection_date==today&
+                      be_seq_mfit0_preds2$variant=="501Y.V3 (Brazilian)",]
+#            variant collection_date_num      prob       SE df asymp.LCL asymp.UCL collection_date
+# 501Y.V3 (Brazilian)               18678 0.04207796 0.05265073 NA -0.06111558 0.1452715      2021-02-20
+
+# estimated proportion of 501Y.V3 among new infections today (counted one week before lab diagnosis)
+be_seq_mfit0_preds2[be_seq_mfit0_preds2$collection_date==(today+7)&
+                      be_seq_mfit0_preds2$variant=="501Y.V3 (Brazilian)",]
+#            variant collection_date_num      prob       SE df asymp.LCL asymp.UCL collection_date
+# 501Y.V3 (Brazilian)               18685 0.09108313 0.1506244 NA -0.2041353 0.3863016      2021-02-27
+
+
+
+# estimated proportion of one of the three VOCs among new lab diagnoses today
+be_seq_mfit0_preds2[be_seq_mfit0_preds2$collection_date==today&
+                                                 be_seq_mfit0_preds2$variant=="501Y.V1+V2+V3",]
+#            variant collection_date_num      prob       SE df asymp.LCL asymp.UCL collection_date
+# 2241 501Y.V1+V2+V3               18678 0.7100834 0.031975 NA 0.6474136 0.7727533      2021-02-20
+
+# estimated proportion of one of the three VOCs among new infections today (counted one week before lab diagnosis)
+be_seq_mfit0_preds2[be_seq_mfit0_preds2$collection_date==(today+7)&
+                      be_seq_mfit0_preds2$variant=="501Y.V1+V2+V3",]
+#            variant collection_date_num      prob       SE df asymp.LCL asymp.UCL collection_date
+# 2241 501Y.V1+V2+V3               18678 0.8138067 0.03018072 NA 0.7546536 0.8729598      2021-02-27
 
 
 
