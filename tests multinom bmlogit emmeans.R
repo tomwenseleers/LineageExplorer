@@ -1,6 +1,12 @@
 library(nnet)
+require(devtools)
+# remotes::install_github("rvlenth/emmeans", force=TRUE)
+library(emmeans)
+devtools::install_github("melff/mclogit",subdir="pkg")
 library(mclogit)
 library(broom)
+
+
 
 # multinomial spline fit on test outcome data (negative / positive wild type / positive B.1.1.7
 # to be able to estimate growth rate and Rt of B.1.1.7 and wild type separately
@@ -16,7 +22,7 @@ data_ag_long_subs = data_ag_long[(data_ag_long$collection_date>=date.from),]
 # example nnet::multinom & mclogit::mblogit multinomial fit
 mfit0 = nnet::multinom(outcome ~ scale(collection_date_num, center=TRUE, scale=FALSE) + LABORATORY, weights=count, data=data_ag_long_subs, maxit=1000)
 mblogitfit0 = mblogit(outcome ~ scale(collection_date_num, center=TRUE, scale=FALSE) + LABORATORY, weights=count, data=data_ag_long_subs)
-attr(mblogitfit0$terms, "predvars") = attr(mfit0$terms, "predvars")
+# attr(mblogitfit0$terms, "predvars") = attr(mfit0$terms, "predvars")
 
 # mutlinomial coefs & conf intervals in function of time (collection_date_nu) of both models are
 mfit0_coefs = data.frame(tidy(mfit0, conf.int=TRUE))[,c("term","estimate","conf.low","conf.high")]
@@ -42,22 +48,15 @@ mblogitfit_coefs
 # these match, so both models agree, as should be the case
 
 
-# the coefficients & confidence intervals above should match with 
-# confint(emtrends(mfit0, trt.vs.ctrl~outcome|1, var="collection_date_num",  mode="latent"))$contrasts
-
-unloadNamespace("emmeans")
-require(devtools)
-remotes::install_github("rvlenth/emmeans", force=TRUE)
-library(emmeans)
-
-confint(emtrends(mfit0, trt.vs.ctrl~outcome|1, var="collection_date_num",  mode="latent"))$contrasts
-# contrast       estimate      SE df lower.CL upper.CL
-# n_spos - n_neg  -0.0339 0.00130 16  -0.0366  -0.0311
-# n_b117 - n_neg   0.0145 0.00213 16   0.0100   0.0190
-# correct
+# the coefficients & confidence intervals match with these emtrends contrasts, which should be the case:
+# (note I had to add adjust="none" and df=NA to get the exact same asymptotic confidence intervals)
+confint(emtrends(mfit0, trt.vs.ctrl ~ outcome|1, var="collection_date_num",  mode="latent"), adjust="none", df=NA)$contrasts
+# contrast       estimate      SE df asymp.LCL asymp.UCL
+# n_spos - n_neg  -0.0339 0.00130 NA   -0.0364   -0.0313
+# n_b117 - n_neg   0.0145 0.00213 NA    0.0104    0.0187
 
 # these confidence intervals are not correct though:
-confint(emtrends(mblogitfit0, trt.vs.ctrl~outcome|1, var="collection_date_num",  mode="latent", adjust="none"))$contrasts
-# contrast       estimate     SE  df asymp.LCL asymp.UCL
-# n_spos - n_neg  -0.0339 0.0587 Inf    -0.149    0.0812
-# n_b117 - n_neg   0.0145 0.0900 Inf    -0.162    0.1909
+confint(emtrends(mblogitfit0, trt.vs.ctrl ~ outcome|1, var="collection_date_num",  mode="latent"), adjust="none", df=NA)$contrasts
+# contrast       estimate      SE df asymp.LCL asymp.UCL
+# n_spos - n_neg  -0.0339 0.00130 NA   -0.0364   -0.0313
+# n_b117 - n_neg   0.0145 0.00213 NA    0.0104    0.0187

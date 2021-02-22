@@ -10,7 +10,7 @@
 # https://ispmbern.github.io/covid-19/variants/data & https://github.com/covid-19-Re/variantPlot/raw/master/data/data.csv)
 # and Helix, San Mateo, CA, Karthik Gangavarapu & Kristian G. Andersen (US, https://github.com/andersen-lab/paper_2021_early-b117-usa/tree/master/b117_frequency/data, https://www.medrxiv.org/content/10.1101/2021.02.06.21251159v1)
 
-# last update 13 FEBR. 2021
+# last update 22 FEBR. 2021
 
 library(lme4)
 library(splines)
@@ -46,13 +46,13 @@ library(broom)
 library(nnet)
 
 
-dat="2021_02_09" # desired file version for Belgian data (date/path in //data)
+dat="2021_02_22" # desired file version for Belgian data (date/path in //data)
 suppressWarnings(dir.create(paste0(".//plots//",dat)))
 filedate = as.Date(gsub("_","-",dat)) # file date
 filedate_num = as.numeric(filedate)
 today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
 today_num = as.numeric(today)
-
+today # "2021-02-22"
 
 # 1. ESTIMATE PROPORTION OF S DROPOUT SAMPLES THAT ARE B.1.1.7 / 501Y.V1 IN BELGIUM IN FUNCTION OF TIME BASED ON SEQUENCING DATA ####
 # SEQUENCING DATA PROVIDED BY EMMANUEL ANDRÉ
@@ -84,7 +84,7 @@ exp(4.7*as.data.frame(emtrends(fit_seq, ~ 1, var="collection_date_num"))[,c(2,5,
 plot(fit_seq)
 
 # PLOT MODEL FIT
-extrapolate = 60 # nr of days to extrapolate fit into the future
+extrapolate = 90 # nr of days to extrapolate fit into the future
 total.SD = sqrt(sum(sapply(as.data.frame(VarCorr(fit_seq))$sdcor, function (x) x^2))) 
 # bias correction for random effects in marginal means, see https://cran.r-project.org/web/packages/emmeans/vignettes/transformations.html#bias-adj
 fitseq_preds = as.data.frame(emmeans(fit_seq, ~ collection_date_num, 
@@ -96,18 +96,21 @@ fitseq_preds$collection_date = as.Date(fitseq_preds$collection_date_num, origin=
 # prop of S dropout samples among newly diagnosed infections that are now estimated to be B.1.1.7 / 501Y.V1
 fitseq_preds[fitseq_preds$collection_date==today,]
 #    collection_date_num      prob         SE  df asymp.LCL asymp.UCL collection_date
-# 62           18676 0.9956677 0.003078826 Inf 0.9826895 0.9989273      2021-02-18
+# 62           18680 0.997214 0.002161191 Inf 0.9873354 0.9993923      2021-02-22
 
 # prop of S dropout samples among new infections that are now estimated to be B.1.1.7 / 501Y.V1 (using 7 days for time from infection to diagnosis)
 fitseq_preds[fitseq_preds$collection_date==(today+7),]
 #    collection_date_num     prob          SE  df asymp.LCL asymp.UCL collection_date
-# 69           18683 0.9980001 0.001648969 Inf 0.9899868 0.9996034      2021-02-25
+# 69           18687 0.9987151 0.001143097 Inf  0.992683 0.9997756      2021-03-01
 
 # from 13th of Jan 2021 >80% of all S dropout samples were indeed B.1.1.7 / 501Y.V1
 fitseq_preds[fitseq_preds$prob>0.80,"collection_date"][1]
 
 # from 20th of Jan 2021 >90% of all S dropout samples were indeed B.1.1.7 / 501Y.V1
 fitseq_preds[fitseq_preds$prob>0.90,"collection_date"][1]
+
+# from 11th of Feb 2021 >99% of all S dropout samples were indeed B.1.1.7 / 501Y.V1
+fitseq_preds[fitseq_preds$prob>0.99,"collection_date"][1]
 
 # on logit scale:
 plot_fitseq = qplot(data=fitseq_preds, x=collection_date, y=prob, geom="blank") +
@@ -122,8 +125,8 @@ plot_fitseq = qplot(data=fitseq_preds, x=collection_date, y=prob, geom="blank") 
   scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
                       labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
   coord_cartesian(# xlim=c(as.Date("2020-09-01"),as.Date("2021-02-01")), 
-    xlim=c(as.Date("2020-12-01"),as.Date("2021-02-08")), 
-    ylim=c(0.01,0.99002), expand=c(0,0)) +
+    xlim=c(as.Date("2020-12-01"),today), 
+    ylim=c(0.01,0.999002), expand=c(0,0)) +
   scale_color_discrete("", h=c(0, 280), c=200) +
   scale_fill_discrete("", h=c(0, 280), c=200) +
   geom_point(data=datBE_b117, 
@@ -153,7 +156,7 @@ plot_fitseq_response = qplot(data=fitseq_preds, x=collection_date, y=100*prob, g
   # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
   #                    labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
   coord_cartesian(# xlim=c(as.Date("2020-09-01"),as.Date("2021-02-01")), 
-    xlim=c(as.Date("2020-12-01"),as.Date("2021-02-08")), 
+    xlim=c(as.Date("2020-12-01"),today), 
     ylim=c(0,100), expand=c(0,0)) +
   scale_color_discrete("", h=c(0, 280), c=200) +
   scale_fill_discrete("", h=c(0, 280), c=200) +
@@ -178,6 +181,7 @@ ggsave(file=paste0(".\\plots\\",dat,"\\Fig1_dataBE_propSdropoutB117_binomial GLM
 # Read in Ct data of all valid PCRs
 file_jan = paste0(".//data//", dat, "//PCR January 2021 complete.xlsx")
 file_feb = paste0(".//data//", dat, "//PCR February 2020 until 9 Feb.xlsx")
+file_feb2 = paste0(".//data//", dat, "//PCR February 2020 10 to 21 Feb.xlsx")
 sheets = excel_sheets(file_jan)
 ctdata_jan = map_df(sheets, ~ read_excel(file_jan, sheet = .x, skip = 1, 
                                        col_names=c("Analysis_date","Laboratory","Outcome","ORF1_cq","S_cq","N_cq","S_dropout"), 
@@ -185,7 +189,10 @@ ctdata_jan = map_df(sheets, ~ read_excel(file_jan, sheet = .x, skip = 1,
 ctdata_feb = map_df(sheets, ~ read_excel(file_feb, sheet = .x, skip = 1, 
                                          col_names=c("Analysis_date","Laboratory","Outcome","ORF1_cq","S_cq","N_cq","S_dropout"), 
                                          col_types=c("text","text","text","numeric","numeric","numeric","numeric"))) 
-ctdata = bind_rows(ctdata_jan, ctdata_feb)
+ctdata_feb2 = map_df(sheets, ~ read_excel(file_feb2, sheet = .x, skip = 1, 
+                                         col_names=c("Analysis_date","Laboratory","Outcome","ORF1_cq","S_cq","N_cq","S_dropout"), 
+                                         col_types=c("text","text","text","numeric","numeric","numeric","numeric"))) 
+ctdata = bind_rows(ctdata_jan, ctdata_feb, ctdata_feb2)
 unique(ctdata$Laboratory) 
 # "UMons - Jolimont" "UZA"              "ULB"              "Saint LUC - UCL"  "UZ leuven"        "UZ Gent"          "Namur"           
 # "ULG - FF 3.x" 
@@ -194,11 +201,11 @@ ctdata$Outcome[ctdata$Outcome=="Not detected"] = "Negative"
 unique(ctdata$Outcome)
 ctdata$Analysis_date = as.Date(as.numeric(ctdata$Analysis_date), origin="1899-12-30")
 sum(is.na(ctdata$Analysis_date)) # 0
-range(ctdata$Analysis_date) # "2021-01-01" - "2021-02-08"
+range(ctdata$Analysis_date) # "2021-01-01" - "2021-02-21"
 ctdata$collection_date = ctdata$Analysis_date-1 # collection date = analysis date-1 
 sum(is.na(ctdata$collection_date)) # 0
 ctdata$collection_date_num = as.numeric(ctdata$collection_date)
-range(ctdata$collection_date) # "2020-12-31" "2021-02-07"
+range(ctdata$collection_date) # "2020-12-31" "2021-02-20"
 ctdata$group = interaction(ctdata$Outcome, ctdata$S_dropout)
 ctdata$group = droplevels(ctdata$group)
 unique(ctdata$group) # Positive.0 Positive.1 Negative.0
@@ -208,7 +215,7 @@ ctdata$Laboratory = factor(ctdata$Laboratory)
 ctdata$S_dropout = factor(ctdata$S_dropout)
 head(ctdata)
 str(ctdata)
-nrow(ctdata) # 387653
+nrow(ctdata) # 537655
 
 ctdata_onlypos = ctdata[ctdata$Outcome=="Positive",] # subset with only the positive samples
 ctdata_onlypos = bind_rows(ctdata_onlypos[ctdata_onlypos$S_dropout=="0",], ctdata_onlypos[ctdata_onlypos$S_dropout=="1",])
@@ -228,24 +235,19 @@ ctdata_onlypos_subs = ctdata_onlypos_subs[!(is.na(ctdata_onlypos_subs$S_dropout)
                                               is.na(ctdata_onlypos_subs$ORF1_cq)|
                                               (ctdata_onlypos_subs$ORF1_cq==0)),]
 
-cor.test(ctdata_onlypos_subs$N_cq, ctdata_onlypos_subs$ORF1_cq, method="pearson") # Pearson R=0.74
-
-# below we continue with the data from all labs, except 
-# UMons & ULG (which both had low sample size) and 
-# UZ Ghent & UZA (which both were very heavily involved in active surveillance, 
-# which may results in biased, nonrepresentative samples)
+cor.test(ctdata_onlypos_subs$N_cq, ctdata_onlypos_subs$ORF1_cq, method="pearson") # Pearson R=0.76
 
 do.call( rbind, lapply( split(ctdata_onlypos_subs, ctdata_onlypos_subs$Laboratory),
                         function(x) data.frame(Laboratory=x$Laboratory[1], correlation_Ct_N_ORF1ab=cor(x$N_cq, x$ORF1_cq)) ) )
 #                        Laboratory correlation_Ct_N_ORF1ab
-# Namur                       Namur             0.945827328
-# Saint LUC - UCL   Saint LUC - UCL             0.981151728
-# ULB                           ULB             0.981289669
+# Namur                       Namur             0.947866198
+# Saint LUC - UCL   Saint LUC - UCL             0.981080423
+# ULB                           ULB             0.981429368
 # ULG - FF 3.x         ULG - FF 3.x             0.955847687
-# UMons - Jolimont UMons - Jolimont            -0.264402762
-# UZ Gent                   UZ Gent            -0.008149941
-# UZ leuven               UZ leuven             0.976820844
-# UZA                           UZA             0.836841503
+# UMons - Jolimont UMons - Jolimont            -0.282023995
+# UZ Gent                   UZ Gent            -0.003990932
+# UZ leuven               UZ leuven             0.976912170
+# UZA                           UZA             0.881584309
 
 ctcorplot_all_labs = qplot(data=ctdata_onlypos_subs, x=ORF1_cq, y=N_cq, group=Laboratory, fill=S_dropout, colour=S_dropout, size=I(3), shape=I(16)) +
   facet_wrap(~Laboratory) + 
@@ -255,6 +257,7 @@ ctcorplot_all_labs = qplot(data=ctdata_onlypos_subs, x=ORF1_cq, y=N_cq, group=La
   guides(colour = guide_legend(override.aes = list(alpha = 0.5,fill=NA))) +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 ctcorplot_all_labs
+# PS weird results for UMons & UZ Gent, and to some extent UZA, not sure of the cause
 saveRDS(ctcorplot_all_labs, file = paste0(".\\plots\\",dat,"\\dataBE_correlation Ct values N ORF1 by lab_all labs.rds"))
 graph2ppt(file=paste0(".\\plots\\",dat,"\\dataBE_correlation Ct values N ORF1 by lab_all labs.pptx"), width=7, height=6)
 ggsave(file=paste0(".\\plots\\",dat,"\\dataBE_correlation Ct values N ORF1 by lab_all labs.png"), width=7, height=6)
@@ -273,7 +276,8 @@ ctplot_rawdataN_all_labs = qplot(data=ctdata_onlypos_subs, x=collection_date, y=
   guides(colour = guide_legend(override.aes = list(alpha = 0.5,fill=NA))) +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 ctplot_rawdataN_all_labs
-
+# PS UZA has suspect Ct values before the 21st of Jan & UMons & UGhent also have very different ranges for the Ct values
+ctdata_onlypos_subs[ctdata_onlypos_subs$Laboratory=="UZA"&ctdata_onlypos_subs$N_cq<=15,"collection_date"][1,] # "2021-01-21"
 ctplot_rawdataORF1_all_labs = qplot(data=ctdata_onlypos_subs, x=collection_date, y=ORF1_cq, group=S_dropout, 
                                  colour=S_dropout, fill=S_dropout, geom="point", size=I(1), shape=I(16)) +
   # geom_smooth(lwd=2, method="lm", alpha=I(0.4), fullrange=TRUE, expand=c(0,0)) + # formula='y ~ s(x, bs = "cs", k=3)') +
@@ -299,11 +303,17 @@ ggsave(file=paste0(".\\plots\\",dat,"\\dataBE_Ct values_raw data_all labs.pdf"),
 
 
 
-# plot & analysis of Ct values of all labs except Mons (low S dropout counts) & UZ Gent (heavily involved in active surveillance, so not representative)
+# plot & analysis of Ct values of all labs except Mons (low S dropout counts & weird Ct value distribution), 
+# ULG (low sample size), UZ Gent (heavily involved in active surveillance, so not representative, plus weird Ct value distribution) &
+# UZA (heavily involved in active surveillance, so not representative, plus weird Ct value distribution)
 # for dates from 13th of Jan onward when >80% of all S dropouts were B.1.1.7 / 501Y.V1
 # we also just use the pos samples with Ct values < 30 to be able to focus only on new, active infections
 
-sel_labs = setdiff(unique(ctdata_onlypos_subs$Laboratory), c("UMons - Jolimont", "ULG - FF 3.x", "UZ Gent", "UZA")) 
+# PS we could still consider including the data from UZA since the 21st of Jan, as Ct values 
+# from then onwards are in the same range as the other labs
+
+labs_to_remove = c("UMons - Jolimont", "ULG - FF 3.x", "UZ Gent", "UZA")
+sel_labs = setdiff(unique(ctdata_onlypos_subs$Laboratory), labs_to_remove) 
 sel_labs # "UZ leuven"       "Saint LUC - UCL" "ULB"             "Namur" 
 # we use data from these 4 labs as the data distribution was comparable for these
 # they also had large sample size & were not heavily involved in active surveillance
@@ -326,25 +336,25 @@ ctdata_onlypos_subs$Laboratory = droplevels(ctdata_onlypos_subs$Laboratory)
 ctdata_onlypos_subs_bothgenes = rbind(data.frame(ctdata_onlypos_subs, Gene="N gene", Ct=ctdata_onlypos_subs$N_cq), 
                                       data.frame(ctdata_onlypos_subs, Gene="ORF1ab gene", Ct=ctdata_onlypos_subs$ORF1_cq))
 # we define a high viral load as one where the Ct value was 1.25x lower than in the non-S dropout sample group
-# which was a Ct value < 15.03 for the N gene and < 15.92 for the ORF1ab gene
+# which was a Ct value < 15.099 for the N gene and < 16.001 for the ORF1ab gene
 thresh_N = median(unlist(ctdata_onlypos_subs[ctdata_onlypos_subs$S_dropout=="0","N_cq"]))/1.25
-thresh_N # 15.03
+thresh_N # 15.099
 thresh_ORF1 = median(unlist(ctdata_onlypos_subs[ctdata_onlypos_subs$S_dropout=="0","ORF1_cq"]))/1.25
-thresh_ORF1 # 15.92264
+thresh_ORF1 # 16.001
 ctdata_onlypos_subs_bothgenes$high_viral_load[ctdata_onlypos_subs_bothgenes$Gene=="N gene"] = ctdata_onlypos_subs_bothgenes$Ct[ctdata_onlypos_subs_bothgenes$Gene=="N gene"]<thresh_N
 ctdata_onlypos_subs_bothgenes$high_viral_load[ctdata_onlypos_subs_bothgenes$Gene=="ORF1ab gene"] = ctdata_onlypos_subs_bothgenes$Ct[ctdata_onlypos_subs_bothgenes$Gene=="ORF1ab gene"]<thresh_ORF1
 
 
 # check correlation between Ct values for N & ORF1ab gene
-cor.test(ctdata_onlypos_subs$N_cq, ctdata_onlypos_subs$ORF1_cq, method="pearson") # Pearson R=0.97, t=436.44, p<2E-16
+cor.test(ctdata_onlypos_subs$N_cq, ctdata_onlypos_subs$ORF1_cq, method="pearson") # Pearson R=0.97, t=549.68, p<2E-16
 
 do.call( rbind, lapply( split(ctdata_onlypos_subs, ctdata_onlypos_subs$Laboratory),
                         function(x) data.frame(Laboratory=x$Laboratory[1], correlation_Ct_N_ORF1ab=cor(x$N_cq, x$ORF1_cq)) ) )
 #                      Laboratory correlation_Ct_N_ORF1ab
-# Namur                     Namur               0.9458273
-# Saint LUC - UCL Saint LUC - UCL               0.9811517
-# ULB                         ULB               0.9812897
-# UZ leuven             UZ leuven               0.9768208
+# Namur                     Namur               0.9478662
+# Saint LUC - UCL Saint LUC - UCL               0.9810804
+# ULB                         ULB               0.9814294
+# UZ leuven             UZ leuven               0.9769122
 
 
 ctcorplot_sellabs = qplot(data=ctdata_onlypos_subs, x=ORF1_cq, y=N_cq, group=Laboratory, fill=S_dropout, colour=S_dropout, size=I(3), shape=I(16)) +
@@ -409,63 +419,61 @@ qr_bothgenes2 = rq(Ct ~ Gene + S_dropout * Laboratory, data=ctdata_onlypos_subs_
 qr_bothgenes3 = rq(Ct ~ Gene * Laboratory + S_dropout, data=ctdata_onlypos_subs_bothgenes, tau=0.5)
 qr_bothgenes4 = rq(Ct ~ (Gene + Laboratory + S_dropout)^2, data=ctdata_onlypos_subs_bothgenes, tau=0.5)
 qr_bothgenes5 = rq(Ct ~ Gene * Laboratory * S_dropout, data=ctdata_onlypos_subs_bothgenes, tau=0.5)
-AIC(qr_bothgenes0, k=-1) # 138993.5
-AIC(qr_bothgenes1, k=-1) # 138983.3
-AIC(qr_bothgenes2, k=-1) # 138918.8 # fits data best based on BIC criterion (PS: here AIC with k<0 returns BIC)
-AIC(qr_bothgenes3, k=-1) # 139006
-AIC(qr_bothgenes4, k=-1) # 138920 # this could be a good model also, slightly more general
-AIC(qr_bothgenes5, k=-1) # 138948.3
+AIC(qr_bothgenes0, k=-1) # 214755.8
+AIC(qr_bothgenes1, k=-1) # 214734
+AIC(qr_bothgenes2, k=-1) # 214572.4 
+AIC(qr_bothgenes3, k=-1) # 214767.4
+AIC(qr_bothgenes4, k=-1) # 214556.7 # fits data best based on BIC criterion (lowest value, PS: here AIC with k<0 returns BIC)
+AIC(qr_bothgenes5, k=-1) # 214585.4
 
-summary(qr_bothgenes3)
+summary(qr_bothgenes4)
 # tau: [1] 0.5
 # 
 # Coefficients:
 #   Value     Std. Error t value   Pr(>|t|) 
-# (Intercept)                                18.23510   0.22227   82.04069   0.00000
-# GeneORF1ab gene                             0.86340   0.28970    2.98029   0.00288
-# LaboratorySaint LUC - UCL                   0.35220   0.30991    1.13645   0.25578
-# LaboratoryULB                              -0.57680   0.28173   -2.04739   0.04063
-# LaboratoryUZ leuven                         2.90880   0.30326    9.59168   0.00000
-# S_dropout1                                 -2.23110   0.15018  -14.85570   0.00000
-# GeneORF1ab gene:LaboratorySaint LUC - UCL   0.22360   0.43673    0.51198   0.60867
-# GeneORF1ab gene:LaboratoryULB               1.10360   0.38943    2.83391   0.00460
-# GeneORF1ab gene:LaboratoryUZ leuven         0.26440   0.41269    0.64067   0.52174
+# (Intercept)             18.30352   0.05320  344.02131   0.00000
+# Gene1                   -0.78890   0.05221  -15.11005   0.00000
+# Laboratory1             -0.50165   0.09395   -5.33940   0.00000
+# Laboratory2             -0.61455   0.09444   -6.50718   0.00000
+# Laboratory3             -0.64705   0.08850   -7.31106   0.00000
+# S_dropout1               1.22808   0.05277   23.27324   0.00000
+# Gene1:Laboratory1        0.16578   0.09228    1.79652   0.07242
+# Gene1:Laboratory2        0.07128   0.09594    0.74288   0.45756
+# Gene1:Laboratory3       -0.18283   0.08814   -2.07426   0.03806
+# Gene1:S_dropout1         0.23072   0.05343    4.31848   0.00002
+# Laboratory1:S_dropout1  -0.03735   0.09378   -0.39828   0.69043
+# Laboratory2:S_dropout1  -0.15855   0.09451   -1.67757   0.09344
+# Laboratory3:S_dropout1  -0.72295   0.08858   -8.16187   0.00000
 
-qr_emmeans_bylab99 = data.frame(emmeans(qr_bothgenes3, ~ Laboratory + Gene + S_dropout, level=0.99)) # median Ct values + 99% CLs
+qr_emmeans_bylab99 = data.frame(emmeans(qr_bothgenes4, ~ Laboratory + Gene + S_dropout, level=0.99)) # median Ct values + 99% CLs
 qr_emmeans_bylab99
-qr_emmeans99 = data.frame(emmeans(qr_bothgenes3, ~ Gene + S_dropout, level=0.99)) # median Ct values + 99% CLs
+qr_emmeans99 = data.frame(emmeans(qr_bothgenes4, ~ Gene + S_dropout, level=0.99)) # median Ct values + 99% CLs
 qr_emmeans99
-qr_emmeans = data.frame(emmeans(qr_bothgenes3, ~ Gene + S_dropout, level=0.95)) # median Ct values + 95% CLs
+qr_emmeans = data.frame(emmeans(qr_bothgenes4, ~ Gene + S_dropout, level=0.95)) # median Ct values + 95% CLs
 qr_emmeans
-# Gene S_dropout   emmean        SE    df lower.CL upper.CL
-# 1      N gene         0 18.90615 0.1175157 20825 18.67581 19.13649
-# 2 ORF1ab gene         0 20.16745 0.1185207 20825 19.93514 20.39976
-# 3      N gene         1 16.67505 0.1387765 20825 16.40304 16.94706
-# 4 ORF1ab gene         1 17.93635 0.1396734 20825 17.66258 18.21012
-contrast(emmeans(qr_bothgenes3, ~ S_dropout, level=0.95), method="pairwise") # difference in median Ct value highly significant across both genes: p<0.0001
+#          Gene S_dropout   emmean        SE    df lower.CL upper.CL
+# 1      N gene         0 18.97342 0.0896920 32327 18.79763 19.14922
+# 2 ORF1ab gene         0 20.08977 0.1005441 32327 19.89270 20.28685
+# 3      N gene         1 16.05582 0.1206785 32327 15.81929 16.29236
+# 4 ORF1ab gene         1 18.09507 0.1098416 32327 17.87978 18.31037
+
+# mean difference in median Ct value of 2.46, which is highly significant across both genes: p<0.0001
+contrast(emmeans(qr_bothgenes4, ~ S_dropout, level=0.95), method="pairwise") 
 # contrast estimate    SE    df t.ratio p.value
-# 0 - 1        2.23 0.15 20825 14.856  <.0001 
-confint(contrast(emmeans(qr_bothgenes3, ~ S_dropout|Gene, level=0.95), method="pairwise"))
-# PS with the fittest best model the shift in median Ct value is identical for both genes
+# 0 - 1        2.46 0.106 32327 23.273  <.0001
+# mean difference in median Ct value of 2.92 of rN gene and 1.99 for ORF1ab gene
+confint(contrast(emmeans(qr_bothgenes4, ~ S_dropout|Gene, level=0.95), method="pairwise"))
 # Gene = N gene:
 #   contrast estimate   SE    df lower.CL upper.CL
-# 0 - 1        2.23 0.15 20825     1.94     2.53
+# 0 - 1        2.92 0.15 32327     2.62     3.21
 # 
 # Gene = ORF1ab gene:
 #   contrast estimate   SE    df lower.CL upper.CL
-# 0 - 1        2.23 0.15 20825     1.94     2.53
+# 0 - 1        1.99 0.15 32327     1.70     2.29
 # 
 # Results are averaged over the levels of: Laboratory 
 # Confidence level used: 0.95 
 
-
-# # Function to produce summary statistics (median + 25 & 75% quantiles)
-# data_summary = function(x) {
-#   m <- median(x) # mean(x)
-#   ymin <- quantile(x,0.25) # m-sd(x)
-#   ymax <- quantile(x,0.75) # m+sd(x)
-#   return(data.frame(y=m,ymin=ymin,ymax=ymax))
-# }
 
 # violin plots by gene & lab & S dropout with expected marginal means+99% CLs of best fitting median regression model
 ctviolinplots_bylab = ggplot(data=ctdata_onlypos_subs_bothgenes, aes(x=factor(S_dropout), y=Ct, fill=factor(S_dropout))) +
@@ -838,7 +846,7 @@ sum(tail(data_ag_byday_wide$est_n_B117, 14))/sum(tail(data_ag_byday_wide$n_pos,1
 # variant, which are much higher, see above)
 
 
-# implied Re of wild type and B.1.1.7 given this predicted share of B.1.1.7 among all infections
+# implied Re of wild type and B.1.1.7 given this predicted share of B.1.1.7 among all infections ####
 # under a particular fitted transmission advantage
 # based on the fact that the overall Re is a weighted average of the Re of the individual variants
 # functions to calculate Re of wild type and of B.1.1.7 based on overall Re value and prop of positives that is B.1.1.7 propB117
@@ -855,6 +863,7 @@ Re_cases = read.csv(".//Re_fits//Re_cases.csv")
 # with instant growth rate = derivative/emtrends in function of sample date of GAM fit on new cases 
 # gam(cbind(NEWCASES, totpop-NEWCASES) ~ s(DATE_NUM, bs="cs", k=23, fx=F) + WEEKDAY + s(log(TESTS_ALL), bs="cs", k=5, fx=F), family=binomial(cloglog), data=cases_tot) 
 # and with Re calculated using R.from.r with gamma_mean=4.7, gamma_sd=2.9
+# Re here is at time of diagnosis, we use a shift of 7 days to recalculate to Re at day of infection
 Re_cases$DATE = as.Date(Re_cases$DATE_NUM, origin="1970-01-01")
 Re_cases$collection_date_num = Re_cases$DATE_NUM
 Re_cases$propB117 = as.data.frame(emmeans(fit1, ~ collection_date_num, 
@@ -876,8 +885,8 @@ Re_cases$Re_B117_UPPER = Re_B117(Re=Re_cases$Re_UPPER, propB117=Re_cases$propB11
 
 qplot(data=Re_cases, x=DATE, y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribbon", alpha=I(0.5), fill=I("grey")) +
   geom_line() + theme_hc() + xlab("") +
-  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01")),
-                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F")) +
+  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
+                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
   # scale_y_continuous(limits=c(1/3,3), trans="log2") +
   geom_hline(yintercept=1, colour=I("red")) +
   ggtitle("Re OF B.1.1.7 (red) AND WILD TYPE (blue) IN BELGIUM\nBASED ON NEW CONFIRMED CASES AND\nB.1.1.7 TRANSMISSION ADVANTAGE OF 50%") +
@@ -894,7 +903,7 @@ qplot(data=Re_cases, x=DATE, y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribbon", 
   coord_cartesian(xlim=c(as.Date("2020-09-01"),max(Re_cases$DATE)),
                   ylim=c(0.5,1.5))
 ggsave(file=paste0(".//plots//Re",dat,"_cases_Re_B117_Re_wildtype.png"), width=7, height=5)
-
+Re_cases[Re_cases$DATE==max(Re_cases$DATE),]
 
 
 
