@@ -611,19 +611,26 @@ sheets = excel_sheets(file_jan)
 ctdata_dec1 = map_df(sheets, ~ read_excel(file_dec1, sheet = .x, skip = 1, 
                                          col_names=c("Analysis_date","Laboratory","Outcome","ORF1_cq","S_cq","N_cq","S_dropout"), 
                                          col_types=c("text","text","text","numeric","numeric","numeric","numeric"))) 
+range(as.Date(as.numeric(ctdata_dec1$Analysis_date), origin="1899-12-30")) # "2020-12-01" "2020-12-20"
 ctdata_dec2 = map_df(sheets, ~ read_excel(file_dec2, sheet = .x, skip = 1, 
                                          col_names=c("Analysis_date","Laboratory","Outcome","ORF1_cq","S_cq","N_cq","S_dropout"), 
                                          col_types=c("text","text","text","numeric","numeric","numeric","numeric"))) 
+range(as.Date(as.numeric(ctdata_dec2$Analysis_date), origin="1899-12-30")) # "2020-12-21" "2020-12-31"
 ctdata_jan = map_df(sheets, ~ read_excel(file_jan, sheet = .x, skip = 1, 
                                        col_names=c("Analysis_date","Laboratory","Outcome","ORF1_cq","S_cq","N_cq","S_dropout"), 
                                        col_types=c("text","text","text","numeric","numeric","numeric","numeric"))) 
+range(as.Date(as.numeric(ctdata_jan$Analysis_date), origin="1899-12-30")) # "2021-01-01" "2021-01-31"
 ctdata_feb1 = map_df(sheets, ~ read_excel(file_feb1, sheet = .x, skip = 1, 
                                          col_names=c("Analysis_date","Laboratory","Outcome","ORF1_cq","S_cq","N_cq","S_dropout"), 
                                          col_types=c("text","text","text","numeric","numeric","numeric","numeric"))) 
+range(as.Date(as.numeric(ctdata_feb1$Analysis_date), origin="1899-12-30")) # "2021-01-01" "2021-01-08"
 ctdata_feb2 = map_df(sheets, ~ read_excel(file_feb2, sheet = .x, skip = 1, 
                                          col_names=c("Analysis_date","Laboratory","Outcome","ORF1_cq","S_cq","N_cq","S_dropout"), 
                                          col_types=c("text","text","text","numeric","numeric","numeric","numeric"))) 
+range(as.Date(as.numeric(ctdata_feb2$Analysis_date), origin="1899-12-30")) # "2021-01-30" "2021-02-21"
+# PS there is still something wrong with file ctdata_feb2 (not the right date range & negatives missing) & ctdata_feb1 misses data 9th of Febr
 ctdata = bind_rows(ctdata_dec1, ctdata_dec2, ctdata_jan, ctdata_feb1, ctdata_feb2)
+range(as.Date(as.numeric(ctdata$Analysis_date), origin="1899-12-30")) # "2020-12-01" "2021-02-21"
 ctdata$Laboratory[ctdata$Laboratory=="ULG - FF 3.x"] = "ULG"
 unique(ctdata$Laboratory) 
 # "ULG"     "Namur"            "UMons - Jolimont" "UZ leuven"        "UZA"              "UZ Gent"          "ULB"             
@@ -677,7 +684,7 @@ cor.test(ctdata_onlypos_subs$N_cq, ctdata_onlypos_subs$ORF1_cq, method="pearson"
 
 do.call( rbind, lapply( split(ctdata_onlypos_subs, ctdata_onlypos_subs$Laboratory),
                         function(x) data.frame(Laboratory=x$Laboratory[1], correlation_Ct_N_ORF1ab=cor(x$N_cq, x$ORF1_cq)) ) )
-#                        Laboratory correlation_Ct_N_ORF1ab
+# Laboratory correlation_Ct_N_ORF1ab
 # Namur                       Namur             0.947866198
 # Saint LUC - UCL   Saint LUC - UCL             0.981080423
 # ULB                           ULB             0.981429368
@@ -1116,6 +1123,7 @@ data_ag_wide$propB117 = data_ag_wide$est_n_B117 / data_ag_wide$n_pos
 data_ag_wide$obs = factor(1:nrow(data_ag_wide))
 data_ag_wide = data_ag_wide[data_ag_wide$total != 0, ]
 head(data_ag_wide)
+tail(data_ag_wide, 70)
 
 write.csv(data_ag_wide, file=".\\data\\be_latest\\be_B117_by lab.csv", row.names=FALSE)
 
