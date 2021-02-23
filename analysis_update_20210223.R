@@ -1371,9 +1371,9 @@ qplot(data=Re_cases, x=DATE, y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribbon", 
 ggsave(file=paste0(".//plots//",dat,"//Re_cases_Re_501YV1_Re_wildtype.png"), width=7, height=5)
 Re_cases[Re_cases$DATE==max(Re_cases$DATE),]
 # DATE_NUM          r          SE       df    r_LOWER    r_UPPER       DATE       Re Re_LOWER Re_UPPER collection_date_num  propB117
-# 366    18687 0.01979236 0.001352939 321.0347 0.01713061 0.02245411 2021-03-01 1.095723 1.082534 1.109012               18687 0.7906432
+# 366    18687 0.04095044 0.001923843 314.1994 0.03716519 0.04473568 2021-03-01 1.204112 1.184255 1.224174               18687 0.7906432
 # Re_WT Re_WT_LOWER Re_WT_UPPER  Re_B117 Re_B117_LOWER Re_B117_UPPER
-# 366 0.7787523   0.7693783   0.7881966 1.179655      1.165455      1.193961
+# 366 0.855786   0.8416732   0.8700445 1.296346      1.274968      1.31794
 
 
 
