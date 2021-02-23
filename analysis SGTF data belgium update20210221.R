@@ -1368,10 +1368,10 @@ qplot(data=Re_cases, x=DATE-7, y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribbon"
   ylab("Re at time of infection")
 ggsave(file=paste0(".//plots//",dat,"//Re_cases_Re_501YV1_Re_wildtype.png"), width=7, height=5)
 Re_cases[Re_cases$DATE==max(Re_cases$DATE),]
-# DATE_NUM          r          SE      df     r_LOWER    r_UPPER       DATE      Re Re_LOWER Re_UPPER collection_date_num  propB117
-# 365    18686 0.01226322 0.001377151 320.037 0.009553808 0.01497263 2021-02-28 1.05867 1.045529 1.071913               18686 0.7827269
+# DATE_NUM          r          SE       df    r_LOWER    r_UPPER       DATE       Re Re_LOWER Re_UPPER collection_date_num  propB117
+# 366    18687 0.01979236 0.001352939 321.0347 0.01713061 0.02245411 2021-03-01 1.095723 1.082534 1.109012               18687 0.8072318
 # Re_WT Re_WT_LOWER Re_WT_UPPER  Re_B117 Re_B117_LOWER Re_B117_UPPER
-# 365 0.7662085   0.7566977    0.775793 1.139854      1.125705      1.154112
+# 366 0.7862255   0.7767616   0.7957605 1.169632      1.155553      1.183817
 
 
 
