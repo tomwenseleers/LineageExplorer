@@ -168,6 +168,39 @@ delta_r_501V1_501YV2_501YV3
 # 501Y.V2 - wild type 0.05340663 0.03519376 0.07161950
 # 501Y.V3 - wild type 0.12353360 0.05273034 0.19433686
 
+# pairwise contrasts in growth rate (here with Tukey correction)
+emtrends(be_seq_mfit0, pairwise ~ variant|1, 
+                   var="collection_date_num",  mode="latent",
+                   at=list(collection_date_num=today_num), 
+          df=NA)$contrasts
+# contrast            estimate      SE df z.ratio p.value
+# wild type - 501Y.V1  -0.0697 0.00432 NA -16.123 <.0001 
+# wild type - 501Y.V2  -0.0534 0.00929 NA  -5.747 <.0001 
+# wild type - 501Y.V3  -0.1235 0.03612 NA  -3.420 0.0035 
+# 501Y.V1 - 501Y.V2     0.0163 0.00971 NA   1.675 0.3371 
+# 501Y.V1 - 501Y.V3    -0.0539 0.03614 NA  -1.490 0.4433 
+# 501Y.V2 - 501Y.V3    -0.0701 0.03711 NA  -1.890 0.2325 
+# 
+# Degrees-of-freedom method: user-specified 
+# P value adjustment: tukey method for comparing a family of 4 estimates 
+
+
+# pairwise contrasts in growth rate (here without Tukey correction)
+emtrends(be_seq_mfit0, pairwise ~ variant|1, 
+         var="collection_date_num",  mode="latent",
+         at=list(collection_date_num=today_num), 
+         df=NA, adjust="none")$contrasts
+# contrast            estimate      SE df z.ratio p.value
+# wild type - 501Y.V1  -0.0697 0.00432 NA -16.123 <.0001 
+# wild type - 501Y.V2  -0.0534 0.00929 NA  -5.747 <.0001 
+# wild type - 501Y.V3  -0.1235 0.03612 NA  -3.420 0.0006 
+# 501Y.V1 - 501Y.V2     0.0163 0.00971 NA   1.675 0.0940 
+# 501Y.V1 - 501Y.V3    -0.0539 0.03614 NA  -1.490 0.1361 
+# 501Y.V2 - 501Y.V3    -0.0701 0.03711 NA  -1.890 0.0588 
+# 
+# Degrees-of-freedom method: user-specified 
+
+
 # implied transmission advantage (assuming no immune evasion advantage of 501Y.V2, if there is such an advantage, transm advantage would be less)
 exp(delta_r_501V1_501YV2_501YV3*4.7) 
 #                     estimate asymp.LCL asymp.UCL
