@@ -4,6 +4,9 @@
 # Tom Wenseleers & Niel Hens
 # All Belgian data provided by Emmanuel André
 
+# Associated report: 
+# https://github.com/tomwenseleers/newcovid_belgium/blob/main/reports/Genomic%20surveillance%20update_23%20feb%202021.pdf
+
 # Data provided by Emmanuel André (BE), COG-UK, PHE & N. Davies (UK), 
 # Statens Serum Institut & Danish Covid-19 Genome Consortium (DK, https://www.covid19genomics.dk/statistics), 
 # Christian Althaus, Swiss Viollier Sequencing Consortium, Institute of Medical Virology, University of Zurich, 
@@ -95,6 +98,7 @@ be_seqdata$basplusactivesurv_n_501Y.propV1V2V3 = be_seqdata$basplusactivesurv_n_
 
 
 head(be_seqdata)
+range(be_seqdata$collection_date)
 
 
 # BASELINE SURVEILLANCE DATA ####
