@@ -1322,7 +1322,7 @@ Re_B117 = function (Re, propB117, M=M_fitted) {
   M*Re / (1-propB117+M*propB117)
 }
 
-Re_cases = read.csv(".//Re_fits//Re_cases.csv") 
+Re_cases = read.csv(paste0(".//data//",dat,"//Re_cases.csv")) 
 # Re values calculated from instantaneous growth rate in nr of new cases 
 # with instantaneous growth rate calculated as the first derivative (calculated using emtrends) to the GAM fit on new cases 
 # gam(cbind(NEWCASES, totpop-NEWCASES) ~ s(DATE_NUM, bs="cs", k=32, fx=F) + 
@@ -1400,6 +1400,60 @@ fit1_preds$collection_date[fit1_preds[,"asymp.LCL"]>=0.9][1]-7
 
 plot_fit1_response = qplot(data=fit1_preds, x=collection_date, y=100*prob, geom="blank") +
   # facet_wrap(~LABORATORY) +
+  # geom_ribbon(data=fit1_22jan_preds, aes(y=100*prob, ymin=100*asymp.LCL, ymax=100*asymp.UCL, colour=NULL, 
+  #                                        # fill=LABORATORY
+  # ), 
+  # fill=I("lightgrey"), 
+  # alpha=I(1)) +
+  # geom_line(data=fit1_22jan_preds, aes(y=100*prob, 
+  #                                      # colour=LABORATORY
+  # ), 
+  # colour=I("grey"), 
+  # alpha=I(1)) +
+  geom_ribbon(aes(y=100*prob, ymin=100*asymp.LCL, ymax=100*asymp.UCL, colour=NULL, 
+                  # fill=LABORATORY
+  ), 
+  fill=I("#b0c4de"), 
+  alpha=I(1)) +
+  geom_line(aes(y=100*prob, 
+                # colour=LABORATORY
+  ), 
+  colour=I("steelblue"), 
+  alpha=I(1)) +
+  ylab("Share of 501Y.V1 (%)") +
+  theme_hc() + xlab("") + 
+  # ggtitle("GROWTH OF VOC 202012/01 BY NHS REGION") +
+  # scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
+  #                   labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
+  # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
+  #                     labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
+  coord_cartesian(xlim=c(min(data_ag_byday_wide$collection_date), as.Date("2021-04-01")), 
+                  # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")), 
+                  ylim=c(0,100), expand=c(0,0)) +
+  scale_color_discrete("", h=c(0, 280), c=200) +
+  scale_fill_discrete("", h=c(0, 280), c=200) +
+  geom_point(data=data_ag_byday_wide, 
+             aes(x=collection_date, y=100*propB117, size=n_pos,
+                 # colour=LABORATORY
+             ), 
+             colour=I("steelblue"), 
+             alpha=I(1)) +
+  scale_size_continuous("number of\npositive tests (Ct<30)", trans="sqrt", 
+                        range=c(1, 4), limits=c(10,10^round(log10(max(data_ag_byday_wide$n_pos)+1),0)), breaks=c(10,100,1000)) +
+  guides(fill=FALSE) + 
+  # guides(colour=FALSE) + 
+  theme(legend.position = "right") +
+  xlab("Collection date")
+plot_fit1_response
+
+
+saveRDS(plot_fit1_response, file = paste0(".\\plots\\",dat,"\\Fig4_fit1_binomGLMM_501YV1_Belgium_response scale.rds"))
+graph2ppt(file=paste0(".\\plots\\",dat,"\\Fig4_fit1_binomGLMM_501YV1_Belgium_response scale.pptx"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",dat,"\\Fig4_fit1_binomGLMM_501YV1_Belgium_response scale.png"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",dat,"\\Fig4_fit1_binomGLMM_501YV1_Belgium_response scale.pdf"), width=8, height=6)
+
+plot_fit1_responseB = qplot(data=fit1_preds, x=collection_date, y=100*prob, geom="blank") +
+  # facet_wrap(~LABORATORY) +
   geom_ribbon(data=fit1_22jan_preds, aes(y=100*prob, ymin=100*asymp.LCL, ymax=100*asymp.UCL, colour=NULL, 
                   # fill=LABORATORY
   ), 
@@ -1444,13 +1498,13 @@ plot_fit1_response = qplot(data=fit1_preds, x=collection_date, y=100*prob, geom=
   # guides(colour=FALSE) + 
   theme(legend.position = "right") +
   xlab("Collection date")
-plot_fit1_response
+plot_fit1_responseB
 
 
-saveRDS(plot_fit1_response, file = paste0(".\\plots\\",dat,"\\Fig4_fit1_binomGLMM_501YV1_Belgium_response scale.rds"))
-graph2ppt(file=paste0(".\\plots\\",dat,"\\Fig4_fit1_binomGLMM_501YV1_Belgium_response scale.pptx"), width=8, height=6)
-ggsave(file=paste0(".\\plots\\",dat,"\\Fig4_fit1_binomGLMM_501YV1_Belgium_response scale.png"), width=8, height=6)
-ggsave(file=paste0(".\\plots\\",dat,"\\Fig4_fit1_binomGLMM_501YV1_Belgium_response scale.pdf"), width=8, height=6)
+saveRDS(plot_fit1_responseB, file = paste0(".\\plots\\",dat,"\\Fig4B_fit1_binomGLMM_501YV1_Belgium_response scale.rds"))
+graph2ppt(file=paste0(".\\plots\\",dat,"\\Fig4B_fit1_binomGLMM_501YV1_Belgium_response scale.pptx"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",dat,"\\Fig4B_fit1_binomGLMM_501YV1_Belgium_response scale.png"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",dat,"\\Fig4B_fit1_binomGLMM_501YV1_Belgium_response scale.pdf"), width=8, height=6)
 
 
 # plot for the whole of Belgium on logit scale:
