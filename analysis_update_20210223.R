@@ -1842,4 +1842,1026 @@ multipanel_Re_growthadv_multinom
 
 # 5. SOME INTERNATIONAL COMPARISONS ####
 
-# SEE SECTION 5. IN https://github.com/nicholasdavies/newcovid/blob/master/multinomial_logistic_fits/multinomial%20logistic%20fits_FINAL.R
+# adapted from section 5. in https://github.com/nicholasdavies/newcovid/blob/master/multinomial_logistic_fits/multinomial%20logistic%20fits_FINAL.R
+# cf. associated paper https://cmmid.github.io/topics/covid19/uk-novel-variant.html
+# https://cmmid.github.io/topics/covid19/reports/uk-novel-variant/2021_02_06_Transmissibility_and_severity_of_VOC_202012_01_in_England_v2.pdf
+
+
+# 5. INTERNATIONAL COMPARISONS: COMPETITIVE ADVANTAGE OF 501Y.V1 IN THE UK, DENMARK, SWITZERLAND & THE USA ####
+
+# GIVEN THAT THE EFFECTIVE REPRODUCTION NUMBER R = (1 + k * r * g)^(1 / k) 
+# (Park et al. 2020) WHEN GENERATION TIME IS GAMMA DISTRIBUTED (with mean g and k=(SD/g)^2), 
+# WHICH IS APPROX EQUAL TO exp(r*g) WITH r=MALTHUSIAN GROWTH RATE, IT FOLLOWS THAT
+# THE EXPECTED MULTIPLICATIVE DIFFERENCE IN THE R VALUE OF TWO COMPETING VARIANTS,
+# ASSUMING IDENTICAL GENERATION TIMES, EQUALS exp((r_new-r_old)*g) = exp(delta_r*g),
+# WHERE THE DIFFERENCE IN MALTHUSIAN GROWTH RATE delta_r IS SOMETIMES REFERRED TO AS
+# THE SELECTION RATE (TRAVISANO & LENSKI 1996) AND delta_r*g IS THE DIMENSIONLESS
+# SELECTION COEFFICIENT sT OF CHEVIN (2011).
+
+M.from.delta_r = function (delta_r, g=4.7) { 
+  delta_R = exp(delta_r*g)
+  return( delta_R ) 
+}
+
+M.from.delta_r(0.088, 4.7)
+
+# This function calculates the expected multiplicative effect on R M for 
+# gamma distributed generation time gamma(mean=4.7d) (Nishiura et al. 2020)
+# It works on an input dataframe df with delta_r values and returns the original
+# data frame plus the estimate of M as a dataframe with extra columns
+# with column names coln
+M.from.delta_r_df = function (df, g=4.7, 
+                              coln=c("M","M.LCL","M.UCL")) { 
+  df_num = df[,which(unlist(lapply(df, is.numeric))), drop=F]
+  df_nonnum = df[,which(!unlist(lapply(df, is.numeric))), drop=F]
+  df_out1 = apply(df_num, 2, function (delta_r) M.from.delta_r(delta_r, g))
+  if (class(df_out1)[1]=="numeric") df_out1=as.data.frame(t(df_out1), check.names=F)
+  df_out = data.frame(df_out1, check.names=F)
+  if (!is.null(coln)) colnames(df_out) = coln
+  return( data.frame(df_nonnum, df_num, df_out, check.names=F) )
+}
+
+
+# 5.1. DATA UK : ANALYSIS OF PILLAR 2 S-GENE TARGET FAILURE DATA ####
+
+levels_UKregions = c("South East","London","East of England",
+                     "South West","Midlands","North East and Yorkshire",
+                     "Scotland","North West","Wales")
+
+# Pillar 2 S gene targeted failure data (SGTF) (S dropout)
+sgtfdata_uk = read.csv("https://github.com/nicholasdavies/newcovid/raw/master/fitting_data/sgtf-2021-01-18.csv") 
+sgtfdata_uk$other = sgtfdata_uk$other+sgtfdata_uk$sgtf
+colnames(sgtfdata_uk) = c("collection_date","REGION","SGTF","TOTAL")
+# modelled proportion of S dropout that was actually the VOC
+sgtfdata_uk_truepos = read.csv("https://github.com/nicholasdavies/newcovid/raw/master/data/sgtfvoc.csv") 
+sgtfdata_uk$TRUEPOS = sgtfdata_uk_truepos$sgtfv[match(interaction(sgtfdata_uk$REGION, sgtfdata_uk$collection_date),
+                                                      interaction(sgtfdata_uk_truepos$nhs_name, sgtfdata_uk_truepos$date))] # modelled proportion of S dropout samples that were actually the VOC
+sgtfdata_uk$est_n_B117 = sgtfdata_uk$SGTF * sgtfdata_uk$TRUEPOS
+sgtfdata_uk$COUNTRY = "UK"
+sgtfdata_uk = sgtfdata_uk[,c("collection_date","COUNTRY","REGION","est_n_B117","TOTAL")]
+colnames(sgtfdata_uk)[which(colnames(sgtfdata_uk)=="TOTAL")] = "n_pos"
+range(sgtfdata_uk$collection_date) # "2020-10-01" "2021-01-17"
+sgtfdata_uk$collection_date = as.Date(sgtfdata_uk$collection_date)
+sgtfdata_uk$collection_date_num = as.numeric(sgtfdata_uk$collection_date)
+sgtfdata_uk$REGION = factor(sgtfdata_uk$REGION, levels=levels_UKregions)
+sgtfdata_uk$REGION = droplevels(sgtfdata_uk$REGION)
+sgtfdata_uk$obs = factor(1:nrow(sgtfdata_uk))
+sgtfdata_uk$propB117 = sgtfdata_uk$est_n_B117 / sgtfdata_uk$n_pos
+head(sgtfdata_uk)
+
+set_sum_contrasts()
+glmersettings = glmerControl(optimizer="Nelder_Mead", optCtrl=list(maxfun=1e5)) # bobyqa, PS : to try all optimizer run all_fit(fit1)
+glmersettings2 = glmerControl(optimizer="optimx", optCtrl=list(method="L-BFGS-B"))
+glmersettings3 = glmerControl(optimizer="optimx", optCtrl=list(method="nlminb"))
+glmersettings4 = glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=1e5))
+fit_ukSGTF_1 = glmer(cbind(est_n_B117, n_pos-est_n_B117 ) ~ (1|obs)+scale(collection_date_num)+REGION, family=binomial(logit), 
+                     data=sgtfdata_uk, control=glmersettings)  # common slope model
+fit_ukSGTF_2 = glmer(cbind(est_n_B117, n_pos-est_n_B117) ~ (1|obs)+scale(collection_date_num)*REGION, family=binomial(logit), 
+                     data=sgtfdata_uk, control=glmersettings3) # heter slope model
+fit_ukSGTF_3 = glmer(cbind(est_n_B117, n_pos-est_n_B117) ~ (1|obs)+scale(ns(collection_date_num,df=3))+REGION, family=binomial(logit), 
+                     data=sgtfdata_uk, control=glmersettings3) # with additive spline term
+fit_ukSGTF_4 = glmer(cbind(est_n_B117, n_pos-est_n_B117) ~ (1|obs)+ns(collection_date_num,df=3)*REGION, family=binomial(logit), 
+                     data=sgtfdata_uk, control=glmersettings3) # with spline term in interaction with region
+BIC(fit_ukSGTF_1, fit_ukSGTF_2, fit_ukSGTF_3, fit_ukSGTF_4) 
+# separate-slopes 3 df spline model fit_be_uk2_4 best
+# df      BIC
+# fit_ukSGTF_1  9 4902.696
+# fit_ukSGTF_2 15 4769.405
+# fit_ukSGTF_3 11 4905.592
+# fit_ukSGTF_4 29 4428.474
+
+
+# model fit_ukSGTF_4 best
+
+summary(fit_ukSGTF_4)
+
+# GROWTH RATE AND TRANSMISSION ADVANTAGE
+
+# on average across all regions, using the most parsimonious model fit_ukSGTF_4, we get
+fit_ukSGTF_4_growthrates_avg_model2h = as.data.frame(emtrends(fit_ukSGTF_4, ~ 1, var="collection_date_num",
+                                                              at=list(sample_date_num=as.numeric(seq(as.Date("2020-11-01"),
+                                                                                                     max(sgtfdata_uk$collection_date), by=1)))))[,-c(3,4)] 
+colnames(fit_ukSGTF_4_growthrates_avg_model2h)[2] = "logistic_growth_rate"
+fit_ukSGTF_4_growthrates_avg_model2h = M.from.delta_r_df(fit_ukSGTF_4_growthrates_avg_model2h)
+fit_ukSGTF_4_growthrates_avg_model2h
+# 1         logistic_growth_rate asymp.LCL asymp.UCL        M    M.LCL    M.UCL
+# 1 overall            0.1093807 0.1074623  0.111299 1.672115 1.657106 1.687259
+
+# growth rates per region for model fit_ukSGTF_4
+fit_ukSGTF_4_growthrates_region_model2h = as.data.frame(emtrends(fit_ukSGTF_4, ~ REGION, var="collection_date_num",
+                                                                 at=list(sample_date_num=as.numeric(seq(as.Date("2020-11-01"),
+                                                                                                        max(sgtfdata_uk$collection_date), by=1)))))[,-c(3,4)] 
+colnames(fit_ukSGTF_4_growthrates_region_model2h)[2] = "logistic_growth_rate"
+fit_ukSGTF_4_growthrates_region_model2h = M.from.delta_r_df(fit_ukSGTF_4_growthrates_region_model2h)
+fit_ukSGTF_4_growthrates_region_model2h
+#                     REGION logistic_growth_rate  asymp.LCL asymp.UCL        M    M.LCL    M.UCL
+# 1               South East           0.09898888 0.09592910 0.1020487 1.592409 1.569672 1.615474
+# 2                   London           0.11321265 0.11007799 0.1163473 1.702503 1.677604 1.727771
+# 3          East of England           0.11927245 0.11526389 0.1232810 1.751689 1.718996 1.785004
+# 4               South West           0.11793937 0.10916388 0.1267149 1.740748 1.670412 1.814046
+# 5                 Midlands           0.09964142 0.09541678 0.1038661 1.597300 1.565897 1.629333
+# 6 North East and Yorkshire           0.10880077 0.10423148 0.1133700 1.667564 1.632133 1.703763
+# 7               North West           0.10780908 0.10264109 0.1129771 1.659809 1.619979 1.700619
+
+
+# PLOT MODEL FIT
+
+# spline model fit_ukSGTF_4
+date.from = as.numeric(as.Date("2020-09-01"))
+date.to = as.numeric(as.Date("2021-04-01")) # date to extrapolate to
+total.SD = sqrt(sum(sapply(as.data.frame(VarCorr(fit_ukSGTF_4))$sdcor, function (x) x^2))) 
+# bias correction for random effects in marginal means, see https://cran.r-project.org/web/packages/emmeans/vignettes/transformations.html#bias-adj
+fit_ukSGTF_4_preds = as.data.frame(emmeans(fit_ukSGTF_4, ~ collection_date_num, 
+                                           by=c("REGION"), 
+                                           at=list(collection_date_num=seq(date.from,
+                                                                           date.to)), 
+                                           type="response"), bias.adjust = TRUE, sigma = total.SD)
+fit_ukSGTF_4_preds$collection_date = as.Date(fit_ukSGTF_4_preds$collection_date_num, origin="1970-01-01")
+
+n = length(levels(fit_ukSGTF_4_preds$REGION))
+reg_cols = hcl(h = seq(290, 0, length = n + 1), l = 50, c = 255)[1:n]
+# reg_cols[2:n] = rev(reg_cols[2:n])
+
+fit_ukSGTF_4_preds$REGION = factor(fit_ukSGTF_4_preds$REGION, levels=unique(fit_ukSGTF_4_preds$REGION))
+sgtfdata_uk$REGION = factor(sgtfdata_uk$REGION, levels=levels(fit_ukSGTF_4_preds$REGION))
+
+# PLOT MODEL FIT (logit scale):
+plot_UK_SGTF = qplot(data=fit_ukSGTF_4_preds, x=collection_date, y=prob, geom="blank") +
+  # facet_wrap(~COUNTRY) +
+  geom_ribbon(aes(y=prob, ymin=asymp.LCL, ymax=asymp.UCL, colour=NULL, 
+                  fill=REGION
+  ), 
+  # fill=I("steelblue"), 
+  alpha=I(0.3)) +
+  geom_line(aes(y=prob, 
+                colour=REGION
+  ), 
+  # colour=I("steelblue"), 
+  alpha=I(0.8)) +
+  ylab("Relative abundance of 501Y.V1 (%)") +
+  theme_hc() + 
+  xlab("") + 
+  # scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
+  #                   labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
+  scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
+                      labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
+  scale_color_manual("", values=reg_cols) +
+  scale_fill_manual("", values=reg_cols) +
+  # scale_color_discrete("", h=c(0, 280), c=200) +
+  # scale_fill_discrete("", h=c(0, 280), c=200) +
+  geom_point(data=sgtfdata_uk, 
+             aes(x=collection_date, y=propB117, size=n_pos,
+                 colour=REGION
+             ), 
+             # colour=I("steelblue"), 
+             alpha=I(0.5)) +
+  scale_size_continuous("number of\npositive tests (Ct<30)", trans="sqrt", 
+                        range=c(1, 4), limits=c(1,10000), breaks=c(100,1000,10000)) +
+  # guides(fill=FALSE) + 
+  # guides(colour=FALSE) + 
+  theme(legend.position = "right") +
+  xlab("Collection date") +
+  ggtitle("UK") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  coord_cartesian(# xlim=c(as.Date("2020-09-01"),as.Date("2021-02-01")), 
+    # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")), 
+    ylim=c(0.001,99.9), expand=c(0,0)) 
+plot_UK_SGTF
+
+
+# PLOT MODEL FIT (response scale):
+plot_UK_SGTF_response = qplot(data=fit_ukSGTF_4_preds, x=collection_date, y=prob*100, geom="blank") +
+  # facet_wrap(~COUNTRY) +
+  geom_ribbon(aes(y=prob*100, ymin=asymp.LCL*100, ymax=asymp.UCL*100, colour=NULL, 
+                  fill=REGION
+  ), 
+  # fill=I("steelblue"), 
+  alpha=I(0.3)) +
+  geom_line(aes(y=prob*100, 
+                colour=REGION
+  ), 
+  # colour=I("steelblue"), 
+  alpha=I(0.8)) +
+  ylab("Relative abundance of 501Y.V1 (%)") +
+  theme_hc() + 
+  xlab("") + 
+  # scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
+  #                   labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
+  # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
+  #                    labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
+  coord_cartesian(# xlim=c(as.Date("2020-09-01"),as.Date("2021-02-01")), 
+    # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")), 
+    ylim=c(0,100), expand=c(0,0)) +
+  scale_color_manual("", values=reg_cols) +
+  scale_fill_manual("", values=reg_cols) +
+  # scale_color_discrete("", h=c(0, 280), c=200) +
+  # scale_fill_discrete("", h=c(0, 280), c=200) +
+  geom_point(data=sgtfdata_uk, 
+             aes(x=collection_date, y=propB117*100, size=n_pos,
+                 colour=REGION
+             ), 
+             # colour=I("steelblue"), 
+             alpha=I(0.5)) +
+  scale_size_continuous("number of\npositive tests (Ct<30)", trans="sqrt", 
+                        range=c(1, 4), limits=c(1,10000), breaks=c(100,1000,10000)) +
+  # guides(fill=FALSE) + 
+  # guides(colour=FALSE) + 
+  theme(legend.position = "right") +
+  xlab("Collection date") +
+  ggtitle("UK") +
+  theme(plot.title = element_text(hjust = 0.5))
+plot_UK_SGTF_response
+
+
+# plot model fit (response scale) (data UK + Belgium combined)
+fit1_preds$REGION = "Belgium"
+preds_UK_plus_BE = rbind(fit_ukSGTF_4_preds, fit1_preds)
+
+plot_UK_SGTF_BE_response = qplot(data=preds_UK_plus_BE, x=collection_date, y=prob*100, geom="blank") +
+  # facet_wrap(~COUNTRY) +
+  geom_ribbon(aes(y=prob*100, ymin=asymp.LCL*100, ymax=asymp.UCL*100, colour=NULL, 
+                  fill=REGION
+  ), 
+  # fill=I("steelblue"), 
+  alpha=I(0.3)) +
+  geom_line(aes(y=prob*100, 
+                colour=REGION
+  ), 
+  # colour=I("steelblue"), 
+  alpha=I(0.8)) +
+  ylab("Relative abundance of 501Y.V1 (%)") +
+  theme_hc() + 
+  xlab("") + 
+  # scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
+  #                   labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
+  # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
+  #                    labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
+  coord_cartesian(# xlim=c(as.Date("2020-09-01"),as.Date("2021-02-01")), 
+    # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")), 
+    ylim=c(0,100), expand=c(0,0)) +
+  scale_color_manual("", values=c(reg_cols,"steelblue")) +
+  scale_fill_manual("", values=c(reg_cols, "steelblue")) +
+  # scale_color_discrete("", h=c(0, 280), c=200) +
+  # scale_fill_discrete("", h=c(0, 280), c=200) +
+  geom_point(data=sgtfdata_uk, 
+             aes(x=collection_date, y=propB117*100, size=n_pos,
+                 colour=REGION
+             ), 
+             # colour=I("steelblue"), 
+             alpha=I(0.5)) +
+  geom_point(data=data_ag_byday_wide, 
+             aes(x=collection_date, y=propB117*100, size=n_pos
+             ), 
+             colour=I("steelblue"), 
+             alpha=I(0.5)) +
+  scale_size_continuous("number of\npositive tests (Ct<30)", trans="sqrt", 
+                        range=c(1, 4), limits=c(1,10000), breaks=c(100,1000,10000)) +
+  # guides(fill=FALSE) + 
+  # guides(colour=FALSE) + 
+  theme(legend.position = "right") +
+  xlab("Collection date") +
+  ggtitle("SPREAD OF VARIANT 501Y.V1 IN THE\nUK & BELGIUM BASED ON S DROPOUT DATA") +
+  theme(plot.title = element_text(hjust = 0.5))
+plot_UK_SGTF_BE_response
+saveRDS(plot_UK_SGTF_BE_response, file = paste0(".\\plots\\",dat,"\\Fig6_UK plus BE S dropout data_response scale.rds"))
+graph2ppt(file=paste0(".\\plots\\",dat,"\\Fig6_UK plus BE S dropout data_response scale.pptx"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",dat,"\\Fig6_UK plus BE S dropout data_response scale.png"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",dat,"\\Fig6_UK plus BE S dropout data_response scale.pdf"), width=8, height=6)
+
+
+# 5.2. DATA DENMARK: SEQUENCING DATA ####
+
+# Data source: Danish Covid-19 Genome Consortium & the Statens Serum Institut, https://www.covid19genomics.dk/statistics
+
+data_denmark = read.csv(".//data//dk//data_denmark_20210224.csv", sep=";", dec=",")
+data_denmark$percent = NULL
+data_denmark$Region = gsub("SjÃ¦lland","Sjælland",data_denmark$Region)
+data_denmark$WEEK = sapply(data_denmark$Week, function(s) as.numeric(strsplit(s, "W")[[1]][[2]]))
+data_denmark$date = as.Date(NA)
+data_denmark$date[data_denmark$WEEK>=42] = lubridate::ymd( "2020-01-01" ) + 
+  lubridate::weeks( data_denmark$WEEK[data_denmark$WEEK>=42] - 1 ) + 1
+data_denmark$date[data_denmark$WEEK<42] = lubridate::ymd( "2021-01-01" ) + 
+  lubridate::weeks( data_denmark$WEEK[data_denmark$WEEK<42] - 1 ) + 6 
+data_denmark$date_num = as.numeric(data_denmark$date)
+data_denmark$obs = factor(1:nrow(data_denmark))
+colnames(data_denmark)[colnames(data_denmark) %in% c("yes")] = "n_B117"
+data_denmark$propB117 = data_denmark$n_B117 / data_denmark$total
+
+data_denmark_whole = data_denmark[data_denmark$Region=="Whole Denmark",]
+data_denmark = data_denmark[data_denmark$Region!="Whole Denmark",]
+levels_DK = c("Syddanmark","Sjælland","Nordjylland","Hovedstaden","Midtjylland")
+data_denmark$Region = factor(data_denmark$Region, levels=levels_DK)
+range(data_denmark$date) # "2020-11-5" "2021-02-28"
+
+fit_denmark1 = glmer(cbind(n_B117,total-n_B117) ~ (1|obs) + Region + scale(date_num), family=binomial(logit), data=data_denmark)
+fit_denmark2 = glmer(cbind(n_B117,total-n_B117) ~ (1|obs) + Region * scale(date_num), family=binomial(logit), data=data_denmark)
+fit_denmark3 = glmer(cbind(n_B117,total-n_B117) ~ (1|Region/obs) + scale(date_num), family=binomial(logit), data=data_denmark)
+fit_denmark4 = glmer(cbind(n_B117,total-n_B117) ~ (date_num||Region/obs) + scale(date_num), family=binomial(logit), data=data_denmark)
+BIC(fit_denmark1, fit_denmark2, fit_denmark3, fit_denmark4)
+#              df      BIC
+# fit_denmark1  7 541.6427
+# fit_denmark2 11 505.6540
+# fit_denmark3  4 533.2144
+# fit_denmark4  6 541.9784
+
+summary(fit_denmark2)
+
+# common-slope model fit_denmark2 with nested random intercepts fits best
+
+#  GROWTH RATE & TRANSMISSION ADVANTAGE
+
+# on average across all regions, using the most parsimonious model fit_denmark2, we get
+dk_growthrates_avg_B117vsallother = as.data.frame(emtrends(fit_denmark2, ~ 1, var="date_num"))[,-c(3,4)] 
+colnames(dk_growthrates_avg_B117vsallother)[2] = "logistic_growth_rate"
+dk_growthrates_avg_B117vsallother = M.from.delta_r_df(dk_growthrates_avg_B117vsallother)
+dk_growthrates_avg_B117vsallother
+# 1 logistic_growth_rate  asymp.LCL  asymp.UCL        M    M.LCL    M.UCL
+# 1 overall            0.0776125 0.07254026 0.08268473 1.440195 1.406268 1.474941
+
+
+# PLOT MODEL FIT
+date.from = as.numeric(as.Date("2020-09-01"))
+date.to = as.numeric(as.Date("2021-04-01")) # date to extrapolate to
+total.SD = sqrt(sum(sapply(as.data.frame(VarCorr(fit_denmark3))$sdcor, function (x) x^2))) 
+# bias correction for random effects in marginal means, see https://cran.r-project.org/web/packages/emmeans/vignettes/transformations.html#bias-adj
+fit_denmark_preds = as.data.frame(emmeans(fit_denmark2, ~ date_num, 
+                                          at=list(date_num=seq(date.from,
+                                                               date.to)), 
+                                          type="response"), bias.adjust = TRUE, sigma = total.SD)
+fit_denmark_preds$date = as.Date(fit_denmark_preds$date_num, origin="1970-01-01")
+
+# n = length(levels(fit_denmark_preds$Region))
+# reg_cols = hcl(h = seq(290, 0, length = n + 1), l = 50, c = 255)[1:n]
+
+# PLOT MODEL FIT (response scale)
+plot_denmark = qplot(data=fit_denmark_preds, x=date, y=prob, geom="blank") +
+  geom_ribbon(aes(y=prob, ymin=asymp.LCL, ymax=asymp.UCL, colour=NULL # , 
+                  # fill=Region
+  ), 
+  fill=I("steelblue"), 
+  alpha=I(0.3)) +
+  geom_line(aes(y=prob# , 
+                # colour=Region
+  ), 
+  colour=I("steelblue"), 
+  alpha=I(0.8)) +
+  ylab("Relative abundance of 501Y.V1 (%)") +
+  theme_hc() + 
+  xlab("") + 
+  # scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
+  #                   labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
+  scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
+                      labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
+  coord_cartesian(# xlim=c(as.Date("2020-09-01"),as.Date("2021-02-01")), 
+    xlim=c(as.Date("2020-10-01"),as.Date("2021-04-01")), 
+    ylim=c(0.001,99.9), expand=c(0,0)) +
+  scale_color_manual("", values=reg_cols) +
+  scale_fill_manual("", values=reg_cols) +
+  # scale_color_discrete("", h=c(0, 280), c=200) +
+  # scale_fill_discrete("", h=c(0, 280), c=200) +
+  geom_point(data=data_denmark_whole, 
+             aes(x=date, y=propB117, size=total,
+                 # colour=Region
+             ), 
+             colour=I("steelblue"), 
+             alpha=I(0.5)) +
+  scale_size_continuous("number of\nsequences", trans="sqrt", 
+                        range=c(1, 4), limits=c(1,max(data_denmark_whole$total)), breaks=c(10,100,1000)) +
+  # guides(fill=FALSE) + 
+  # guides(colour=FALSE) + 
+  theme(legend.position = "right") +
+  xlab("Collection date") +
+  ggtitle("DENMARK") +
+  theme(plot.title = element_text(hjust = 0.5))
+plot_denmark
+
+
+# PLOT MODEL FIT (response scale)
+plot_denmark_response = qplot(data=fit_denmark_preds, x=date, y=prob*100, geom="blank") +
+  geom_ribbon(aes(y=prob*100, ymin=asymp.LCL*100, ymax=asymp.UCL*100, colour=NULL # , 
+                  # fill=Region
+  ), 
+  fill=I("steelblue"), 
+  alpha=I(0.3)) +
+  geom_line(aes(y=prob*100 # , 
+                # colour=Region
+  ), 
+  colour=I("steelblue"), 
+  alpha=I(0.8)) +
+  ylab("Relative abundance of 501Y.V1 (%)") +
+  theme_hc() + 
+  xlab("") + 
+  # scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
+  #                   labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
+  # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
+  #                    labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
+  coord_cartesian(# xlim=c(as.Date("2020-09-01"),as.Date("2021-02-01")), 
+    xlim=c(as.Date("2020-10-01"),as.Date("2021-04-01")), 
+    ylim=c(0,100), expand=c(0,0)) +
+  # scale_color_manual("", values=reg_cols) +
+  # scale_fill_manual("", values=reg_cols) +
+  # scale_color_discrete("", h=c(0, 280), c=200) +
+  # scale_fill_discrete("", h=c(0, 280), c=200) +
+  geom_point(data=data_denmark_whole, 
+             aes(x=date, y=propB117*100, size=total # ,
+                 # colour=Region
+             ), 
+             colour=I("steelblue"), 
+             alpha=I(0.5)) +
+  scale_size_continuous("total n", trans="sqrt", 
+                        range=c(1, 4), limits=c(1,max(data_denmark_whole$total)), 
+                        breaks=c(10,100,1000)) +
+  # guides(fill=FALSE) + 
+  # guides(colour=FALSE) + 
+  theme(legend.position = "right") +
+  xlab("Collection date") +
+  ggtitle("DENMARK") +
+  theme(plot.title = element_text(hjust = 0.5))
+plot_denmark_response
+
+
+
+# 5.3. DATA SWITZERLAND : SEQUENCING & RT-PCR RE-SCREENING DATA ####
+
+# Data source: https://ispmbern.github.io/covid-19/variants (contact: Christian Althaus) 
+# & https://github.com/covid-19-Re/variantPlot/raw/master/data/data.csv (https://ibz-shiny.ethz.ch/covidDashboard/variant-plot/index.html, contact: Tanja Stadler)
+
+data_geneva = read.csv("https://ispmbern.github.io/covid-19/variants/data/variants_GE.csv")
+data_geneva$date = as.Date(data_geneva$date)
+data_geneva$lab = "Geneva"
+colnames(data_geneva)[colnames(data_geneva) %in% c("N501Y")] = c("n_B117")
+head(data_geneva)
+data_zurich = read.csv("https://ispmbern.github.io/covid-19/variants/data/variants_ZH.csv")
+data_zurich$date = as.Date(data_zurich$date)
+data_zurich$lab = "Zürich"
+colnames(data_zurich)[colnames(data_zurich) %in% c("N501Y")] = c("n_B117")
+head(data_zurich)
+data_bern = read.csv("https://ispmbern.github.io/covid-19/variants/data/variants_BE.csv")
+data_bern$date = as.Date(data_bern$date)
+data_bern$lab = "Bern"
+colnames(data_bern)[colnames(data_bern) %in% c("N501Y")] = c("n_B117")
+head(data_bern)
+
+data_viollier_risch = read.csv("https://github.com/covid-19-Re/variantPlot/raw/master/data/data.csv")
+data_viollier_risch[is.na(data_viollier_risch)] = 0
+data_viollier_risch$date = as.Date(NA)
+data_viollier_risch$date[data_viollier_risch$week>=51] = lubridate::ymd( "2020-01-01" ) + 
+  lubridate::weeks( data_viollier_risch$week[data_viollier_risch$week>=51] - 1 ) + 1
+data_viollier_risch$date[data_viollier_risch$week<51] = lubridate::ymd( "2021-01-01" ) + 
+  lubridate::weeks( data_viollier_risch$week[data_viollier_risch$week<51] - 1 ) + 6 # PS dates were made to match the ones given in https://ispmbern.github.io/covid-19/variants/data/variants_CH.csv
+colnames(data_viollier_risch)[colnames(data_viollier_risch) %in% c("n","b117")] = c("total","n_B117")
+data_viollier_risch = data_viollier_risch[,c("date","total","n_B117","lab")]
+
+data_switzerland = rbind(data_geneva, data_zurich, data_bern, data_viollier_risch)[,c("date","lab","n_B117","total")]
+# write_csv(data_switzerland, file=".//data//ch//data_switzerland_20210224.csv")
+
+# Details data:
+# Viollier data = sequencing of a random subset of all positive cases by ETH/Tanja Stadler (covers large parts of Switzerland, though with a bias towards German speaking Switzerland) - as it is sequencing data is 1-2 weeks later than N501Y screening
+# Risch - Taqpath + N501Y re-screening = faster (covers primarily German speaking Switzerland)
+# Samples are provided and screened by Labor Risch. Genomic characterization is performed by Labor Risch, the University Hospital Basel (Clinical Mircobiology) and the University Hospitals of Geneva (Group Eckerle and Group Kaiser). 
+# Geneva - centre de reference pour infections virales emergentes / university hospital Geneva - N501Y and WGS currently:
+# Samples that were sent to the Geneva University Hospitals for primary diagnosis of SARS-CoV-2. All positives were re-screened for 501Y using RT-PCR (mostly B.1.1.7). To cover the period of November and December 2020, we use sequence data from randomly chosen samples from Geneva that were submitted to GISAID by the Swiss Viollier Sequencing Consortium from ETH Zurich.
+# Bern: Samples from SARS-CoV-2-positive cases that were re-screened for 501Y using RT-PCR at the Institute for Infectious Diseases, University of Bern.
+# Zurich: Samples from SARS-CoV-2-positive cases from the University Hospital Zurich and test centers at Limmattal Hospital in Schlieren (ZH) and Spital Männedorf that were re-screened for 501Y using RT-PCR at the Institute of Medical Virology, University of Zurich. In addition, we use SARS-CoV-2-positive samples from Kantonsspital Winterthur and its walk-in test center that were re-screened for 501Y using RT-PCR.
+
+# data_switzerland = read_csv(file=".//multinomial_logistic_fits//data//ch//data_switzerland_20210216.csv", col_names=TRUE) 
+data_switzerland = data.frame(data_switzerland)
+data_switzerland$date = as.Date(data_switzerland$date)
+data_switzerland$lab = factor(data_switzerland$lab, levels=c("Geneva","Zürich","Bern","Viollier","Risch"),
+                              labels=c("Geneva","Zürich","Bern","Switzerland","Switzerland"))
+data_switzerland$date_num = as.numeric(data_switzerland$date)
+data_switzerland$obs = factor(1:nrow(data_switzerland))
+data_switzerland$propB117 = data_switzerland$n_B117 / data_switzerland$total
+range(data_switzerland$date) # "2020-11-02" "2021-02-18"
+
+fit_switerland1 = glmer(cbind(n_B117,total-n_B117) ~ (1|obs) + lab + scale(date_num), family=binomial(logit), data=data_switzerland)
+fit_switerland2 = glmer(cbind(n_B117,total-n_B117) ~ (1|obs) + lab * scale(date_num), family=binomial(logit), data=data_switzerland)
+fit_switerland3 = glmer(cbind(n_B117,total-n_B117) ~ (1|lab/obs) + scale(date_num), family=binomial(logit), data=data_switzerland)
+fit_switerland4 = glmer(cbind(n_B117,total-n_B117) ~ (date_num||lab/obs) + scale(date_num), family=binomial(logit), data=data_switzerland)
+BIC(fit_switerland1, fit_switerland2, fit_switerland3, fit_switerland4)
+#                 df      BIC
+# fit_switerland1  6 646.8101
+# fit_switerland2  9 659.2752
+# fit_switerland3  4 656.9695
+# fit_switerland4  6 666.7944
+
+# fit fit_switerland1 best
+
+summary(fit_switerland1)
+
+
+#  GROWTH RATE & TRANSMISSION ADVANTAGE
+
+# on average across all regions, using the most parsimonious model fit_switerland1, we get
+ch_growthrates_avg_B117vsallother = as.data.frame(emtrends(fit_switerland1, ~ 1, var="date_num"))[,-c(3,4)] 
+colnames(ch_growthrates_avg_B117vsallother)[2] = "logistic_growth_rate"
+ch_growthrates_avg_B117vsallother = M.from.delta_r_df(ch_growthrates_avg_B117vsallother)
+ch_growthrates_avg_B117vsallother
+# 1         logistic_growth_rate  asymp.LCL  asymp.UCL     M1   M1.LCL   M1.UCL       M2   M2.LCL   M2.UCL
+# 1 overall            0.09292921 0.08611969 0.09973872 1.547696 1.498947 1.598031
+
+
+
+# PLOT MODEL FIT
+date.from = as.numeric(as.Date("2020-09-01"))
+date.to = as.numeric(as.Date("2021-04-01")) # date to extrapolate to
+total.SD = sqrt(sum(sapply(as.data.frame(VarCorr(fit_switerland1))$sdcor, function (x) x^2))) 
+# bias correction for random effects in marginal means, see https://cran.r-project.org/web/packages/emmeans/vignettes/transformations.html#bias-adj
+fit_switzerland_preds = as.data.frame(emmeans(fit_switerland1, ~ date_num, 
+                                              by=c("lab"), 
+                                              at=list(date_num=seq(date.from,
+                                                                   date.to)), 
+                                              type="response"), bias.adjust = TRUE, sigma = total.SD)
+fit_switzerland_preds$date = as.Date(fit_switzerland_preds$date_num, origin="1970-01-01")
+
+n = length(levels(fit_switzerland_preds$lab))
+reg_cols = hcl(h = seq(290, 0, length = n + 1), l = 50, c = 255)[1:n]
+# reg_cols[2:n] = rev(reg_cols[2:n])
+
+# PLOT MODEL FIT (logit scale):
+plot_switzerland = qplot(data=fit_switzerland_preds, x=date, y=prob, geom="blank") +
+  geom_ribbon(aes(y=prob, ymin=asymp.LCL, ymax=asymp.UCL, colour=NULL, 
+                  fill=lab
+  ), 
+  # fill=I("steelblue"), 
+  alpha=I(0.3)) +
+  geom_line(aes(y=prob, 
+                colour=lab
+  ), 
+  # colour=I("steelblue"), 
+  alpha=I(0.8)) +
+  ylab("Relative abundance of 501Y.V1 (%)") +
+  theme_hc() + 
+  xlab("") + 
+  # scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
+  #                   labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
+  scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
+                      labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
+  coord_cartesian(# xlim=c(as.Date("2020-09-01"),as.Date("2021-02-01")), 
+    xlim=c(as.Date("2020-11-01"),as.Date("2021-04-01")), 
+    ylim=c(0.001,99.9), expand=c(0,0)) +
+  scale_color_manual("", values=reg_cols) +
+  scale_fill_manual("", values=reg_cols) +
+  # scale_color_discrete("", h=c(0, 280), c=200) +
+  # scale_fill_discrete("", h=c(0, 280), c=200) +
+  geom_point(data=data_switzerland, 
+             aes(x=date, y=propB117, size=total,
+                 colour=lab
+             ), 
+             # colour=I("steelblue"), 
+             alpha=I(0.5)) +
+  scale_size_continuous("total n", trans="sqrt", 
+                        range=c(1, 4), limits=c(1,2000), breaks=c(10,100,1000)) +
+  # guides(fill=FALSE) + 
+  # guides(colour=FALSE) + 
+  theme(legend.position = "right") +
+  xlab("Collection date") +
+  ggtitle("SWITZERLAND") +
+  theme(plot.title = element_text(hjust = 0.5))
+plot_switzerland
+
+
+# PLOT MODEL FIT (response scale):
+plot_switzerland_response = qplot(data=fit_switzerland_preds, x=date, y=prob*100, geom="blank") +
+  geom_ribbon(aes(y=prob*100, ymin=asymp.LCL*100, ymax=asymp.UCL*100, colour=NULL, 
+                  fill=lab
+  ), 
+  # fill=I("steelblue"), 
+  alpha=I(0.3)) +
+  geom_line(aes(y=prob*100, 
+                colour=lab
+  ), 
+  # colour=I("steelblue"), 
+  alpha=I(0.8)) +
+  ylab("Relative abundance of 501Y.V1 (%)") +
+  theme_hc() + 
+  xlab("") + 
+  # scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
+  #                   labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
+  # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
+  #                    labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
+  coord_cartesian(# xlim=c(as.Date("2020-09-01"),as.Date("2021-02-01")), 
+    xlim=c(as.Date("2020-11-01"),as.Date("2021-03-01")), 
+    ylim=c(0,100), expand=c(0,0)) +
+  scale_color_manual("", values=reg_cols) +
+  scale_fill_manual("", values=reg_cols) +
+  # scale_color_discrete("", h=c(0, 280), c=200) +
+  # scale_fill_discrete("", h=c(0, 280), c=200) +
+  geom_point(data=data_switzerland, 
+             aes(x=date, y=propB117*100, size=total,
+                 colour=lab
+             ), 
+             # colour=I("steelblue"), 
+             alpha=I(0.5)) +
+  scale_size_continuous("total n", trans="sqrt", 
+                        range=c(1, 4), limits=c(1,2000), breaks=c(500,1000,2000)) +
+  # guides(fill=FALSE) + 
+  # guides(colour=FALSE) + 
+  theme(legend.position = "right") +
+  xlab("Collection date") +
+  ggtitle("SWITZERLAND") +
+  theme(plot.title = element_text(hjust = 0.5))
+plot_switzerland_response
+
+
+
+
+# 5.3. DATA USA : S-GENE TARGET FAILURE DATA ####
+
+# Data source: Helix® COVID-19 Surveillance, https://github.com/myhelix/helix-covid19db
+# see preprint https://www.medrxiv.org/content/10.1101/2021.02.06.21251159v1 & https://github.com/andersen-lab/paper_2021_early-b117-usa/tree/master/b117_frequency/data
+
+us_data = read.csv("https://github.com/myhelix/helix-covid19db/raw/master/counts_by_state.csv")
+# write.csv(us_data, file=".//data//us//data_us_20210224.csv", row.names=F)
+
+us_data$collection_date = as.Date(us_data$collection_date)
+us_data$collection_date_num = as.numeric(us_data$collection_date)
+us_data$obs = factor(1:nrow(us_data))
+# us_data = us_data[us_data$state %in% sel_states,]
+us_data$state = factor(us_data$state)
+
+range(us_data$collection_date) # "2020-09-05" "2021-02-21"
+
+fit_us_propB117amongSGTF = glmer(cbind(B117, sequenced_SGTF-B117) ~ (1|state)+scale(collection_date_num), 
+                                 family=binomial(logit), data=us_data)
+
+# implied growth rate advantage of B.1.1.7 over other earlier strains showing S dropout:
+as.data.frame(emtrends(fit_us_propB117amongSGTF, ~ 1, var="collection_date_num"))[,c(2,5,6)]
+#   collection_date_num.trend  asymp.LCL asymp.UCL
+# 1                0.09847144 0.08327195 0.1136709
+
+# with a generation time of 4.7 days this would translate to a multiplicative effect on Rt
+# and estimated increased infectiousness of B.1.1.7 over other strains showing S dropout of
+exp(4.7*as.data.frame(emtrends(fit_us_propB117amongSGTF, ~ 1, var="collection_date_num"))[,c(2,5,6)])
+#   collection_date_num.trend asymp.LCL asymp.UCL
+# 1                   1.588541  1.479018  1.706174
+
+
+# FIT FOR WHOLE US + PLOT
+
+fitted_truepos = predict(fit_us_propB117amongSGTF, newdat=us_data, type="response") 
+# fitted true positive rate, ie prop of S dropout samples that are B.1.1.7 for dates & states in helix_sgtf
+
+us_data$est_n_B117 = us_data$all_SGTF*fitted_truepos # estimated nr of B.1.1.7 samples
+us_data$propB117 = us_data$est_n_B117/us_data$positive
+fit_us1 = glmer(cbind(est_n_B117, positive-est_n_B117) ~ (1|state/obs)+scale(collection_date_num), 
+                family=binomial(logit), data=us_data) # random intercepts by state
+fit_us2 = glmer(cbind(est_n_B117, positive-est_n_B117) ~ (collection_date_num||state/obs)+scale(collection_date_num), 
+                family=binomial(logit), data=us_data) # random intercepts+slopes by state, with uncorrelated intercepts & slopes
+BIC(fit_us1, fit_us2) # random intercept model fit_us1 is best
+# df      BIC
+# fit_us1  4 2253.782
+# fit_us2  6 2269.764
+summary(fit_us1)
+
+#  GROWTH RATE & TRANSMISSION ADVANTAGE
+
+# on average across all states, using the most parsimonious model fit_us1, we get
+us_growthrates_avg_B117vsallother = as.data.frame(emtrends(fit_us1, ~ 1, var="collection_date_num"))[,-c(3,4)] 
+colnames(us_growthrates_avg_B117vsallother)[2] = "logistic_growth_rate"
+us_growthrates_avg_B117vsallother = M.from.delta_r_df(us_growthrates_avg_B117vsallother)
+us_growthrates_avg_B117vsallother
+# 1 logistic_growth_rate asymp.LCL  asymp.UCL        M  M.LCL    M.UCL
+# 1 overall           0.08399167 0.0805767 0.08740664 1.484029 1.4604 1.508041
+
+
+# plot model fit fit_us
+
+date.to = as.numeric(as.Date("2021-06-01"))
+# sel_states = intersect(rownames(ranef(fit_us)$state)[order(ranef(fit_us1)$state[,1], decreasing=T)],states_gt_500)[1:16] # unique(helix_sgtf$state[helix_sgtf$propB117>0.03])
+# rem_states = c("NY","NJ","MN","IL","AL","OH","MI") # states with too few data points we don't want to show on plot
+# sel_states = setdiff(sel_states,rem_states)
+
+
+# sel_states = unique(us_data$state)
+# we fitted our model on all the available data from all states, but below we will plot just
+# the 9 states with the most data
+# sel_states=c("FL","NY","CA","NJ","GA","TX","OH","PA","LA","IL","MI","MA","NC","IN","AZ")
+# sel_states=c("FL","CA","GA","TX","PA","LA","IL","MI","MA","NC","IN","AZ")
+sel_states=c("FL","CA","GA","TX","PA","MA","NC","IN","AZ")
+total.SD = sqrt(sum(sapply(as.data.frame(VarCorr(fit_us1))$sdcor, function (x) x^2))) 
+fit_us_preds = as.data.frame(emmeans(fit_us1, ~ collection_date_num, 
+                                     # by="state", 
+                                     at=list(collection_date_num=seq(min(us_data$collection_date_num),
+                                                                     date.to)), 
+                                     type="link"), bias.adjust = TRUE, sigma = total.SD)
+fit_us_preds$collection_date = as.Date(fit_us_preds$collection_date_num, origin="1970-01-01")
+fit_us_preds2 = do.call(rbind,lapply(unique(us_data$state), function(st) { ranintercs = ranef(fit_us1)$state
+raninterc = ranintercs[rownames(ranintercs)==st,]
+data.frame(state=st, fit_us_preds, raninterc=raninterc)}))
+fit_us_preds2$prob = plogis(fit_us_preds2$emmean+fit_us_preds2$raninterc)
+fit_us_preds2$prob.asymp.LCL = plogis(fit_us_preds2$asymp.LCL+fit_us_preds2$raninterc)
+fit_us_preds2$prob.asymp.UCL = plogis(fit_us_preds2$asymp.UCL+fit_us_preds2$raninterc)
+fit_us_preds2 = fit_us_preds2[as.character(fit_us_preds2$state) %in% sel_states,]
+fit_us_preds2$state = droplevels(fit_us_preds2$state)
+fit_us_preds2$state = factor(fit_us_preds2$state, # we order states by random intercept, ie date of introduction
+                             levels=intersect(rownames(ranef(fit_us1)$state)[order(ranef(fit_us1)$state[,1], decreasing=T)],
+                                              sel_states))
+
+# PLOT MODEL FIT (logit scale)
+plot_us = qplot(data=fit_us_preds2, x=collection_date, y=prob, geom="blank") +
+  facet_wrap(~state, nrow=3) +
+  geom_ribbon(aes(y=prob, ymin=prob.asymp.LCL, ymax=prob.asymp.UCL, colour=NULL, 
+                  fill=state
+  ), 
+  # fill=I("steelblue"), 
+  alpha=I(0.3)) +
+  geom_line(aes(y=prob, 
+                colour=state
+  ), 
+  # colour=I("steelblue"), 
+  alpha=I(0.8)) +
+  ylab("Relative abundance of 501Y.V1 (%)") +
+  theme_hc() + xlab("") + 
+  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
+                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
+  scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
+                      labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
+  coord_cartesian(xlim=c(min(fit_us_preds$collection_date), as.Date("2021-04-01")), 
+                  # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")), 
+                  ylim=c(0.001,0.9990001), expand=c(0,0)) +
+  scale_color_discrete("state", h=c(0, 240), c=180, l=55) +
+  scale_fill_discrete("state", h=c(0, 240), c=180, l=55) +
+  geom_point(data=us_data[us_data$state %in% sel_states,],  
+             aes(x=collection_date, y=propB117, size=positive,
+                 colour=state
+             ), pch=I(16),
+             # colour=I("steelblue"), 
+             alpha=I(0.5)) +
+  scale_size_continuous("number of\npositive tests", trans="sqrt", 
+                        range=c(1, 2), limits=c(1,max(us_data$positive)), breaks=c(10,100,1000)) +
+  # guides(fill=FALSE) + 
+  # guides(colour=FALSE) + 
+  theme(legend.position = "right") +
+  xlab("") # +
+# theme(axis.text.x = element_text(angle = 90, vjust=0.5)) +
+# ggtitle("US") +
+# theme(plot.title = element_text(hjust = 0.5))
+plot_us
+
+
+# PLOT MODEL FIT (response scale)
+plot_us_response = qplot(data=fit_us_preds2, x=collection_date, y=prob*100, geom="blank") +
+  facet_wrap(~state) +
+  geom_ribbon(aes(y=prob*100, ymin=prob.asymp.LCL*100, ymax=prob.asymp.UCL*100, colour=NULL, 
+                  fill=state
+  ), 
+  # fill=I("steelblue"), 
+  alpha=I(0.3)) +
+  geom_line(aes(y=prob*100, 
+                colour=state
+  ), 
+  # colour=I("steelblue"), 
+  alpha=I(0.8)) +
+  ylab("Relative abundance of 501Y.V1 (%)") +
+  theme_hc() + xlab("") + 
+  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
+                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
+  # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
+  #                    labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
+  coord_cartesian(xlim=c(min(fit_us_preds2$collection_date), as.Date("2021-04-01")), 
+                  # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")), 
+                  ylim=c(0,100), expand=c(0,0)) +
+  scale_color_discrete("state", h=c(0, 240), c=180, l=55) +
+  scale_fill_discrete("state", h=c(0, 240), c=180, l=55) +
+  geom_point(data=us_data[us_data$state %in% sel_states,],  
+             aes(x=collection_date, y=propB117*100, size=positive,
+                 colour=state
+             ), pch=I(16),
+             # colour=I("steelblue"), 
+             alpha=I(0.5)) +
+  scale_size_continuous("number of\npositive tests", trans="log10", 
+                        range=c(1, 2), limits=c(1,max(us_data$positive)), breaks=c(10,100,1000)) +
+  # guides(fill=FALSE) + 
+  # guides(colour=FALSE) + 
+  theme(legend.position = "right") +
+  xlab("") # +
+# theme(axis.text.x = element_text(angle = 90, vjust=0.5)) +
+# ggtitle("US") +
+# theme(plot.title = element_text(hjust = 0.5))
+
+plot_us_response
+
+
+
+
+
+
+# 5.4. MULTIPANEL PLOT INTERNATIONAL COMPARISONS ####
+
+fit_uk_preds2 = fit_ukSGTF_4_preds
+fit_uk_preds2$country = "UK"
+colnames(fit_uk_preds2)[2] = "REGION"
+colnames(fit_uk_preds2)[1] = "date_num"
+colnames(fit_uk_preds2)[8] = "date"
+fit_switzerland_preds2 = fit_switzerland_preds
+fit_switzerland_preds2$country = "Switzerland"
+colnames(fit_switzerland_preds2)[2] = "REGION"
+colnames(fit_switzerland_preds2)[1] = "date_num"
+colnames(fit_switzerland_preds2)[8] = "date"
+fit_denmark_preds2 = fit_denmark_preds
+fit_denmark_preds2$country = "Denmark"
+fit_denmark_preds2$REGION = "Denmark"
+colnames(fit_denmark_preds2)[1] = "date_num"
+colnames(fit_denmark_preds2)[7] = "date"
+fit_us_preds3 = fit_us_preds2
+fit_us_preds3$country = "USA"
+fit_us_preds3 = fit_us_preds3[,-which(colnames(fit_us_preds3) %in% c("asymp.LCL","asymp.UCL"))]
+colnames(fit_us_preds3)[1] = "REGION"
+colnames(fit_us_preds3)[2] = "date_num"
+colnames(fit_us_preds3)[6] = "date"
+colnames(fit_us_preds3)[9] = "asymp.LCL"
+colnames(fit_us_preds3)[10] = "asymp.UCL"
+fit_us_preds3 = fit_us_preds3[fit_us_preds3$REGION %in% c("FL","CA"),]
+fit_us_preds3$REGION = factor(fit_us_preds3$REGION, levels=c("FL","CA"), labels=c("Florida","California"))
+fit_us_preds3 = fit_us_preds3[,c("date_num","REGION","prob","SE","df","asymp.LCL","asymp.UCL","date","country")]
+fit_be_preds = fit1_preds
+fit_be_preds$country = "Belgium"
+colnames(fit_be_preds)[1] = "date_num"
+colnames(fit_be_preds)[7] = "date"
+
+fits_international = rbind(fit_uk_preds2,fit_switzerland_preds2,fit_us_preds3,
+                           fit_denmark_preds2,fit_be_preds)
+fits_international$country = factor(fits_international$country, levels=c("UK","Switzerland","USA","Denmark","Belgium"))
+
+sgtfdata_uk2 = sgtfdata_uk
+sgtfdata_uk2$country = "UK"
+colnames(sgtfdata_uk2)[colnames(sgtfdata_uk2) %in% c("collection_date","n_pos")] = c("date","total")
+sgtfdata_uk2 = sgtfdata_uk2[,c("date","country","REGION","propB117","total")]
+
+data_switzerland2 = data_switzerland
+data_switzerland2$country = "Switzerland"
+colnames(data_switzerland2)[colnames(data_switzerland2) %in% c("lab")] = c("REGION")
+data_switzerland2 = data_switzerland2[,c("date","country","REGION","propB117","total")]
+
+data_denmark2 = data_denmark_whole
+data_denmark2$country = "Denmark"
+data_denmark2$REGION = "Denmark"
+data_denmark2 = data_denmark2[,c("date","country","REGION","propB117","total")]
+
+data_us2 = data.frame(us_data)
+data_us2$country = "USA"
+colnames(data_us2)[1] = "REGION"
+colnames(data_us2)[2] = "date"
+colnames(data_us2)[3] = "total"
+data_us2 = data_us2[,c("date","country","REGION","propB117","total")]
+data_us2 = data_us2[data_us2$REGION %in% c("FL","CA"),]
+data_us2$REGION = factor(data_us2$REGION, levels=c("FL","CA"), labels=c("Florida","California"))
+
+data_belgium = data_ag_byday_wide
+data_belgium$country = "Belgium"
+data_belgium$REGION = "Belgium"
+colnames(data_belgium)[1] = "date"
+data_belgium = data_belgium[,c("date","country","REGION","propB117","total")]
+
+data_international = rbind(sgtfdata_uk2, data_switzerland2, data_us2,
+                           data_denmark2, data_belgium)
+data_international$country = factor(data_international$country, levels=c("UK","Switzerland","USA","Denmark","Belgium"))
+
+# n1 = length(levels(fit_uk_preds2$REGION))
+# n2 = length(levels(fit_switzerland_preds2$REGION))
+# n3 = length(levels(fit_denmark_preds2$REGION))
+# reg_cols = c(hcl(h = seq(290, 0, length = n1), l = 50, c = 255),
+#              muted(hcl(h = seq(290, 0, length = n2+n3), l = 50, c = 255), c=200, l=40))
+
+# ymin = 0.001
+ymax = 0.999
+data_international$propB117[data_international$propB117>ymax] = ymax
+fits_international$prob[fits_international$prob>ymax] = ymax
+fits_international$asymp.LCL[fits_international$asymp.LCL>ymax] = ymax
+fits_international$asymp.UCL[fits_international$asymp.UCL>ymax] = ymax
+
+fits_international$REGION = factor(fits_international$REGION, levels=levels(fits_international$REGION))
+data_international$REGION = factor(data_international$REGION, levels=levels(fits_international$REGION))
+
+# PLOT MODEL FITS (response scale)
+plot_international = qplot(data=fits_international, x=date, y=prob, geom="blank") +
+  facet_wrap(~country, nrow=2, scales="fixed") +
+  geom_ribbon(aes(y=prob, ymin=asymp.LCL, ymax=asymp.UCL, colour=NULL, 
+                  fill=REGION
+  ), 
+  # fill=I("steelblue"), 
+  alpha=I(0.3)) +
+  geom_line(aes(y=prob, 
+                colour=REGION
+  ), 
+  # colour=I("steelblue"), 
+  alpha=I(0.8)) +
+  ylab("Relative abundance (%)") +
+  theme_hc() + 
+  xlab("") + 
+  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01")),
+                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A")) +
+  scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
+                      labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9") # ,
+                      # limits = c(ymin,ymax+1E-7)
+  ) +
+  # scale_color_manual("", values=reg_cols) +
+  # scale_fill_manual("", values=reg_cols) +
+  scale_color_discrete("region", h=c(0, 290), c=180, l=55) +
+  scale_fill_discrete("region", h=c(0, 290), c=180, l=55) +
+  # scale_color_discrete("", h=c(0, 280), c=200) +
+  # scale_fill_discrete("", h=c(0, 280), c=200) +
+  geom_point(data=data_international, 
+             aes(x=date, y=propB117, size=total, # shape=country,
+                 colour=REGION, fill=REGION
+             ), 
+             # colour=I("steelblue"), 
+             alpha=I(0.5)) +
+  scale_size_continuous("total n", trans="sqrt", 
+                        range=c(1, 2), limits=c(1,max(data_international$total)), breaks=c(100,1000,10000)) +
+  # scale_shape_manual(values=21:25) +
+  # guides(fill=FALSE) + 
+  # guides(colour=FALSE) + 
+  theme(legend.position = "right") +
+  xlab("") +
+  guides(
+    shape = guide_legend(order = 1),
+    color = guide_legend(order = 2),
+    fill = guide_legend(order = 2),
+    size = guide_legend(order = 3)
+  ) + 
+  coord_cartesian( 
+    xlim=c(as.Date("2020-09-01"),as.Date("2021-03-31")),
+    ylim=c(ymin,ymax+1E-7), 
+    expand=FALSE) 
+# ggtitle("INTERNATIONAL SPREAD OF SARS-CoV2 VARIANT B.1.1.7") +
+# theme(plot.title = element_text(hjust = 0.5))
+plot_international
+
+saveRDS(plot_international, file = paste0(".\\plots\\",dat,"\\Fig7_international_data_UK_CH_USA_DK_BE.rds"))
+graph2ppt(file = paste0(".\\plots\\",dat,"\\Fig7_internat_data_UK_CH_USA_DK_BE.pptx"), width=9, height=7)
+ggsave(file = paste0(".\\plots\\",dat,"\\Fig7_internat_data_UK_CH_USA_DK_BE.png"), width=9, height=7)
+ggsave(file = paste0(".\\plots\\",dat,"\\Fig7_internat_data_UK_CH_USA_DK_BE.pdf"), width=9, height=7)
+
+
+
+
+# PLOT MODEL FITS (response scale)
+plot_international_response = qplot(data=fits_international, x=date, y=prob*100, geom="blank") +
+  facet_wrap(~country, nrow=2) +
+  geom_ribbon(aes(y=prob*100, ymin=asymp.LCL*100, ymax=asymp.UCL*100, colour=NULL, 
+                  fill=REGION
+  ), 
+  # fill=I("steelblue"), 
+  alpha=I(0.3)) +
+  geom_line(aes(y=prob*100, 
+                colour=REGION
+  ), 
+  # colour=I("steelblue"), 
+  alpha=I(0.8)) +
+  ylab("Relative abundance of 501Y.V1 (%)") +
+  theme_hc() + 
+  xlab("") + 
+  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01")),
+                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A")) +
+  # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
+  #                    labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
+  scale_color_discrete("region", h=c(0, 290), c=180, l=55) +
+  scale_fill_discrete("region", h=c(0, 290), c=180, l=55) +
+  #   scale_color_manual("", values=reg_cols) +
+  #  scale_fill_manual("", values=reg_cols) +
+  # scale_color_discrete("", h=c(0, 280), c=200) +
+  # scale_fill_discrete("", h=c(0, 280), c=200) +
+  geom_point(data=data_international, 
+             aes(x=date, y=propB117*100, size=total, # shape=country,
+                 colour=REGION, fill=REGION
+             ), 
+             # colour=I("steelblue"), 
+             alpha=I(0.5)) +
+  scale_size_continuous("total n", trans="identity", 
+                        range=c(1, 2), limits=c(1,max(data_international$total)), breaks=c(100,1000,10000)) +
+  # scale_shape_manual(values=21:25) +
+  # guides(fill=FALSE) + 
+  # guides(colour=FALSE) + 
+  theme(legend.position = "right") +
+  xlab("Collection date") +
+  guides(
+    shape = guide_legend(order = 1),
+    color = guide_legend(order = 2),
+    fill = guide_legend(order = 2),
+    size = guide_legend(order = 3)
+  ) +
+  coord_cartesian( 
+    xlim=c(as.Date("2020-09-01"),as.Date("2021-04-01")-1),
+    ylim=c(0,100), expand=c(0,0))
+# +
+# ggtitle("INTERNATIONAL SPREAD OF SARS-CoV2 VARIANT B.1.1.7") +
+# theme(plot.title = element_text(hjust = 0.5))
+plot_international_response
+
+saveRDS(plot_international_response, file = paste0(".\\plots\\",dat,"\\Fig7_international_data_UK_CH_USA_DK_BE_response.rds"))
+graph2ppt(file = paste0(".\\plots\\",dat,"\\Fig7_internat_data_UK_CH_USA_DK_BE_response.pptx"), width=9, height=7)
+ggsave(file = paste0(".\\plots\\",dat,"\\Fig7_internat_data_UK_CH_USA_DK_BE_response.png"), width=9, height=7)
+ggsave(file = paste0(".\\plots\\",dat,"\\Fig7_internat_data_UK_CH_USA_DK_BE_response.pdf"), width=9, height=7)
+
+
+plot_us2 = plot_us + coord_cartesian(xlim=c(as.Date("2020-11-01"), as.Date("2021-03-31")),
+                                     ylim=c(0.001,99.9), expand=c(0,0)) # + ggtitle("SPREAD OF VARIANT B.1.1.7 IN THE US")
+plot_us2
+
+saveRDS(plot_us2, file = paste0(".\\plots\\",dat,"\\Fig8_US_data_by state.rds"))
+graph2ppt(file = paste0(".\\plots\\",dat,"\\Fig8_US_data_by state.pptx"), width=9, height=7)
+ggsave(file = paste0(".\\plots\\",dat,"\\Fig8_US_data_by state.png"), width=9, height=7)
+ggsave(file = paste0(".\\plots\\",dat,"\\Fig8_US_data_by state.pdf"), width=9, height=7)
+
