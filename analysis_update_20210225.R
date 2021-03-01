@@ -651,7 +651,7 @@ ctdata$Outcome[ctdata$Outcome=="Not detected"] = "Negative"
 unique(ctdata$Outcome) # "Positive" "Negative"
 ctdata$Analysis_date = as.Date(as.numeric(ctdata$Analysis_date), origin="1899-12-30")
 sum(is.na(ctdata$Analysis_date)) # 0
-range(ctdata$Analysis_date) # "2020-12-01" - "2021-02-21"
+range(ctdata$Analysis_date) # "2020-12-01" - "2021-02-23"
 ctdata$collection_date = ctdata$Analysis_date-1 # collection date = analysis date-1 
 sum(is.na(ctdata$collection_date)) # 0
 ctdata$collection_date_num = as.numeric(ctdata$collection_date)
@@ -1070,7 +1070,7 @@ ggsave(file=paste0(".\\plots\\",dat,"\\Fig3_dataBE_Ct values_multipanel violin p
 # we remove ULG - FF 3.x due to low sample size & also just use positive samples with Ct values for N & ORF1ab < 30 to focus on active, recent infections
 # we also remove UZ Gent data because this lab was very heavily involved in active surveillance, and so 
 # its results could bias the overall inferred growth rate advantage (plus this lab also had weird Ct patterns)
-sel_labs = setdiff(unique(ctdata$Laboratory), c("ULG - FF 3.x", "ULG", "UZ Gent"))  # unique(ctdata$Laboratory) # 
+sel_labs = setdiff(unique(ctdata$Laboratory), c("ULG - FF 3.x", "ULG")) # , "UZ Gent"))  # unique(ctdata$Laboratory) # 
 # setdiff(unique(ctdata$Laboratory), c("UMons - Jolimont", "ULG - FF 3.x", "UZ Gent", "UZA")) 
 # setdiff(unique(ctdata$Laboratory), c("UMons - Jolimont", "UZ Gent","UZA","ULG - FF 3.x")) 
 sel_labs  
@@ -1351,7 +1351,7 @@ sum(tail(data_ag_byday_wide$est_n_B117, 14))/sum(tail(data_ag_byday_wide$n_pos,1
 # functions to calculate Re of wild type and of 501Y.V1 based on overall Re value and prop of positives that is 501Y.V1 propB117
 # and transmission advantage of 501Y.V1 M
 M_fitted = exp(fit1_emtrends[,c(2,5,6)]*4.7)[1,1] 
-M_fitted # 1.51
+M_fitted # 1.52
 Re_wild_type = function (Re, propB117, M=M_fitted) {
   Re / (1-propB117+M*propB117)
 }
@@ -1360,6 +1360,7 @@ Re_B117 = function (Re, propB117, M=M_fitted) {
 }
 
 Re_cases = read.csv(paste0(".//data//",dat,"//Re_cases.csv")) 
+Re_cases = read.csv(paste0(".//data//be_latest//Re_cases.csv")) 
 # Re values calculated from instantaneous growth rate in nr of new cases 
 # with instantaneous growth rate calculated as the first derivative (calculated using emtrends) to the GAM fit on new cases 
 # gam(cbind(NEWCASES, totpop-NEWCASES) ~ s(DATE_NUM, bs="cs", k=32, fx=F) + 
@@ -1408,9 +1409,15 @@ qplot(data=Re_cases, x=DATE, y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribbon", 
 ggsave(file=paste0(".//plots//",dat,"//Re_cases_Re_501YV1_Re_wildtype.png"), width=7, height=5)
 Re_cases[Re_cases$DATE==max(Re_cases$DATE),]
 # DATE_NUM          r          SE       df    r_LOWER    r_UPPER       DATE       Re Re_LOWER Re_UPPER collection_date_num  propB117
-# 366    18687 0.04095044 0.001923843 314.1994 0.03716519 0.04473568 2021-03-01 1.204112 1.184255 1.224174               18687 0.7906432
+# 373    18694 0.02624037 0.001789314 321.1952 0.02272011 0.02976063 2021-03-08 1.128085 1.110345    1.146               18694 0.8798404
 # Re_WT Re_WT_LOWER Re_WT_UPPER  Re_B117 Re_B117_LOWER Re_B117_UPPER
-# 366 0.855786   0.8416732   0.8700445 1.296346      1.274968      1.31794
+# 373 0.7709675   0.7588433   0.7832109 1.176857       1.15835      1.195546
+
+Re_cases[Re_cases$DATE==today,]
+# DATE_NUM          r          SE       df    r_LOWER    r_UPPER       DATE       Re Re_LOWER Re_UPPER collection_date_num  propB117
+# 360    18681 0.02549623 0.001687455 321.1952 0.02217637 0.02881609 2021-02-23 1.124321 1.107621 1.141176               18681 0.7072377
+# Re_WT Re_WT_LOWER Re_WT_UPPER  Re_B117 Re_B117_LOWER Re_B117_UPPER
+# 360 0.8192741   0.8071049   0.8315563 1.250595       1.23202      1.269344
 
 
 
