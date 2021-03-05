@@ -1360,7 +1360,7 @@ Re_B117 = function (Re, propB117, M=M_fitted) {
 }
 
 Re_cases = read.csv(paste0(".//data//",dat,"//Re_cases.csv")) 
-Re_cases = read.csv(paste0(".//data//be_latest//Re_cases.csv")) 
+# Re_cases = read.csv(paste0(".//data//be_latest//Re_cases.csv")) 
 # Re values calculated from instantaneous growth rate in nr of new cases 
 # with instantaneous growth rate calculated as the first derivative (calculated using emtrends) to the GAM fit on new cases 
 # gam(cbind(NEWCASES, totpop-NEWCASES) ~ s(DATE_NUM, bs="cs", k=32, fx=F) + 
@@ -1409,14 +1409,15 @@ qplot(data=Re_cases, x=DATE, y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribbon", 
 ggsave(file=paste0(".//plots//",dat,"//Re_cases_Re_501YV1_Re_wildtype.png"), width=7, height=5)
 Re_cases[Re_cases$DATE==max(Re_cases$DATE),]
 # DATE_NUM            r          SE       df      r_LOWER     r_UPPER       DATE      Re  Re_LOWER Re_UPPER collection_date_num  propB117
-# 376    18697 0.0005506917 0.001880696 324.1773 -0.003149218 0.004250601 2021-03-11 1.00259 0.9852664 1.020102               18697 0.9049341
+# 376    18697 0.0005506917 0.001880696 324.1773 -0.003149218 0.004250601 2021-03-11 1.00259 0.9852664 1.020102               18697 0.9145933
 # Re_WT Re_WT_LOWER Re_WT_UPPER  Re_B117 Re_B117_LOWER Re_B117_UPPER
-# 376 0.6790691   0.6673354   0.6909298 1.036577      1.018666      1.054682
+# 376 0.6767382   0.6650448   0.6885582 1.033019      1.015169      1.051062
 
 Re_cases[Re_cases$DATE==today,]
-# 360    18681 0.004729737 0.001451638 324.1773 0.001873918 0.007585557 2021-02-23 1.022383 1.008831 1.036047               18681 0.7072377
+# DATE_NUM            r          SE       df      r_LOWER     r_UPPER       DATE      Re  Re_LOWER Re_UPPER collection_date_num  propB117
+# 370    18691 0.0005506917 0.001880696 324.1773 -0.003149218 0.004250601 2021-03-05 1.00259 0.9852664 1.020102               18691 0.8624579
 # Re_WT Re_WT_LOWER Re_WT_UPPER  Re_B117 Re_B117_LOWER Re_B117_UPPER
-# 360 0.7449937   0.7351189   0.7549503 1.137209      1.122135      1.152407
+# 370 0.6895127   0.6775986   0.7015558 1.052519      1.034332      1.070902
 
 
 
