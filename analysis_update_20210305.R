@@ -14,7 +14,7 @@
 # https://ispmbern.github.io/covid-19/variants/data & https://github.com/covid-19-Re/variantPlot/raw/master/data/data.csv)
 # and Helix, San Mateo, CA, Karthik Gangavarapu & Kristian G. Andersen (US, https://github.com/andersen-lab/paper_2021_early-b117-usa/tree/master/b117_frequency/data, https://www.medrxiv.org/content/10.1101/2021.02.06.21251159v1)
 
-# last update 22 FEBR. 2021
+# last update 5 MARCH 2021
 
 library(lme4)
 library(splines)
@@ -52,14 +52,14 @@ library(nnet)
 library(mclogit)
 
 
-dat="2021_02_23" # desired file version for Belgian data (date/path in //data)
+dat="2021_03_05" # desired file version for Belgian data (date/path in //data)
 suppressWarnings(dir.create(paste0(".//plots//",dat)))
 filedate = as.Date(gsub("_","-",dat)) # file date
 filedate_num = as.numeric(filedate)
 today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-02-23")
+# today = as.Date("2021-02-23")
 today_num = as.numeric(today)
-today # "2021-02-23"
+today # "2021-03-05"
 
 set_sum_contrasts() # we use effect coding for all models
 
@@ -98,7 +98,7 @@ be_seqdata$basplusactivesurv_n_501Y.propV1V2V3 = be_seqdata$basplusactivesurv_n_
 
 
 head(be_seqdata)
-range(be_seqdata$collection_date)
+range(be_seqdata$collection_date) # "2020-12-03" "2021-02-25"
 
 
 # BASELINE SURVEILLANCE DATA ####
@@ -163,10 +163,10 @@ delta_r_501V1_501YV2_501YV3 = data.frame(confint(emtrends(be_seq_mfit0, trt.vs.c
 rownames(delta_r_501V1_501YV2_501YV3) = delta_r_501V1_501YV2_501YV3[,"contrast"]
 delta_r_501V1_501YV2_501YV3 = delta_r_501V1_501YV2_501YV3[,-1]
 delta_r_501V1_501YV2_501YV3
-#                       estimate  asymp.LCL  asymp.UCL
-# 501Y.V1 - wild type 0.06966334 0.06119481 0.07813188
-# 501Y.V2 - wild type 0.05340663 0.03519376 0.07161950
-# 501Y.V3 - wild type 0.12353360 0.05273034 0.19433686
+#                      estimate  asymp.LCL  asymp.UCL
+# 501Y.V1 - wild type 0.0662825 0.05986855 0.07269646
+# 501Y.V2 - wild type 0.0507152 0.03769901 0.06373139
+# 501Y.V3 - wild type 0.1212061 0.08001965 0.16239249
 
 # pairwise contrasts in growth rate (here with Tukey correction)
 emtrends(be_seq_mfit0, pairwise ~ variant|1, 
@@ -174,12 +174,12 @@ emtrends(be_seq_mfit0, pairwise ~ variant|1,
                    at=list(collection_date_num=today_num), 
           df=NA)$contrasts
 # contrast            estimate      SE df z.ratio p.value
-# wild type - 501Y.V1  -0.0697 0.00432 NA -16.123 <.0001 
-# wild type - 501Y.V2  -0.0534 0.00929 NA  -5.747 <.0001 
-# wild type - 501Y.V3  -0.1235 0.03612 NA  -3.420 0.0035 
-# 501Y.V1 - 501Y.V2     0.0163 0.00971 NA   1.675 0.3371 
-# 501Y.V1 - 501Y.V3    -0.0539 0.03614 NA  -1.490 0.4433 
-# 501Y.V2 - 501Y.V3    -0.0701 0.03711 NA  -1.890 0.2325 
+# wild type - 501Y.V1  -0.0663 0.00327 NA -20.254 <.0001 
+# wild type - 501Y.V2  -0.0507 0.00664 NA  -7.637 <.0001 
+# wild type - 501Y.V3  -0.1212 0.02101 NA  -5.768 <.0001 
+# 501Y.V1 - 501Y.V2     0.0156 0.00692 NA   2.248 0.1105 
+# 501Y.V1 - 501Y.V3    -0.0549 0.02102 NA  -2.613 0.0444 
+# 501Y.V2 - 501Y.V3    -0.0705 0.02184 NA  -3.228 0.0068 
 # 
 # Degrees-of-freedom method: user-specified 
 # P value adjustment: tukey method for comparing a family of 4 estimates 
@@ -191,12 +191,12 @@ emtrends(be_seq_mfit0, pairwise ~ variant|1,
          at=list(collection_date_num=today_num), 
          df=NA, adjust="none")$contrasts
 # contrast            estimate      SE df z.ratio p.value
-# wild type - 501Y.V1  -0.0697 0.00432 NA -16.123 <.0001 
-# wild type - 501Y.V2  -0.0534 0.00929 NA  -5.747 <.0001 
-# wild type - 501Y.V3  -0.1235 0.03612 NA  -3.420 0.0006 
-# 501Y.V1 - 501Y.V2     0.0163 0.00971 NA   1.675 0.0940 
-# 501Y.V1 - 501Y.V3    -0.0539 0.03614 NA  -1.490 0.1361 
-# 501Y.V2 - 501Y.V3    -0.0701 0.03711 NA  -1.890 0.0588 
+# wild type - 501Y.V1  -0.0663 0.00327 NA -20.254 <.0001 
+# wild type - 501Y.V2  -0.0507 0.00664 NA  -7.637 <.0001 
+# wild type - 501Y.V3  -0.1212 0.02101 NA  -5.768 <.0001 
+# 501Y.V1 - 501Y.V2     0.0156 0.00692 NA   2.248 0.0246 
+# 501Y.V1 - 501Y.V3    -0.0549 0.02102 NA  -2.613 0.0090 
+# 501Y.V2 - 501Y.V3    -0.0705 0.02184 NA  -3.228 0.0012 
 # 
 # Degrees-of-freedom method: user-specified 
 
@@ -204,9 +204,9 @@ emtrends(be_seq_mfit0, pairwise ~ variant|1,
 # implied transmission advantage (assuming no immune evasion advantage of 501Y.V2, if there is such an advantage, transm advantage would be less)
 exp(delta_r_501V1_501YV2_501YV3*4.7) 
 #                     estimate asymp.LCL asymp.UCL
-# 501Y.V1 - wild type 1.387381  1.333245  1.443715
-# 501Y.V2 - wild type 1.285324  1.179878  1.400195
-# 501Y.V3 - wild type 1.787124  1.281245  2.492742
+# 501Y.V1 - wild type 1.365510  1.324960  1.407301
+# 501Y.V2 - wild type 1.269168  1.193852  1.349235
+# 501Y.V3 - wild type 1.767681  1.456582  2.145226
 
 # for all 3 variants together
 # growth rate advantage compared to wild type
@@ -215,12 +215,12 @@ rownames(delta_r_allVOCs) = delta_r_allVOCs[,"contrast"]
 delta_r_allVOCs = delta_r_allVOCs[,-1]
 delta_r_allVOCs
 #                               estimate  asymp.LCL  asymp.UCL
-# (501Y.V1+V2+V3) - wild type 0.08273544 0.06978487 0.09568601
+# (501Y.V1+V2+V3) - wild type 0.06504784 0.05897912 0.07111656
 
 # implied transmission advantage (assuming no immune evasion advantage of 501Y.V2, if there is such an advantage, transm advantage would be less)
 exp(delta_r_allVOCs*4.7) 
 #                             estimate asymp.LCL asymp.UCL
-# (501Y.V1+V2+V3) - wild type   1.475293  1.388174   1.56788
+# (501Y.V1+V2+V3) - wild type   1.357609  1.319433  1.396889
 
 
 
@@ -318,7 +318,7 @@ plot_multinom_501YV1_501YV2_501YV3_response = qplot(data=be_seq_mfit0_preds2, x=
   #                   labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
   # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
   #                     labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
-  coord_cartesian(xlim=c(min(be_basseqdata_long2$collection_date), as.Date("2021-03-01")),
+  coord_cartesian(xlim=c(min(be_basseqdata_long2$collection_date), as.Date("2021-04-01")),
                   # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")),
                   ylim=c(0,100), expand=c(0,0)) +
   # scale_color_discrete("", h=c(0, 280), c=200) +
@@ -348,7 +348,7 @@ ggsave(file=paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2 501YV3_
 
 be_seq_mfit0_preds3 = be_seq_mfit0_preds2
 ymin = 0.001
-ymax = 0.900001
+ymax = 0.990001
 be_seq_mfit0_preds3$asymp.LCL[be_seq_mfit0_preds3$asymp.LCL<ymin] = ymin
 be_seq_mfit0_preds3$asymp.UCL[be_seq_mfit0_preds3$asymp.UCL<ymin] = ymin
 be_seq_mfit0_preds3$asymp.UCL[be_seq_mfit0_preds3$asymp.UCL>ymax] = ymax
@@ -383,7 +383,7 @@ plot_multinom_501YV1_501YV2_501YV3 = qplot(data=be_seq_mfit0_preds3, x=collectio
   # guides(colour=FALSE) +
   theme(legend.position = "right") +
   xlab("Collection date")+
-  coord_cartesian(xlim=c(as.Date("2021-01-01"),as.Date("2021-03-01")), ylim=c(0.001, 0.9000001), expand=c(0,0))
+  coord_cartesian(xlim=c(as.Date("2021-01-01"),as.Date("2021-04-01")), ylim=c(0.001, 0.9900001), expand=c(0,0))
 plot_multinom_501YV1_501YV2_501YV3
 
 
@@ -397,37 +397,37 @@ ggsave(file=paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2 501YV3_
 be_seq_mfit0_preds2[be_seq_mfit0_preds2$collection_date==today&
                       be_seq_mfit0_preds2$variant=="501Y.V1 (British)",]
 #            variant collection_date_num      prob       SE df asymp.LCL asymp.UCL collection_date
-# 501Y.V1 (British)               18681 0.615664 0.02353748 NA 0.5695314 0.6617966      2021-02-23
+# 501Y.V1 (British)               18691 0.6866696 0.02419298 NA 0.6392522  0.734087      2021-03-05
 
 # estimated proportion of 501Y.V1 among new infections today (counted one week before lab diagnosis)
 be_seq_mfit0_preds2[be_seq_mfit0_preds2$collection_date==(today+7)&
                       be_seq_mfit0_preds2$variant=="501Y.V1 (British)",]
 #            variant collection_date_num      prob       SE df asymp.LCL asymp.UCL collection_date
-# 501Y.V1 (British)               18688 0.6958476 0.03143403 NA 0.6342381 0.7574572      2021-03-02
+# 501Y.V1 (British)               18698 0.7242335 0.04008266 NA  0.645673 0.8027941      2021-03-12
 
 # estimated proportion of 501Y.V2 among new lab diagnoses today
 be_seq_mfit0_preds2[be_seq_mfit0_preds2$collection_date==today&
                       be_seq_mfit0_preds2$variant=="501Y.V2 (South African)",]
 #            variant collection_date_num      prob       SE df asymp.LCL asymp.UCL collection_date
-# 501Y.V2 (South African)               18681 0.0586159 0.01160612 NA 0.03586833 0.08136348      2021-02-23
+# 501Y.V2 (South African)               18691 0.06517474 0.01122923 NA 0.04316585 0.08718363      2021-03-05
 
 # estimated proportion of 501Y.V2 among new infections today (counted one week before lab diagnosis)
 be_seq_mfit0_preds2[be_seq_mfit0_preds2$collection_date==(today+7)&
                       be_seq_mfit0_preds2$variant=="501Y.V2 (South African)",]
 #            variant collection_date_num      prob       SE df asymp.LCL asymp.UCL collection_date
-# 501Y.V2 (South African)               18688 0.05912409 0.01512296 NA 0.02948362 0.08876455      2021-03-02
+# 501Y.V2 (South African)               18698 0.06164311 0.0134403 NA 0.03530061 0.08798561      2021-03-12
 
 # estimated proportion of 501Y.V3 among new lab diagnoses today
 be_seq_mfit0_preds2[be_seq_mfit0_preds2$collection_date==today&
                       be_seq_mfit0_preds2$variant=="501Y.V3 (Brazilian)",]
 #            variant collection_date_num      prob       SE df asymp.LCL asymp.UCL collection_date
-# 501Y.V3 (Brazilian)               18681 0.01987965 0.01105983 NA -0.001797221 0.04155653      2021-02-23
+# 501Y.V3 (Brazilian)               18691 0.05592833 0.02213388 NA 0.01254673 0.09930993      2021-03-05
 
 # estimated proportion of 501Y.V3 among new infections today (counted one week before lab diagnosis)
 be_seq_mfit0_preds2[be_seq_mfit0_preds2$collection_date==(today+7)&
                       be_seq_mfit0_preds2$variant=="501Y.V3 (Brazilian)",]
 #            variant collection_date_num      prob       SE df asymp.LCL asymp.UCL collection_date
-# 501Y.V3 (Brazilian)               18688 0.03276032 0.02512898 NA -0.01649158 0.08201221      2021-03-02
+# 501Y.V3 (Brazilian)               18698 0.08664304 0.04406039 NA 0.0002862699 0.1729998      2021-03-12
 
 
 
@@ -435,13 +435,13 @@ be_seq_mfit0_preds2[be_seq_mfit0_preds2$collection_date==(today+7)&
 be_seq_mfit0_preds2[be_seq_mfit0_preds2$collection_date==today&
                       be_seq_mfit0_preds2$variant=="501Y.V1+V2+V3",]
 #            variant collection_date_num      prob       SE df asymp.LCL asymp.UCL collection_date
-# 2241 501Y.V1+V2+V3               18681 0.6910092 0.02021192 NA 0.6513945 0.7306238      2021-02-23
+# 2241 501Y.V1+V2+V3               18691 0.8015485 0.01406841 NA 0.7739749 0.8291221      2021-03-05
 
 # estimated proportion of one of the three VOCs among new infections today (counted one week before lab diagnosis)
 be_seq_mfit0_preds2[be_seq_mfit0_preds2$collection_date==(today+7)&
                       be_seq_mfit0_preds2$variant=="501Y.V1+V2+V3",]
 #            variant collection_date_num      prob       SE df asymp.LCL asymp.UCL collection_date
-# 2241 501Y.V1+V2+V3               18688 0.7827108 0.02055526 NA 0.7424233 0.8229984      2021-03-02
+# 2241 501Y.V1+V2+V3               18698 0.8642839 0.01274384 NA 0.8393064 0.8892613      2021-03-12
 
 
 
@@ -449,17 +449,17 @@ be_seq_mfit0_preds2[be_seq_mfit0_preds2$collection_date==(today+7)&
 # the time at which new lab diagnoses would be by more than 50%, 75% 90% by one of the three VOCs :
 be_seq_mfit0_preds2_subs = be_seq_mfit0_preds2[be_seq_mfit0_preds2$collection_date>as.Date("2021-01-01")&
                                                  be_seq_mfit0_preds2$variant=="501Y.V1+V2+V3",]
-# >50% by 12th of February [10th Feb - 13th Feb] 95% CLs
+# >50% by 12th of February [11th Feb - 13th Feb] 95% CLs
 be_seq_mfit0_preds2_subs$collection_date[which(be_seq_mfit0_preds2_subs$prob>=0.5)[1]]
 be_seq_mfit0_preds2_subs$collection_date[which(be_seq_mfit0_preds2_subs$asymp.UCL>=0.5)[1]]
 be_seq_mfit0_preds2_subs$collection_date[which(be_seq_mfit0_preds2_subs$asymp.LCL>=0.5)[1]]
 
-# >75% by 28th of February [25th Feb - 3d March] 95% CLs
+# >75% by 1st of March [27th Feb - 3d March] 95% CLs
 be_seq_mfit0_preds2_subs$collection_date[which(be_seq_mfit0_preds2_subs$prob>=0.75)[1]]
 be_seq_mfit0_preds2_subs$collection_date[which(be_seq_mfit0_preds2_subs$asymp.UCL>=0.75)[1]]
 be_seq_mfit0_preds2_subs$collection_date[which(be_seq_mfit0_preds2_subs$asymp.LCL>=0.75)[1]]
 
-# >90% by 16th of March [11th March - 21st of March] 95% CLs
+# >90% by 18th of March [14th March - 22nd of March] 95% CLs
 be_seq_mfit0_preds2_subs$collection_date[which(be_seq_mfit0_preds2_subs$prob>=0.90)[1]]
 be_seq_mfit0_preds2_subs$collection_date[which(be_seq_mfit0_preds2_subs$asymp.UCL>=0.90)[1]]
 be_seq_mfit0_preds2_subs$collection_date[which(be_seq_mfit0_preds2_subs$asymp.LCL>=0.90)[1]]
@@ -467,17 +467,17 @@ be_seq_mfit0_preds2_subs$collection_date[which(be_seq_mfit0_preds2_subs$asymp.LC
 
 # the time at which new infections would be by more than 50%, 75% 90% by one of the three VOCs
 # (counting 7 days between infection & diagnosis) :
-# >50% by 5th of Feb [3d Feb - 6th Feb] 95% CLs
+# >50% by 5th of Feb [4th Feb - 6th Feb] 95% CLs
 be_seq_mfit0_preds2_subs$collection_date[which(be_seq_mfit0_preds2_subs$prob>=0.5)[1]]-7
 be_seq_mfit0_preds2_subs$collection_date[which(be_seq_mfit0_preds2_subs$asymp.UCL>=0.5)[1]]-7
 be_seq_mfit0_preds2_subs$collection_date[which(be_seq_mfit0_preds2_subs$asymp.LCL>=0.5)[1]]-7
 
-# >75% by 21st of February [18th Feb - 24th Feb] 95% CLs
+# >75% by 22nd of February [20th Feb - 24th Feb] 95% CLs
 be_seq_mfit0_preds2_subs$collection_date[which(be_seq_mfit0_preds2_subs$prob>=0.75)[1]]-7
 be_seq_mfit0_preds2_subs$collection_date[which(be_seq_mfit0_preds2_subs$asymp.UCL>=0.75)[1]]-7
 be_seq_mfit0_preds2_subs$collection_date[which(be_seq_mfit0_preds2_subs$asymp.LCL>=0.75)[1]]-7
 
-# >90% by 9th of March [4th March - 14th of March] 95% CLs
+# >90% by 11th of March [7th March - 15th of March] 95% CLs
 be_seq_mfit0_preds2_subs$collection_date[which(be_seq_mfit0_preds2_subs$prob>=0.90)[1]]-7
 be_seq_mfit0_preds2_subs$collection_date[which(be_seq_mfit0_preds2_subs$asymp.UCL>=0.90)[1]]-7
 be_seq_mfit0_preds2_subs$collection_date[which(be_seq_mfit0_preds2_subs$asymp.LCL>=0.90)[1]]-7
