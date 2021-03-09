@@ -282,6 +282,43 @@ muller_be_seq_mfit0
 ggsave(file=paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2 501YV3_multinomial fit.png"), width=7, height=5)
 # ggsave(file=paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2 501YV3_multinomial fit.pdf"), width=7, height=5)
 
+
+# plot of nr of new confirmed cases that are estimated to be by 501Y.V1, 501Y.V2 & 501Y.V3 vs. wild type ####
+
+library(readr)
+coronavirus_df = read_csv("https://raw.githubusercontent.com/RamiKrispin/coronavirus/master/csv/coronavirus.csv")
+data_cases_BE = coronavirus_df[coronavirus_df$country=="Belgium"&coronavirus_df$type=="confirmed",]
+data_cases_BE
+props = data.frame(emmeans(be_seq_mfit0, ~ variant+collection_date_num, at=list(collection_date_num=as.numeric(data_cases_BE$date)), 
+                           mode="prob", df=NA))
+data_cases_BE$prop501YV1 =  props[props$variant=="501Y.V1","prob"]
+data_cases_BE$prop501YV2 =  props[props$variant=="501Y.V2","prob"]
+data_cases_BE$prop501YV3 =  props[props$variant=="501Y.V3","prob"]
+
+data_cases_BE_501YV1 = data.frame(data_cases_BE, variant="501Y.V1")
+data_cases_BE_501YV1$cases = data_cases_BE_501YV1$cases*data_cases_BE$prop501YV1
+data_cases_BE_501YV2 = data.frame(data_cases_BE, variant="501Y.V2")
+data_cases_BE_501YV2$cases = data_cases_BE_501YV2$cases*data_cases_BE$prop501YV2
+data_cases_BE_501YV3 = data.frame(data_cases_BE, variant="501Y.V3")
+data_cases_BE_501YV3$cases = data_cases_BE_501YV3$cases*data_cases_BE$prop501YV2
+data_cases_BE_wildtype = data.frame(data_cases_BE, variant="wild type")
+data_cases_BE_wildtype$cases = data_cases_BE_wildtype$cases*(1-(data_cases_BE$prop501YV1+data_cases_BE$prop501YV2+data_cases_BE$prop501YV3))
+
+data_cases_BE = rbind(data_cases_BE_501YV1, data_cases_BE_501YV2, data_cases_BE_501YV3, data_cases_BE_wildtype)
+data_cases_BE$variant = factor(data_cases_BE$variant, levels=c("wild type", "501Y.V1", "501Y.V2", "501Y.V3"), 
+                               labels=c("wild type","501Y.V1 (British)","501Y.V2 (South African)","501Y.V3 (Brazilian)"))
+qplot(data=data_cases_BE[data_cases_BE$variant!="total",], x=date, y=cases, group=variant, colour=variant, fill=variant, geom="blank") +
+  geom_area(position="stack") +
+  scale_colour_manual("", values=c("darkgrey","blue","red","green3")) +
+  scale_fill_manual("", values=c("darkgrey","blue","red","green3")) +
+  ylab("New confirmed cases") + xlab("") + ggtitle("Estimated infections by British, South African & Brazilian\nSARS-CoV2 variants in Belgium (baseline sequencing)") +
+  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
+                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
+  coord_cartesian(xlim=c(as.Date("2020-09-01"),NA))
+ggsave(file=paste0(".//plots//",dat,"//confirmed_cases_by_501YV1_501YV2_501YV3_wildtype_baseline sequencing.png"), width=7, height=5)
+
+
+
 multinom_501YV1_501YV2_501YV3 = ggarrange(baseline_sequencing+ggtitle("Spread of the British, South African & Brazilian\nSARS-CoV2 variants in Belgium (baseline surveillance)")+xlab("")+ylab("Share")+
                                             coord_cartesian(xlim=c(as.Date("2020-12-01"),as.Date("2021-04-01"))), 
                                           muller_be_seq_mfit0+ggtitle("Multinomial fit plus extrapolation")+ylab("Share"), ncol=1, 
@@ -1744,6 +1781,32 @@ Re_cases[Re_cases$DATE==today,]
 # 373 0.6968096 0.7936371   0.7805043   0.8069059 0.9527614     0.9369954     0.9686906
 
 
+# plot of nr of new confirmed cases that are estimated to be by UK variant 501Y.V1 vs. wild type ####
+
+library(readr)
+coronavirus_df = read_csv("https://raw.githubusercontent.com/RamiKrispin/coronavirus/master/csv/coronavirus.csv")
+data_cases_BE = coronavirus_df[coronavirus_df$country=="Belgium"&coronavirus_df$type=="confirmed",]
+data_cases_BE
+data_cases_BE$propB117 =  fit_preds$prob[match(data_cases_BE$date,
+                                               fit_preds$collection_date)]
+# data_cases_BE_total = data.frame(data_cases_BE[!is.na(data_cases_BE$propB117),], variant="total")
+data_cases_BE_501YV1 = data.frame(data_cases_BE[!is.na(data_cases_BE$propB117),], variant="501Y.V1")
+data_cases_BE_501YV1$cases = data_cases_BE_501YV1$cases*data_cases_BE_501YV1$propB117
+data_cases_BE_wildtype = data.frame(data_cases_BE[!is.na(data_cases_BE$propB117),], variant="wild type")
+data_cases_BE_wildtype$cases = data_cases_BE_wildtype$cases*(1-data_cases_BE_wildtype$propB117)
+data_cases_BE = rbind(data_cases_BE_501YV1, data_cases_BE_wildtype)
+data_cases_BE$variant = factor(data_cases_BE$variant, levels=c("wild type", "501Y.V1"), labels=c("wild type","501Y.V1 (British)"))
+
+qplot(data=data_cases_BE[data_cases_BE$variant!="total",], x=date, y=cases, group=variant, colour=variant, fill=variant, geom="blank") +
+  geom_area(position="stack") +
+  scale_colour_manual("", values=c("darkgrey","blue3")) +
+  scale_fill_manual("", values=c("darkgrey","blue3")) +
+  ylab("New confirmed cases") + xlab("") + ggtitle("Estimated infections by SARS-CoV2 UK variant 501Y.V1\nin Belgium (S dropout data)") +
+  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
+                   labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M"))
+ggsave(file=paste0(".//plots//",dat,"//confirmed_cases_by_501YV1_vs_wildtype_S dropout.png"), width=7, height=5)
+
+
 
 
 
@@ -2798,19 +2861,21 @@ library(readr)
 coronavirus_df = read_csv("https://raw.githubusercontent.com/RamiKrispin/coronavirus/master/csv/coronavirus.csv")
 data_cases_BE = coronavirus_df[coronavirus_df$country=="Belgium"&coronavirus_df$type=="confirmed",]
 data_cases_BE
-data_cases_BE$propB117 =  fit_be_preds$prob[match(data_cases_BE$date,
-                                                 fit_be_preds$date)]
-data_cases_BE = data_cases_BE[!is.na(data_cases_BE$propB117),]
-data_cases_BE$cases_B117 = data_cases_BE$cases*data_cases_BE$propB117
-data_cases_BE$cases_wildtype = data_cases_BE$cases*(1-data_cases_BE$propB117)
-head(data_cases_BE)  
-plot(data_cases_BE$date, data_cases_BE$cases, type="l", log="y", ylim=c(100,max(data_cases_BE$cases)), xlab="Collection date", ylab="New confirmed case by 501Y.V1 (red) vs. wild type (blue)")
-lines(data_cases_BE$date, data_cases_BE$cases_B117, col="red")
-lines(data_cases_BE$date, data_cases_BE$cases_wildtype, col="blue")
-plot(data_cases_BE$date, data_cases_BE$cases, type="l", ylim=c(100,max(data_cases_BE$cases)), xlab="Collection date", ylab="New confirmed case by 501Y.V1 (red) vs. wild type (blue)")
-lines(data_cases_BE$date, data_cases_BE$cases_B117, col="red")
-lines(data_cases_BE$date, data_cases_BE$cases_wildtype, col="blue")
-# TO DO : make pretty ggplot out of this (include smoothed trend based on GAM fit)
+data_cases_BE$propB117 =  fit_preds$prob[match(data_cases_BE$date,
+                                                 fit_preds$collection_date)]
+# data_cases_BE_total = data.frame(data_cases_BE[!is.na(data_cases_BE$propB117),], variant="total")
+data_cases_BE_501YV1 = data.frame(data_cases_BE[!is.na(data_cases_BE$propB117),], variant="501Y.V1")
+data_cases_BE_501YV1$cases = data_cases_BE_501YV1$cases*data_cases_BE_501YV1$propB117
+data_cases_BE_wildtype = data.frame(data_cases_BE[!is.na(data_cases_BE$propB117),], variant="wild type")
+data_cases_BE_wildtype$cases = data_cases_BE_wildtype$cases*(1-data_cases_BE_wildtype$propB117)
+data_cases_BE = rbind(data_cases_BE_501YV1, data_cases_BE_wildtype)
+data_cases_BE$variant = factor(data_cases_BE$variant, levels=c("wild type", "501Y.V1"), labels=c("wild type","501Y.V1 (British)"))
+
+qplot(data=data_cases_BE[data_cases_BE$variant!="total",], x=date, y=cases, group=variant, colour=variant, fill=variant, geom="blank") +
+  geom_area(position="stack") +
+  scale_colour_manual("", values=c("darkgrey","blue3")) +
+  scale_fill_manual("", values=c("darkgrey","blue3")) +
+  ylab("New confirmed cases") + xlab("Date") + ggtitle("New confirmed cases by SARS-CoV2\nUK variant 501Y.V1 vs. wild type in Belgium")
 
 
 # plot for Florida ####
