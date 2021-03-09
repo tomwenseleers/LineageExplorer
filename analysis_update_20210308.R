@@ -1667,17 +1667,7 @@ ggsave(file=paste0(".\\plots\\",dat,"\\Fig5_fit4_binomGLMM_501YV1_Belgium by lab
 # 4.2. PLOT OF Re VALUE of WILD TYPE AND 501Y.V1, CALCULATED FROM PREDICTED SHARE OF 501Y.V1 AMONG ALL INFECTIONS & FITTED TRANSMISSION ADVANTAGE ####
 # based on the fact that the overall Re is a weighted average of the Re of the individual variants
 
-# functions to calculate Re of wild type and of 501Y.V1 based on overall Re value and prop of positives that is 501Y.V1 propB117
-# and transmission advantage of 501Y.V1 M
-M_fitted = exp(fit_emtrends[,c(2,5,6)]*4.7)[1,1] 
-M_fitted # 1.20
-Re_wild_type = function (Re, propB117, M) {
-  Re / (1-propB117+M*propB117)
-}
-Re_B117 = function (Re, propB117, M=M_fitted) {
-  M*Re / (1-propB117+M*propB117)
-}
-
+# fitted Re values based on Sciensano new confirmed case & testing data
 Re_cases = read.csv(paste0(".//data//",dat,"//Re_cases.csv")) 
 # Re_cases = read.csv(paste0(".//data//be_latest//Re_cases.csv")) 
 # Re values calculated from instantaneous growth rate in nr of new cases 
@@ -1688,6 +1678,27 @@ Re_cases = read.csv(paste0(".//data//",dat,"//Re_cases.csv"))
 # note that Re here is calculated at time of diagnosis
 Re_cases$DATE = as.Date(Re_cases$DATE_NUM, origin="1970-01-01")
 Re_cases$collection_date_num = Re_cases$DATE_NUM
+
+date.from.num = min(Re_cases$collection_date_num)
+date.to.num = max(Re_cases$collection_date_num)
+
+# estimated transmission advantage of 501Y.V1 (potentially time-varying when using a binomial spline GLMM)
+M_fitted = exp(as.data.frame(emtrends(fit4, ~ 1, var="collection_date_num", by="collection_date_num",
+                                                 at=list(collection_date_num=seq(date.from.num,
+                                                                                 date.to.num)), 
+                                  mode="link"))$collection_date_num.trend*4.7)
+Re_cases$M = M_fitted
+
+# functions to calculate Re of wild type and of 501Y.V1 based on overall Re value and prop of positives that is 501Y.V1 propB117
+# and transmission advantage of 501Y.V1 M
+
+Re_wild_type = function (Re, propB117, M) {
+  Re / (1-propB117+M*propB117)
+}
+Re_B117 = function (Re, propB117, M) {
+  M*Re / (1-propB117+M*propB117)
+}
+
 Re_cases$propB117 = as.data.frame(emmeans(fit1, ~ collection_date_num, 
                                           # by="LABORATORY", 
                                           at=list(collection_date_num=seq(min(Re_cases$collection_date_num),
