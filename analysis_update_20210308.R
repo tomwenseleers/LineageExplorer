@@ -1795,7 +1795,7 @@ data_cases_BE_501YV1$cases = data_cases_BE_501YV1$cases*data_cases_BE_501YV1$pro
 data_cases_BE_wildtype = data.frame(data_cases_BE[!is.na(data_cases_BE$propB117),], variant="wild type")
 data_cases_BE_wildtype$cases = data_cases_BE_wildtype$cases*(1-data_cases_BE_wildtype$propB117)
 data_cases_BE = rbind(data_cases_BE_501YV1, data_cases_BE_wildtype)
-data_cases_BE$variant = factor(data_cases_BE$variant, levels=c("wild type", "501Y.V1"), labels=c("wild type","501Y.V1 (British)"))
+data_cases_BE$variant = factor(data_cases_BE$variant, levels=c("wild type", "501Y.V1"), labels=c("wild type+other VOCs","501Y.V1 (British)"))
 
 qplot(data=data_cases_BE[data_cases_BE$variant!="total",], x=date, y=cases, group=variant, colour=variant, fill=variant, geom="blank") +
   geom_area(position="stack") +
