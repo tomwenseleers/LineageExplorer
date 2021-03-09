@@ -1699,19 +1699,19 @@ Re_B117 = function (Re, propB117, M) {
   M*Re / (1-propB117+M*propB117)
 }
 
-Re_cases$propB117 = as.data.frame(emmeans(fit1, ~ collection_date_num, 
+Re_cases$propB117 = as.data.frame(emmeans(fit4, ~ collection_date_num, 
                                           # by="LABORATORY", 
                                           at=list(collection_date_num=seq(min(Re_cases$collection_date_num),
                                                                           max(Re_cases$collection_date_num))), 
                                           type="response"), bias.adjust = TRUE, sigma = total.SD)$prob
 
 head(Re_cases)
-Re_cases$Re_WT = Re_wild_type(Re=Re_cases$Re, propB117=Re_cases$propB117)
-Re_cases$Re_WT_LOWER = Re_wild_type(Re=Re_cases$Re_LOWER, propB117=Re_cases$propB117)
-Re_cases$Re_WT_UPPER = Re_wild_type(Re=Re_cases$Re_UPPER, propB117=Re_cases$propB117)
-Re_cases$Re_B117 = Re_B117(Re=Re_cases$Re, propB117=Re_cases$propB117)
-Re_cases$Re_B117_LOWER = Re_B117(Re=Re_cases$Re_LOWER, propB117=Re_cases$propB117)
-Re_cases$Re_B117_UPPER = Re_B117(Re=Re_cases$Re_UPPER, propB117=Re_cases$propB117)
+Re_cases$Re_WT = Re_wild_type(Re=Re_cases$Re, propB117=Re_cases$propB117, M=Re_cases$M)
+Re_cases$Re_WT_LOWER = Re_wild_type(Re=Re_cases$Re_LOWER, propB117=Re_cases$propB117, M=Re_cases$M)
+Re_cases$Re_WT_UPPER = Re_wild_type(Re=Re_cases$Re_UPPER, propB117=Re_cases$propB117, M=Re_cases$M)
+Re_cases$Re_B117 = Re_B117(Re=Re_cases$Re, propB117=Re_cases$propB117, M=Re_cases$M)
+Re_cases$Re_B117_LOWER = Re_B117(Re=Re_cases$Re_LOWER, propB117=Re_cases$propB117, M=Re_cases$M)
+Re_cases$Re_B117_UPPER = Re_B117(Re=Re_cases$Re_UPPER, propB117=Re_cases$propB117, M=Re_cases$M)
 
 # d = as.Date(max(Re_cases$DATE))
 # tag = paste("@TWenseleers\n",dat)
@@ -1738,10 +1738,12 @@ qplot(data=Re_cases, x=DATE, y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribbon", 
   ylab("Re at time of diagnosis")
 ggsave(file=paste0(".//plots//",dat,"//Re_cases_Re_501YV1_Re_wildtype.png"), width=7, height=5)
 Re_cases[Re_cases$DATE==today,]
-# DATE_NUM           r          SE       df    r_LOWER    r_UPPER       DATE        Re  Re_LOWER  Re_UPPER collection_date_num  propB117
-# 373    18694 -0.01791465 0.001754665 327.1555 -0.0213665 -0.0144628 2021-03-08 0.9179816 0.9026751 0.9334478               18694 0.8120433
-# Re_WT Re_WT_LOWER Re_WT_UPPER  Re_B117 Re_B117_LOWER Re_B117_UPPER
-# 373 0.6740082   0.6627697   0.6853639 0.974452     0.9582039     0.9908697
+# DATE_NUM           r          SE       df     r_LOWER     r_UPPER       DATE        Re  Re_LOWER Re_UPPER collection_date_num      M
+# 373    18694 -0.02094934 0.001731537 328.1529 -0.02435565 -0.01754303 2021-03-08 0.9045164 0.8895488 0.919639               18694 1.2005
+# propB117     Re_WT Re_WT_LOWER Re_WT_UPPER   Re_B117 Re_B117_LOWER Re_B117_UPPER
+# 373 0.6968096 0.7936371   0.7805043   0.8069059 0.9527614     0.9369954     0.9686906
+
+
 
 
 
