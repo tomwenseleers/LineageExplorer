@@ -145,9 +145,9 @@ ggsave(file=paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2 501YV3.
 # to be able to estimate growth rate advantage of each type compared to wild type
 
 set.seed(1)
-be_seq_mfit0 = nnet::multinom(variant ~ scale(collection_date_num, center=TRUE, scale=FALSE), weights=count, data=be_basseqdata_long, 
+be_seq_mfit0 = nnet::multinom(variant ~ ns(collection_date_num, df=1), weights=count, data=be_basseqdata_long, 
                               subset=be_basseqdata_long$variant!="501Y.V1+V2+V3", maxit=1000)
-be_seq_mfitallVOC = nnet::multinom(variant ~ scale(collection_date_num, center=TRUE, scale=FALSE), weights=count, data=be_basseqdata_long, 
+be_seq_mfitallVOC = nnet::multinom(variant ~ ns(collection_date_num, df=1), weights=count, data=be_basseqdata_long, 
                                    subset=be_basseqdata_long$variant=="wild type"|be_basseqdata_long$variant=="501Y.V1+V2+V3", maxit=1000) 
 summary(be_seq_mfit0)
 
@@ -285,49 +285,61 @@ ggsave(file=paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2 501YV3_
 
 # plot of nr of new confirmed cases that are estimated to be by 501Y.V1, 501Y.V2 & 501Y.V3 vs. wild type ####
 
-library(readr)
-coronavirus_df = read_csv("https://raw.githubusercontent.com/RamiKrispin/coronavirus/master/csv/coronavirus.csv")
-data_cases_BE = coronavirus_df[coronavirus_df$country=="Belgium"&coronavirus_df$type=="confirmed",]
-data_cases_BE
-props = data.frame(emmeans(be_seq_mfit0, ~ variant+collection_date_num, at=list(collection_date_num=as.numeric(data_cases_BE$date)), 
+source("scripts/downloadData.R") # download latest data with new confirmed cases per day from Sciensano website, code adapted from https://github.com/JoFAM/covidBE_analysis by Joris Meys
+range(cases_tot$DATE) # "2020-03-01" "2021-03-09"
+props = data.frame(emmeans(be_seq_mfit0, ~ variant+collection_date_num, at=list(collection_date_num=as.numeric(cases_tot$DATE)), 
                            mode="prob", df=NA))
-data_cases_BE$prop501YV1 =  props[props$variant=="501Y.V1","prob"]
-data_cases_BE$prop501YV2 =  props[props$variant=="501Y.V2","prob"]
-data_cases_BE$prop501YV3 =  props[props$variant=="501Y.V3","prob"]
+cases_tot$prop501YV1 =  props[props$variant=="501Y.V1","prob"] # new confirmed cases per day in total across the whole of Belgium
+cases_tot$prop501YV1[cases_tot$DATE<as.Date("2020-12-01")] =  0
+cases_tot$prop501YV2 =  props[props$variant=="501Y.V2","prob"]
+cases_tot$prop501YV2[cases_tot$DATE<as.Date("2020-12-01")] =  0
+cases_tot$prop501YV3 =  props[props$variant=="501Y.V3","prob"]
+cases_tot$prop501YV3[cases_tot$DATE<as.Date("2020-12-01")] =  0
 
-data_cases_BE_501YV1 = data.frame(data_cases_BE, variant="501Y.V1")
-data_cases_BE_501YV1$cases = data_cases_BE_501YV1$cases*data_cases_BE$prop501YV1
-data_cases_BE_501YV2 = data.frame(data_cases_BE, variant="501Y.V2")
-data_cases_BE_501YV2$cases = data_cases_BE_501YV2$cases*data_cases_BE$prop501YV2
-data_cases_BE_501YV3 = data.frame(data_cases_BE, variant="501Y.V3")
-data_cases_BE_501YV3$cases = data_cases_BE_501YV3$cases*data_cases_BE$prop501YV2
-data_cases_BE_wildtype = data.frame(data_cases_BE, variant="wild type")
-data_cases_BE_wildtype$cases = data_cases_BE_wildtype$cases*(1-(data_cases_BE$prop501YV1+data_cases_BE$prop501YV2+data_cases_BE$prop501YV3))
+data_cases_BE_501YV1 = data.frame(cases_tot, variant="501Y.V1")
+data_cases_BE_501YV1$CASES = data_cases_BE_501YV1$CASES*cases_tot$prop501YV1
+data_cases_BE_501YV2 = data.frame(cases_tot, variant="501Y.V2")
+data_cases_BE_501YV2$CASES = data_cases_BE_501YV2$CASES*cases_tot$prop501YV2
+data_cases_BE_501YV3 = data.frame(cases_tot, variant="501Y.V3")
+data_cases_BE_501YV3$CASES = data_cases_BE_501YV3$CASES*cases_tot$prop501YV3
+data_cases_BE_wildtype = data.frame(cases_tot, variant="wild type")
+data_cases_BE_wildtype$CASES = data_cases_BE_wildtype$CASES*(1-(cases_tot$prop501YV1+cases_tot$prop501YV2+cases_tot$prop501YV3))
+data_cases_BE_total = data.frame(cases_tot, variant="total")
 
-data_cases_BE = rbind(data_cases_BE_501YV1, data_cases_BE_501YV2, data_cases_BE_501YV3, data_cases_BE_wildtype)
-data_cases_BE$variant = factor(data_cases_BE$variant, levels=c("wild type", "501Y.V1", "501Y.V2", "501Y.V3"), 
-                               labels=c("wild type","501Y.V1 (British)","501Y.V2 (South African)","501Y.V3 (Brazilian)"))
-qplot(data=data_cases_BE[data_cases_BE$variant!="total",], x=date, y=cases, group=variant, colour=variant, fill=variant, geom="blank") +
+data_cases_BE = rbind(data_cases_BE_501YV1, data_cases_BE_501YV2, data_cases_BE_501YV3, data_cases_BE_wildtype, data_cases_BE_total)
+data_cases_BE$variant = factor(data_cases_BE$variant, levels=c("wild type", "501Y.V1", "501Y.V2", "501Y.V3", "total"), 
+                               labels=c("wild type","501Y.V1 (British)","501Y.V2 (South African)","501Y.V3 (Brazilian)", "total"))
+
+d = as.Date(max(data_cases_BE$DATE))
+tag = paste("@TWenseleers\ndata Sciensano & Emmanuel André\n",d)
+
+qplot(data=data_cases_BE[data_cases_BE$DATE>=as.Date("2020-09-01"),], # data_cases_BE$variant!="total"&
+      x=DATE, y=CASES+1, group=variant, colour=variant, fill=variant, geom="blank") +
+  # geom_area(position="stack") +
+  geom_line(lwd=I(0.75)) +
+  scale_colour_manual("", values=c("deepskyblue2","blue","red","green3", "grey40")) +
+  scale_fill_manual("", values=c("deepskyblue2","blue","red","green3", "grey40")) +
+  ylab("Estimated new confirmed cases") + xlab("") + ggtitle("Estimated infections by British, South African & Brazilian\nSARS-CoV2 variants in Belgium (baseline sequencing)") +
+  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
+                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
+  scale_y_continuous(breaks=10^seq(0,4), expand=FALSE, limits=c(2,3E4)) +
+  coord_cartesian(xlim=c(as.Date("2020-09-01"),NA), expand=c(0,0)) +
+  # coord_trans(y="log10", expand=FALSE)
+  coord_trans(y="log10", expand=FALSE)
+ggsave(file=paste0(".//plots//",dat,"//confirmed_cases_by_501YV1_501YV2_501YV3_wildtype_baseline sequencing_log10 scale.png"), width=7, height=5)
+qplot(data=data_cases_BE[data_cases_BE$variant!="total",], 
+      x=DATE, y=CASES, group=variant, colour=variant, fill=variant, geom="blank") +
   geom_area(position="stack") +
   scale_colour_manual("", values=c("darkgrey","blue","red","green3")) +
   scale_fill_manual("", values=c("darkgrey","blue","red","green3")) +
-  ylab("New confirmed cases") + xlab("") + ggtitle("Estimated infections by British, South African & Brazilian\nSARS-CoV2 variants in Belgium (baseline sequencing)") +
+  ylab("Estimated new confirmed cases") + xlab("") + ggtitle("Estimated infections by British, South African & Brazilian\nSARS-CoV2 variants in Belgium (baseline sequencing)") +
   scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
                      labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
-  coord_cartesian(xlim=c(as.Date("2020-09-01"),NA))
-ggsave(file=paste0(".//plots//",dat,"//confirmed_cases_by_501YV1_501YV2_501YV3_wildtype_baseline sequencing.png"), width=7, height=5)
-
-
-
-multinom_501YV1_501YV2_501YV3 = ggarrange(baseline_sequencing+ggtitle("Spread of the British, South African & Brazilian\nSARS-CoV2 variants in Belgium (baseline surveillance)")+xlab("")+ylab("Share")+
-                                            coord_cartesian(xlim=c(as.Date("2020-12-01"),as.Date("2021-04-01"))), 
-                                          muller_be_seq_mfit0+ggtitle("Multinomial fit plus extrapolation")+ylab("Share"), ncol=1, 
-                                          common.legend = TRUE, legend="bottom")
-multinom_501YV1_501YV2_501YV3
-# saveRDS(multinom_501YV1_501YV2_501YV3, file = paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2 501YV3_multinomial fit_multipanel.rds"))
-# graph2ppt(file=paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2 501YV3_multinomial fit_multipanel.pptx"), width=7, height=10)
-ggsave(file=paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2 501YV3_multinomial fit_multipanel.png"), width=7, height=10)
-# ggsave(file=paste0(".\\plots\\",dat,"\\baseline_sequencing_501YV1 501YV2 501YV3_multinomial fit_multipanel.pdf"), width=7, height=10)
+  coord_cartesian(xlim=c(as.Date("2020-09-01"),NA), expand=c(0,0)) +
+  labs(tag = tag) +
+  theme(plot.tag.position = "bottomright",
+        plot.tag = element_text(vjust = 1, hjust = 1, size=8))
+ggsave(file=paste0(".//plots//",dat,"//confirmed_cases_by_501YV1_501YV2_501YV3_wildtype_baseline sequencing_stacked.png"), width=7, height=5)
 
 
 # PLOT MODEL FIT WITH DATA & CONFIDENCE INTERVALS
@@ -514,6 +526,291 @@ be_seq_mfit0_preds2_subs$collection_date[which(be_seq_mfit0_preds2_subs$asymp.LC
 be_seq_mfit0_preds2_subs$collection_date[which(be_seq_mfit0_preds2_subs$prob>=0.90)[1]]-7
 be_seq_mfit0_preds2_subs$collection_date[which(be_seq_mfit0_preds2_subs$asymp.UCL>=0.90)[1]]-7
 be_seq_mfit0_preds2_subs$collection_date[which(be_seq_mfit0_preds2_subs$asymp.LCL>=0.90)[1]]-7
+
+
+
+# BASELINE PLUS ACTIVE SURVEILLANCE DATA ####
+
+be_basplusactseqdata_long = gather(be_seqdata[,c("collection_date",
+                                                 "basplusactivesurv_n_wild_type",
+                                                 "basplusactivesurv_n_501Y.V1",
+                                                 "basplusactivesurv_n_501Y.V2",
+                                                 "basplusactivesurv_n_501Y.V3",
+                                                 "basplusactivesurv_n_501Y.V1plusV2plusV3",
+                                                 "basplusactivesurv_total_sequenced")], 
+                                   variant, count, c("basplusactivesurv_n_wild_type",
+                                                     "basplusactivesurv_n_501Y.V1",
+                                                     "basplusactivesurv_n_501Y.V2",
+                                                     "basplusactivesurv_n_501Y.V3",
+                                                     "basplusactivesurv_n_501Y.V1plusV2plusV3"), factor_key=TRUE)
+be_basplusactseqdata_long$variant = factor(be_basplusactseqdata_long$variant, 
+                                           levels=c("basplusactivesurv_n_wild_type","basplusactivesurv_n_501Y.V1","basplusactivesurv_n_501Y.V2","basplusactivesurv_n_501Y.V3","basplusactivesurv_n_501Y.V1plusV2plusV3"), 
+                                           labels=c("wild type", "501Y.V1", "501Y.V2", "501Y.V3", "501Y.V1+V2+V3"))
+be_basplusactseqdata_long$collection_date_num = as.numeric(be_basplusactseqdata_long$collection_date)
+be_basplusactseqdata_long$prop = be_basplusactseqdata_long$count / be_basplusactseqdata_long$basplusactivesurv_total_sequenced
+
+basplusact_sequencing = ggplot(data=be_basplusactseqdata_long[be_basplusactseqdata_long$variant!="501Y.V1+V2+V3",], 
+                               aes(x=collection_date, 
+                                   y=count, fill=variant, group=variant)) +
+  # facet_wrap(~LABORATORY) +
+  geom_area(aes(fill=variant), position = position_fill(reverse = FALSE)) +
+  theme_hc() +
+  scale_fill_manual("variant", values=c("darkgrey","blue","red","green3"), 
+                    labels=c("wild type","501Y.V1 (British)","501Y.V2 (South African)","501Y.V3 (Brazilian)")) +
+  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
+                     labels=substring(months(as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01"))),1,1),
+                     limits=as.Date(c("2020-12-01","2021-03-01")), expand=c(0,0)) +
+  ylab("Share among newly diagnosed infections") +
+  xlab("Collection date") +
+  # ggtitle("Test outcomes") +
+  theme(plot.title = element_text(hjust = 0)) +
+  theme(legend.position = "right")
+basplusact_sequencing
+
+# saveRDS(basplusact_sequencing, file = paste0(".\\plots\\",dat,"\\basplusact_sequencing_501YV1 501YV2 501YV3.rds"))
+# graph2ppt(file=paste0(".\\plots\\",dat,"\\basplusact_sequencing_501YV1 501YV2 501YV3.pptx"), width=7, height=5)
+ggsave(file=paste0(".\\plots\\",dat,"\\basplusact_sequencing_501YV1 501YV2 501YV3.png"), width=7, height=5)
+# ggsave(file=paste0(".\\plots\\",dat,"\\basplusact_sequencing_501YV1 501YV2 501YV3.pdf"), width=7, height=5)
+
+
+# multinomial spline fit on share of each type (wild type / British / SA / Brazilian
+# to be able to estimate growth rate advantage of each type compared to wild type
+
+set.seed(1)
+be_basplusact_seq_mfit0 = nnet::multinom(variant ~ ns(collection_date_num, df=3), weights=count, data=be_basplusactseqdata_long, 
+                                         subset=be_basplusactseqdata_long$variant!="501Y.V1+V2+V3", maxit=1000)
+be_basplusact_seq_mfitallVOC = nnet::multinom(variant ~ ns(collection_date_num, df=3), weights=count, data=be_basplusactseqdata_long, 
+                                              subset=be_basplusactseqdata_long$variant=="wild type"|be_basplusactseqdata_long$variant=="501Y.V1+V2+V3", maxit=1000) 
+summary(be_basplusact_seq_mfit0)
+BIC(be_basplusact_seq_mfit0)
+
+# growth rate advantage compared to wild type
+delta_r_501V1_501YV2_501YV3_basplusact = data.frame(confint(emtrends(be_basplusact_seq_mfit0, trt.vs.ctrl ~ variant|1, 
+                                                                     var="collection_date_num",  mode="latent",
+                                                                     at=list(collection_date_num=today_num)), 
+                                                            adjust="none", df=NA)$contrasts)[,-c(3,4)]
+rownames(delta_r_501V1_501YV2_501YV3_basplusact) = delta_r_501V1_501YV2_501YV3_basplusact[,"contrast"]
+delta_r_501V1_501YV2_501YV3_basplusact = delta_r_501V1_501YV2_501YV3_basplusact[,-1]
+delta_r_501V1_501YV2_501YV3_basplusact
+
+# pairwise contrasts in growth rate (here with Tukey correction)
+emtrends(be_basplusact_seq_mfit0, revpairwise ~ variant|1, 
+         var="collection_date_num",  mode="latent",
+         at=list(collection_date_num=today_num), 
+         df=NA)$contrasts
+
+# pairwise contrasts in growth rate (here without Tukey correction)
+emtrends(be_basplusact_seq_mfit0, revpairwise ~ variant|1, 
+         var="collection_date_num",  mode="latent",
+         at=list(collection_date_num=today_num), 
+         df=NA, adjust="none")$contrasts
+
+# implied transmission advantage (assuming no immune evasion advantage of 501Y.V2, if there is such an advantage, transm advantage would be less)
+exp(delta_r_501V1_501YV2_501YV3_basplusact*4.7) 
+
+# for all 3 variants together
+# growth rate advantage compared to wild type
+delta_r_allVOCs_basplusact = data.frame(confint(emtrends(be_basplusact_seq_mfitallVOC, trt.vs.ctrl ~ variant|1, var="collection_date_num",  mode="latent"), adjust="none", df=NA)$contrasts)[,-c(3,4)]
+rownames(delta_r_allVOCs_basplusact) = delta_r_allVOCs_basplusact[,"contrast"]
+delta_r_allVOCs_basplusact = delta_r_allVOCs_basplusact[,-1]
+delta_r_allVOCs_basplusact
+
+# implied transmission advantage (assuming no immune evasion advantage of 501Y.V2, if there is such an advantage, transm advantage would be less)
+exp(delta_r_allVOCs_basplusact*4.7) 
+
+# # PS: mblogit fit would also be possible & would take into account overdispersion
+
+extrapolate = 90
+date.from = as.numeric(as.Date("2020-11-01")) # min(be_basplusactseqdata_long$collection_date_num)
+date.to = max(be_basplusactseqdata_long$collection_date_num)+extrapolate
+
+be_basplusact_seq_mfit0_preds = data.frame(emmeans(be_basplusact_seq_mfit0, ~ variant+collection_date_num, at=list(collection_date_num=seq(date.from, date.to)), mode="prob", df=NA))
+be_basplusact_seq_mfit0_preds$collection_date = as.Date(be_basplusact_seq_mfit0_preds$collection_date_num, origin="1970-01-01")
+be_basplusact_seq_mfit0_preds$variant = factor(be_basplusact_seq_mfit0_preds$variant, levels=c("wild type","501Y.V1","501Y.V2","501Y.V3"),
+                                               labels=c("wild type","501Y.V1 (British)","501Y.V2 (South African)","501Y.V3 (Brazilian)"))
+
+be_basplusact_seq_mfitallVOCs_preds = data.frame(emmeans(be_basplusact_seq_mfitallVOC, ~ variant+collection_date_num, at=list(collection_date_num=seq(date.from, date.to)), mode="prob", df=NA))
+be_basplusact_seq_mfitallVOCs_preds$collection_date = as.Date(be_basplusact_seq_mfitallVOCs_preds$collection_date_num, origin="1970-01-01")
+be_basplusact_seq_mfitallVOCs_preds$variant = factor(be_basplusact_seq_mfitallVOCs_preds$variant, levels=c("wild type","501Y.V1+V2+V3"),
+                                                     labels=c("wild type","501Y.V1+V2+V3"))
+
+be_basplusactseqdata_long2 = be_basplusactseqdata_long[be_basplusactseqdata_long$variant!="wild type",]
+be_basplusactseqdata_long2$variant = droplevels(be_basplusactseqdata_long2$variant) 
+be_basplusactseqdata_long2$variant = factor(be_basplusactseqdata_long2$variant, levels=c("501Y.V1","501Y.V2","501Y.V3","501Y.V1+V2+V3"),
+                                            labels=c("501Y.V1 (British)","501Y.V2 (South African)","501Y.V3 (Brazilian)","501Y.V1+V2+V3"))
+
+muller_be_basplusact_seq_mfit0 = ggplot(data=be_basplusact_seq_mfit0_preds, 
+                                        aes(x=collection_date, y=prob, group=variant)) + 
+  # facet_wrap(~LABORATORY) +
+  geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant), position="stack") +
+  annotate("rect", xmin=max(be_basplusactseqdata_long$collection_date)+1, 
+           xmax=as.Date("2021-04-01"), ymin=0, ymax=1, alpha=0.3, fill="white") + # extrapolated part
+  scale_fill_manual("variant", values=c("darkgrey","blue","red","green3")) +
+  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01")),
+                     labels=substring(months(as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01"))),1,1),
+                     limits=as.Date(c("2020-12-01","2021-04-01")), expand=c(0,0)) +
+  # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
+  theme_hc() + theme(legend.position="right", 
+                     axis.title.x=element_blank()) + 
+  # labs(title = "MAIN SARS-CoV2 VARIANT LINEAGES IN THE UK") +
+  ylab("Share among newly diagnosed infections") +
+  ggtitle("Spread of the British, South African & Brazilian\nSARS-CoV2 variants in Belgium (baseline plus active surveillance)")
+muller_be_basplusact_seq_mfit0
+
+# saveRDS(muller_be_basplusact_seq_mfit0, file = paste0(".\\plots\\",dat,"\\basplusact_sequencing_501YV1 501YV2 501YV3_multinomial fit.rds"))
+# graph2ppt(file=paste0(".\\plots\\",dat,"\\basplusact_sequencing_501YV1 501YV2 501YV3_multinomial fit.pptx"), width=7, height=5)
+ggsave(file=paste0(".\\plots\\",dat,"\\basplusact_sequencing_501YV1 501YV2 501YV3_multinomial fit.png"), width=7, height=5)
+# ggsave(file=paste0(".\\plots\\",dat,"\\basplusact_sequencing_501YV1 501YV2 501YV3_multinomial fit.pdf"), width=7, height=5)
+
+
+# plot of nr of new confirmed cases that are estimated to be by 501Y.V1, 501Y.V2 & 501Y.V3 vs. wild type ####
+
+source("scripts/downloadData.R") # download latest data with new confirmed cases per day from Sciensano website, code adapted from https://github.com/JoFAM/covidBE_analysis by Joris Meys
+range(cases_tot$DATE) # "2020-03-01" "2021-03-12"
+props = data.frame(emmeans(be_basplusact_seq_mfit0, ~ variant+collection_date_num, at=list(collection_date_num=as.numeric(cases_tot$DATE)), 
+                           mode="prob", df=NA))
+cases_tot$prop501YV1 =  props[props$variant=="501Y.V1","prob"] # new confirmed cases per day in total across the whole of Belgium
+cases_tot$prop501YV2 =  props[props$variant=="501Y.V2","prob"]
+cases_tot$prop501YV3 =  props[props$variant=="501Y.V3","prob"]
+cases_tot$prop501YV3[cases_tot$DATE<as.Date("2020-12-01")] =  0
+
+data_cases_BE_501YV1 = data.frame(cases_tot, variant="501Y.V1")
+data_cases_BE_501YV1$CASES = data_cases_BE_501YV1$CASES*cases_tot$prop501YV1
+data_cases_BE_501YV2 = data.frame(cases_tot, variant="501Y.V2")
+data_cases_BE_501YV2$CASES = data_cases_BE_501YV2$CASES*cases_tot$prop501YV2
+data_cases_BE_501YV3 = data.frame(cases_tot, variant="501Y.V3")
+data_cases_BE_501YV3$CASES = data_cases_BE_501YV3$CASES*cases_tot$prop501YV3
+data_cases_BE_501YV3$CASES[data_cases_BE_501YV3$DATE<as.Date("2020-12-01")]=0
+data_cases_BE_wildtype = data.frame(cases_tot, variant="wild type")
+data_cases_BE_wildtype$CASES = data_cases_BE_wildtype$CASES*(1-(cases_tot$prop501YV1+cases_tot$prop501YV2+cases_tot$prop501YV3))
+
+data_cases_BE = rbind(data_cases_BE_501YV1, data_cases_BE_501YV2, data_cases_BE_501YV3, data_cases_BE_wildtype)
+data_cases_BE$variant = factor(data_cases_BE$variant, levels=c("wild type", "501Y.V1", "501Y.V2", "501Y.V3"), 
+                               labels=c("wild type","501Y.V1 (British)","501Y.V2 (South African)","501Y.V3 (Brazilian)"))
+
+d = as.Date(max(data_cases_BE$DATE))
+tag = paste("@TWenseleers\ndata Sciensano & Emmanuel André\n",d)
+
+qplot(data=data_cases_BE[data_cases_BE$variant!="total",], x=DATE, y=CASES, group=variant, colour=variant, fill=variant, geom="blank") +
+  geom_area(position="stack") +
+  scale_colour_manual("", values=c("darkgrey","blue","red","green3")) +
+  scale_fill_manual("", values=c("darkgrey","blue","red","green3")) +
+  ylab("New confirmed cases") + xlab("") + ggtitle("Estimated infections by British, South African & Brazilian\nSARS-CoV2 variants in Belgium (baseline plus active sequencing)") +
+  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
+                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
+  coord_cartesian(xlim=c(as.Date("2020-09-01"),NA)) +
+  labs(tag = tag) +
+  theme(plot.tag.position = "bottomright",
+        plot.tag = element_text(vjust = 1, hjust = 1, size=8))
+ggsave(file=paste0(".//plots//",dat,"//confirmed_cases_by_501YV1_501YV2_501YV3_wildtype_baselplusact sequencing_stacked.png"), width=7, height=5)
+
+
+
+multinom_501YV1_501YV2_501YV3_basplusact = ggarrange(basplusact_sequencing+ggtitle("Spread of the British, South African & Brazilian\nSARS-CoV2 variants in Belgium (baseline plus active surveillance)")+xlab("")+ylab("Share")+
+                                                       coord_cartesian(xlim=c(as.Date("2020-12-01"),as.Date("2021-04-01"))), 
+                                                     muller_be_basplusact_seq_mfit0+ggtitle("Multinomial fit plus extrapolation")+ylab("Share"), ncol=1, 
+                                                     common.legend = TRUE, legend="bottom")
+multinom_501YV1_501YV2_501YV3_basplusact
+# saveRDS(multinom_501YV1_501YV2_501YV3_basplusact, file = paste0(".\\plots\\",dat,"\\basplusact_sequencing_501YV1 501YV2 501YV3_multinomial fit_multipanel.rds"))
+# graph2ppt(file=paste0(".\\plots\\",dat,"\\basplusact_sequencing_501YV1 501YV2 501YV3_multinomial fit_multipanel.pptx"), width=7, height=10)
+ggsave(file=paste0(".\\plots\\",dat,"\\basplusact_sequencing_501YV1 501YV2 501YV3_multinomial fit_multipanel.png"), width=7, height=10)
+# ggsave(file=paste0(".\\plots\\",dat,"\\basplusact_sequencing_501YV1 501YV2 501YV3_multinomial fit_multipanel.pdf"), width=7, height=10)
+
+
+# PLOT MODEL FIT WITH DATA & CONFIDENCE INTERVALS
+be_basplusact_seq_mfit0_preds2 = rbind(be_basplusact_seq_mfit0_preds[be_basplusact_seq_mfit0_preds$variant!="wild type",],
+                                       be_basplusact_seq_mfitallVOCs_preds[be_basplusact_seq_mfitallVOCs_preds$variant!="wild type",])
+be_basplusact_seq_mfit0_preds2$variant = droplevels(be_basplusact_seq_mfit0_preds2$variant)
+
+
+# on response scale:
+plot_multinom_501YV1_501YV2_501YV3_basplusact_response = qplot(data=be_basplusact_seq_mfit0_preds2, x=collection_date, y=100*prob, geom="blank") +
+  geom_ribbon(aes(y=100*prob, ymin=100*asymp.LCL, ymax=100*asymp.UCL, colour=NULL,
+                  fill=variant
+  ), alpha=I(0.3)) +
+  geom_line(aes(y=100*prob,
+                colour=variant
+  ), alpha=I(1)) +
+  ylab("Share among newly diagnosed infections (%)") +
+  theme_hc() + xlab("") +
+  ggtitle("Spread of the British, South African & Brazilian\nSARS-CoV2 variants in Belgium (baseline surveillance)") +
+  # scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
+  #                   labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
+  # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
+  #                     labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
+  coord_cartesian(xlim=c(min(be_basplusactseqdata_long2$collection_date), as.Date("2021-04-01")),
+                  # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")),
+                  ylim=c(0,100), expand=c(0,0)) +
+  # scale_color_discrete("", h=c(0, 280), c=200) +
+  # scale_fill_discrete("", h=c(0, 280), c=200) +
+  scale_fill_manual("variant", values=c("blue","red","green3","black")) +
+  scale_colour_manual("variant", values=c("blue","red","green3","black")) +
+  geom_point(data=be_basplusactseqdata_long2,
+             aes(x=collection_date, y=100*prop, size=basplusactivesurv_total_sequenced,
+                 colour=variant
+             ),
+             alpha=I(1)) +
+  scale_size_continuous("number\nsequenced", trans="sqrt",
+                        range=c(1, 4), limits=c(1,10^3), breaks=c(10,100,1000)) +
+  # guides(fill=FALSE) +
+  # guides(colour=FALSE) +
+  theme(legend.position = "right") +
+  xlab("Collection date")
+plot_multinom_501YV1_501YV2_501YV3_basplusact_response
+
+# saveRDS(plot_multinom_501YV1_501YV2_501YV3_basplusact_response, file = paste0(".\\plots\\",dat,"\\basplusact_sequencing_501YV1 501YV2_501YV3_multinomial fit_model preds_response.rds"))
+# graph2ppt(file=paste0(".\\plots\\",dat,"\\basplusact_sequencing_501YV1 501YV2 501YV3_multinomial fit_model preds_response.pptx"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",dat,"\\basplusact_sequencing_501YV1 501YV2 501YV3_multinomial fit_model preds_response.png"), width=8, height=6)
+# ggsave(file=paste0(".\\plots\\",dat,"\\basplusact_sequencing_501YV1 501YV2 501YV3_multinomial fit_model preds_response.pdf"), width=8, height=6)
+
+
+# on logit scale:
+
+be_basplusact_seq_mfit0_preds3 = be_basplusact_seq_mfit0_preds2
+ymin = 0.001
+ymax = 0.990001
+be_basplusact_seq_mfit0_preds3$asymp.LCL[be_basplusact_seq_mfit0_preds3$asymp.LCL<ymin] = ymin
+be_basplusact_seq_mfit0_preds3$asymp.UCL[be_basplusact_seq_mfit0_preds3$asymp.UCL<ymin] = ymin
+be_basplusact_seq_mfit0_preds3$asymp.UCL[be_basplusact_seq_mfit0_preds3$asymp.UCL>ymax] = ymax
+be_basplusact_seq_mfit0_preds3$prob[be_basplusact_seq_mfit0_preds3$prob<ymin] = ymin
+
+plot_multinom_501YV1_501YV2_501YV3_basplusact = qplot(data=be_basplusact_seq_mfit0_preds3, x=collection_date, y=prob, geom="blank") +
+  geom_ribbon(aes(y=prob, ymin=asymp.LCL, ymax=asymp.UCL, colour=NULL,
+                  fill=variant
+  ), alpha=I(0.3)) +
+  geom_line(aes(y=prob,
+                colour=variant
+  ), alpha=I(1)) +
+  ylab("Share among newly diagnosed infections (%)") +
+  theme_hc() + xlab("") +
+  ggtitle("Spread of the British, South African & Brazilian\nSARS-CoV2 variants in Belgium (baseline surveillance)") +
+  # scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
+  #                   labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
+  scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
+                      labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
+  # scale_color_discrete("", h=c(0, 280), c=200) +
+  # scale_fill_discrete("", h=c(0, 280), c=200) +
+  scale_fill_manual("variant", values=c("blue","red","green3","black")) +
+  scale_colour_manual("variant", values=c("blue","red","green3","black")) +
+  geom_point(data=be_basplusactseqdata_long2,
+             aes(x=collection_date, y=prop, size=basplusactivesurv_total_sequenced,
+                 colour=variant
+             ),
+             alpha=I(1)) +
+  scale_size_continuous("total number\nsequenced", trans="sqrt",
+                        range=c(1, 4), limits=c(10,10^3), breaks=c(10,100,1000)) +
+  # guides(fill=FALSE) +
+  # guides(colour=FALSE) +
+  theme(legend.position = "right") +
+  xlab("Collection date")+
+  coord_cartesian(xlim=c(as.Date("2021-01-01"),as.Date("2021-04-01")), ylim=c(0.001, 0.9900001), expand=c(0,0))
+plot_multinom_501YV1_501YV2_501YV3_basplusact
+
+
+# saveRDS(plot_multinom_501YV1_501YV2_501YV3, file = paste0(".\\plots\\",dat,"\\basplusact_sequencing_501YV1 501YV2 501YV3_multinomial fit_model preds.rds"))
+# graph2ppt(file=paste0(".\\plots\\",dat,"\\basplusact_sequencing_501YV1 501YV2 501YV3_multinomial fit_model preds.pptx"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",dat,"\\basplusact_sequencing_501YV1 501YV2 501YV3_multinomial fit_model preds.png"), width=8, height=6)
+# ggsave(file=paste0(".\\plots\\",dat,"\\basplusact_sequencing_501YV1 501YV2 501YV3_multinomial fit_model preds.pdf"), width=8, height=6)
 
 
 
@@ -1781,6 +2078,7 @@ Re_cases[Re_cases$DATE==today,]
 # 373 0.6968096 0.7936371   0.7805043   0.8069059 0.9527614     0.9369954     0.9686906
 
 
+
 # plot of nr of new confirmed cases that are estimated to be by UK variant 501Y.V1 vs. wild type ####
 
 library(readr)
@@ -2857,25 +3155,40 @@ ggsave(file = paste0(".\\plots\\",dat,"\\Fig8_US_data_by state.png"), width=9, h
 
 # plot for Belgium ####
 
-library(readr)
-coronavirus_df = read_csv("https://raw.githubusercontent.com/RamiKrispin/coronavirus/master/csv/coronavirus.csv")
-data_cases_BE = coronavirus_df[coronavirus_df$country=="Belgium"&coronavirus_df$type=="confirmed",]
-data_cases_BE
-data_cases_BE$propB117 =  fit_preds$prob[match(data_cases_BE$date,
-                                                 fit_preds$collection_date)]
-# data_cases_BE_total = data.frame(data_cases_BE[!is.na(data_cases_BE$propB117),], variant="total")
-data_cases_BE_501YV1 = data.frame(data_cases_BE[!is.na(data_cases_BE$propB117),], variant="501Y.V1")
-data_cases_BE_501YV1$cases = data_cases_BE_501YV1$cases*data_cases_BE_501YV1$propB117
-data_cases_BE_wildtype = data.frame(data_cases_BE[!is.na(data_cases_BE$propB117),], variant="wild type")
-data_cases_BE_wildtype$cases = data_cases_BE_wildtype$cases*(1-data_cases_BE_wildtype$propB117)
-data_cases_BE = rbind(data_cases_BE_501YV1, data_cases_BE_wildtype)
-data_cases_BE$variant = factor(data_cases_BE$variant, levels=c("wild type", "501Y.V1"), labels=c("wild type","501Y.V1 (British)"))
+source("scripts/downloadData.R") # download latest data with new confirmed cases per day from Sciensano website, code adapted from https://github.com/JoFAM/covidBE_analysis by Joris Meys
+range(cases_tot$DATE) # "2020-03-01" "2021-03-10"
+row.names(cases_tot) = NULL
+cases_tot$prop501YV1 =  data.frame(emmeans(fit4, ~ collection_date_num, at=list(collection_date_num=as.numeric(cases_tot$DATE)), 
+                                           type="response", df=NA))$prob 
+data_cases_BE_501YV1 = data.frame(cases_tot, variant="501Y.V1")
+data_cases_BE_501YV1$CASES = data_cases_BE_501YV1$CASES*cases_tot$prop501YV1
+data_cases_BE_wildtype = data.frame(cases_tot, variant="wild type")
+data_cases_BE_wildtype$CASES = data_cases_BE_wildtype$CASES*(1-cases_tot$prop501YV1)
+data_cases_BE_total = data.frame(cases_tot, variant="total")
 
-qplot(data=data_cases_BE[data_cases_BE$variant!="total",], x=date, y=cases, group=variant, colour=variant, fill=variant, geom="blank") +
+data_cases_BE = rbind(data_cases_BE_501YV1, data_cases_BE_wildtype, data_cases_BE_total)
+data_cases_BE$variant = factor(data_cases_BE$variant, levels=c("wild type", "501Y.V1", "total"), 
+                               labels=c("wild type","501Y.V1 (British)", "total"))
+
+d = as.Date(max(data_cases_BE$DATE))
+tag = paste("@TWenseleers\ndata Sciensano & Emmanuel André\n",d)
+
+plotcases501YV1_Sdropout_BE = qplot(data=data_cases_BE[data_cases_BE$variant!="total",], 
+      x=DATE, y=CASES, group=variant, colour=variant, fill=variant, geom="blank") +
   geom_area(position="stack") +
-  scale_colour_manual("", values=c("darkgrey","blue3")) +
-  scale_fill_manual("", values=c("darkgrey","blue3")) +
-  ylab("New confirmed cases") + xlab("Date") + ggtitle("New confirmed cases by SARS-CoV2\nUK variant 501Y.V1 vs. wild type in Belgium")
+  scale_colour_manual("", values=c("darkgrey","blue","red","green3")) +
+  scale_fill_manual("", values=c("darkgrey","blue","red","green3")) +
+  ylab("New confirmed cases") + xlab("") + ggtitle("Estimated infections by UK SARS-CoV2 variant 501Y.V1\nin Belgium (S dropout data)") +
+  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
+                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
+  coord_cartesian(xlim=c(as.Date("2020-09-01"),NA), expand=c(0,0)) +
+  labs(tag = tag) +
+  theme(plot.tag.position = "bottomright",
+        plot.tag = element_text(vjust = 1, hjust = 1, size=8))
+plotcases501YV1_Sdropout_BE
+ggsave(file=paste0(".//plots//",dat,"//confirmed_cases_by_501YV1_wildtype_S dropout_BE_stacked.png"), width=7, height=5)
+
+
 
 
 # plot for Florida ####
@@ -2899,17 +3212,34 @@ us_data_by_state$state = factor(us_data_by_state$state,
 data_florida = us_data_by_state[us_data_by_state$state=="Florida",]
 data_florida$newcases = c(0,diff(data_florida$cases))
 data_florida$newcases[data_florida$newcases<0] = 0
-plot(data_florida$newcases)
+# plot(data_florida$newcases)
 data_florida$propB117 =  data_us2$propB117[match(interaction(data_florida$date, data_florida$state),
                                                     interaction(data_us2$date,data_us2$REGION))]
 data_florida = data_florida[!is.na(data_florida$propB117),]
-data_florida$state = droplevels(data_florida$state)
-head(data_florida)
-data_florida$newcases_B117 = data_florida$newcases*data_florida$propB117
-data_florida$newcases_wildtype = data_florida$newcases*(1-data_florida$propB117)
-head(data_florida)  
-plot(data_florida$newcases, type="l", log="y", ylim=c(100,max(data_florida$newcases)))
-lines(data_florida$newcases_B117, col="red")
-lines(data_florida$newcases_wildtype, col="blue")
-# TO DO : make pretty ggplot out of this (include smoothed trend based on GAM fit) & do the same for data from Denmark & Switzerland
+
+data_florida_501YV1 = data.frame(data_florida, variant="501Y.V1")
+data_florida_501YV1$newcases = data_florida_501YV1$newcases*data_florida_501YV1$propB117
+data_florida_wildtype = data.frame(data_florida, variant="wild type")
+data_florida_wildtype$newcases = data_florida_wildtype$newcases*(1-data_florida_wildtype$propB117)
+data_florida = rbind(data_florida_501YV1, data_florida_wildtype)
+data_florida$variant = factor(data_florida$variant, levels=c("wild type", "501Y.V1"), labels=c("wild type","501Y.V1 (British)"))
+
+d = as.Date(max(data_florida$date))
+tag = paste("@TWenseleers\n                           data Helix & NYT\n",d)
+
+plotcases501YV1_Sdropout_Florida = qplot(data=data_florida[data_florida$variant!="total",], x=date, y=newcases, group=variant, colour=variant, fill=variant, geom="blank") +
+  geom_area(position="stack") +
+  scale_colour_manual("", values=c("darkgrey","blue3")) +
+  scale_fill_manual("", values=c("darkgrey","blue3")) +
+  ylab("New confirmed cases") + xlab("") + ggtitle("Estimated infections by UK SARS-CoV2 UK variant 501Y.V1\nin Florida (S dropout data)") +
+  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
+                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
+  labs(tag = tag) +
+  theme(plot.tag.position = "bottomright",
+        plot.tag = element_text(vjust = 1, hjust = 1, size=8))
+plotcases501YV1_Sdropout_Florida
+ggsave(file=paste0(".//plots//",dat,"//confirmed_cases_by_501YV1_vs_wildtype_S dropout_Florida.png"), width=7, height=5)
+
+ggarrange(plotcases501YV1_Sdropout_BE+ggtitle("Estimated infections by SARS-CoV2 variant 501Y.V1\n\nBelgium"), plotcases501YV1_Sdropout_Florida+ggtitle("Florida"), ncol=1, common.legend=TRUE, legend="bottom")
+ggsave(file=paste0(".//plots//",dat,"//confirmed_cases_by_501YV1_vs_wildtype_S dropout_Belgium_Florida.png"), width=5, height=7)
 
