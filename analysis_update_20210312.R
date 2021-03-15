@@ -317,6 +317,7 @@ qplot(data=data_cases_BE[data_cases_BE$DATE>=as.Date("2020-09-01"),], # data_cas
       x=DATE, y=CASES+1, group=variant, colour=variant, fill=variant, geom="blank") +
   # geom_area(position="stack") +
   geom_line(lwd=I(0.75)) +
+  # geom_smooth(lwd=I(0.75), se=FALSE, method = "gam", formula = y ~ s(x, bs = "cs", k=15)) +
   scale_colour_manual("", values=c("deepskyblue2","blue","red","green3", "grey40")) +
   scale_fill_manual("", values=c("deepskyblue2","blue","red","green3", "grey40")) +
   ylab("Estimated new confirmed cases") + xlab("") + ggtitle("Estimated infections by British, South African & Brazilian\nSARS-CoV2 variants in Belgium (baseline sequencing)") +
@@ -329,6 +330,23 @@ qplot(data=data_cases_BE[data_cases_BE$DATE>=as.Date("2020-09-01"),], # data_cas
   theme(plot.tag.position = "bottomright",
         plot.tag = element_text(vjust = 1, hjust = 1, size=8))
 ggsave(file=paste0(".//plots//",dat,"//confirmed_cases_by_501YV1_501YV2_501YV3_wildtype_baseline sequencing_log10 scale.png"), width=7, height=5)
+qplot(data=data_cases_BE[data_cases_BE$DATE>=as.Date("2020-09-01"),], # data_cases_BE$variant!="total"&
+      x=DATE, y=CASES+1, group=variant, colour=variant, fill=variant, geom="blank") +
+  # geom_area(position="stack") +
+  # geom_line(lwd=I(0.75)) +
+  geom_smooth(lwd=I(0.75), se=FALSE, method = "gam", formula = y ~ s(x, bs = "cs", k=15)) +
+  scale_colour_manual("", values=c("deepskyblue2","blue","red","green3", "grey40")) +
+  scale_fill_manual("", values=c("deepskyblue2","blue","red","green3", "grey40")) +
+  ylab("Estimated new confirmed cases") + xlab("") + ggtitle("Estimated infections by British, South African & Brazilian\nSARS-CoV2 variants in Belgium (baseline sequencing)") +
+  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
+                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
+  scale_y_continuous(breaks=10^seq(0,4), expand=FALSE, limits=c(2,3E4)) +
+  coord_cartesian(xlim=c(as.Date("2020-09-01"),NA), expand=c(0,0)) +
+  coord_trans(y="log10", expand=FALSE) +
+  labs(tag = tag) +
+  theme(plot.tag.position = "bottomright",
+        plot.tag = element_text(vjust = 1, hjust = 1, size=8))
+ggsave(file=paste0(".//plots//",dat,"//confirmed_cases_by_501YV1_501YV2_501YV3_wildtype_baseline sequencing_log10 scale_smoothed.png"), width=7, height=5)
 qplot(data=data_cases_BE[data_cases_BE$variant!="total",], 
       x=DATE, y=CASES, group=variant, colour=variant, fill=variant, geom="blank") +
   geom_area(position="stack") +
