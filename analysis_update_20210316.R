@@ -1665,6 +1665,27 @@ fit1_22jan_preds[fit1_22jan_preds$collection_date==(today+7),]
 # 34               18709 0.9941464 0.004818432 Inf 0.9711108 0.9988406      2021-03-23
 
 
+# estimated share of 501Y.V1 among currently diagnosed infections in different regions based on best fitting model
+fit_preds_bylab[fit_preds_bylab$collection_date==today,]
+# collection_date_num       LABORATORY      prob         SE  df asymp.LCL asymp.UCL collection_date
+# 197                18702            Namur 0.7356135 0.02972836 Inf 0.6735602 0.7897713      2021-03-16
+# 440                18702  Saint LUC - UCL 0.6069653 0.03236175 Inf 0.5421361 0.6683674      2021-03-16
+# 683                18702              ULB 0.7242305 0.02988058 Inf 0.6621525 0.7789244      2021-03-16
+# 926                18702 UMons - Jolimont 0.8914617 0.01525559 Inf 0.8578154 0.9179825      2021-03-16
+# 1169               18702        UZ leuven 0.6099085 0.03512875 Inf 0.5393786 0.6762848      2021-03-16
+# 1412               18702              UZA 0.8141871 0.02121207 Inf 0.7690908 0.8523027      2021-03-16
+
+# estimated share of 501Y.V1 among new infections (assuming time between infection & diagnosis of 7 days) in different regions
+fit_preds_bylab[fit_preds_bylab$collection_date==(today+7),]
+# collection_date_num       LABORATORY      prob         SE  df asymp.LCL asymp.UCL collection_date
+# 204                18709            Namur 0.7747303 0.03441783 Inf 0.7005216 0.8351847      2021-03-23
+# 447                18709  Saint LUC - UCL 0.6204433 0.04044071 Inf 0.5387436 0.6960682      2021-03-23
+# 690                18709              ULB 0.7447183 0.03607304 Inf 0.6681262 0.8090045      2021-03-23
+# 933                18709 UMons - Jolimont 0.9381637 0.01185882 Inf 0.9104685 0.9577329      2021-03-23
+# 1176               18709        UZ leuven 0.6354737 0.04345388 Inf 0.5470331 0.7159079      2021-03-23
+# 1419               18709              UZA 0.8508995 0.02242840 Inf 0.8015461 0.8898182      2021-03-23
+
+
 sum(tail(data_ag_byday_wide$est_n_B117, 14))/sum(tail(data_ag_byday_wide$n_pos,14)) 
 # 68.28% of the samples of last 2 weeks in the dataset were estimated to be by British variant
 # PS: with data 31/1 this was 15.4%  
@@ -3103,6 +3124,9 @@ data_cases_BE_total = data.frame(cases_tot1, variant="total")
 data_cases_BE = rbind(data_cases_BE_501YV1, data_cases_BE_501YV2, data_cases_BE_501YV3, data_cases_BE_wildtype, data_cases_BE_total)
 data_cases_BE$variant = factor(data_cases_BE$variant, levels=c("wild type", "501Y.V1", "501Y.V2", "501Y.V3", "total"), 
                                labels=c("wild type","501Y.V1 (UK)", "501Y.V2 (South Africa)", "501Y.V3 (Brazil)", "total"))
+data_cases_BE_NL = data_cases_BE
+data_cases_BE_NL$variant = factor(data_cases_BE$variant, levels=c("wild type","501Y.V1 (UK)", "501Y.V2 (South Africa)", "501Y.V3 (Brazil)", "total"), 
+                               labels=c("oude varianten","Britse variant", "Zuid-Afrikaanse variant", "Braziliaanse variant", "totaal"))
 
 d = as.Date(max(data_cases_BE$DATE))
 tag = paste("@TWenseleers\ndata Sciensano & Emmanuel André\n",d)
@@ -3126,8 +3150,23 @@ qplot(data=data_cases_BE[data_cases_BE$DATE>=as.Date("2020-09-01"),], # data_cas
         plot.tag = element_text(vjust = 1, hjust = 1, size=8))
 ggsave(file=paste0(".//plots//",dat,"//confirmed_cases_by_501YV1_501YV2_501YV3_wildtype_baseline surveillance_log10 scale_smoothed.png"), width=7, height=5)
 
-qplot(data=data_cases_BE[data_cases_BE$variant!="total",], 
+qplot(data=data_cases_BE_NL[data_cases_BE_NL$variant!="totaal",], 
                                     x=DATE, y=CASES, group=variant, colour=variant, fill=variant, geom="blank") +
+  geom_area(position="stack") +
+  scale_colour_manual("", values=c("grey75","red","blue","green3")) +
+  scale_fill_manual("", values=c("grey75","red","blue","green3")) +
+  ylab("Aantal bevestigde infecties per dag") + xlab("") + ggtitle("Geschat aantal nieuw bevestigde infecties door de\nBritse, Zuid-Afrikaanse en Braziliaanse varianten") +
+  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
+                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
+  coord_cartesian(xlim=c(as.Date("2020-09-01"),NA), expand=c(0,0)) +
+  labs(tag = tag) +
+  theme(plot.tag.position = "bottomright",
+        plot.tag = element_text(vjust = 1, hjust = 1, size=8))
+ggsave(file=paste0(".//plots//",dat,"//confirmed_cases_by_501YV1_501YV2_501YV3_wildtype_baseline surveillance_stacked_NL.png"), width=7, height=5)
+ggsave(file=paste0(".//plots//",dat,"//confirmed_cases_by_501YV1_501YV2_501YV3_wildtype_baseline surveillance_stacked_NL.pdf"), width=7, height=5)
+
+qplot(data=data_cases_BE[data_cases_BE$variant!="total",], 
+      x=DATE, y=CASES, group=variant, colour=variant, fill=variant, geom="blank") +
   geom_area(position="stack") +
   scale_colour_manual("", values=c("grey75","red","blue","green3")) +
   scale_fill_manual("", values=c("grey75","red","blue","green3")) +
@@ -3139,7 +3178,6 @@ qplot(data=data_cases_BE[data_cases_BE$variant!="total",],
   theme(plot.tag.position = "bottomright",
         plot.tag = element_text(vjust = 1, hjust = 1, size=8))
 ggsave(file=paste0(".//plots//",dat,"//confirmed_cases_by_501YV1_501YV2_501YV3_wildtype_baseline surveillance_stacked.png"), width=7, height=5)
-
 
 
 # plot for Belgium (BASED ON LOGISTIC FIT TO S DROPOUT DATA & POISSON GAM FIT TO SCIENSANO TOTAL CASE DATA) ####
