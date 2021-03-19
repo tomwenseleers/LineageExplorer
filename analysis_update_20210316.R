@@ -3065,10 +3065,10 @@ df = as.data.frame(emmeans(fit_cases_BE, ~ DATE_NUM,
                                      TESTS_ALL=mean(tail(cases_tot$TESTS_ALL,7))
                            ),
                            type="response"))
-colnames(df)[2] = "CASES"
+colnames(df)[2] = "CASES_SMOOTH"
 colnames(df)[5] = "CASES_LCL"
 colnames(df)[6] = "CASES_UCL"
-cases_tot$CASES = df$CASES # replace case data by Poisson GAM smoothed data
+cases_tot$CASES_SMOOTH = df$CASES_SMOOTH # Poisson GAM smoothed data
 cases_tot$CASES_LCL = df$CASES_LCL
 cases_tot$CASES_UCL = df$CASES_UCL
 
@@ -3101,23 +3101,27 @@ cases_tot1$prop501YV3_UCL[cases_tot1$DATE<as.Date("2020-12-01")] =  0
 
 data_cases_BE_501YV1 = data.frame(cases_tot1, variant="501Y.V1")
 data_cases_BE_501YV1$CASES = cases_tot1$CASES*cases_tot1$prop501YV1
-data_cases_BE_501YV1$CASES_LCL = cases_tot1$CASES*cases_tot1$prop501YV1_LCL
-data_cases_BE_501YV1$CASES_UCL = cases_tot1$CASES*cases_tot1$prop501YV1_UCL
+data_cases_BE_501YV1$CASES_SMOOTH = cases_tot1$CASES_SMOOTH*cases_tot1$prop501YV1
+data_cases_BE_501YV1$CASES_LCL = cases_tot1$CASES_SMOOTH*cases_tot1$prop501YV1_LCL
+data_cases_BE_501YV1$CASES_UCL = cases_tot1$CASES_SMOOTH*cases_tot1$prop501YV1_UCL
 
 data_cases_BE_501YV2 = data.frame(cases_tot1, variant="501Y.V2")
 data_cases_BE_501YV2$CASES = cases_tot1$CASES*cases_tot1$prop501YV2
-data_cases_BE_501YV2$CASES_LCL = cases_tot1$CASES*cases_tot1$prop501YV2_LCL
-data_cases_BE_501YV2$CASES_UCL = cases_tot1$CASES*cases_tot1$prop501YV2_UCL
+data_cases_BE_501YV2$CASES_SMOOTH = cases_tot1$CASES_SMOOTH*cases_tot1$prop501YV2
+data_cases_BE_501YV2$CASES_LCL = cases_tot1$CASES_SMOOTH*cases_tot1$prop501YV2_LCL
+data_cases_BE_501YV2$CASES_UCL = cases_tot1$CASES_SMOOTH*cases_tot1$prop501YV2_UCL
 
 data_cases_BE_501YV3 = data.frame(cases_tot1, variant="501Y.V3")
 data_cases_BE_501YV3$CASES = cases_tot1$CASES*cases_tot1$prop501YV3
-data_cases_BE_501YV3$CASES_LCL = cases_tot1$CASES*cases_tot1$prop501YV3_LCL
-data_cases_BE_501YV3$CASES_UCL = cases_tot1$CASES*cases_tot1$prop501YV3_UCL
+data_cases_BE_501YV3$CASES_SMOOTH = cases_tot1$CASES_SMOOTH*cases_tot1$prop501YV3
+data_cases_BE_501YV3$CASES_LCL = cases_tot1$CASES_SMOOTH*cases_tot1$prop501YV3_LCL
+data_cases_BE_501YV3$CASES_UCL = cases_tot1$CASES_SMOOTH*cases_tot1$prop501YV3_UCL
 
 data_cases_BE_wildtype = data.frame(cases_tot1, variant="wild type")
 data_cases_BE_wildtype$CASES = cases_tot1$CASES*(1-(cases_tot1$prop501YV1+cases_tot1$prop501YV2+cases_tot1$prop501YV3))
-data_cases_BE_wildtype$CASES_LCL = cases_tot1$CASES*(1-(cases_tot1$prop501YV1_LCL+cases_tot1$prop501YV2_LCL+cases_tot1$prop501YV3_LCL))
-data_cases_BE_wildtype$CASES_UCL = cases_tot1$CASES*(1-(cases_tot1$prop501YV1_UCL+cases_tot1$prop501YV2_UCL+cases_tot1$prop501YV3_UCL))
+data_cases_BE_wildtype$CASES_SMOOTH = cases_tot1$CASES_SMOOTH*(1-(cases_tot1$prop501YV1+cases_tot1$prop501YV2+cases_tot1$prop501YV3))
+data_cases_BE_wildtype$CASES_LCL = cases_tot1$CASES_SMOOTH*(1-(cases_tot1$prop501YV1_LCL+cases_tot1$prop501YV2_LCL+cases_tot1$prop501YV3_LCL))
+data_cases_BE_wildtype$CASES_UCL = cases_tot1$CASES_SMOOTH*(1-(cases_tot1$prop501YV1_UCL+cases_tot1$prop501YV2_UCL+cases_tot1$prop501YV3_UCL))
 
 data_cases_BE_total = data.frame(cases_tot1, variant="total")
 
@@ -3132,7 +3136,7 @@ d = as.Date(max(data_cases_BE$DATE))
 tag = paste("@TWenseleers\ndata Sciensano & Emmanuel André\n",d)
 
 qplot(data=data_cases_BE[data_cases_BE$DATE>=as.Date("2020-09-01"),], # data_cases_BE$variant!="total"&
-      x=DATE, y=CASES, group=variant, colour=variant, fill=variant, geom="blank") +
+      x=DATE, y=CASES_SMOOTH, group=variant, colour=variant, fill=variant, geom="blank") +
   # geom_area(position="stack") +
   geom_line(lwd=I(0.75)) +
   geom_ribbon(aes(ymin=CASES_LCL, ymax=CASES_UCL), alpha=I(0.3), colour=NA) + # TO DO: fix bug in confidence intervals
@@ -3162,11 +3166,40 @@ qplot(data=data_cases_BE_NL[data_cases_BE_NL$variant!="totaal",],
   labs(tag = tag) +
   theme(plot.tag.position = "bottomright",
         plot.tag = element_text(vjust = 1, hjust = 1, size=8))
+ggsave(file=paste0(".//plots//",dat,"//confirmed_cases_by_501YV1_501YV2_501YV3_wildtype_baseline surveillance_stacked_NL_raw.png"), width=7, height=5)
+ggsave(file=paste0(".//plots//",dat,"//confirmed_cases_by_501YV1_501YV2_501YV3_wildtype_baseline surveillance_stacked_NL_raw.pdf"), width=7, height=5)
+
+qplot(data=data_cases_BE_NL[data_cases_BE_NL$variant!="totaal",], 
+      x=DATE, y=CASES_SMOOTH, group=variant, colour=variant, fill=variant, geom="blank") +
+  geom_area(position="stack") +
+  scale_colour_manual("", values=c("grey75","red","blue","green3")) +
+  scale_fill_manual("", values=c("grey75","red","blue","green3")) +
+  ylab("Aantal bevestigde infecties per dag") + xlab("") + ggtitle("Geschat aantal nieuw bevestigde infecties door de\nBritse, Zuid-Afrikaanse en Braziliaanse varianten") +
+  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
+                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
+  coord_cartesian(xlim=c(as.Date("2020-09-01"),NA), expand=c(0,0)) +
+  labs(tag = tag) +
+  theme(plot.tag.position = "bottomright",
+        plot.tag = element_text(vjust = 1, hjust = 1, size=8))
 ggsave(file=paste0(".//plots//",dat,"//confirmed_cases_by_501YV1_501YV2_501YV3_wildtype_baseline surveillance_stacked_NL.png"), width=7, height=5)
 ggsave(file=paste0(".//plots//",dat,"//confirmed_cases_by_501YV1_501YV2_501YV3_wildtype_baseline surveillance_stacked_NL.pdf"), width=7, height=5)
 
 qplot(data=data_cases_BE[data_cases_BE$variant!="total",], 
       x=DATE, y=CASES, group=variant, colour=variant, fill=variant, geom="blank") +
+  geom_area(position="stack") +
+  scale_colour_manual("", values=c("grey75","red","blue","green3")) +
+  scale_fill_manual("", values=c("grey75","red","blue","green3")) +
+  ylab("Estimated new confirmed cases per day") + xlab("") + ggtitle("Estimated infections by British, South African & Brazilian\nSARS-CoV2 variants in Belgium (baseline surveillance)") +
+  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
+                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
+  coord_cartesian(xlim=c(as.Date("2020-09-01"),NA), expand=c(0,0)) +
+  labs(tag = tag) +
+  theme(plot.tag.position = "bottomright",
+        plot.tag = element_text(vjust = 1, hjust = 1, size=8))
+ggsave(file=paste0(".//plots//",dat,"//confirmed_cases_by_501YV1_501YV2_501YV3_wildtype_baseline surveillance_stacked_raw.png"), width=7, height=5)
+
+qplot(data=data_cases_BE[data_cases_BE$variant!="total",], 
+      x=DATE, y=CASES_SMOOTH, group=variant, colour=variant, fill=variant, geom="blank") +
   geom_area(position="stack") +
   scale_colour_manual("", values=c("grey75","red","blue","green3")) +
   scale_fill_manual("", values=c("grey75","red","blue","green3")) +
@@ -3192,13 +3225,15 @@ cases_tot2$prop501YV1_UCL =  df_fit4_emmeans$asymp.UCL
 
 data_cases_BE_501YV1 = data.frame(cases_tot2, variant="501Y.V1")
 data_cases_BE_501YV1$CASES = cases_tot2$CASES*cases_tot2$prop501YV1
-data_cases_BE_501YV1$CASES_LCL = cases_tot2$CASES*cases_tot2$prop501YV1_LCL
-data_cases_BE_501YV1$CASES_UCL = cases_tot2$CASES*cases_tot2$prop501YV1_UCL
+data_cases_BE_501YV1$CASES_SMOOTH = cases_tot2$CASES_SMOOTH*cases_tot2$prop501YV1
+data_cases_BE_501YV1$CASES_LCL = cases_tot2$CASES_SMOOTH*cases_tot2$prop501YV1_LCL
+data_cases_BE_501YV1$CASES_UCL = cases_tot2$CASES_SMOOTH*cases_tot2$prop501YV1_UCL
 
 data_cases_BE_wildtype = data.frame(cases_tot2, variant="wild type")
 data_cases_BE_wildtype$CASES = cases_tot2$CASES*(1-cases_tot2$prop501YV1)
-data_cases_BE_wildtype$CASES_LCL = cases_tot2$CASES*(1-cases_tot2$prop501YV1_LCL)
-data_cases_BE_wildtype$CASES_UCL = cases_tot2$CASES*(1-cases_tot2$prop501YV1_UCL)
+data_cases_BE_wildtype$CASES_SMOOTH = cases_tot2$CASES_SMOOTH*(1-cases_tot2$prop501YV1)
+data_cases_BE_wildtype$CASES_LCL = cases_tot2$CASES_SMOOTH*(1-cases_tot2$prop501YV1_LCL)
+data_cases_BE_wildtype$CASES_UCL = cases_tot2$CASES_SMOOTH*(1-cases_tot2$prop501YV1_UCL)
 
 data_cases_BE_total = data.frame(cases_tot2, variant="total")
 
@@ -3210,7 +3245,7 @@ d = as.Date(max(data_cases_BE$DATE))
 tag = paste("@TWenseleers\ndata Sciensano & Emmanuel André\n",d)
 
 qplot(data=data_cases_BE[data_cases_BE$DATE>=as.Date("2020-09-01"),], # data_cases_BE$variant!="total"&
-      x=DATE, y=CASES, group=variant, colour=variant, fill=variant, geom="blank") +
+      x=DATE, y=CASES_SMOOTH, group=variant, colour=variant, fill=variant, geom="blank") +
   # geom_area(position="stack") +
   geom_line(lwd=I(0.75)) +
   geom_ribbon(aes(ymin=CASES_LCL, ymax=CASES_UCL), alpha=I(0.3), colour=NA) +
@@ -3241,8 +3276,21 @@ qplot(data=data_cases_BE[data_cases_BE$variant!="total",],
   labs(tag = tag) +
   theme(plot.tag.position = "bottomright",
         plot.tag = element_text(vjust = 1, hjust = 1, size=8))
-ggsave(file=paste0(".//plots//",dat,"//confirmed_cases_by_501YV1_wildtype_S dropout_BE_stacked.png"), width=7, height=5)
+ggsave(file=paste0(".//plots//",dat,"//confirmed_cases_by_501YV1_wildtype_S dropout_BE_stacked_raw.png"), width=7, height=5)
 
+qplot(data=data_cases_BE[data_cases_BE$variant!="total",], 
+      x=DATE, y=CASES_SMOOTH, group=variant, colour=variant, fill=variant, geom="blank") +
+  geom_area(position="stack") +
+  scale_colour_manual("", values=c("grey75","red2")) +
+  scale_fill_manual("", values=c("grey75","red2")) +
+  ylab("Estimated new confirmed cases per day") + xlab("") + ggtitle("Estimated infections by UK SARS-CoV2 variant 501Y.V1\nin Belgium (S dropout data)") +
+  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
+                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
+  coord_cartesian(xlim=c(as.Date("2020-09-01"),NA), expand=c(0,0)) +
+  labs(tag = tag) +
+  theme(plot.tag.position = "bottomright",
+        plot.tag = element_text(vjust = 1, hjust = 1, size=8))
+ggsave(file=paste0(".//plots//",dat,"//confirmed_cases_by_501YV1_wildtype_S dropout_BE_stacked.png"), width=7, height=5)
 
 
 
