@@ -2655,22 +2655,22 @@ us_data$obs = factor(1:nrow(us_data))
 # us_data = us_data[us_data$state %in% sel_states,]
 us_data$state = factor(us_data$state)
 
-range(us_data$collection_date) # "2020-09-05" "2021-03-10"
+range(us_data$collection_date) # "2020-09-05" "2021-03-14"
 
 fit_us_propB117amongSGTF = glmer(cbind(B117, sequenced_SGTF-B117) ~ (1|state)+scale(collection_date_num), 
                                  family=binomial(logit), data=us_data)
-BIC(fit_us_propB117amongSGTF) # 751.069
+BIC(fit_us_propB117amongSGTF) # 752.1197
 
 # implied growth rate advantage of B.1.1.7 over other earlier strains showing S dropout:
 as.data.frame(emtrends(fit_us_propB117amongSGTF, ~ 1, var="collection_date_num"))[,c(2,5,6)]
 #   collection_date_num.trend  asymp.LCL asymp.UCL
-# 1                0.07786998 0.06677178 0.08896818
+# 1                0.07841014 0.06737622 0.08944407
 
 # with a generation time of 4.7 days this would translate to a multiplicative effect on Rt
 # and estimated increased infectiousness of B.1.1.7 over other strains showing S dropout of
 exp(4.7*as.data.frame(emtrends(fit_us_propB117amongSGTF, ~ 1, var="collection_date_num"))[,c(2,5,6)])
 #   collection_date_num.trend asymp.LCL asymp.UCL
-# 1                   1.441939  1.368653  1.519149
+# 1                   1.445605  1.372547  1.522551
 
 
 # FIT FOR WHOLE US + PLOT
@@ -2688,8 +2688,8 @@ fit_us2 = glmer(cbind(est_n_B117, positive-est_n_B117) ~ (collection_date_num||s
                 family=binomial(logit), data=us_data, control=glmersettings2) # random intercepts+slopes by state, with uncorrelated intercepts & slopes
 BIC(fit_us1, fit_us2) # random intercept model fit_us1 is best
 # df      BIC
-# fit_us1  4 3502.801
-# fit_us2  6 3611.034
+# fit_us1  4 3841.183
+# fit_us2  6 4394.376
 summary(fit_us1)
 
 #  GROWTH RATE & TRANSMISSION ADVANTAGE
@@ -2700,7 +2700,7 @@ colnames(us_growthrates_avg_B117vsallother)[2] = "logistic_growth_rate"
 us_growthrates_avg_B117vsallother = M.from.delta_r_df(us_growthrates_avg_B117vsallother)
 us_growthrates_avg_B117vsallother
 # 1 logistic_growth_rate asymp.LCL  asymp.UCL        M  M.LCL    M.UCL
-# 1 overall           0.08232273 0.08021172 0.08443373 1.472434 1.457897 1.487116
+# 1 overall           0.08186126 0.07991355 0.08380897
 
 
 # plot model fit fit_us
@@ -2716,7 +2716,7 @@ date.to = as.numeric(as.Date("2021-06-01"))
 # the 9 states with the most data
 # sel_states=c("FL","NY","CA","NJ","GA","TX","OH","PA","LA","IL","MI","MA","NC","IN","AZ")
 # sel_states=c("FL","CA","GA","TX","PA","LA","IL","MI","MA","NC","IN","AZ")
-sel_states=c("FL","CA","GA","TX","PA","MA","NC","IN","AZ")
+sel_states=c("MI","MN","NY","TX","GA","FL","CA","MA","LA","PA","OH","IN","IL","NC","AZ")
 total.SD = sqrt(sum(sapply(as.data.frame(VarCorr(fit_us1))$sdcor, function (x) x^2))) 
 fit_us_preds = as.data.frame(emmeans(fit_us1, ~ collection_date_num, 
                                      # by="state", 
@@ -2732,9 +2732,8 @@ fit_us_preds2$prob.asymp.LCL = plogis(fit_us_preds2$asymp.LCL+fit_us_preds2$rani
 fit_us_preds2$prob.asymp.UCL = plogis(fit_us_preds2$asymp.UCL+fit_us_preds2$raninterc)
 fit_us_preds2 = fit_us_preds2[as.character(fit_us_preds2$state) %in% sel_states,]
 fit_us_preds2$state = droplevels(fit_us_preds2$state)
-fit_us_preds2$state = factor(fit_us_preds2$state, # we order states by random intercept, ie date of introduction
-                             levels=intersect(rownames(ranef(fit_us1)$state)[order(ranef(fit_us1)$state[,1], decreasing=T)],
-                                              sel_states))
+fit_us_preds2$state = factor(fit_us_preds2$state, levels=
+                               fit_us_preds2[fit_us_preds2$collection_date==today,"state"][order(fit_us_preds2[fit_us_preds2$collection_date==today,"prob"], decreasing=T)])
 
 # PLOT MODEL FIT (logit scale)
 plot_us = qplot(data=fit_us_preds2, x=collection_date, y=prob, geom="blank") +
@@ -2780,7 +2779,7 @@ plot_us
 
 # PLOT MODEL FIT (response scale)
 plot_us_response = qplot(data=fit_us_preds2, x=collection_date, y=prob*100, geom="blank") +
-  facet_wrap(~state) +
+  facet_wrap(~state, nrow=3) +
   geom_ribbon(aes(y=prob*100, ymin=prob.asymp.LCL*100, ymax=prob.asymp.UCL*100, colour=NULL, 
                   fill=state
   ), 
@@ -3051,7 +3050,7 @@ ggsave(file = paste0(".\\plots\\",dat,"\\Fig8_US_data_by state.png"), width=9, h
 # fit POISSON GAM TO TOTAL SCIENSANO CASE DATA, correcting for weekday & testing intensity ####
 
 source("scripts/downloadData.R") # download latest data with new confirmed cases per day from Sciensano website, code adapted from https://github.com/JoFAM/covidBE_analysis by Joris Meys
-range(cases_tot$DATE) # "2020-03-01" "2021-03-15"
+range(cases_tot$DATE) # "2020-03-01" "2021-03-17"
 # smooth out weekday effects in case nrs using GAM & correct for unequal testing intensity
 fit_cases_BE = gam(CASES ~ s(DATE_NUM, bs="cs", k=34, fx=F) + 
                      WEEKDAY + 
@@ -3139,7 +3138,7 @@ qplot(data=data_cases_BE[data_cases_BE$DATE>=as.Date("2020-09-01"),], # data_cas
   # geom_smooth(lwd=I(0.75), se=FALSE, method = "gam", formula = y ~ s(x, bs = "cs", k=15)) +
   scale_colour_manual("", values=c("deepskyblue2","red","blue","green3", "grey40")) +
   scale_fill_manual("", values=c("deepskyblue2","red","blue","green3", "grey40")) +
-  ylab("Estimated new confirmed cases") + xlab("") + ggtitle("Estimated infections by British, South African & Brazilian\nSARS-CoV2 variants in Belgium (baseline surveillance)") +
+  ylab("Estimated new confirmed cases per day") + xlab("") + ggtitle("Estimated infections by British, South African & Brazilian\nSARS-CoV2 variants in Belgium (baseline surveillance)") +
   scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
                      labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
   scale_y_continuous(breaks=10^seq(0,4), minor_breaks=0, expand=FALSE, limits=c(2,3E4)) +
@@ -3170,7 +3169,7 @@ qplot(data=data_cases_BE[data_cases_BE$variant!="total",],
   geom_area(position="stack") +
   scale_colour_manual("", values=c("grey75","red","blue","green3")) +
   scale_fill_manual("", values=c("grey75","red","blue","green3")) +
-  ylab("Estimated new confirmed cases") + xlab("") + ggtitle("Estimated infections by British, South African & Brazilian\nSARS-CoV2 variants in Belgium (baseline surveillance)") +
+  ylab("Estimated new confirmed cases per day") + xlab("") + ggtitle("Estimated infections by British, South African & Brazilian\nSARS-CoV2 variants in Belgium (baseline surveillance)") +
   scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
                      labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
   coord_cartesian(xlim=c(as.Date("2020-09-01"),NA), expand=c(0,0)) +
@@ -3217,7 +3216,7 @@ qplot(data=data_cases_BE[data_cases_BE$DATE>=as.Date("2020-09-01"),], # data_cas
   # geom_smooth(lwd=I(0.75), se=FALSE, method = "gam", formula = y ~ s(x, bs = "cs", k=15)) +
   scale_colour_manual("", values=c("deepskyblue2","red","grey40")) +
   scale_fill_manual("", values=c("deepskyblue2","red","grey40")) +
-  ylab("Estimated new confirmed cases") + xlab("") + ggtitle("Estimated infections by UK SARS-CoV2 variant 501Y.V1\nin Belgium (S dropout data)") +
+  ylab("Estimated new confirmed cases per day") + xlab("") + ggtitle("Estimated infections by UK SARS-CoV2 variant 501Y.V1\nin Belgium (S dropout data)") +
   scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
                      labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
   coord_cartesian(xlim=c(as.Date("2020-09-01"),NA)) +
@@ -3234,7 +3233,7 @@ qplot(data=data_cases_BE[data_cases_BE$variant!="total",],
   geom_area(position="stack") +
   scale_colour_manual("", values=c("grey75","red2")) +
   scale_fill_manual("", values=c("grey75","red2")) +
-  ylab("Estimated new confirmed cases") + xlab("") + ggtitle("Estimated infections by UK SARS-CoV2 variant 501Y.V1\nin Belgium (S dropout data)") +
+  ylab("Estimated new confirmed cases per day") + xlab("") + ggtitle("Estimated infections by UK SARS-CoV2 variant 501Y.V1\nin Belgium (S dropout data)") +
   scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
                      labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
   coord_cartesian(xlim=c(as.Date("2020-09-01"),NA), expand=c(0,0)) +
