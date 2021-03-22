@@ -11,7 +11,7 @@
 # https://ispmbern.github.io/covid-19/variants/data & https://github.com/covid-19-Re/variantPlot/raw/master/data/data.csv)
 # and Helix, San Mateo, CA, Karthik Gangavarapu & Kristian G. Andersen (US, https://github.com/andersen-lab/paper_2021_early-b117-usa/tree/master/b117_frequency/data, https://www.medrxiv.org/content/10.1101/2021.02.06.21251159v1)
 
-# last update 19 MARCH 2021
+# last update 22 MARCH 2021
 
 library(lme4)
 library(splines)
@@ -1995,10 +1995,10 @@ qplot(data=Re_cases, x=DATE, y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribbon", 
   ylab("Re at time of diagnosis")
 ggsave(file=paste0(".//plots//",dat,"//Re_cases_Re_501YV1_Re_wildtype.png"), width=7, height=5)
 Re_cases[Re_cases$DATE==today,]
-# DATE_NUM          r          SE       df    r_LOWER    r_UPPER       DATE       Re Re_LOWER Re_UPPER collection_date_num        M  propB117   Re_WT
-# 381    18702 0.04079506 0.001508787 194.0331 0.03781933 0.04377079 2021-03-16 1.203293 1.187672  1.21904               18702 1.167686 0.7452103 1.06963
+# DATE_NUM          r          SE       df    r_LOWER    r_UPPER       DATE       Re Re_LOWER Re_UPPER collection_date_num        M  propB117    Re_WT
+# 384    18705 0.04602482 0.001368728 197.0327 0.04332558 0.04872405 2021-03-19 1.231053 1.216676 1.245535               18705 1.167686 0.7491958 1.093657
 # Re_WT_LOWER Re_WT_UPPER  Re_B117 Re_B117_LOWER Re_B117_UPPER
-# 381    1.055744    1.083629 1.248992      1.232778      1.265338
+# 384    1.080885    1.106523 1.277048      1.262134      1.292071
 
 
 
@@ -2717,7 +2717,7 @@ date.to = as.numeric(as.Date("2021-06-01"))
 # the 9 states with the most data
 # sel_states=c("FL","NY","CA","NJ","GA","TX","OH","PA","LA","IL","MI","MA","NC","IN","AZ")
 # sel_states=c("FL","CA","GA","TX","PA","LA","IL","MI","MA","NC","IN","AZ")
-sel_states=c("MI","MN","NY","TX","GA","FL","CA","MA","LA","PA","OH","IN","IL","NC","AZ")
+sel_states=c("MI","MN","NY","TX","GA","FL","CA","MA","PA","IN","IL","AZ")
 total.SD = sqrt(sum(sapply(as.data.frame(VarCorr(fit_us1))$sdcor, function (x) x^2))) 
 fit_us_preds = as.data.frame(emmeans(fit_us1, ~ collection_date_num, 
                                      # by="state", 
@@ -2776,6 +2776,7 @@ plot_us = qplot(data=fit_us_preds2, x=collection_date, y=prob, geom="blank") +
 # ggtitle("US") +
 # theme(plot.title = element_text(hjust = 0.5))
 plot_us
+ggsave(file = paste0(".\\plots\\",dat,"\\Fig8_US_data_by state.png"), width=9, height=7)
 
 
 # PLOT MODEL FIT (response scale)
@@ -2819,6 +2820,7 @@ plot_us_response = qplot(data=fit_us_preds2, x=collection_date, y=prob*100, geom
 # theme(plot.title = element_text(hjust = 0.5))
 
 plot_us_response
+ggsave(file = paste0(".\\plots\\",dat,"\\Fig8_US_data_by state_response.png"), width=9, height=7)
 
 
 
@@ -2850,8 +2852,8 @@ colnames(fit_us_preds3)[2] = "date_num"
 colnames(fit_us_preds3)[6] = "date"
 colnames(fit_us_preds3)[9] = "asymp.LCL"
 colnames(fit_us_preds3)[10] = "asymp.UCL"
-fit_us_preds3 = fit_us_preds3[fit_us_preds3$REGION %in% c("FL","CA","TX","GA"),]
-fit_us_preds3$REGION = factor(fit_us_preds3$REGION, levels=c("FL","CA","TX","GA"), labels=c("Florida","California","Texas","Georgia"))
+fit_us_preds3 = fit_us_preds3[fit_us_preds3$REGION %in% c("FL","CA","TX","GA","MI"),]
+fit_us_preds3$REGION = factor(fit_us_preds3$REGION, levels=c("FL","CA","TX","GA","MI"), labels=c("Florida","California","Texas","Georgia","Michigan"))
 fit_us_preds3 = fit_us_preds3[,c("date_num","REGION","prob","SE","df","asymp.LCL","asymp.UCL","date","country")]
 fit_be_preds = fit_preds
 fit_be_preds$REGION = "Belgium"
@@ -2884,8 +2886,8 @@ colnames(data_us2)[1] = "REGION"
 colnames(data_us2)[2] = "date"
 colnames(data_us2)[3] = "total"
 data_us2 = data_us2[,c("date","country","REGION","propB117","total")]
-data_us2 = data_us2[data_us2$REGION %in% c("FL","CA","TX","GA"),]
-data_us2$REGION = factor(data_us2$REGION, levels=c("FL","CA","TX","GA"), labels=c("Florida","California","Texas","Georgia"))
+data_us2 = data_us2[data_us2$REGION %in% c("FL","CA","TX","GA","MI"),]
+data_us2$REGION = factor(data_us2$REGION, levels=c("FL","CA","TX","GA","MI"), labels=c("Florida","California","Texas","Georgia","Michigan"))
 
 data_belgium = data_ag_byday_wide
 data_belgium$country = "Belgium"
@@ -3041,7 +3043,7 @@ plot_us2
 
 # saveRDS(plot_us2, file = paste0(".\\plots\\",dat,"\\Fig8_US_data_by state.rds"))
 # graph2ppt(file = paste0(".\\plots\\",dat,"\\Fig8_US_data_by state.pptx"), width=9, height=7)
-ggsave(file = paste0(".\\plots\\",dat,"\\Fig8_US_data_by state.png"), width=9, height=7)
+# ggsave(file = paste0(".\\plots\\",dat,"\\Fig8_US_data_by state.png"), width=9, height=7)
 # ggsave(file = paste0(".\\plots\\",dat,"\\Fig8_US_data_by state.pdf"), width=9, height=7)
 
 
@@ -3051,7 +3053,7 @@ ggsave(file = paste0(".\\plots\\",dat,"\\Fig8_US_data_by state.png"), width=9, h
 # fit POISSON GAM TO TOTAL SCIENSANO CASE DATA, correcting for weekday & testing intensity ####
 
 source("scripts/downloadData.R") # download latest data with new confirmed cases per day from Sciensano website, code adapted from https://github.com/JoFAM/covidBE_analysis by Joris Meys
-range(cases_tot$DATE) # "2020-03-01" "2021-03-17"
+range(cases_tot$DATE) # "2020-03-01" "2021-03-19"
 # smooth out weekday effects in case nrs using GAM & correct for unequal testing intensity
 fit_cases_BE = gam(CASES ~ s(DATE_NUM, bs="cs", k=34, fx=F) + 
                      WEEKDAY + 
@@ -3339,8 +3341,62 @@ plotcases501YV1_Sdropout_Florida = qplot(data=data_florida[data_florida$variant!
                      labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
   labs(tag = tag) +
   theme(plot.tag.position = "bottomright",
-        plot.tag = element_text(vjust = 1, hjust = 1, size=8))
+        plot.tag = element_text(vjust = 1, hjust = 1, size=8)) +
+  coord_cartesian(xlim=c(as.Date("2020-11-01"),NA), expand=c(0,0))
 plotcases501YV1_Sdropout_Florida
 ggsave(file=paste0(".//plots//",dat,"//confirmed_cases_by_501YV1_vs_wildtype_S dropout_Florida.png"), width=7, height=5)
+
+
+
+
+# plot for Michigan ####
+
+us_data_by_state = read.csv("https://github.com/nytimes/covid-19-data/raw/master/us-states.csv")
+us_data_by_state$date = as.Date(us_data_by_state$date)
+us_data_by_state$state = factor(us_data_by_state$state, 
+                                levels=c("Washington","Illinois","California",
+                                         "Arizona","Massachusetts","Wisconsin",
+                                         "Texas","Nebraska","Utah","Oregon",
+                                         "Florida","New York","Rhode Island",
+                                         "Georgia","New Hampshire","North Carolina",
+                                         "New Jersey","Colorado","Maryland","Nevada",
+                                         "Tennessee","Hawaii","Indiana","Kentucky","Minnesota",
+                                         "Oklahoma","Pennsylvania","South Carolina","District of Columbia",
+                                         "Kansas","Missouri","Vermont","Virginia","Connecticut",
+                                         "Iowa","Louisiana","Ohio","Michigan","South Dakota",
+                                         "Arkansas","Delaware","Mississippi","New Mexico","North Dakota",
+                                         "Wyoming","Alaska","Maine","Alabama","Idaho","Montana",
+                                         "Puerto Rico","Virgin Islands","Guam","West Virginia","Northern Mariana Islands"))
+data_michigan = us_data_by_state[us_data_by_state$state=="Michigan",]
+data_michigan$newcases = c(0,diff(data_michigan$cases))
+data_michigan$newcases[data_michigan$newcases<0] = 0
+# plot(data_michigan$newcases)
+data_michigan$propB117 =  data_us2$propB117[match(interaction(data_michigan$date, data_michigan$state),
+                                                 interaction(data_us2$date,data_us2$REGION))]
+data_michigan = data_michigan[!is.na(data_michigan$propB117),]
+
+data_michigan_501YV1 = data.frame(data_michigan, variant="501Y.V1")
+data_michigan_501YV1$newcases = data_michigan_501YV1$newcases*data_michigan_501YV1$propB117
+data_michigan_wildtype = data.frame(data_michigan, variant="wild type")
+data_michigan_wildtype$newcases = data_michigan_wildtype$newcases*(1-data_michigan_wildtype$propB117)
+data_michigan = rbind(data_michigan_501YV1, data_michigan_wildtype)
+data_michigan$variant = factor(data_michigan$variant, levels=c("wild type", "501Y.V1"), labels=c("wild type","501Y.V1 (British)"))
+
+d = as.Date(max(data_michigan$date))
+tag = paste("@TWenseleers\n                           data Helix & NYT\n",d)
+
+plotcases501YV1_Sdropout_Michigan = qplot(data=data_michigan[data_michigan$variant!="total",], x=date, y=newcases, group=variant, colour=variant, fill=variant, geom="blank") +
+  geom_area(position="stack") +
+  scale_colour_manual("", values=c("grey75","red2")) +
+  scale_fill_manual("", values=c("grey75","red2")) +
+  ylab("New confirmed cases") + xlab("") + ggtitle("Estimated infections by UK SARS-CoV2 variant 501Y.V1\nin Michigan (S dropout data)") +
+  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
+                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
+  labs(tag = tag) +
+  theme(plot.tag.position = "bottomright",
+        plot.tag = element_text(vjust = 1, hjust = 1, size=8)) +
+  coord_cartesian(xlim=c(as.Date("2020-11-01"),NA), expand=c(0,0))
+plotcases501YV1_Sdropout_Michigan
+ggsave(file=paste0(".//plots//",dat,"//confirmed_cases_by_501YV1_vs_wildtype_S dropout_Michigan.png"), width=7, height=5)
 
 
