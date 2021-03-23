@@ -2660,7 +2660,7 @@ range(us_data$collection_date) # "2020-09-05" "2021-03-14"
 
 fit_us_propB117amongSGTF = glmer(cbind(B117, sequenced_SGTF-B117) ~ (1|state)+scale(collection_date_num), 
                                  family=binomial(logit), data=us_data)
-BIC(fit_us_propB117amongSGTF) # 752.1197
+BIC(fit_us_propB117amongSGTF) # 852.8811
 
 # implied growth rate advantage of B.1.1.7 over other earlier strains showing S dropout:
 as.data.frame(emtrends(fit_us_propB117amongSGTF, ~ 1, var="collection_date_num"))[,c(2,5,6)]
@@ -3073,6 +3073,86 @@ colnames(df)[6] = "CASES_UCL"
 cases_tot$CASES_SMOOTH = df$CASES_SMOOTH # Poisson GAM smoothed data
 cases_tot$CASES_LCL = df$CASES_LCL
 cases_tot$CASES_UCL = df$CASES_UCL
+
+# fit Poisson GAM to cases by districts where national testing labs are based ####
+# TO DO
+rawmunicipalities$cases[rawmunicipalities$cases=="<5"] = "2.5"
+rawmunicipalities$cases = as.numeric(rawmunicipalities$cases)
+sel_districts = c("Antwerpen","Brussel-Hoofdstad","Leuven","Gent","Arrondissement Luik","Arrondissement Namen","Arrondissement Bergen")
+cases_distr = rawmunicipalities[rawmunicipalities$DISTRICT %in% sel_districts,]
+cases_distr$DISTRICT = factor(cases_distr$DISTRICT, levels=sel_districts, labels=c("Antwerpen","Brussel","Leuven","Gent","Luik","Namen","Bergen"))
+cases_distr$DATE = as.Date(cases_distr$DATE)
+cases_distr$DATE_NUM = as.numeric(cases_distr$DATE)
+cases_distr = cases_distr[with(cases_distr, order(DISTRICT,DATE)),]
+cases_distr$newcases = unlist(lapply(unique(cases_distr$DISTRICT), function(distr) c(0,diff(cases_distr$cases[cases_distr$DISTRICT==distr]))))
+cases_distr$newcases[cases_distr$newcases<0] = 0
+range(rawmunicipalities$DATE)
+cases_distr$DISTRDATE = interaction(cases_distr$DISTRICT, cases_distr$DATE)
+cases_distr$WEEKDAY = as.factor(weekdays(cases_distr$DATE))
+cases_distr = cases_distr[complete.cases(cases_distr),]
+fit_cases_distr = gam(newcases ~ # s(DATE_NUM, bs="cs", k=30, fx=T) + 
+                       s(DATE_NUM, bs="cs", k=30, by=DISTRICT, fx=T) + 
+                        DISTRICT + WEEKDAY, # evt  + s(log(TESTS_ALL+1), k=5, fx=T)
+                     family=poisson, data=cases_distr) 
+BIC(fit_cases_distr)
+cases_distr$newcases_fitted = predict(fit_cases_distr, type="response")
+
+emmeans_cases_distr = as.data.frame(emmeans(fit_cases_distr, ~ DATE_NUM+DISTRICT, 
+                                                 at = list(DATE_NUM=unique(cases_distr$DATE_NUM))
+                                                 ),
+                                                 type="response")
+emmeans_cases_distr$DATE = as.Date(emmeans_cases_distr$DATE_NUM, origin="1970-01-01")
+qplot(data=cases_distr, x=DATE, y=newcases, group=DISTRICT, colour=DISTRICT, fill=DISTRICT, geom="col")
+qplot(data=cases_distr, x=DATE, y=newcases_fitted, group=DISTRICT, colour=DISTRICT, fill=DISTRICT, geom="col")
+qplot(data=emmeans_cases_distr, x=DATE, y=rate, group=DISTRICT, colour=DISTRICT, fill=DISTRICT, geom="area")
+
+head(data_ag)
+data_ag_wide
+
+
+# fit Poisson GAM to cases by province where national testing labs are based ####
+# TO DO
+cases_prov = rawcases[rawcases$PROVINCE!="All"&rawcases$REGION!="Belgium"&rawcases$SEX=="All"&rawcases$AGEGROUP!="unknown"&rawcases$AGEGROUP=="All"&rawcases$PROVINCE!="unknown",]
+sel_provs = c("Antwerpen","Brussels","VlaamsBrabant","OostVlaanderen","Liège","Namur","Hainaut")
+cases_prov = cases_prov[cases_prov$PROVINCE %in% sel_provs,] 
+cases_prov$DATE = as.Date(cases_prov$DATE)
+cases_prov$DATE_NUM = as.numeric(cases_prov$DATE)
+cases_prov$PROVDATE = interaction(cases_prov$PROVINCE,cases_prov$DATE)
+cases_prov$TESTS_ALL = tests_prov$TESTS_ALL[match(cases_prov$PROVDATE,tests_prov$PROVDATE)]
+cases_prov$PROVINCE = factor(cases_prov$PROVINCE, levels=c("Antwerpen","Brussels","VlaamsBrabant","OostVlaanderen","Liège","Namur","Hainaut"),
+                             labels=c("Antwerpen","Brussel","Vlaams Brabant","Oost Vlaanderen","Luik","Namen","Henegouwen"))
+cases_prov$WEEKDAY = as.factor(weekdays(cases_prov$DATE))
+cases_prov = cases_prov[complete.cases(cases_prov),]
+fit_cases_prov = gam(CASES ~ # s(DATE_NUM, bs="cs", k=30, fx=T) + 
+                       s(DATE_NUM, bs="cs", k=30, by=PROVINCE, fx=T) + 
+                       PROVINCE + WEEKDAY, # + s(log(TESTS_ALL+1), k=5, fx=T), 
+                     family=poisson, data=cases_prov) 
+BIC(fit_cases_prov) # 46345.07
+cases_prov$CASES_fitted = predict(fit_cases_prov, type="response")
+
+emmeans_cases_prov = as.data.frame(emmeans(fit_cases_prov, ~ DATE_NUM+PROVINCE, 
+                                            at = list(DATE_NUM=unique(cases_distr$DATE_NUM))
+                                          ), type="response")
+emmeans_cases_prov$DATE = as.Date(emmeans_cases_prov$DATE_NUM, origin="1970-01-01")
+qplot(data=cases_prov, x=DATE, y=CASES, group=PROVINCE, colour=PROVINCE, fill=PROVINCE, geom="col")
+qplot(data=cases_prov, x=DATE, y=CASES_fitted, group=PROVINCE, colour=PROVINCE, fill=PROVINCE, geom="col")
+qplot(data=emmeans_cases_prov, x=DATE, y=rate, group=PROVINCE, colour=PROVINCE, fill=PROVINCE, geom="area")
+
+# head(data_ag)
+# data_ag_wide
+
+# fit of prop of 501Y.V1 by district based on S dropout data
+# TO DO
+data_ag_wide$DISTRICT = factor(data_ag_wide$LABORATORY, levels=c("Namur","Saint LUC - UCL","ULB","UMons - Jolimont","UZ leuven","UZA"),
+                               labels=c("Namen","Brussel","Brussel","Bergen","Leuven","Antwerpen"))
+fit4_distr = glmer(cbind(est_n_B117, n_pos-est_n_B117) ~ (1|obs)+ns(collection_date_num,df=2)*DISTRICT, family=binomial(logit), 
+             data=data_ag_wide, subset=data_ag_wide$n_pos>0, control=glmersettings) # with 2 df natural cubic spline term ifo date * DISTRICT
+prop501YV1_distr = data.frame(emmeans(fit4_distr, ~ collection_date_num+DISTRICT, at=list(collection_date_num=as.numeric(cases_tot$DATE)), 
+                                                    type="response", df=NA)) # proportions of 3 VOCs as fit based on mulinomial fit
+
+
+# hospitalisations & ICU admissions by region/city
+# TO DO
 
 
 # plot for Belgium (BASED ON MULTINOMIAL FIT TO BASELINE SURVEILLANCE SEQUENCING DATA & POISSON GAM FIT TO SCIENSANO TOTAL CASE DATA) ####
