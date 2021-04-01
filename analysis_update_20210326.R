@@ -54,9 +54,9 @@ suppressWarnings(dir.create(paste0(".//plots//",dat)))
 filedate = as.Date(gsub("_","-",dat)) # file date
 filedate_num = as.numeric(filedate)
 today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-03-28")
+today = as.Date("2021-04-01")
 today_num = as.numeric(today)
-today # "2021-03-28"
+today # "2021-04-01"
 
 set_sum_contrasts() # we use effect coding for all models
 
@@ -384,37 +384,37 @@ ggsave(file=paste0(".\\plots\\",dat,"\\baseline_surveillance_501YV1 501YV2 501YV
 be_seq_mfit0_preds2[be_seq_mfit0_preds2$collection_date==today&
                       be_seq_mfit0_preds2$variant=="501Y.V1 (British)",]
 #            variant collection_date_num      prob       SE df asymp.LCL asymp.UCL collection_date
-# 501Y.V1 (British)               18714 0.8201757 0.01298444 NA 0.7947267 0.8456248      2021-03-28
+# 501Y.V1 (British)               18718 0.8320038 0.0145061 NA 0.8035724 0.8604353      2021-04-01
 
 # estimated proportion of 501Y.V1 among new infections today (counted one week before lab diagnosis)
 be_seq_mfit0_preds2[be_seq_mfit0_preds2$collection_date==(today+7)&
                       be_seq_mfit0_preds2$variant=="501Y.V1 (British)",]
 #            variant collection_date_num      prob       SE df asymp.LCL asymp.UCL collection_date
-# 501Y.V1 (British)               18721 0.8391537 0.01578583 NA 0.8082141 0.8700934      2021-04-04
+# 501Y.V1 (British)               18725 0.8467266 0.01767872 NA 0.8120769 0.8813762      2021-04-08
 
 # estimated proportion of 501Y.V2 among new lab diagnoses today
 be_seq_mfit0_preds2[be_seq_mfit0_preds2$collection_date==today&
                       be_seq_mfit0_preds2$variant=="501Y.V2 (South African)",]
 #            variant collection_date_num      prob       SE df asymp.LCL asymp.UCL collection_date
-# 501Y.V2 (South African)               18714 0.06936614 0.008264422 NA 0.05316817 0.08556411      2021-03-28
+# 501Y.V2 (South African)               18718 0.06738117 0.008835209 NA 0.05006448 0.08469786      2021-04-01
 
 # estimated proportion of 501Y.V2 among new infections today (counted one week before lab diagnosis)
 be_seq_mfit0_preds2[be_seq_mfit0_preds2$collection_date==(today+7)&
                       be_seq_mfit0_preds2$variant=="501Y.V2 (South African)",]
 #            variant collection_date_num      prob       SE df asymp.LCL asymp.UCL collection_date
-# 501Y.V2 (South African)               18721 0.0657861 0.009227858 NA 0.04769983 0.08387237      2021-04-04
+# 501Y.V2 (South African)               18725 0.06356359 0.009703057 NA 0.04454594 0.08258123      2021-04-08
 
 # estimated proportion of 501Y.V3 among new lab diagnoses today
 be_seq_mfit0_preds2[be_seq_mfit0_preds2$collection_date==today&
                       be_seq_mfit0_preds2$variant=="501Y.V3 (Brazilian)",]
 #            variant collection_date_num      prob       SE df asymp.LCL asymp.UCL collection_date
-# 501Y.V3 (Brazilian)               18714 0.04663558 0.009930572 NA 0.02717202 0.06609914      2021-03-28
+# 501Y.V3 (Brazilian)               18718 0.05013289 0.01181703 NA 0.02697193 0.07329385      2021-04-01
 
 # estimated proportion of 501Y.V3 among new infections today (counted one week before lab diagnosis)
 be_seq_mfit0_preds2[be_seq_mfit0_preds2$collection_date==(today+7)&
                       be_seq_mfit0_preds2$variant=="501Y.V3 (Brazilian)",]
 #            variant collection_date_num      prob       SE df asymp.LCL asymp.UCL collection_date
-# 501Y.V3 (Brazilian)                18721 0.05281158 0.0133565 NA 0.02663333 0.07898983      2021-04-04
+# 501Y.V3 (Brazilian)                18725 0.05647 0.01557988 NA 0.02593399 0.08700601      2021-04-08
 
 
 
@@ -422,13 +422,13 @@ be_seq_mfit0_preds2[be_seq_mfit0_preds2$collection_date==(today+7)&
 be_seq_mfit0_preds2[be_seq_mfit0_preds2$collection_date==today&
                       be_seq_mfit0_preds2$variant=="501Y.V1+V2+V3",]
 #            variant collection_date_num      prob       SE df asymp.LCL asymp.UCL collection_date
-# 2241 501Y.V1+V2+V3               18714 0.9352393 0.004453946 NA 0.9265097 0.9439688      2021-03-28
+# 2241 501Y.V1+V2+V3               18718 0.9485992 0.003896622 NA 0.9409619 0.9562364      2021-04-01
 
 # estimated proportion of one of the three VOCs among new infections today (counted one week before lab diagnosis)
 be_seq_mfit0_preds2[be_seq_mfit0_preds2$collection_date==(today+7)&
                       be_seq_mfit0_preds2$variant=="501Y.V1+V2+V3",]
 #            variant collection_date_num      prob       SE df asymp.LCL asymp.UCL collection_date
-# 2241 501Y.V1+V2+V3               18721 0.956862 0.003497812 NA 0.9500064 0.9637175      2021-04-04
+# 2241 501Y.V1+V2+V3               18725 0.9659237 0.003002291 NA 0.9600393 0.9718081      2021-04-08
 
 
 
@@ -504,7 +504,7 @@ basplusact_sequencing = ggplot(data=be_basplusactseqdata_long[be_basplusactseqda
                      limits=as.Date(c("2020-12-01","2021-03-01")), expand=c(0,0)) +
   ylab("Share among newly diagnosed infections") +
   xlab("Collection date") +
-  # ggtitle("Test outcomes") +
+  ggtitle("Spread of the British, South African & Brazilian\nSARS-CoV2 variants in Belgium (baseline plus active surveillance)") +
   theme(plot.title = element_text(hjust = 0)) +
   theme(legend.position = "right")
 basplusact_sequencing
@@ -519,10 +519,12 @@ graph2ppt(file=paste0(".\\plots\\",dat,"\\basplusact_sequencing_501YV1 501YV2 50
 # to be able to estimate growth rate advantage of each type compared to wild type
 
 set.seed(1)
-be_basplusact_seq_mfit0 = nnet::multinom(variant ~ ns(collection_date_num, df=3), weights=count, data=be_basplusactseqdata_long, 
-                                         subset=be_basplusactseqdata_long$variant!="501Y.V1+V2+V3", maxit=1000)
-be_basplusact_seq_mfitallVOC = nnet::multinom(variant ~ ns(collection_date_num, df=3), weights=count, data=be_basplusactseqdata_long, 
-                                              subset=be_basplusactseqdata_long$variant=="wild type"|be_basplusactseqdata_long$variant=="501Y.V1+V2+V3", maxit=1000) 
+be_basplusact_seq_mfit0 = nnet::multinom(variant ~ ns(collection_date_num, df=1), weights=count, data=be_basplusactseqdata_long, 
+                                         subset=be_basplusactseqdata_long$variant!="501Y.V1+V2+V3"&be_basplusactseqdata_long$collection_date>=as.Date("2021-02-01"), 
+                                         maxit=1000)
+be_basplusact_seq_mfitallVOC = nnet::multinom(variant ~ ns(collection_date_num, df=1), weights=count, data=be_basplusactseqdata_long, 
+                                              subset=be_basplusactseqdata_long$variant=="wild type"|be_basplusactseqdata_long$variant=="501Y.V1+V2+V3"&be_basplusactseqdata_long$collection_date>=as.Date("2021-02-01"), 
+                                              maxit=1000) 
 summary(be_basplusact_seq_mfit0)
 BIC(be_basplusact_seq_mfit0)
 
@@ -635,13 +637,13 @@ plot_multinom_501YV1_501YV2_501YV3_basplusact_response = qplot(data=be_basplusac
   # scale_fill_discrete("", h=c(0, 280), c=200) +
   scale_fill_manual("variant", values=c("blue","red","green3","black")) +
   scale_colour_manual("variant", values=c("blue","red","green3","black")) +
-  geom_point(data=be_basplusactseqdata_long2,
+  geom_point(data=be_basplusactseqdata_long2[be_basplusactseqdata_long2$collection_date>=as.Date("2021-02-01"),],
              aes(x=collection_date, y=100*prop, size=basplusactivesurv_total_sequenced,
                  colour=variant
              ),
              alpha=I(1)) +
   scale_size_continuous("number\nsequenced", trans="sqrt",
-                        range=c(1, 4), limits=c(1,10^3), breaks=c(10,100,1000)) +
+                        range=c(1, 4), limits=c(0,10^4), breaks=c(10,100,1000)) +
   # guides(fill=FALSE) +
   # guides(colour=FALSE) +
   theme(legend.position = "right") +
@@ -682,13 +684,13 @@ plot_multinom_501YV1_501YV2_501YV3_basplusact = qplot(data=be_basplusact_seq_mfi
   # scale_fill_discrete("", h=c(0, 280), c=200) +
   scale_fill_manual("variant", values=c("blue","red","green3","black")) +
   scale_colour_manual("variant", values=c("blue","red","green3","black")) +
-  geom_point(data=be_basplusactseqdata_long2,
+  geom_point(data=be_basplusactseqdata_long2[be_basplusactseqdata_long2$collection_date>=as.Date("2021-02-01"),],
              aes(x=collection_date, y=prop, size=basplusactivesurv_total_sequenced,
                  colour=variant
              ),
              alpha=I(1)) +
   scale_size_continuous("total number\nsequenced", trans="sqrt",
-                        range=c(1, 4), limits=c(10,10^3), breaks=c(10,100,1000)) +
+                        range=c(1, 4), limits=c(1,10^4), breaks=c(10,100,1000)) +
   # guides(fill=FALSE) +
   # guides(colour=FALSE) +
   theme(legend.position = "right") +
@@ -746,12 +748,12 @@ fitseq_preds$collection_date = as.Date(fitseq_preds$collection_date_num, origin=
 # prop of S dropout samples among newly diagnosed infections that are now estimated to be B.1.1.7 / 501Y.V1
 fitseq_preds[fitseq_preds$collection_date==today,]
 #    collection_date_num      prob         SE  df asymp.LCL asymp.UCL collection_date
-# 62           18694 0.9994079 0.0005942373 Inf  0.995778 0.9999173      2021-03-08
+# 62           18718 0.9999585 5.789292e-05 Inf 0.9993608 0.9999973      2021-04-01
 
 # prop of S dropout samples among new infections that are now estimated to be B.1.1.7 / 501Y.V1 (using 7 days for time from infection to diagnosis)
 fitseq_preds[fitseq_preds$collection_date==(today+7),]
 #    collection_date_num     prob          SE  df asymp.LCL asymp.UCL collection_date
-# 69           18701 0.9997273 0.0003048442 Inf 0.9975652 0.9999695      2021-03-15
+# 69           18725 0.9999809 2.884737e-05 Inf 0.9996314  0.999999      2021-04-08
 
 # from 13th of Jan 2021 >80% of all S dropout samples were indeed B.1.1.7 / 501Y.V1
 fitseq_preds[fitseq_preds$prob>0.80,"collection_date"][1]
@@ -1647,44 +1649,44 @@ fit_preds_bylab$LABORATORY = factor(fit_preds_bylab$LABORATORY,
 # estimated share of 501Y.V1 among currently diagnosed infections based on best fitting model
 fit_preds[fit_preds$collection_date==today,]
 #    collection_date_num     prob         SE  df asymp.LCL asymp.UCL collection_date
-# 27              18709 0.7855921 0.01294065 Inf 0.7591719  0.809891      2021-03-23
+# 27              18718 0.8305255 0.01398165 Inf 0.8013776 0.8562271      2021-04-01
 
 # estimated share of 501Y.V1 among new infections (assuming time between infection & diagnosis of 7 days)
 fit_preds[fit_preds$collection_date==(today+7),]
 #    collection_date_num     prob         SE  df asymp.LCL asymp.UCL collection_date
-# 34               18716 0.8212194 0.01383955 Inf 0.7925096 0.8467865      2021-03-30
+# 34               18725 0.8601258 0.01411272 Inf 0.8301598 0.8855993      2021-04-08
 
 
 # estimated share of 501Y.V1 among currently diagnosed infections predicted based on jan 22 data used in first report
 fit1_22jan_preds[fit1_22jan_preds$collection_date==today,]
 #    collection_date_num     prob         SE  df asymp.LCL asymp.UCL collection_date
-# 27              18709 0.9941464 0.004818432 Inf 0.9711108 0.9988406      2021-03-23
+# 27              18718 0.9978622 0.001998574 Inf 0.9867597 0.9996587      2021-04-01
 
 # estimated share of 501Y.V1 among new infections (assuming time between infection & diagnosis of 7 days) predicted based on jan 22 data used in first report
 fit1_22jan_preds[fit1_22jan_preds$collection_date==(today+7),]
 #    collection_date_num     prob         SE  df asymp.LCL asymp.UCL collection_date
-# 34               18716 0.9973249 0.002435032 Inf 0.9842344 0.9995521      2021-03-30
+# 34               18725 0.9990254 0.0009944078 Inf 0.9928372 0.9998683      2021-04-08
 
 
 # estimated share of 501Y.V1 among currently diagnosed infections in different regions based on best fitting model
 fit_preds_bylab[fit_preds_bylab$collection_date==today,]
 # collection_date_num       LABORATORY      prob         SE  df asymp.LCL asymp.UCL collection_date
-# 204                18709            Namur 0.7747303 0.03441783 Inf 0.7005216 0.8351847      2021-03-23
-# 447                18709  Saint LUC - UCL 0.6204433 0.04044071 Inf 0.5387436 0.6960682      2021-03-23
-# 690                18709              ULB 0.7447183 0.03607304 Inf 0.6681262 0.8090045      2021-03-23
-# 933                18709 UMons - Jolimont 0.9381637 0.01185882 Inf 0.9104685 0.9577329      2021-03-23
-# 1176               18709        UZ leuven 0.6354737 0.04345388 Inf 0.5470331 0.7159079      2021-03-23
-# 1419               18709              UZA 0.8508995 0.02242840 Inf 0.8015461 0.8898182      2021-03-23
+# 213                18718            Namur 0.8188628 0.038155725 Inf 0.7322974 0.8823128      2021-04-01
+# 456                18718  Saint LUC - UCL 0.6375110 0.050885199 Inf 0.5333954 0.7305289      2021-04-01
+# 699                18718              ULB 0.7695901 0.043186029 Inf 0.6748710 0.8435647      2021-04-01
+# 942                18718 UMons - Jolimont 0.9710271 0.007510052 Inf 0.9520894 0.9826316      2021-04-01
+# 1185               18718        UZ leuven 0.6672784 0.053579783 Inf 0.5557769 0.7632224      2021-04-01
+# 1428               18718              UZA 0.8892086 0.022257140 Inf 0.8376718 0.9259734      2021-04-01
 
 # estimated share of 501Y.V1 among new infections (assuming time between infection & diagnosis of 7 days) in different regions
 fit_preds_bylab[fit_preds_bylab$collection_date==(today+7),]
 # collection_date_num       LABORATORY      prob         SE  df asymp.LCL asymp.UCL collection_date
-# 211                18716            Namur 0.8096601 0.037557703 Inf 0.7254793 0.8729171      2021-03-30
-# 454                18716  Saint LUC - UCL 0.6337452 0.048578965 Inf 0.5346461 0.7230303      2021-03-30
-# 697                18716              ULB 0.7642088 0.041705116 Inf 0.6734321 0.8363098      2021-03-30
-# 940                18716 UMons - Jolimont 0.9656311 0.008393589 Inf 0.9448245 0.9787878      2021-03-30
-# 1183               18716        UZ leuven 0.6603247 0.051415372 Inf 0.5539031 0.7531295      2021-03-30
-# 1426               18716              UZA 0.8815079 0.022442949 Inf 0.8301537 0.9189981      2021-03-30
+# 220                18725            Namur 0.8483952 0.039257961 Inf 0.7551563 0.9107133      2021-04-08
+# 463                18725  Saint LUC - UCL 0.6505617 0.058828367 Inf 0.5288308 0.7559119      2021-04-08
+# 706                18725              ULB 0.7877582 0.047878212 Inf 0.6797222 0.8670279      2021-04-08
+# 949                18725 UMons - Jolimont 0.9841714 0.004929228 Inf 0.9709778 0.9914264      2021-04-08
+# 1192               18725        UZ leuven 0.6910551 0.060673937 Inf 0.5621256 0.7964552      2021-04-08
+# 1435               18725              UZA 0.9128367 0.021088844 Inf 0.8618354 0.9463080      2021-04-08
 
 
 sum(tail(data_ag_byday_wide$est_n_B117, 14))/sum(tail(data_ag_byday_wide$n_pos,14)) 
@@ -1996,12 +1998,11 @@ qplot(data=Re_cases, x=DATE, y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribbon", 
   ylab("R waarde")
 ggsave(file=paste0(".//plots//",dat,"//Re_cases_Re_501YV1_Re_wildtype.png"), width=7, height=5)
 ggsave(file=paste0(".//plots//",dat,"//Re_cases_Re_501YV1_Re_wildtype.pdf"), width=7, height=5)
-Re_cases[Re_cases$DATE==today,]
-# DATE_NUM          r          SE       df    r_LOWER    r_UPPER       DATE       Re Re_LOWER Re_UPPER collection_date_num        M  propB117    Re_WT
-# 384    18705 0.04602482 0.001368728 197.0327 0.04332558 0.04872405 2021-03-19 1.231053 1.216676 1.245535               18705 1.167686 0.7491958 1.093657
+Re_cases[Re_cases$DATE==max(Re_cases$DATE),]
+# DATE_NUM          r          SE       df    r_LOWER    r_UPPER       DATE      Re Re_LOWER Re_UPPER collection_date_num        M  propB117     Re_WT
+# 237    18711 0.02632812 0.001408553 204.0343 0.02355093 0.02910531 2021-03-25 1.12853 1.114516 1.142652               18711 1.167686 0.7962589 0.9955965
 # Re_WT_LOWER Re_WT_UPPER  Re_B117 Re_B117_LOWER Re_B117_UPPER
-# 384    1.080885    1.106523 1.277048      1.262134      1.292071
-
+# 237   0.9832337    1.008055 1.162544      1.148108      1.177092
 
 
 # 5. SOME INTERNATIONAL COMPARISONS ####
@@ -2087,7 +2088,7 @@ fit_ukSGTF_3 = glmer(cbind(est_n_B117, n_pos-est_n_B117) ~ (1|obs)+scale(ns(coll
 fit_ukSGTF_4 = glmer(cbind(est_n_B117, n_pos-est_n_B117) ~ (1|obs)+ns(collection_date_num,df=3)*REGION, family=binomial(logit), 
                      data=sgtfdata_uk, control=glmersettings3) # with spline term in interaction with region
 BIC(fit_ukSGTF_1, fit_ukSGTF_2, fit_ukSGTF_3, fit_ukSGTF_4) 
-# separate-slopes 3 df spline model fit_be_uk2_4 best
+# separate-slopes 3 df spline model fit_ukSGTF_4 best
 # df      BIC
 # fit_ukSGTF_1  9 4902.696
 # fit_ukSGTF_2 15 4769.405
@@ -2658,22 +2659,22 @@ us_data$obs = factor(1:nrow(us_data))
 # us_data = us_data[us_data$state %in% sel_states,]
 us_data$state = factor(us_data$state)
 
-range(us_data$collection_date) # "2020-09-05" "2021-03-14"
+range(us_data$collection_date) # "2020-09-05" "2021-03-19"
 
 fit_us_propB117amongSGTF = glmer(cbind(B117, sequenced_SGTF-B117) ~ (1|state)+scale(collection_date_num), 
                                  family=binomial(logit), data=us_data)
-BIC(fit_us_propB117amongSGTF) # 852.8811
+BIC(fit_us_propB117amongSGTF) 
 
 # implied growth rate advantage of B.1.1.7 over other earlier strains showing S dropout:
 as.data.frame(emtrends(fit_us_propB117amongSGTF, ~ 1, var="collection_date_num"))[,c(2,5,6)]
 #   collection_date_num.trend  asymp.LCL asymp.UCL
-# 1                0.07841014 0.06737622 0.08944407
+# 1                 0.06693256  0.060078 0.07378713
 
 # with a generation time of 4.7 days this would translate to a multiplicative effect on Rt
 # and estimated increased infectiousness of B.1.1.7 over other strains showing S dropout of
 exp(4.7*as.data.frame(emtrends(fit_us_propB117amongSGTF, ~ 1, var="collection_date_num"))[,c(2,5,6)])
 #   collection_date_num.trend asymp.LCL asymp.UCL
-# 1                   1.445605  1.372547  1.522551
+# 1                   1.369688  1.326265  1.414533
 
 
 # FIT FOR WHOLE US + PLOT
@@ -2703,7 +2704,7 @@ colnames(us_growthrates_avg_B117vsallother)[2] = "logistic_growth_rate"
 us_growthrates_avg_B117vsallother = M.from.delta_r_df(us_growthrates_avg_B117vsallother)
 us_growthrates_avg_B117vsallother
 # 1 logistic_growth_rate asymp.LCL  asymp.UCL        M  M.LCL    M.UCL
-# 1 overall           0.08186126 0.07991355 0.08380897
+# 1 overall           0.07949194 0.0777954 0.08118848 1.452973 1.441434 1.464605
 
 
 # plot model fit fit_us
@@ -3057,7 +3058,7 @@ plot_us2
 # fit POISSON GAM TO TOTAL SCIENSANO CASE DATA, correcting for weekday & testing intensity ####
 
 source("scripts/downloadData.R") # download latest data with new confirmed cases per day from Sciensano website, code adapted from https://github.com/JoFAM/covidBE_analysis by Joris Meys
-range(cases_tot$DATE) # "2020-03-01" "2021-03-20"
+range(cases_tot$DATE) # "2020-03-01" "2021-03-30"
 # smooth out weekday effects in case nrs using GAM & correct for unequal testing intensity
 fit_cases_BE = gam(CASES ~ s(DATE_NUM, bs="cs", k=34, fx=F) + 
                      WEEKDAY + 
@@ -3483,5 +3484,3 @@ plotcases501YV1_Sdropout_Michigan = qplot(data=data_michigan[data_michigan$varia
   coord_cartesian(xlim=c(as.Date("2020-11-01"),NA), expand=c(0,0))
 plotcases501YV1_Sdropout_Michigan
 ggsave(file=paste0(".//plots//",dat,"//confirmed_cases_by_501YV1_vs_wildtype_S dropout_Michigan.png"), width=7, height=5)
-
-
