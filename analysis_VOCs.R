@@ -155,7 +155,7 @@ exp(delta_r_VOCs*4.7)
 
 # plot multinomial model fit
 
-extrapolate = 60
+extrapolate = 30*4
 date.from = as.numeric(as.Date("2021-01-01")) # min(vocs_long$DATE_NUM)
 date.to =  max(vocs_long$DATE_NUM)+extrapolate
 
@@ -185,7 +185,7 @@ ggplot(data=voc_mbfit1_preds, aes(x=DATE, y=prob, group=LINEAGE)) +
                      axis.title.x=element_blank()) + 
   # labs(title = "MAIN SARS-CoV2 VARIANT LINEAGES IN THE UK") +
   ylab("Share among newly diagnosed infections") +
-  ggtitle("Spread of the B.1.1.7, B.1.351, P.1 & B.1.214.2\nSARS-CoV2 variants in Belgium (baseline surveillance)")
+  ggtitle("Spread of the B.1.1.7, B.1.351, P.1 & B.1.214.2\nSARS-CoV2 variants in Belgium (multinomial fit to GISAID data)")
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\VOCs_muller_plot_multinomial fit.png"), width=10, height=7)
 

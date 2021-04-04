@@ -2659,7 +2659,7 @@ us_data$obs = factor(1:nrow(us_data))
 # us_data = us_data[us_data$state %in% sel_states,]
 us_data$state = factor(us_data$state)
 
-range(us_data$collection_date) # "2020-09-05" "2021-03-19"
+range(us_data$collection_date) # "2020-09-05" "2021-03-29"
 
 fit_us_propB117amongSGTF = glmer(cbind(B117, sequenced_SGTF-B117) ~ (1|state)+scale(collection_date_num), 
                                  family=binomial(logit), data=us_data)
@@ -2668,13 +2668,19 @@ BIC(fit_us_propB117amongSGTF)
 # implied growth rate advantage of B.1.1.7 over other earlier strains showing S dropout:
 as.data.frame(emtrends(fit_us_propB117amongSGTF, ~ 1, var="collection_date_num"))[,c(2,5,6)]
 #   collection_date_num.trend  asymp.LCL asymp.UCL
-# 1                 0.06693256  0.060078 0.07378713
+# 1                 0.06778484 0.06177939 0.07379029
 
 # with a generation time of 4.7 days this would translate to a multiplicative effect on Rt
 # and estimated increased infectiousness of B.1.1.7 over other strains showing S dropout of
 exp(4.7*as.data.frame(emtrends(fit_us_propB117amongSGTF, ~ 1, var="collection_date_num"))[,c(2,5,6)])
 #   collection_date_num.trend asymp.LCL asymp.UCL
-# 1                   1.369688  1.326265  1.414533
+# 1                   1.375186  1.336913  1.414554
+
+# with a generation time of 5.5 days this would translate to a multiplicative effect on Rt
+# and estimated increased infectiousness of B.1.1.7 over other strains showing S dropout of
+exp(5.5*as.data.frame(emtrends(fit_us_propB117amongSGTF, ~ 1, var="collection_date_num"))[,c(2,5,6)])
+#   collection_date_num.trend asymp.LCL asymp.UCL
+# 1                   1.451818  1.404648  1.500572
 
 
 # FIT FOR WHOLE US + PLOT
@@ -2692,8 +2698,8 @@ fit_us2 = glmer(cbind(est_n_B117, positive-est_n_B117) ~ (collection_date_num||s
                 family=binomial(logit), data=us_data, control=glmersettings2) # random intercepts+slopes by state, with uncorrelated intercepts & slopes
 BIC(fit_us1, fit_us2) # random intercept model fit_us1 is best
 # df      BIC
-# fit_us1  4 3841.183
-# fit_us2  6 4394.376
+# fit_us1  4 5337.897
+# fit_us2  6 5849.333
 summary(fit_us1)
 
 #  GROWTH RATE & TRANSMISSION ADVANTAGE
@@ -2704,7 +2710,7 @@ colnames(us_growthrates_avg_B117vsallother)[2] = "logistic_growth_rate"
 us_growthrates_avg_B117vsallother = M.from.delta_r_df(us_growthrates_avg_B117vsallother)
 us_growthrates_avg_B117vsallother
 # 1 logistic_growth_rate asymp.LCL  asymp.UCL        M  M.LCL    M.UCL
-# 1 overall           0.07949194 0.0777954 0.08118848 1.452973 1.441434 1.464605
+# 1 overall           0.07725101 0.07579652 0.07870549 1.43775 1.427955 1.447613
 
 
 # plot model fit fit_us
@@ -2754,11 +2760,11 @@ plot_us = qplot(data=fit_us_preds2, x=collection_date, y=prob, geom="blank") +
   alpha=I(0.8)) +
   ylab("Relative abundance of 501Y.V1 (%)") +
   theme_hc() + xlab("") + 
-  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
-                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
+  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01")),
+                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A","M")) +
   scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
                       labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
-  coord_cartesian(xlim=c(min(fit_us_preds$collection_date), as.Date("2021-04-01")), 
+  coord_cartesian(xlim=c(as.Date("2020-12-01"), as.Date("2021-05-01")), 
                   # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")), 
                   ylim=c(0.001,0.9990001), expand=c(0,0)) +
   scale_color_discrete("state", h=c(0, 240), c=180, l=55) +
@@ -2801,7 +2807,7 @@ plot_us_response = qplot(data=fit_us_preds2, x=collection_date, y=prob*100, geom
                      labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
   # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
   #                    labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
-  coord_cartesian(xlim=c(min(fit_us_preds2$collection_date), as.Date("2021-04-01")), 
+  coord_cartesian(xlim=c(as.Date("2020-12-01"), as.Date("2021-05-01")), 
                   # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")), 
                   ylim=c(0,100), expand=c(0,0)) +
   scale_color_discrete("state", h=c(0, 240), c=180, l=55) +
@@ -2934,8 +2940,8 @@ plot_international = qplot(data=fits_international, x=date, y=prob, geom="blank"
   ylab("Relative abundance of 501Y.V1 (%)") +
   theme_hc() + 
   xlab("") + 
-  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01")),
-                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A")) +
+  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01")),
+                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A","M")) +
   scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
                       labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9") # ,
                       # limits = c(ymin,ymax+1E-7)
@@ -2966,7 +2972,7 @@ plot_international = qplot(data=fits_international, x=date, y=prob, geom="blank"
     size = guide_legend(order = 3)
   ) + 
   coord_cartesian( 
-    xlim=c(as.Date("2020-09-01"),as.Date("2021-03-31")),
+    xlim=c(as.Date("2020-09-01"),as.Date("2021-04-30")),
     ylim=c(ymin,ymax+1E-7), 
     expand=FALSE) 
 # ggtitle("INTERNATIONAL SPREAD OF SARS-CoV2 VARIANT B.1.1.7") +
