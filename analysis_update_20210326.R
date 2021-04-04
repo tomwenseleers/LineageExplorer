@@ -2645,7 +2645,7 @@ plot_switzerland_response
 
 
 
-# 5.3. DATA USA : S-GENE TARGET FAILURE DATA ####
+# 5.4. DATA USA : S-GENE TARGET FAILURE DATA ####
 
 # Data source: Helix® COVID-19 Surveillance, https://github.com/myhelix/helix-covid19db
 # see preprint https://www.medrxiv.org/content/10.1101/2021.02.06.21251159v1 & https://github.com/andersen-lab/paper_2021_early-b117-usa/tree/master/b117_frequency/data
@@ -2764,7 +2764,7 @@ plot_us = qplot(data=fit_us_preds2, x=collection_date, y=prob, geom="blank") +
                      labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A","M")) +
   scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
                       labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
-  coord_cartesian(xlim=c(as.Date("2020-12-01"), as.Date("2021-05-01")), 
+  coord_cartesian(xlim=c(as.Date("2020-12-01"), as.Date("2021-04-30")), 
                   # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")), 
                   ylim=c(0.001,0.9990001), expand=c(0,0)) +
   scale_color_discrete("state", h=c(0, 240), c=180, l=55) +
@@ -2803,11 +2803,11 @@ plot_us_response = qplot(data=fit_us_preds2, x=collection_date, y=prob*100, geom
   alpha=I(0.8)) +
   ylab("Relative abundance of 501Y.V1 (%)") +
   theme_hc() + xlab("") + 
-  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
-                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
+  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01")),
+                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A","M")) +
   # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
   #                    labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
-  coord_cartesian(xlim=c(as.Date("2020-12-01"), as.Date("2021-05-01")), 
+  coord_cartesian(xlim=c(as.Date("2020-12-01"), as.Date("2021-04-30")), 
                   # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")), 
                   ylim=c(0,100), expand=c(0,0)) +
   scale_color_discrete("state", h=c(0, 240), c=180, l=55) +
@@ -2836,7 +2836,7 @@ ggsave(file = paste0(".\\plots\\",dat,"\\Fig8_US_data_by state_response.png"), w
 
 
 
-# 5.4. MULTIPANEL PLOT INTERNATIONAL COMPARISONS ####
+# 5.5. MULTIPANEL PLOT INTERNATIONAL COMPARISONS ####
 
 fit_uk_preds2 = fit_ukSGTF_4_preds
 fit_uk_preds2$country = "UK"
@@ -3004,8 +3004,8 @@ plot_international_response = qplot(data=fits_international, x=date, y=prob*100,
   ylab("Relative abundance of 501Y.V1 (%)") +
   theme_hc() + 
   xlab("") + 
-  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01")),
-                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A")) +
+  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01")),
+                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A","M")) +
   # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
   #                    labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
   scale_color_discrete("region", h=c(0, 290), c=180, l=55) +
@@ -3034,7 +3034,7 @@ plot_international_response = qplot(data=fits_international, x=date, y=prob*100,
     size = guide_legend(order = 3)
   ) +
   coord_cartesian( 
-    xlim=c(as.Date("2020-09-01"),as.Date("2021-04-01")-1),
+    xlim=c(as.Date("2020-09-01"),as.Date("2021-04-30")),
     ylim=c(0,100), expand=c(0,0))
 # +
 # ggtitle("INTERNATIONAL SPREAD OF SARS-CoV2 VARIANT B.1.1.7") +
@@ -3059,7 +3059,7 @@ plot_us2
 
 
 
-# 5.5. PLOTS OF ESTIMATED NR OF NEW INFECTIONS BY DIFFERENT VOCs VS. WILD TYPE BASED ON LOGISTIC FIT TO S DROPOUT DATA & MULTINOMIAL FIT TO BASELINE SURVEILLANCE SEQ DATA ####
+# 5.6. PLOTS OF ESTIMATED NR OF NEW INFECTIONS BY DIFFERENT VOCs VS. WILD TYPE BASED ON LOGISTIC FIT TO S DROPOUT DATA & MULTINOMIAL FIT TO BASELINE SURVEILLANCE SEQ DATA ####
 
 # fit POISSON GAM TO TOTAL SCIENSANO CASE DATA, correcting for weekday & testing intensity ####
 
