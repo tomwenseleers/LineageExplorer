@@ -2712,6 +2712,17 @@ us_growthrates_avg_B117vsallother
 # 1 logistic_growth_rate asymp.LCL  asymp.UCL        M  M.LCL    M.UCL
 # 1 overall           0.07725101 0.07579652 0.07870549 1.43775 1.427955 1.447613
 
+# with a generation time of 4.7 days this would translate to a multiplicative effect on Rt of
+exp(4.7*as.data.frame(emtrends(fit_us1, ~ 1, var="collection_date_num"))[c(2,5,6)])
+#   collection_date_num.trend asymp.LCL asymp.UCL
+# 1                   1.43775  1.427955  1.447613
+
+# with a generation time of 5.5 days this would translate to a multiplicative effect on Rt of
+exp(5.5*as.data.frame(emtrends(fit_us1, ~ 1, var="collection_date_num"))[c(2,5,6)])
+#   collection_date_num.trend asymp.LCL asymp.UCL
+# 1                   1.529408  1.517222  1.541692
+
+
 
 # plot model fit fit_us
 
