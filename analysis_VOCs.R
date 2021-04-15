@@ -46,6 +46,8 @@ vocs_long = vocs_long[vocs_long$DATE>=as.Date("2021-02-07"),] # we just use data
 vocs_long$obs = factor(1:nrow(vocs_long))
 head(vocs_long)
 
+library(ggplot2)
+library(ggthemes)
 ggplot(data=vocs_long, aes(x=DATE, 
                            y=COUNT, fill=LINEAGE, group=LINEAGE)) +
   facet_wrap(~PROVINCE) +
@@ -66,6 +68,7 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\VOCs_muller_plot_raw data.png"), widt
 
 # multinomial fit of share of each variant
 
+library(splines)
 set.seed(1)
 voc_mfit1 = nnet::multinom(LINEAGE ~ DATE_NUM+PROVINCE, weights=COUNT, data=vocs_long, 
                                      subset=vocs_long$PROVINCE!="All",
@@ -85,6 +88,7 @@ BIC(voc_mfit1,voc_mfit2,voc_mfit3,voc_mfit4) # voc_mfit1 has best BIC
 # voc_mfit2  88 9740.092
 # voc_mfit3  52 9186.459
 # voc_mfit4 132 9680.397
+
 
 # we could also use mblogit to do a multinomial fit taking into account overdispersion
 voc_mbfit1 = mblogit(LINEAGE ~ scale(DATE_NUM, center=TRUE, scale=FALSE)+PROVINCE,
@@ -155,7 +159,7 @@ exp(delta_r_VOCs*4.7)
 
 # plot multinomial model fit
 
-extrapolate = 30*4
+extrapolate = 30
 date.from = as.numeric(as.Date("2021-01-01")) # min(vocs_long$DATE_NUM)
 date.to =  max(vocs_long$DATE_NUM)+extrapolate
 
