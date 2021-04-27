@@ -28,9 +28,16 @@ bankholidays = as.Date(c("2020-04-13", # public holidays (excluding the ones tha
                          "2020-11-01",
                          "2020-11-11",
                          "2020-12-24", # not an official one though
-                         "2020-12-25"))
+                         "2020-12-25",
+                         "2021-01-01",
+                         "2021-04-05",
+                         "2021-05-13",
+                         "2021-05-24",
+                         "2021-07-21",
+                         "2021-11-01"))
 bankholiday = function(date) { date=as.Date(date)
                                as.factor(c("no","yes")[(date %in% bankholidays)*1+1]) }
+
 
 #----------------------------------
 # Translates provinces to regions.

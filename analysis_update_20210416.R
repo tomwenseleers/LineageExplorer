@@ -49,14 +49,14 @@ library(nnet)
 library(mclogit)
 
 
-dat="2021_04_16" # desired file version for Belgian data (date/path in //data)
+dat="2021_04_26" # desired file version for Belgian data (date/path in //data)
 suppressWarnings(dir.create(paste0(".//plots//",dat)))
 filedate = as.Date(gsub("_","-",dat)) # file date
 filedate_num = as.numeric(filedate)
 today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-04-16")
+today = as.Date("2021-04-26")
 today_num = as.numeric(today)
-today # "2021-04-16"
+today # "2021-04-26"
 
 set_sum_contrasts() # we use effect coding for all models
 
@@ -2661,33 +2661,41 @@ us_data$obs = factor(1:nrow(us_data))
 # us_data = us_data[us_data$state %in% sel_states,]
 us_data$state = factor(us_data$state)
 
-range(us_data$collection_date) # "2020-09-05" "2021-03-29"
+range(us_data$collection_date) # "2020-09-05" "2021-04-22"
+
+us_data2 = us_data
+us_data2 = us_data2[us_data2$sequenced_SGTF!=0,]
+us_data2$propB117 = us_data2$B117/us_data2$sequenced_SGTF
+us_data2 = us_data2[us_data2$propB117<=1,]
+range(us_data2$propB117)
+
+range(us_data2$collection_date) # "2020-12-19" "2021-04-06"
 
 fit_us_propB117amongSGTF = glmer(cbind(B117, sequenced_SGTF-B117) ~ (1|state)+scale(collection_date_num), 
-                                 family=binomial(logit), data=us_data)
+                                 family=binomial(logit), data=us_data2)
 BIC(fit_us_propB117amongSGTF) 
 
 # implied growth rate advantage of B.1.1.7 over other earlier strains showing S dropout:
 as.data.frame(emtrends(fit_us_propB117amongSGTF, ~ 1, var="collection_date_num"))[,c(2,5,6)]
 #   collection_date_num.trend  asymp.LCL asymp.UCL
-# 1                 0.06778484 0.06177939 0.07379029
+# 1                 0.06099678 0.05686935 0.06512421
 
 # with a generation time of 4.7 days this would translate to a multiplicative effect on Rt
 # and estimated increased infectiousness of B.1.1.7 over other strains showing S dropout of
 exp(4.7*as.data.frame(emtrends(fit_us_propB117amongSGTF, ~ 1, var="collection_date_num"))[,c(2,5,6)])
 #   collection_date_num.trend asymp.LCL asymp.UCL
-# 1                   1.375186  1.336913  1.414554
+# 1                   1.332004  1.306414  1.358096
 
 # with a generation time of 5.5 days this would translate to a multiplicative effect on Rt
 # and estimated increased infectiousness of B.1.1.7 over other strains showing S dropout of
 exp(5.5*as.data.frame(emtrends(fit_us_propB117amongSGTF, ~ 1, var="collection_date_num"))[,c(2,5,6)])
 #   collection_date_num.trend asymp.LCL asymp.UCL
-# 1                   1.451818  1.404648  1.500572
+# 1                   1.398615  1.367223  1.430728
 
 
 # FIT FOR WHOLE US + PLOT
 
-fitted_truepos = predict(fit_us_propB117amongSGTF, newdat=us_data, type="response") 
+fitted_truepos = predict(fit_us_propB117amongSGTF, newdat=us_data, type="response", re.form=NA) 
 # fitted true positive rate, ie prop of S dropout samples that are B.1.1.7 for dates & states in helix_sgtf
 
 us_data$est_n_B117 = us_data$all_SGTF*fitted_truepos # estimated nr of B.1.1.7 samples
@@ -2700,8 +2708,8 @@ fit_us2 = glmer(cbind(est_n_B117, positive-est_n_B117) ~ (collection_date_num||s
                 family=binomial(logit), data=us_data, control=glmersettings2) # random intercepts+slopes by state, with uncorrelated intercepts & slopes
 BIC(fit_us1, fit_us2) # random intercept model fit_us1 is best
 # df      BIC
-# fit_us1  4 5337.897
-# fit_us2  6 5849.333
+# fit_us1  4 8309.006
+# fit_us2  6 8961.308
 summary(fit_us1)
 
 #  GROWTH RATE & TRANSMISSION ADVANTAGE
@@ -2712,17 +2720,17 @@ colnames(us_growthrates_avg_B117vsallother)[2] = "logistic_growth_rate"
 us_growthrates_avg_B117vsallother = M.from.delta_r_df(us_growthrates_avg_B117vsallother)
 us_growthrates_avg_B117vsallother
 # 1 logistic_growth_rate asymp.LCL  asymp.UCL        M  M.LCL    M.UCL
-# 1 overall           0.07725101 0.07579652 0.07870549 1.43775 1.427955 1.447613
+# 1 overall           0.06815698 0.06698542 0.06932853 1.377593 1.370028 1.385199
 
 # with a generation time of 4.7 days this would translate to a multiplicative effect on Rt of
 exp(4.7*as.data.frame(emtrends(fit_us1, ~ 1, var="collection_date_num"))[c(2,5,6)])
 #   collection_date_num.trend asymp.LCL asymp.UCL
-# 1                   1.43775  1.427955  1.447613
+# 1                   1.377593  1.370028  1.385199 
 
 # with a generation time of 5.5 days this would translate to a multiplicative effect on Rt of
 exp(5.5*as.data.frame(emtrends(fit_us1, ~ 1, var="collection_date_num"))[c(2,5,6)])
 #   collection_date_num.trend asymp.LCL asymp.UCL
-# 1                   1.529408  1.517222  1.541692
+# 1                   1.454793  1.445449  1.464197
 
 
 
@@ -2739,7 +2747,8 @@ date.to = as.numeric(as.Date("2021-06-01"))
 # the 9 states with the most data
 # sel_states=c("FL","NY","CA","NJ","GA","TX","OH","PA","LA","IL","MI","MA","NC","IN","AZ")
 # sel_states=c("FL","CA","GA","TX","PA","LA","IL","MI","MA","NC","IN","AZ")
-sel_states=c("MI","MN","NY","TX","GA","FL","CA","MA","PA","IN","IL","AZ")
+# sel_states=c("MI","MN","NY","TX","GA","FL","CA","MA","PA","IN","IL","AZ")
+sel_states=c("CA","CO","CT","FL","IL","MD","MA","MI","MN","NJ","NY","PA")
 total.SD = sqrt(sum(sapply(as.data.frame(VarCorr(fit_us1))$sdcor, function (x) x^2))) 
 fit_us_preds = as.data.frame(emmeans(fit_us1, ~ collection_date_num, 
                                      # by="state", 
@@ -2793,7 +2802,10 @@ plot_us = qplot(data=fit_us_preds2, x=collection_date, y=prob, geom="blank") +
   # guides(fill=FALSE) + 
   # guides(colour=FALSE) + 
   theme(legend.position = "right") +
-  xlab("") # +
+  xlab("") +
+  labs(tag = "@TWenseleers\ndata Helix") +
+  theme(plot.tag.position = "bottomright",
+        plot.tag = element_text(vjust = 1, hjust = 1, size=8)) # +
 # theme(axis.text.x = element_text(angle = 90, vjust=0.5)) +
 # ggtitle("US") +
 # theme(plot.title = element_text(hjust = 0.5))
@@ -2836,7 +2848,11 @@ plot_us_response = qplot(data=fit_us_preds2, x=collection_date, y=prob*100, geom
   # guides(fill=FALSE) + 
   # guides(colour=FALSE) + 
   theme(legend.position = "right") +
-  xlab("") # +
+  xlab("") +
+  labs(tag = "@TWenseleers\ndata Helix") +
+  theme(plot.tag.position = "bottomright",
+        plot.tag = element_text(vjust = 1, hjust = 1, size=8)) # +
+# +
 # theme(axis.text.x = element_text(angle = 90, vjust=0.5)) +
 # ggtitle("US") +
 # theme(plot.title = element_text(hjust = 0.5))
@@ -3077,18 +3093,22 @@ plot_us2
 # fit POISSON GAM TO TOTAL SCIENSANO CASE DATA, correcting for weekday & testing intensity ####
 
 source("scripts/downloadData.R") # download latest data with new confirmed cases per day from Sciensano website, code adapted from https://github.com/JoFAM/covidBE_analysis by Joris Meys
-range(cases_tot$DATE) # "2020-03-01" "2021-04-07"
+range(cases_tot$DATE) # "2020-03-01" "2021-04-20"
+
+cases_tot = cases_tot[cases_tot$DATE>=as.Date("2020-08-01"),]
+
 # smooth out weekday effects in case nrs using GAM & correct for unequal testing intensity
-fit_cases_BE = gam(CASES ~ s(DATE_NUM, bs="cs", k=34, fx=F) + 
-                     WEEKDAY + 
-                     s(log(TESTS_ALL), bs="cs", k=7, fx=F),
+fit_cases_BE = gam(CASES ~ s(DATE_NUM, bs="cs", k=20, fx=F) + 
+                     WEEKDAY + BANKHOLIDAY +
+                     s(TESTS_ALL, bs="cs", k=8, fx=F),
                    family=poisson(log), data=cases_tot,
 ) 
 BIC(fit_cases_BE)
 # expected marginal mean cases for average weekdata at mean testing effort of last week
 df = as.data.frame(emmeans(fit_cases_BE, ~ DATE_NUM, 
                            at = list(DATE_NUM=cases_tot$DATE_NUM,
-                                     TESTS_ALL=mean(tail(cases_tot$TESTS_ALL,7))
+                                     BANKHOLIDAY = factor("no"),
+                                     TESTS_ALL=max(cases_tot$TESTS_ALL)
                            ),
                            type="response"))
 colnames(df)[2] = "CASES_SMOOTH"
@@ -3252,9 +3272,9 @@ qplot(data=data_cases_BE[data_cases_BE$DATE>=as.Date("2020-09-01"),], # data_cas
   ylab("Geschatte aantal nieuwe infecties per dag") + xlab("") + ggtitle("Geschatte aantal nieuwe infecties door de\nBritse, Zuid-Afrikaanse en Braziliaanse varianten") +
   scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01")),
                      labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A","M")) +
-  scale_y_continuous(breaks=10^seq(0,4), minor_breaks=0, expand=FALSE, limits=c(2,3E4)) +
+  scale_y_continuous(breaks=10^seq(0,4), minor_breaks=0, expand=FALSE, limits=c(0.01,3E4)) +
   coord_cartesian(xlim=c(as.Date("2020-09-01"),NA), expand=c(0,0)) +
-  coord_trans(y="log10", ylim=c(10,3E4), expand=FALSE) +
+  coord_trans(y="log10", ylim=c(1,max(data_cases_BE$CASES_SMOOTH)), expand=FALSE) +
   labs(tag = tag) +
   theme(plot.tag.position = "bottomright",
         plot.tag = element_text(vjust = 1, hjust = 1, size=8))
@@ -3317,7 +3337,7 @@ qplot(data=data_cases_BE[data_cases_BE$variant!="total",],
   labs(tag = tag) +
   theme(plot.tag.position = "bottomright",
         plot.tag = element_text(vjust = 1, hjust = 1, size=8))
-ggsave(file=paste0(".//plots//",dat,"//confirmed_cases_by_501YV1_501YV2_501YV3_wildtype_baseline surveillance_stacked.png"), width=7, height=5)
+ggsave(file=paste0(".//plots//",dat,"//confirmed_cases_by_501YV1_501YV2_501YV3_wildtype_baseline surveillance_stacked_ENG.png"), width=7, height=5)
 
 
 # plot for Belgium (BASED ON LOGISTIC FIT TO S DROPOUT DATA & POISSON GAM FIT TO SCIENSANO TOTAL CASE DATA) ####
@@ -3495,8 +3515,8 @@ plotcases501YV1_Sdropout_Michigan = qplot(data=data_michigan[data_michigan$varia
   scale_colour_manual("", values=c("grey75","red2")) +
   scale_fill_manual("", values=c("grey75","red2")) +
   ylab("New confirmed cases") + xlab("") + ggtitle("Estimated infections by UK SARS-CoV2 variant 501Y.V1\nin Michigan (S dropout data)") +
-  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
-                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
+  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01")),
+                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A","M")) +
   labs(tag = tag) +
   theme(plot.tag.position = "bottomright",
         plot.tag = element_text(vjust = 1, hjust = 1, size=8)) +

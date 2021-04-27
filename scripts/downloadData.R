@@ -229,6 +229,7 @@ cases_tot = rawcases[rawcases$PROVINCE=="All"&
 cases_tot$DATE = as.Date(cases_tot$DATE)
 cases_tot = cases_tot[!is.na(cases_tot$DATE),]
 range(cases_tot$DATE) # "2020-03-01" "2021-02-21"
+cases_tot$BANKHOLIDAY = bankholiday(cases_tot$DATE)
 cases_tot$DATE_NUM = as.numeric(cases_tot$DATE)
 cases_tot$TESTS_ALL = tests_tot$TESTS_ALL[match(cases_tot$DATE,tests_tot$DATE)]
 cases_tot$WEEKDAY = as.factor(weekdays(as.Date(cases_tot$DATE)))
