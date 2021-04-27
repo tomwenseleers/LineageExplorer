@@ -627,12 +627,12 @@ plot_multinom_501YV1_501YV2_501YV3_basplusact_response = qplot(data=be_basplusac
   ), alpha=I(1)) +
   ylab("Share among newly diagnosed infections (%)") +
   theme_hc() + xlab("") +
-  ggtitle("Spread of the British, South African & Brazilian\nSARS-CoV2 variants in Belgium (baseline surveillance)") +
+  ggtitle("Spread of the British, South African & Brazilian\nSARS-CoV2 variants in Belgium (baseline plus active surveillance)") +
   # scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01")),
   #                   labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M")) +
   # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
   #                     labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
-  coord_cartesian(xlim=c(min(be_basplusactseqdata_long2$collection_date), as.Date("2021-04-01")),
+  coord_cartesian(xlim=c(min(be_basplusactseqdata_long2$collection_date), as.Date("2021-05-31")),
                   # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")),
                   ylim=c(0,100), expand=c(0,0)) +
   # scale_color_discrete("", h=c(0, 280), c=200) +
