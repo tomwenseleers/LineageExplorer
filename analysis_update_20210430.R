@@ -3238,7 +3238,7 @@ data_cases_BE_NL$variant = factor(data_cases_BE$variant, levels=c("wild type","5
                                labels=c("oude varianten","Britse variant", "Zuid-Afrikaanse variant", "Braziliaanse variant", "totaal"))
 
 d = as.Date(max(data_cases_BE$DATE))
-tag = paste("@TWenseleers\ndata Sciensano & Emmanuel André\n",d)
+tag = paste("@TWenseleers\ndata Sciensano & federal test platform\n",d)
 
 data_cases_BE2 = data_cases_BE
 data_cases_BE2[data_cases_BE2$CASES<=0.1] = 0.101
@@ -3279,6 +3279,19 @@ qplot(data=data_cases_BE[data_cases_BE$variant!="total",],
 ggsave(file=paste0(".//plots//",dat,"//confirmed_cases_by_501YV1_501YV2_501YV3_wildtype_baseline surveillance_stacked_raw.png"), width=7, height=5)
 ggsave(file=paste0(".//plots//",dat,"//confirmed_cases_by_501YV1_501YV2_501YV3_wildtype_baseline surveillance_stacked_raw.pdf"), width=7, height=5)
 
+qplot(data=data_cases_BE[data_cases_BE$variant!="total",], 
+      x=DATE, y=CASES_SMOOTH, group=variant, colour=variant, fill=variant, geom="blank") +
+  geom_area(position="stack") +
+  scale_colour_manual("", values=c("grey75","red","blue","green3")) +
+  scale_fill_manual("", values=c("grey75","red","blue","green3")) +
+  ylab("Estimated new confirmed cases per day") + xlab("") + ggtitle("Estimated new infections by UK, South African & Brazilian variants in Belgium") +
+  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01")),
+                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A","M")) +
+  coord_cartesian(xlim=c(as.Date("2020-09-01"),NA), expand=c(0,0)) +
+  labs(tag = tag) +
+  theme(plot.tag.position = "bottomright",
+        plot.tag = element_text(vjust = 1, hjust = 1, size=8))
+ggsave(file=paste0(".//plots//",dat,"//confirmed_cases_by_501YV1_501YV2_501YV3_wildtype_baseline surveillance_stacked.png"), width=7, height=5)
 
 
 # plot for Belgium (BASED ON LOGISTIC FIT TO S DROPOUT DATA & POISSON GAM FIT TO SCIENSANO TOTAL CASE DATA) ####
