@@ -9,7 +9,7 @@ library(mclogit)
 library(emmeans)
 
 today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-03-28")
+today = as.Date("2021-04-16")
 today_num = as.numeric(today)
 today # "2021-03-28"
 plotdir = "VOCs"
@@ -42,7 +42,8 @@ voc_props_long = gather(voc_props, WEEK, PROP, Week53:Week10, factor_key=FALSE)
 vocs_long$PROP = voc_props_long$PROP
 vocs_long = vocs_long[vocs_long$LINEAGE!="*",]
 vocs_long$LINEAGE = factor(vocs_long$LINEAGE, levels=c("Other","B.1.1.7","B.1.351","P.1","B.1.214.2"))
-vocs_long = vocs_long[vocs_long$DATE>=as.Date("2021-02-07"),] # we just use data from Feb 7 onward as before there was too much active surveillance
+# vocs_long = vocs_long[vocs_long$DATE>=as.Date("2021-02-07"),] # we just use data from Feb 7 onward as before there was too much active surveillance
+vocs_long = vocs_long[vocs_long$DATE>=as.Date("2021-02-01"),] # we just use data from Feb 7 onward as before there was too much active surveillance
 vocs_long$obs = factor(1:nrow(vocs_long))
 head(vocs_long)
 
@@ -159,7 +160,7 @@ exp(delta_r_VOCs*4.7)
 
 # plot multinomial model fit
 
-extrapolate = 30
+extrapolate = 90
 date.from = as.numeric(as.Date("2021-01-01")) # min(vocs_long$DATE_NUM)
 date.to =  max(vocs_long$DATE_NUM)+extrapolate
 
