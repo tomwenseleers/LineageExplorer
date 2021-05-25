@@ -304,6 +304,8 @@ data_agbyweek2$collection_date_num = as.numeric(data_agbyweek2$collection_date)
 data_agbyweek2$prop = data_agbyweek2$count/data_agbyweek2$total
 data_agbyweek2$floor_date = NULL
 
+write.csv(data_agbyweek2, ".//data//GISAID//Belgium//gisaid_hcov-19_2021_05_24_10_BASELINE SELECTION_aggregated counts by week.csv",row.names=F)
+
 
 # aggregated by week and province for selected variant lineages
 data_agbyweekregion1 = as.data.frame(table(GISAID_belgium$floor_date, GISAID_belgium$province, GISAID_belgium$LINEAGE1))
