@@ -20,7 +20,7 @@ plotdir = "VOCs_GISAID"
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 
 # import GISAID genomic epidemiology metadata (file version metadata_2021-05-21_13-00.tsv.gz)
-GISAID = read_tsv(".//data//GISAID_genomic_epidemiology//metadata.tsv", col_types = cols(.default = "c"))
+GISAID = read_tsv(gzfile(".//data//GISAID_genomic_epidemiology//metadata_2021-05-21_13-00.tsv.gz"), col_types = cols(.default = "c")) 
 GISAID = as.data.frame(GISAID)
 GISAID$date = as.Date(GISAID$date)
 GISAID = GISAID[!is.na(GISAID$date),]
