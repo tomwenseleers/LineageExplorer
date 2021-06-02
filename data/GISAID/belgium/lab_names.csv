@@ -1,0 +1,189 @@
+lab,type,count,lab_name,do_baseline_surveillance
+GIGA Medical Genomics,submitting_lab,5723,Platform Liège,yes
+"KU Leuven, Rega Institute, Clinical and Epidemiological Virology",submitting_lab,4926,Platform UZ/KU Leuven,yes
+"KU Leuven, Rega Institute, Clinical and Epidemiological Virology",originating_lab,3974,Platform UZ/KU Leuven,yes
+Lab voor klinische biologie,originating_lab,3170,UZA,yes
+Lab voor klinische biologie,submitting_lab,2872,UZA,yes
+Department of Clinical Microbiology,originating_lab,2048,CHU Liège,yes
+SYNLAB,originating_lab,1798,Synlab,yes
+"Labo Klinische Biologie, UZA",submitting_lab,1706,UZA,yes
+Platform BIS UZA/UAntwerpen,originating_lab,1561,Platform UZA/UA,yes
+Jessa,submitting_lab,1452,Jessa,yes
+Jessa,originating_lab,1334,Jessa,yes
+AZDelta,originating_lab,1077,AZ Delta Roeselare,yes
+Plateforme de testing Namuroise,submitting_lab,1027,Platform Namur,yes
+"UZ Leuven, National Reference Laboratory for Coronaviruses, Laboratory Medicine, Leuven, Belgium",originating_lab,951,Platform UZ/KU Leuven,yes
+University of Liège COVID-19 testing center,originating_lab,920,CHU Liège,yes
+"UAntwerp, Laboratory of Medical Microbiology",submitting_lab,762,Platform UZA/UA,yes
+AZDelta,submitting_lab,714,AZ Delta Roeselare,yes
+Plateforme de testing Namuroise,originating_lab,689,Platform Namur,yes
+LHUB-ULB,originating_lab,593,LHUB-ULB,yes
+National Platform bis UMONS/Jolimont,originating_lab,427,Platform Mons,yes
+National Platform bis UMONS/Jolimont,submitting_lab,427,Platform Mons,yes
+"AZ Delta Medical Laboratories in Roeselare, Belgium",submitting_lab,364,AZ Delta Roeselare,yes
+Onderzoeksgroep Virologie,submitting_lab,298,UZ Gent,yes
+Institut de Pathologie et Genetique (IPG),submitting_lab,292,Chwapi/IPG,yes
+CHWAPI - SITE NOTRE DAME,originating_lab,260,Chwapi/IPG,yes
+SYNLAB - Laboratoire J. Collard,originating_lab,248,Synlab,yes
+AZ Klina,originating_lab,230,AZ Klina,no
+AZ Klina,submitting_lab,228,AZ Klina,no
+Klinisch Laboratorium ZNA,submitting_lab,188,ZNA,yes
+"KU Leuven, Clinical and Epidemiological Virology",originating_lab,183,Platform UZ/KU Leuven,yes
+"KU Leuven, Clinical and Epidemiological Virology",submitting_lab,183,Platform UZ/KU Leuven,yes
+Klinisch Laboratorium ZNA,originating_lab,174,ZNA,yes
+Algemeen Medisch Labo,originating_lab,165,AML,yes
+Arlon,originating_lab,163,Arlon,no
+AZ SINT-JAN BRUGGE,submitting_lab,149,AZ St.Jan,no
+Synlab,originating_lab,143,Synlab,yes
+St. Nikolaus-Hospital Eupen,originating_lab,123,St. Nikolaus-Hospital Eupen,no
+OLVZ Aalst,submitting_lab,115,OLVZ Aalst,no
+OLVZ Aalst,originating_lab,114,OLVZ Aalst,no
+Marche en Famenne,originating_lab,105,Vivalia Marche-en-Famenne,yes
+UCLouvain/IREC/MBLG,submitting_lab,103,Platform UCL,yes
+CHR de La Citadelle,originating_lab,101,CHR de la Citadelle,no
+Brussels Academic Hospital Lab (LHUB-ULB),originating_lab,96,LHUB-ULB,yes
+Imelda Hospital,submitting_lab,86,Imelda,yes
+Cliniques universitaires Saint-Luc,originating_lab,79,Saint Luc UCL,yes
+"UZA, Clinical Biology",submitting_lab,71,UZA,yes
+Algemeen Medisch Laboratorium (AML),originating_lab,52,AML,yes
+CHR de la Citadelle,originating_lab,52,CHR de la Citadelle,no
+Institute of Tropical Medicine,submitting_lab,51,ITM,no
+Labo Luc Olivier,originating_lab,51,Labo Luc Olivier,no
+I.F.A.C. Hopital Princesse Paola,originating_lab,47,I.F.A.C. Hopital Princesse Paola,no
+jessa,originating_lab,46,Jessa,yes
+LKO,originating_lab,46,LKO LMC Sint-Truiden,yes
+AZ St.Jan Brugge-Oostende,originating_lab,44,AZ St.Jan,no
+Plateforme BIS Namur,originating_lab,42,Platform Namur,yes
+Imeda Hospital,originating_lab,41,Imelda,yes
+Institut de Pathologie et Génétique (IPG),submitting_lab,39,Chwapi/IPG,yes
+AZ Zeno,originating_lab,37,AZ Zeno,no
+LHUB-ULB,submitting_lab,37,LHUB-ULB,yes
+Hospital AZ Rivierenland,originating_lab,35,Hospital AZ Rivierenland,no
+Imelda Hospital,originating_lab,35,Imelda,yes
+"Labo Klinische Biologie, UZA",originating_lab,33,UZA,yes
+"UAntwerp, Laboratory of Medical Microbiology, Campus Drie Eiken S6.26, Universiteitsplein 1, 2610, Wilrijk, Antwerp, Belgium",submitting_lab,29,Platform UZA/UA,yes
+Laboratoire Hospitalier Universitaire de Bruxelles (LHUB-ULB),originating_lab,28,LHUB-ULB,yes
+Plateforme Clinique de testing Namuroise,originating_lab,27,Platform Namur,yes
+Plateforme Clinique de testing Namuroise,submitting_lab,27,Platform Namur,yes
+Vivalia - Clinique Saint-Joseph,originating_lab,27,Vivalia,yes
+Imelda hospital Bonheiden,submitting_lab,25,Imelda,yes
+Clinique N.D de Grâce Gosselies,originating_lab,24,Clinique Notre-Dame Grace,yes
+CLINIQUE N-D DE GRACE,originating_lab,24,Clinique Notre-Dame Grace,yes
+Libramont,originating_lab,23,Libramont,no
+"Platform BIS UZA/UAntwerpen, University Hospital Antwerp, Edegem, Belgium",originating_lab,23,Platform UZA/UA,yes
+Plateforme de testing namuroise,originating_lab,22,Platform Namur,yes
+Imeda Hospital,submitting_lab,21,Imelda,yes
+Somedi laboratories,originating_lab,20,Somedi,no
+CHR Citadelle,originating_lab,18,CHR de la Citadelle,no
+AZ Sint-Jan,originating_lab,16,AZ St.Jan,no
+GHDC - SITE ST JOSEPH,originating_lab,16,Grand Hôpital De Charleroi Saint-Joseph,no
+Imelda Ziekenhuis,submitting_lab,16,Imelda,yes
+Cliniques Cud-Luxembourg,originating_lab,15,Cliniques Sud-Luxembourg,no
+Cliniques Saint-Pierre Ottignies,originating_lab,15,Clinique St-Pierre Ottignies,yes
+Algemeen Medisch Laboratorium,originating_lab,14,AML,yes
+Klinisch Laboratorium GZA,originating_lab,14,GZA,no
+AZ Sint-Jan Brugge-Oostende AV,originating_lab,13,AZ St.Jan,no
+Centre Hospitalier de l'Ardenne,originating_lab,13,CHA,no
+"UAntwerp, Laboratory of Medical Microbiology, Campus Drie Eiken S6.26, Universiteitsplein 1, 2610, Wilrijk, Belgium",submitting_lab,13,Platform UZA/UA,yes
+arlon,originating_lab,12,Arlon,no
+Centre Hospitalier de Wallonie Picarde (CHWaPi),originating_lab,12,Chwapi/IPG,yes
+CHC,originating_lab,12,CHC Liège,no
+HCRC,originating_lab,12,HCRC,no
+HCRC,submitting_lab,12,HCRC,no
+Laboratoire Vivalia - Cliniques St-Joseph,originating_lab,12,Vivalia,yes
+AZ St.Jan Brugge,originating_lab,11,AZ St.Jan,no
+AZ St.Jan Brugge-Oostende AV,originating_lab,11,AZ St.Jan,no
+AZ St.jan Brugge,originating_lab,10,AZ St.Jan,no
+Cliniques Sud-Luxembourg,originating_lab,10,Cliniques Sud-Luxembourg,no
+Heilig hart Lier,originating_lab,10,Heilig Hart Lier,yes
+Imelda Ziekenhuis,originating_lab,10,Imelda,yes
+Queen Astrid Military Hospital,originating_lab,10,Queen Astrid Military Hospital,no
+AZ Delta,originating_lab,9,AZ Delta Roeselare,yes
+AZ Delta,submitting_lab,9,AZ Delta Roeselare,yes
+CUB Hopital Erasme Laboratoire d'Anatomie Pathologique,originating_lab,9,CUB Hopital Erasme Laboratoire d'Anatomie Pathologique,no
+CUB Hopital Erasme Laboratoire d'Anatomie Pathologique,submitting_lab,9,CUB Hopital Erasme Laboratoire d'Anatomie Pathologique,no
+CUSL/UCLouvain COVID testing federal platform,originating_lab,9,Platform UCL,yes
+Platform BIS UZA/UAntwerpen (PLBIS),originating_lab,9,Platform UZA/UA,yes
+Cabinet Priv<U+00E9>,originating_lab,8,Cabinet Privé,no
+Centrum voor Medische Analyse,originating_lab,8,CMA,yes
+LKOLMC,originating_lab,8,LKO LMC Sint-Truiden,yes
+Dutch COVID-19 response team,originating_lab,7,Dutch COVID-19 response team,no
+Erasmus Medical Center,submitting_lab,7,Erasmus Medical Center,no
+Imelda hospital,originating_lab,7,Imelda,yes
+Imelda hospital Bonheiden,originating_lab,7,Imelda,yes
+"Laboratory of Medical Microbiology, University of Antwerp, Campus Drie Eiken, S6.26, Universiteitsplein 1, 2610, Wilrijk, Antwerp, Belgium",submitting_lab,7,Platform UZA/UA,yes
+"UZA/UAntwerpen (BIS lab), University Hospital Antwerp, Edegem, Belgium",originating_lab,7,UZA,yes
+ALGEMEEN MEDISCH LABO,originating_lab,6,AML,yes
+Antwerp University Hospital,originating_lab,6,UZA,yes
+AZT,originating_lab,6,AZ Turnhout,yes
+C.H.C MontLégia,originating_lab,6,C.H.C MontLégia,no
+Cabinet Privé,originating_lab,6,Cabinet Privé,no
+GZA Sint-Augustinus Hospital,originating_lab,6,GZA,no
+Microbiology Department - University Hospital Brussel,originating_lab,6,UZ Brussel,yes
+Microbiology Department - University Hospital Brussel,submitting_lab,6,UZ Brussel,yes
+Univeritair Ziekenhuis Antwerpen (UZA),originating_lab,6,UZA,yes
+AZ Zeno Knokke-Blankenberge,originating_lab,5,AZ Zeno,no
+Chu Tivoli,originating_lab,5,CHU Tivoli,no
+Heilig Hart Hospital,originating_lab,5,Heilig Hart Lier,yes
+Labo Medicom,originating_lab,5,Labo Medicom,no
+AZ Vesale (Tongres),originating_lab,4,AZ Vesalius,no
+Landstuhl Regional Medical Center,originating_lab,4,Landstuhl Regional Medical Center,no
+Trudo,originating_lab,4,St. Trudo,no
+"University Hospital Antwerp (UZA), Drie Eikenstraat 655, 2650 Edegem, Belgium",originating_lab,4,UZA,yes
+US Air Force School of Aerospace Medicine,submitting_lab,4,US Air Force School of Aerospace Medicine,no
+AZ Sint Maarten,originating_lab,3,AZ St Maarten Mechelen,yes
+AZ Sint-Maarten,originating_lab,3,AZ St Maarten Mechelen,yes
+AZV,originating_lab,3,AZV,no
+Centre Hospitalier de Wallonie picarde (CHwapi),originating_lab,3,Chwapi/IPG,yes
+STZ,originating_lab,3,STZ,no
+#VALUE!,originating_lab,3,UZA,yes
+AZ Jan Portaels,originating_lab,2,AZ St Jan Portaels,yes
+"AZ Rivierenland, Campus Rumst",originating_lab,2,AZ Rivierenland,no
+CHC Liège,originating_lab,2,CHC Liège,no
+Clinique André Renard Herstal,originating_lab,2,Clinique André Renard,no
+Institut de Pathologie et Genetique (IPG),originating_lab,2,Chwapi/IPG,yes
+Labo Somedi,originating_lab,2,Somedi,no
+SFZ,originating_lab,2,SFZ,no
+Somedi,originating_lab,2,Somedi,no
+"UAntwerp, Laboratory of Medical Microbiology,",submitting_lab,2,Platform UZA/UA,yes
+[Run20210508template bulk upload 20210508.xlsx]intermediaire'!R97,originating_lab,1,UZA,yes
+Algemeen Klinisch Labo Lier,originating_lab,1,Algemeen Klinisch Labo Lier,no
+Augustijnslei 100 2930 Brasschaat,submitting_lab,1,AZ Klina,no
+"AZ Delta Medical Laboratories in Roeselare, Belgium",originating_lab,1,AZ Delta Roeselare,yes
+AZ KLina,submitting_lab,1,AZ Klina,no
+AZ Sint Blasius,originating_lab,1,AZ Rivierenland,no
+AZ St.Jan,originating_lab,1,AZ St.Jan,no
+"AZ St.Jan, campus Oostende",originating_lab,1,AZ St.Jan,no
+C.H Peltzer - la Tourelle,originating_lab,1,CHR Verviers,no
+C.H.Bois de l'Abbaye,originating_lab,1,CHBA,no
+CHR de Namur,originating_lab,1,CHR Namur,no
+CHR Namur,originating_lab,1,CHR Namur,no
+CHR Verviers,originating_lab,1,CHR Verviers,no
+Clinique St Joseph Saint Vith,originating_lab,1,Clinique St Joseph Saint Vith,no
+GZA Hospital Sint-Augustinus,originating_lab,1,GZA,no
+GZA Sint-Augustinus,originating_lab,1,GZA,no
+Heilig Hart Hospital Lier,originating_lab,1,Heilig Hart Lier,yes
+Heilig Hart Lier,originating_lab,1,Heilig Hart Lier,yes
+Heilig Hart Mol,originating_lab,1,Heilig Hart Mol,no
+Hopital Sainte Therese Bastogne,originating_lab,1,Hopital Sainte Therese Bastogne,no
+"Institute information KU Leuven, Clinical and Epidemiological Virology",originating_lab,1,Platform UZ/KU Leuven,yes
+"Institute information KU Leuven, Clinical and Epidemiological Virology",submitting_lab,1,Platform UZ/KU Leuven,yes
+Instituut Tropische Geneeskunde,originating_lab,1,ITM,no
+"KU Leuven, Clincal and Epidemiological Virology",originating_lab,1,Platform UZ/KU Leuven,yes
+"KU Leuven, Clincal and Epidemiological Virology",submitting_lab,1,Platform UZ/KU Leuven,yes
+Laboratoire de biologie moléculaire - Plateforme Clinique,originating_lab,1,Platform Namur,yes
+Laboratoire de biologie moléculaire - Plateforme Clinique,submitting_lab,1,Platform Namur,yes
+Laboratoire Vivalia -Cliniques St-Joseph,originating_lab,1,Vivalia,yes
+National Plateform bis UMONS/Jolimont,originating_lab,1,Platform Mons,yes
+National Plateform bis UMONS/Jolimont,submitting_lab,1,Platform Mons,yes
+PathoSense BV,submitting_lab,1,PathoSense BV,no
+Plateforme de testing namuroise,submitting_lab,1,Platform Namur,yes
+Saint-Luc Bouge,originating_lab,1,Saint-Luc Bouge,no
+SCIENSANO National Influenza Centre,originating_lab,1,SCIENSANO National Influenza Centre,no
+ST. JOZEFKLINIEK-Campus Willebroek,originating_lab,1,St. Jozefkliniek Willebroek,no
+"The Institute of Tropical Medicine in Antwerp, Belgium",originating_lab,1,ITM,no
+Universitair Ziekemhuis Antwerpen (UZA),originating_lab,1,UZA,yes
+"University Hospital Basel, Clinical Bacteriology",submitting_lab,1,University Hospital Basel,no
+"University Hospital Basel, Clinical Virology",originating_lab,1,University Hospital Basel,no
+University Hospital Laboratory of Brussels Universitair Laboratorium van Brussel (LHUB-ULB),originating_lab,1,LHUB-ULB,yes
+ZNA Middelheim,originating_lab,1,ZNA,yes

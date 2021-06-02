@@ -1,0 +1,3853 @@
+specimen_date,ereg_code,sgtf,non_sgtf,ereg_name
+2020-03-29,x,0,0,South East
+2020-03-29,x,0,0,London
+2020-03-29,x,0,0,South West
+2020-03-29,x,0,0,West Midlands
+2020-03-29,x,0,0,North East
+2020-03-29,x,0,0,Yorkshire and The Humber
+2020-03-29,x,0,0,East Midlands
+2020-03-29,x,0,0,North West
+2020-03-29,x,0,0,East of England
+2020-03-30,x,0,0,London
+2020-03-30,x,0,0,South East
+2020-03-30,x,0,0,North East
+2020-03-30,x,0,0,Yorkshire and The Humber
+2020-03-30,x,0,0,South West
+2020-03-30,x,0,0,East of England
+2020-03-30,x,0,0,East Midlands
+2020-03-30,x,0,0,North West
+2020-03-30,x,0,0,West Midlands
+2020-03-31,x,0,0,London
+2020-03-31,x,0,0,East Midlands
+2020-03-31,x,0,0,South East
+2020-03-31,x,0,0,Yorkshire and The Humber
+2020-03-31,x,0,0,North East
+2020-03-31,x,0,0,West Midlands
+2020-03-31,x,0,0,North West
+2020-03-31,x,0,0,South West
+2020-03-31,x,0,0,East of England
+2020-04-01,x,0,0,London
+2020-04-01,x,0,0,South East
+2020-04-01,x,0,0,East of England
+2020-04-01,x,0,0,Yorkshire and The Humber
+2020-04-01,x,0,0,East Midlands
+2020-04-01,x,0,0,North East
+2020-04-01,x,0,0,North West
+2020-04-01,x,0,0,West Midlands
+2020-04-01,x,0,0,South West
+2020-04-02,x,0,0,London
+2020-04-02,x,0,0,South East
+2020-04-02,x,0,0,East of England
+2020-04-02,x,0,0,North East
+2020-04-02,x,0,0,Yorkshire and The Humber
+2020-04-02,x,0,0,West Midlands
+2020-04-02,x,0,0,South West
+2020-04-02,x,0,0,East Midlands
+2020-04-02,x,0,0,North West
+2020-04-03,x,0,0,London
+2020-04-03,x,0,0,South East
+2020-04-03,x,0,0,South West
+2020-04-03,x,0,0,East of England
+2020-04-03,x,0,0,North East
+2020-04-03,x,0,0,Yorkshire and The Humber
+2020-04-03,x,0,0,West Midlands
+2020-04-03,x,0,0,East Midlands
+2020-04-03,x,0,0,North West
+2020-04-04,x,0,0,South East
+2020-04-04,x,0,0,London
+2020-04-04,x,0,0,East of England
+2020-04-04,x,0,0,West Midlands
+2020-04-04,x,0,0,North East
+2020-04-04,x,0,0,South West
+2020-04-04,x,0,0,Yorkshire and The Humber
+2020-04-04,x,0,0,North West
+2020-04-04,x,0,0,East Midlands
+2020-04-05,x,0,0,North West
+2020-04-05,x,0,0,London
+2020-04-05,x,0,0,West Midlands
+2020-04-05,x,0,0,East of England
+2020-04-05,x,0,0,South East
+2020-04-05,x,0,0,South West
+2020-04-05,x,0,0,North East
+2020-04-05,x,0,0,East Midlands
+2020-04-05,x,0,0,Yorkshire and The Humber
+2020-04-06,x,0,0,South East
+2020-04-06,x,0,0,London
+2020-04-06,x,0,0,West Midlands
+2020-04-06,x,0,0,East of England
+2020-04-06,x,0,0,East Midlands
+2020-04-06,x,0,0,South West
+2020-04-06,x,0,0,North West
+2020-04-06,x,0,0,Yorkshire and The Humber
+2020-04-06,x,0,0,North East
+2020-04-07,x,0,0,London
+2020-04-07,x,0,0,South East
+2020-04-07,x,0,0,Yorkshire and The Humber
+2020-04-07,x,0,0,East of England
+2020-04-07,x,0,0,West Midlands
+2020-04-07,x,0,0,East Midlands
+2020-04-07,x,0,0,North East
+2020-04-07,x,0,0,South West
+2020-04-07,x,0,0,North West
+2020-04-08,x,0,0,London
+2020-04-08,x,0,0,South East
+2020-04-08,x,0,0,West Midlands
+2020-04-08,x,0,0,East of England
+2020-04-08,x,0,0,North East
+2020-04-08,x,0,0,Yorkshire and The Humber
+2020-04-08,x,0,0,North West
+2020-04-08,x,0,0,South West
+2020-04-08,x,0,0,East Midlands
+2020-04-09,x,0,0,Yorkshire and The Humber
+2020-04-09,x,0,0,London
+2020-04-09,x,0,0,East Midlands
+2020-04-09,x,0,0,South East
+2020-04-09,x,0,0,East of England
+2020-04-09,x,0,0,West Midlands
+2020-04-09,x,0,0,North East
+2020-04-09,x,0,0,South West
+2020-04-09,x,0,0,North West
+2020-04-10,x,0,0,South East
+2020-04-10,x,0,0,London
+2020-04-10,x,0,0,East of England
+2020-04-10,x,0,0,West Midlands
+2020-04-10,x,0,0,Yorkshire and The Humber
+2020-04-10,x,0,0,North East
+2020-04-10,x,0,0,South West
+2020-04-10,x,0,0,North West
+2020-04-10,x,0,0,East Midlands
+2020-04-11,x,0,0,West Midlands
+2020-04-11,x,0,0,London
+2020-04-11,x,0,0,South East
+2020-04-11,x,0,0,Yorkshire and The Humber
+2020-04-11,x,0,0,East Midlands
+2020-04-11,x,0,0,East of England
+2020-04-11,x,0,0,North East
+2020-04-11,x,0,0,South West
+2020-04-11,x,0,0,North West
+2020-04-12,x,0,0,South East
+2020-04-12,x,0,0,North West
+2020-04-12,x,0,0,London
+2020-04-12,x,0,0,East of England
+2020-04-12,x,0,0,Yorkshire and The Humber
+2020-04-12,x,0,0,East Midlands
+2020-04-12,x,0,0,West Midlands
+2020-04-12,x,0,0,South West
+2020-04-12,x,0,0,North East
+2020-04-13,x,0,0,South West
+2020-04-13,x,0,0,East Midlands
+2020-04-13,x,0,0,London
+2020-04-13,x,0,0,South East
+2020-04-13,x,0,0,Yorkshire and The Humber
+2020-04-13,x,0,0,East of England
+2020-04-13,x,0,0,West Midlands
+2020-04-13,x,0,0,North West
+2020-04-13,x,0,0,North East
+2020-04-14,x,0,0,South East
+2020-04-14,x,0,0,London
+2020-04-14,x,0,0,Yorkshire and The Humber
+2020-04-14,x,0,0,West Midlands
+2020-04-14,x,0,0,East Midlands
+2020-04-14,x,0,0,East of England
+2020-04-14,x,0,0,South West
+2020-04-14,x,0,0,North West
+2020-04-14,x,0,0,North East
+2020-04-15,x,0,0,West Midlands
+2020-04-15,x,0,0,London
+2020-04-15,x,0,0,North West
+2020-04-15,x,0,0,Yorkshire and The Humber
+2020-04-15,x,0,0,South East
+2020-04-15,x,0,0,South West
+2020-04-15,x,0,0,East of England
+2020-04-15,x,0,0,East Midlands
+2020-04-15,x,0,0,North East
+2020-04-16,x,0,0,London
+2020-04-16,x,0,0,South West
+2020-04-16,x,0,0,West Midlands
+2020-04-16,x,0,0,East of England
+2020-04-16,x,0,0,Yorkshire and The Humber
+2020-04-16,x,0,0,North East
+2020-04-16,x,0,0,South East
+2020-04-16,x,0,0,East Midlands
+2020-04-16,x,0,0,North West
+2020-04-17,x,0,0,London
+2020-04-17,x,0,0,East of England
+2020-04-17,x,0,0,South East
+2020-04-17,x,0,0,Yorkshire and The Humber
+2020-04-17,x,0,0,East Midlands
+2020-04-17,x,0,0,North West
+2020-04-17,x,0,0,South West
+2020-04-17,x,0,0,West Midlands
+2020-04-17,x,0,0,North East
+2020-04-18,x,0,0,North West
+2020-04-18,x,0,0,North East
+2020-04-18,x,0,0,West Midlands
+2020-04-18,x,0,0,London
+2020-04-18,x,0,0,East Midlands
+2020-04-18,x,0,0,South East
+2020-04-18,x,0,0,Yorkshire and The Humber
+2020-04-18,x,0,0,South West
+2020-04-18,x,0,0,East of England
+2020-04-19,x,0,0,London
+2020-04-19,x,0,0,South West
+2020-04-19,x,0,0,North West
+2020-04-19,x,0,0,North East
+2020-04-19,x,0,0,East Midlands
+2020-04-19,x,0,0,South East
+2020-04-19,x,0,0,East of England
+2020-04-19,x,0,0,Yorkshire and The Humber
+2020-04-19,x,0,0,West Midlands
+2020-04-20,x,0,0,South West
+2020-04-20,x,0,0,London
+2020-04-20,x,0,0,South East
+2020-04-20,x,0,0,Yorkshire and The Humber
+2020-04-20,x,0,0,West Midlands
+2020-04-20,x,0,0,North West
+2020-04-20,x,0,0,East Midlands
+2020-04-20,x,0,0,East of England
+2020-04-20,x,0,0,North East
+2020-04-21,x,0,0,South East
+2020-04-21,x,0,0,East Midlands
+2020-04-21,x,0,0,East of England
+2020-04-21,x,0,0,South West
+2020-04-21,x,0,0,West Midlands
+2020-04-21,x,0,0,London
+2020-04-21,x,0,0,Yorkshire and The Humber
+2020-04-21,x,0,0,North West
+2020-04-21,x,0,0,North East
+2020-04-22,x,0,0,North East
+2020-04-22,x,0,0,North West
+2020-04-22,x,0,0,South East
+2020-04-22,x,0,0,London
+2020-04-22,x,0,0,West Midlands
+2020-04-22,x,0,0,Yorkshire and The Humber
+2020-04-22,x,0,0,South West
+2020-04-22,x,0,0,East Midlands
+2020-04-22,x,0,0,East of England
+2020-04-23,x,0,0,South East
+2020-04-23,x,0,0,West Midlands
+2020-04-23,x,0,0,North West
+2020-04-23,x,0,0,East of England
+2020-04-23,x,0,0,North East
+2020-04-23,x,0,0,Yorkshire and The Humber
+2020-04-23,x,0,0,East Midlands
+2020-04-23,x,0,0,London
+2020-04-23,x,0,0,South West
+2020-04-24,x,0,0,Yorkshire and The Humber
+2020-04-24,x,0,0,South East
+2020-04-24,x,0,0,North West
+2020-04-24,x,0,0,East of England
+2020-04-24,x,0,0,West Midlands
+2020-04-24,x,0,0,London
+2020-04-24,x,0,0,North East
+2020-04-24,x,0,0,East Midlands
+2020-04-24,x,0,0,South West
+2020-04-25,x,0,0,East of England
+2020-04-25,x,0,0,North West
+2020-04-25,x,0,0,West Midlands
+2020-04-25,x,0,0,North East
+2020-04-25,x,0,0,South East
+2020-04-25,x,0,0,Yorkshire and The Humber
+2020-04-25,x,0,0,London
+2020-04-25,x,0,0,East Midlands
+2020-04-25,x,0,0,South West
+2020-04-26,x,0,0,West Midlands
+2020-04-26,x,0,0,North East
+2020-04-26,x,0,0,South West
+2020-04-26,x,0,0,East of England
+2020-04-26,x,0,0,London
+2020-04-26,x,0,0,South East
+2020-04-26,x,0,0,North West
+2020-04-26,x,0,0,Yorkshire and The Humber
+2020-04-26,x,0,0,East Midlands
+2020-04-27,x,0,0,East of England
+2020-04-27,x,0,0,South West
+2020-04-27,x,0,0,South East
+2020-04-27,x,0,0,East Midlands
+2020-04-27,x,0,0,West Midlands
+2020-04-27,x,0,0,London
+2020-04-27,x,0,0,North East
+2020-04-27,x,0,0,North West
+2020-04-27,x,0,0,Yorkshire and The Humber
+2020-04-28,x,0,0,North West
+2020-04-28,x,0,0,East Midlands
+2020-04-28,x,0,0,South East
+2020-04-28,x,0,0,London
+2020-04-28,x,0,0,Yorkshire and The Humber
+2020-04-28,x,0,0,East of England
+2020-04-28,x,0,0,North East
+2020-04-28,x,0,0,West Midlands
+2020-04-28,x,0,0,South West
+2020-04-29,x,0,0,East Midlands
+2020-04-29,x,0,0,South East
+2020-04-29,x,0,0,North West
+2020-04-29,x,0,0,East of England
+2020-04-29,x,0,0,West Midlands
+2020-04-29,x,0,0,North East
+2020-04-29,x,0,0,Yorkshire and The Humber
+2020-04-29,x,0,0,South West
+2020-04-29,x,0,0,London
+2020-04-30,x,0,0,East Midlands
+2020-04-30,x,0,0,North West
+2020-04-30,x,0,0,West Midlands
+2020-04-30,x,0,0,South East
+2020-04-30,x,0,0,East of England
+2020-04-30,x,0,0,Yorkshire and The Humber
+2020-04-30,x,0,0,South West
+2020-04-30,x,0,0,North East
+2020-04-30,x,0,0,London
+2020-05-01,x,0,0,North West
+2020-05-01,x,0,0,Yorkshire and The Humber
+2020-05-01,x,0,0,West Midlands
+2020-05-01,x,0,0,South East
+2020-05-01,x,0,0,London
+2020-05-01,x,0,0,East Midlands
+2020-05-01,x,0,0,South West
+2020-05-01,x,0,0,East of England
+2020-05-01,x,0,0,North East
+2020-05-02,x,0,0,West Midlands
+2020-05-02,x,0,0,South West
+2020-05-02,x,0,0,East Midlands
+2020-05-02,x,0,0,North West
+2020-05-02,x,0,0,Yorkshire and The Humber
+2020-05-02,x,0,0,South East
+2020-05-02,x,0,0,London
+2020-05-02,x,0,0,North East
+2020-05-02,x,0,0,East of England
+2020-05-03,x,0,0,East Midlands
+2020-05-03,x,0,0,South West
+2020-05-03,x,0,0,North West
+2020-05-03,x,0,0,East of England
+2020-05-03,x,0,0,North East
+2020-05-03,x,0,0,South East
+2020-05-03,x,0,0,Yorkshire and The Humber
+2020-05-03,x,0,0,West Midlands
+2020-05-03,x,0,0,London
+2020-05-04,x,0,0,South East
+2020-05-04,x,0,0,East Midlands
+2020-05-04,x,0,0,South West
+2020-05-04,x,0,0,Yorkshire and The Humber
+2020-05-04,x,0,0,East of England
+2020-05-04,x,0,0,North East
+2020-05-04,x,0,0,North West
+2020-05-04,x,0,0,West Midlands
+2020-05-04,x,0,0,London
+2020-05-05,x,0,0,North West
+2020-05-05,x,0,0,South East
+2020-05-05,x,0,0,North East
+2020-05-05,x,0,0,London
+2020-05-05,x,0,0,Yorkshire and The Humber
+2020-05-05,x,0,0,East Midlands
+2020-05-05,x,0,0,East of England
+2020-05-05,x,0,0,West Midlands
+2020-05-05,x,0,0,South West
+2020-05-06,x,0,0,West Midlands
+2020-05-06,x,0,0,North West
+2020-05-06,x,0,0,East of England
+2020-05-06,x,0,0,East Midlands
+2020-05-06,x,0,0,South West
+2020-05-06,x,0,0,London
+2020-05-06,x,0,0,South East
+2020-05-06,x,0,0,Yorkshire and The Humber
+2020-05-06,x,0,0,North East
+2020-05-07,x,0,0,South East
+2020-05-07,x,0,0,North West
+2020-05-07,x,0,0,North East
+2020-05-07,x,0,0,Yorkshire and The Humber
+2020-05-07,x,0,0,East Midlands
+2020-05-07,x,0,0,East of England
+2020-05-07,x,0,0,West Midlands
+2020-05-07,x,0,0,London
+2020-05-07,x,0,0,South West
+2020-05-08,x,0,0,Yorkshire and The Humber
+2020-05-08,x,0,0,South East
+2020-05-08,x,0,0,East of England
+2020-05-08,x,0,0,East Midlands
+2020-05-08,x,0,0,North West
+2020-05-08,x,0,0,North East
+2020-05-08,x,0,0,West Midlands
+2020-05-08,x,0,0,South West
+2020-05-08,x,0,0,London
+2020-05-09,x,0,0,West Midlands
+2020-05-09,x,0,0,East Midlands
+2020-05-09,x,0,0,South East
+2020-05-09,x,0,0,North West
+2020-05-09,x,0,0,East of England
+2020-05-09,x,0,0,Yorkshire and The Humber
+2020-05-09,x,0,0,London
+2020-05-09,x,0,0,South West
+2020-05-09,x,0,0,North East
+2020-05-10,x,0,0,North West
+2020-05-10,x,0,0,London
+2020-05-10,x,0,0,East of England
+2020-05-10,x,0,0,South East
+2020-05-10,x,0,0,West Midlands
+2020-05-10,x,0,0,South West
+2020-05-10,x,0,0,North East
+2020-05-10,x,0,0,East Midlands
+2020-05-10,x,0,0,Yorkshire and The Humber
+2020-05-11,x,0,0,West Midlands
+2020-05-11,x,0,0,Yorkshire and The Humber
+2020-05-11,x,0,0,London
+2020-05-11,x,0,0,North East
+2020-05-11,x,0,0,South West
+2020-05-11,x,0,0,North West
+2020-05-11,x,0,0,East of England
+2020-05-11,x,0,0,South East
+2020-05-11,x,0,0,East Midlands
+2020-05-12,x,0,0,East Midlands
+2020-05-12,x,0,0,East of England
+2020-05-12,x,0,0,West Midlands
+2020-05-12,x,0,0,Yorkshire and The Humber
+2020-05-12,x,0,0,South West
+2020-05-12,x,0,0,North West
+2020-05-12,x,0,0,South East
+2020-05-12,x,0,0,North East
+2020-05-12,x,0,0,London
+2020-05-13,x,0,0,North East
+2020-05-13,x,0,0,South East
+2020-05-13,x,0,0,East Midlands
+2020-05-13,x,0,0,North West
+2020-05-13,x,0,0,Yorkshire and The Humber
+2020-05-13,x,0,0,East of England
+2020-05-13,x,0,0,London
+2020-05-13,x,0,0,South West
+2020-05-13,x,0,0,West Midlands
+2020-05-14,x,0,0,East of England
+2020-05-14,x,0,0,South East
+2020-05-14,x,0,0,Yorkshire and The Humber
+2020-05-14,x,0,0,North West
+2020-05-14,x,0,0,East Midlands
+2020-05-14,x,0,0,West Midlands
+2020-05-14,x,0,0,London
+2020-05-14,x,0,0,North East
+2020-05-14,x,0,0,South West
+2020-05-15,x,0,0,North East
+2020-05-15,x,0,0,South East
+2020-05-15,x,0,0,North West
+2020-05-15,x,0,0,London
+2020-05-15,x,0,0,Yorkshire and The Humber
+2020-05-15,x,0,0,West Midlands
+2020-05-15,x,0,0,East Midlands
+2020-05-15,x,0,0,South West
+2020-05-15,x,0,0,East of England
+2020-05-16,x,0,0,East of England
+2020-05-16,x,0,0,East Midlands
+2020-05-16,x,0,0,South East
+2020-05-16,x,0,0,North West
+2020-05-16,x,0,0,London
+2020-05-16,x,0,0,Yorkshire and The Humber
+2020-05-16,x,0,0,North East
+2020-05-16,x,0,0,West Midlands
+2020-05-16,x,0,0,South West
+2020-05-17,x,0,0,East Midlands
+2020-05-17,x,0,0,South East
+2020-05-17,x,0,0,South West
+2020-05-17,x,0,0,East of England
+2020-05-17,x,0,0,North East
+2020-05-17,x,0,0,London
+2020-05-17,x,0,0,North West
+2020-05-17,x,0,0,West Midlands
+2020-05-17,x,0,0,Yorkshire and The Humber
+2020-05-18,x,0,0,North West
+2020-05-18,x,0,0,South East
+2020-05-18,x,0,0,West Midlands
+2020-05-18,x,0,0,East of England
+2020-05-18,x,0,0,London
+2020-05-18,x,0,0,North East
+2020-05-18,x,0,0,East Midlands
+2020-05-18,x,0,0,Yorkshire and The Humber
+2020-05-18,x,0,0,South West
+2020-05-19,x,0,0,East Midlands
+2020-05-19,x,0,0,North West
+2020-05-19,x,0,0,North East
+2020-05-19,x,0,0,South East
+2020-05-19,x,0,0,Yorkshire and The Humber
+2020-05-19,x,0,0,East of England
+2020-05-19,x,0,0,South West
+2020-05-19,x,0,0,London
+2020-05-19,x,0,0,West Midlands
+2020-05-20,x,0,0,London
+2020-05-20,x,0,0,East Midlands
+2020-05-20,x,0,0,West Midlands
+2020-05-20,x,0,0,North West
+2020-05-20,x,0,0,East of England
+2020-05-20,x,0,0,South East
+2020-05-20,x,0,0,Yorkshire and The Humber
+2020-05-20,x,0,0,South West
+2020-05-20,x,0,0,North East
+2020-05-21,x,0,0,Yorkshire and The Humber
+2020-05-21,x,0,0,North East
+2020-05-21,x,0,0,East Midlands
+2020-05-21,x,0,0,North West
+2020-05-21,x,0,0,West Midlands
+2020-05-21,x,0,0,London
+2020-05-21,x,0,0,East of England
+2020-05-21,x,0,0,South West
+2020-05-21,x,0,0,South East
+2020-05-22,x,0,0,East of England
+2020-05-22,x,0,0,Yorkshire and The Humber
+2020-05-22,x,0,0,North West
+2020-05-22,x,0,0,London
+2020-05-22,x,0,0,East Midlands
+2020-05-22,x,0,0,South East
+2020-05-22,x,0,0,South West
+2020-05-22,x,0,0,North East
+2020-05-22,x,0,0,West Midlands
+2020-05-23,x,0,0,Yorkshire and The Humber
+2020-05-23,x,0,0,West Midlands
+2020-05-23,x,0,0,North West
+2020-05-23,x,0,0,East Midlands
+2020-05-23,x,0,0,South East
+2020-05-23,x,0,0,East of England
+2020-05-23,x,0,0,South West
+2020-05-23,x,0,0,London
+2020-05-23,x,0,0,North East
+2020-05-24,x,0,0,North West
+2020-05-24,x,0,0,Yorkshire and The Humber
+2020-05-24,x,0,0,West Midlands
+2020-05-24,x,0,0,South East
+2020-05-24,x,0,0,South West
+2020-05-24,x,0,0,East Midlands
+2020-05-24,x,0,0,London
+2020-05-24,x,0,0,North East
+2020-05-24,x,0,0,East of England
+2020-05-25,x,0,0,North East
+2020-05-25,x,0,0,East Midlands
+2020-05-25,x,0,0,South East
+2020-05-25,x,0,0,West Midlands
+2020-05-25,x,0,0,North West
+2020-05-25,x,0,0,Yorkshire and The Humber
+2020-05-25,x,0,0,East of England
+2020-05-25,x,0,0,London
+2020-05-25,x,0,0,South West
+2020-05-26,x,0,0,North West
+2020-05-26,x,0,0,South East
+2020-05-26,x,0,0,East of England
+2020-05-26,x,0,0,North East
+2020-05-26,x,0,0,Yorkshire and The Humber
+2020-05-26,x,0,0,East Midlands
+2020-05-26,x,0,0,South West
+2020-05-26,x,0,0,West Midlands
+2020-05-26,x,0,0,London
+2020-05-27,x,0,0,East of England
+2020-05-27,x,0,0,West Midlands
+2020-05-27,x,0,0,South East
+2020-05-27,x,0,0,North West
+2020-05-27,x,0,0,London
+2020-05-27,x,0,0,Yorkshire and The Humber
+2020-05-27,x,0,0,South West
+2020-05-27,x,0,0,East Midlands
+2020-05-27,x,0,0,North East
+2020-05-28,x,0,0,South East
+2020-05-28,x,0,0,North West
+2020-05-28,x,0,0,Yorkshire and The Humber
+2020-05-28,x,0,0,South West
+2020-05-28,x,0,0,London
+2020-05-28,x,0,0,East of England
+2020-05-28,x,0,0,East Midlands
+2020-05-28,x,0,0,West Midlands
+2020-05-28,x,0,0,North East
+2020-05-29,x,0,0,South East
+2020-05-29,x,0,0,South West
+2020-05-29,x,0,0,North West
+2020-05-29,x,0,0,Yorkshire and The Humber
+2020-05-29,x,0,0,East Midlands
+2020-05-29,x,0,0,East of England
+2020-05-29,x,0,0,West Midlands
+2020-05-29,x,0,0,London
+2020-05-29,x,0,0,North East
+2020-05-30,x,0,0,North East
+2020-05-30,x,0,0,East of England
+2020-05-30,x,0,0,London
+2020-05-30,x,0,0,North West
+2020-05-30,x,0,0,South West
+2020-05-30,x,0,0,Yorkshire and The Humber
+2020-05-30,x,0,0,South East
+2020-05-30,x,0,0,East Midlands
+2020-05-30,x,0,0,West Midlands
+2020-05-31,x,0,0,South West
+2020-05-31,x,0,0,South East
+2020-05-31,x,0,0,Yorkshire and The Humber
+2020-05-31,x,0,0,North West
+2020-05-31,x,0,0,West Midlands
+2020-05-31,x,0,0,East Midlands
+2020-05-31,x,0,0,North East
+2020-05-31,x,0,0,London
+2020-05-31,x,0,0,East of England
+2020-06-01,x,0,0,West Midlands
+2020-06-01,x,0,0,South East
+2020-06-01,x,0,0,East Midlands
+2020-06-01,x,0,0,East of England
+2020-06-01,x,0,0,North East
+2020-06-01,x,0,0,North West
+2020-06-01,x,0,0,London
+2020-06-01,x,0,0,Yorkshire and The Humber
+2020-06-01,x,0,0,South West
+2020-06-02,x,0,0,North West
+2020-06-02,x,0,0,Yorkshire and The Humber
+2020-06-02,x,0,0,East Midlands
+2020-06-02,x,0,0,South West
+2020-06-02,x,0,0,North East
+2020-06-02,x,0,0,East of England
+2020-06-02,x,0,0,South East
+2020-06-02,x,0,0,West Midlands
+2020-06-02,x,0,0,London
+2020-06-03,x,0,0,South East
+2020-06-03,x,0,0,East Midlands
+2020-06-03,x,0,0,Yorkshire and The Humber
+2020-06-03,x,0,0,North West
+2020-06-03,x,0,0,West Midlands
+2020-06-03,x,0,0,North East
+2020-06-03,x,0,0,South West
+2020-06-03,x,0,0,East of England
+2020-06-03,x,0,0,London
+2020-06-04,x,0,0,North West
+2020-06-04,x,0,0,North East
+2020-06-04,x,0,0,Yorkshire and The Humber
+2020-06-04,x,0,0,South East
+2020-06-04,x,0,0,West Midlands
+2020-06-04,x,0,0,East Midlands
+2020-06-04,x,0,0,London
+2020-06-04,x,0,0,East of England
+2020-06-04,x,0,0,South West
+2020-06-05,x,0,0,Yorkshire and The Humber
+2020-06-05,x,0,0,North West
+2020-06-05,x,0,0,South East
+2020-06-05,x,0,0,West Midlands
+2020-06-05,x,0,0,East Midlands
+2020-06-05,x,0,0,London
+2020-06-05,x,0,0,South West
+2020-06-05,x,0,0,East of England
+2020-06-05,x,0,0,North East
+2020-06-06,x,0,0,South East
+2020-06-06,x,0,0,East Midlands
+2020-06-06,x,0,0,West Midlands
+2020-06-06,x,0,0,Yorkshire and The Humber
+2020-06-06,x,0,0,South West
+2020-06-06,x,0,0,East of England
+2020-06-06,x,0,0,North West
+2020-06-06,x,0,0,London
+2020-06-06,x,0,0,North East
+2020-06-07,x,0,0,South East
+2020-06-07,x,0,0,North West
+2020-06-07,x,0,0,Yorkshire and The Humber
+2020-06-07,x,0,0,East Midlands
+2020-06-07,x,0,0,East of England
+2020-06-07,x,0,0,North East
+2020-06-07,x,0,0,West Midlands
+2020-06-07,x,0,0,London
+2020-06-07,x,0,0,South West
+2020-06-08,x,0,0,Yorkshire and The Humber
+2020-06-08,x,0,0,East of England
+2020-06-08,x,0,0,East Midlands
+2020-06-08,x,0,0,West Midlands
+2020-06-08,x,0,0,North West
+2020-06-08,x,0,0,London
+2020-06-08,x,0,0,South East
+2020-06-08,x,0,0,South West
+2020-06-08,x,0,0,North East
+2020-06-09,x,0,0,East Midlands
+2020-06-09,x,0,0,Yorkshire and The Humber
+2020-06-09,x,0,0,North West
+2020-06-09,x,0,0,North East
+2020-06-09,x,0,0,East of England
+2020-06-09,x,0,0,South East
+2020-06-09,x,0,0,South West
+2020-06-09,x,0,0,West Midlands
+2020-06-09,x,0,0,London
+2020-06-10,x,0,0,North West
+2020-06-10,x,0,0,Yorkshire and The Humber
+2020-06-10,x,0,0,West Midlands
+2020-06-10,x,0,0,East Midlands
+2020-06-10,x,0,0,South West
+2020-06-10,x,0,0,East of England
+2020-06-10,x,0,0,South East
+2020-06-10,x,0,0,North East
+2020-06-10,x,0,0,London
+2020-06-11,x,0,0,North West
+2020-06-11,x,0,0,South East
+2020-06-11,x,0,0,East Midlands
+2020-06-11,x,0,0,Yorkshire and The Humber
+2020-06-11,x,0,0,North East
+2020-06-11,x,0,0,London
+2020-06-11,x,0,0,South West
+2020-06-11,x,0,0,West Midlands
+2020-06-11,x,0,0,East of England
+2020-06-12,x,0,0,West Midlands
+2020-06-12,x,0,0,East Midlands
+2020-06-12,x,0,0,North East
+2020-06-12,x,0,0,East of England
+2020-06-12,x,0,0,London
+2020-06-12,x,0,0,North West
+2020-06-12,x,0,0,Yorkshire and The Humber
+2020-06-12,x,0,0,South East
+2020-06-12,x,0,0,South West
+2020-06-13,x,0,0,East Midlands
+2020-06-13,x,0,0,Yorkshire and The Humber
+2020-06-13,x,0,0,North West
+2020-06-13,x,0,0,South East
+2020-06-13,x,0,0,West Midlands
+2020-06-13,x,0,0,South West
+2020-06-13,x,0,0,North East
+2020-06-13,x,0,0,London
+2020-06-13,x,0,0,East of England
+2020-06-14,x,0,0,South East
+2020-06-14,x,0,0,North West
+2020-06-14,x,0,0,East Midlands
+2020-06-14,x,0,0,Yorkshire and The Humber
+2020-06-14,x,0,0,London
+2020-06-14,x,0,0,East of England
+2020-06-14,x,0,0,West Midlands
+2020-06-14,x,0,0,North East
+2020-06-14,x,0,0,South West
+2020-06-15,x,0,0,London
+2020-06-15,x,0,0,East Midlands
+2020-06-15,x,0,0,East of England
+2020-06-15,x,0,0,Yorkshire and The Humber
+2020-06-15,x,0,0,North West
+2020-06-15,x,0,0,South East
+2020-06-15,x,0,0,South West
+2020-06-15,x,0,0,West Midlands
+2020-06-15,x,0,0,North East
+2020-06-16,x,0,0,North East
+2020-06-16,x,0,0,North West
+2020-06-16,x,0,0,Yorkshire and The Humber
+2020-06-16,x,0,0,East Midlands
+2020-06-16,x,0,0,South East
+2020-06-16,x,0,0,West Midlands
+2020-06-16,x,0,0,East of England
+2020-06-16,x,0,0,London
+2020-06-16,x,0,0,South West
+2020-06-17,x,0,0,West Midlands
+2020-06-17,x,0,0,East Midlands
+2020-06-17,x,0,0,Yorkshire and The Humber
+2020-06-17,x,0,0,South East
+2020-06-17,x,0,0,North West
+2020-06-17,x,0,0,East of England
+2020-06-17,x,0,0,South West
+2020-06-17,x,0,0,London
+2020-06-17,x,0,0,North East
+2020-06-18,x,0,0,North West
+2020-06-18,x,0,0,South East
+2020-06-18,x,0,0,Yorkshire and The Humber
+2020-06-18,x,0,0,West Midlands
+2020-06-18,x,0,0,London
+2020-06-18,x,0,0,East Midlands
+2020-06-18,x,0,0,East of England
+2020-06-18,x,0,0,North East
+2020-06-18,x,0,0,South West
+2020-06-19,x,0,0,North West
+2020-06-19,x,0,0,Yorkshire and The Humber
+2020-06-19,x,0,0,South West
+2020-06-19,x,0,0,East Midlands
+2020-06-19,x,0,0,West Midlands
+2020-06-19,x,0,0,East of England
+2020-06-19,x,0,0,South East
+2020-06-19,x,0,0,North East
+2020-06-19,x,0,0,London
+2020-06-20,x,0,0,East Midlands
+2020-06-20,x,0,0,North West
+2020-06-20,x,0,0,Yorkshire and The Humber
+2020-06-20,x,0,0,West Midlands
+2020-06-20,x,0,0,South East
+2020-06-20,x,0,0,North East
+2020-06-20,x,0,0,London
+2020-06-20,x,0,0,East of England
+2020-06-20,x,0,0,South West
+2020-06-21,x,0,0,East of England
+2020-06-21,x,0,0,South East
+2020-06-21,x,0,0,Yorkshire and The Humber
+2020-06-21,x,0,0,North West
+2020-06-21,x,0,0,East Midlands
+2020-06-21,x,0,0,London
+2020-06-21,x,0,0,West Midlands
+2020-06-21,x,0,0,South West
+2020-06-21,x,0,0,North East
+2020-06-22,x,0,0,South West
+2020-06-22,x,0,0,East of England
+2020-06-22,x,0,0,East Midlands
+2020-06-22,x,0,0,South East
+2020-06-22,x,0,0,West Midlands
+2020-06-22,x,0,0,North West
+2020-06-22,x,0,0,Yorkshire and The Humber
+2020-06-22,x,0,0,North East
+2020-06-22,x,0,0,London
+2020-06-23,x,0,0,North West
+2020-06-23,x,0,0,East Midlands
+2020-06-23,x,0,0,West Midlands
+2020-06-23,x,0,0,Yorkshire and The Humber
+2020-06-23,x,0,0,East of England
+2020-06-23,x,0,0,London
+2020-06-23,x,0,0,North East
+2020-06-23,x,0,0,South East
+2020-06-23,x,0,0,South West
+2020-06-24,x,0,0,East Midlands
+2020-06-24,x,0,0,West Midlands
+2020-06-24,x,0,0,North West
+2020-06-24,x,0,0,Yorkshire and The Humber
+2020-06-24,x,0,0,East of England
+2020-06-24,x,0,0,London
+2020-06-24,x,0,0,South East
+2020-06-24,x,0,0,North East
+2020-06-24,x,0,0,South West
+2020-06-25,x,0,0,East Midlands
+2020-06-25,x,0,0,West Midlands
+2020-06-25,x,0,0,London
+2020-06-25,x,0,0,Yorkshire and The Humber
+2020-06-25,x,0,0,North West
+2020-06-25,x,0,0,South East
+2020-06-25,x,0,0,North East
+2020-06-25,x,0,0,East of England
+2020-06-25,x,0,0,South West
+2020-06-26,x,0,0,East of England
+2020-06-26,x,0,0,North West
+2020-06-26,x,0,0,London
+2020-06-26,x,0,0,Yorkshire and The Humber
+2020-06-26,x,0,0,South East
+2020-06-26,x,0,0,East Midlands
+2020-06-26,x,0,0,West Midlands
+2020-06-26,x,0,0,North East
+2020-06-26,x,0,0,South West
+2020-06-27,x,0,0,South East
+2020-06-27,x,0,0,Yorkshire and The Humber
+2020-06-27,x,0,0,West Midlands
+2020-06-27,x,0,0,London
+2020-06-27,x,0,0,East Midlands
+2020-06-27,x,0,0,North East
+2020-06-27,x,0,0,North West
+2020-06-27,x,0,0,East of England
+2020-06-27,x,0,0,South West
+2020-06-28,x,0,0,West Midlands
+2020-06-28,x,0,0,East of England
+2020-06-28,x,0,0,North West
+2020-06-28,x,0,0,Yorkshire and The Humber
+2020-06-28,x,0,0,East Midlands
+2020-06-28,x,0,0,South West
+2020-06-28,x,0,0,South East
+2020-06-28,x,0,0,London
+2020-06-28,x,0,0,North East
+2020-06-29,x,0,0,South East
+2020-06-29,x,0,0,North East
+2020-06-29,x,0,0,West Midlands
+2020-06-29,x,0,0,London
+2020-06-29,x,0,0,East Midlands
+2020-06-29,x,0,0,East of England
+2020-06-29,x,0,0,Yorkshire and The Humber
+2020-06-29,x,0,0,North West
+2020-06-29,x,0,0,South West
+2020-06-30,x,0,0,South East
+2020-06-30,x,0,0,East Midlands
+2020-06-30,x,0,0,London
+2020-06-30,x,0,0,North West
+2020-06-30,x,0,0,Yorkshire and The Humber
+2020-06-30,x,0,0,South West
+2020-06-30,x,0,0,East of England
+2020-06-30,x,0,0,West Midlands
+2020-06-30,x,0,0,North East
+2020-07-01,x,0,0,West Midlands
+2020-07-01,x,0,0,North West
+2020-07-01,x,0,0,North East
+2020-07-01,x,0,0,South East
+2020-07-01,x,0,0,East Midlands
+2020-07-01,x,0,0,South West
+2020-07-01,x,0,0,London
+2020-07-01,x,0,0,Yorkshire and The Humber
+2020-07-01,x,0,0,East of England
+2020-07-02,x,0,0,London
+2020-07-02,x,0,0,East Midlands
+2020-07-02,x,0,0,North West
+2020-07-02,x,0,0,West Midlands
+2020-07-02,x,0,0,Yorkshire and The Humber
+2020-07-02,x,0,0,South East
+2020-07-02,x,0,0,East of England
+2020-07-02,x,0,0,South West
+2020-07-02,x,0,0,North East
+2020-07-03,x,0,0,East Midlands
+2020-07-03,x,0,0,Yorkshire and The Humber
+2020-07-03,x,0,0,West Midlands
+2020-07-03,x,0,0,North West
+2020-07-03,x,0,0,London
+2020-07-03,x,0,0,East of England
+2020-07-03,x,0,0,South East
+2020-07-03,x,0,0,South West
+2020-07-03,x,0,0,North East
+2020-07-04,x,0,0,London
+2020-07-04,x,0,0,Yorkshire and The Humber
+2020-07-04,x,0,0,South East
+2020-07-04,x,0,0,East of England
+2020-07-04,x,0,0,East Midlands
+2020-07-04,x,0,0,North West
+2020-07-04,x,0,0,South West
+2020-07-04,x,0,0,North East
+2020-07-04,x,0,0,West Midlands
+2020-07-05,x,0,0,Yorkshire and The Humber
+2020-07-05,x,0,0,North West
+2020-07-05,x,0,0,London
+2020-07-05,x,0,0,East Midlands
+2020-07-05,x,0,0,West Midlands
+2020-07-05,x,0,0,South East
+2020-07-05,x,0,0,East of England
+2020-07-05,x,0,0,South West
+2020-07-05,x,0,0,North East
+2020-07-06,x,0,0,North East
+2020-07-06,x,0,0,North West
+2020-07-06,x,0,0,East Midlands
+2020-07-06,x,0,0,London
+2020-07-06,x,0,0,South East
+2020-07-06,x,0,0,West Midlands
+2020-07-06,x,0,0,Yorkshire and The Humber
+2020-07-06,x,0,0,South West
+2020-07-06,x,0,0,East of England
+2020-07-07,x,0,0,North West
+2020-07-07,x,0,0,East Midlands
+2020-07-07,x,0,0,Yorkshire and The Humber
+2020-07-07,x,0,0,East of England
+2020-07-07,x,0,0,West Midlands
+2020-07-07,x,0,0,South East
+2020-07-07,x,0,0,South West
+2020-07-07,x,0,0,London
+2020-07-07,x,0,0,North East
+2020-07-08,x,0,0,West Midlands
+2020-07-08,x,0,0,South East
+2020-07-08,x,0,0,Yorkshire and The Humber
+2020-07-08,x,0,0,North West
+2020-07-08,x,0,0,London
+2020-07-08,x,0,0,East Midlands
+2020-07-08,x,0,0,South West
+2020-07-08,x,0,0,East of England
+2020-07-08,x,0,0,North East
+2020-07-09,x,0,0,London
+2020-07-09,x,0,0,Yorkshire and The Humber
+2020-07-09,x,0,0,North West
+2020-07-09,x,0,0,East Midlands
+2020-07-09,x,0,0,South East
+2020-07-09,x,0,0,East of England
+2020-07-09,x,0,0,South West
+2020-07-09,x,0,0,West Midlands
+2020-07-09,x,0,0,North East
+2020-07-10,x,0,0,West Midlands
+2020-07-10,x,0,0,Yorkshire and The Humber
+2020-07-10,x,0,0,East of England
+2020-07-10,x,0,0,South East
+2020-07-10,x,0,0,North West
+2020-07-10,x,0,0,East Midlands
+2020-07-10,x,0,0,London
+2020-07-10,x,0,0,South West
+2020-07-10,x,0,0,North East
+2020-07-11,x,0,0,West Midlands
+2020-07-11,x,0,0,Yorkshire and The Humber
+2020-07-11,x,0,0,East Midlands
+2020-07-11,x,0,0,North East
+2020-07-11,x,0,0,North West
+2020-07-11,x,0,0,East of England
+2020-07-11,x,0,0,London
+2020-07-11,x,0,0,South East
+2020-07-11,x,0,0,South West
+2020-07-12,x,0,0,West Midlands
+2020-07-12,x,0,0,South West
+2020-07-12,x,0,0,London
+2020-07-12,x,0,0,Yorkshire and The Humber
+2020-07-12,x,0,0,East of England
+2020-07-12,x,0,0,South East
+2020-07-12,x,0,0,East Midlands
+2020-07-12,x,0,0,North West
+2020-07-12,x,0,0,North East
+2020-07-13,x,0,0,Yorkshire and The Humber
+2020-07-13,x,0,0,North East
+2020-07-13,x,0,0,South East
+2020-07-13,x,0,0,East Midlands
+2020-07-13,x,0,0,London
+2020-07-13,x,0,0,North West
+2020-07-13,x,0,0,West Midlands
+2020-07-13,x,0,0,East of England
+2020-07-13,x,0,0,South West
+2020-07-14,x,0,0,Yorkshire and The Humber
+2020-07-14,x,0,0,East Midlands
+2020-07-14,x,0,0,East of England
+2020-07-14,x,0,0,South West
+2020-07-14,x,0,0,South East
+2020-07-14,x,0,0,West Midlands
+2020-07-14,x,0,0,North West
+2020-07-14,x,0,0,London
+2020-07-14,x,0,0,North East
+2020-07-15,x,0,0,West Midlands
+2020-07-15,x,0,0,South East
+2020-07-15,x,0,0,London
+2020-07-15,x,0,0,East of England
+2020-07-15,x,0,0,North West
+2020-07-15,x,0,0,South West
+2020-07-15,x,0,0,Yorkshire and The Humber
+2020-07-15,x,0,0,North East
+2020-07-15,x,0,0,East Midlands
+2020-07-16,x,0,0,East of England
+2020-07-16,x,0,0,South West
+2020-07-16,x,0,0,South East
+2020-07-16,x,0,0,London
+2020-07-16,x,0,0,Yorkshire and The Humber
+2020-07-16,x,0,0,North East
+2020-07-16,x,0,0,East Midlands
+2020-07-16,x,0,0,North West
+2020-07-16,x,0,0,West Midlands
+2020-07-17,x,0,0,East Midlands
+2020-07-17,x,0,0,North West
+2020-07-17,x,0,0,Yorkshire and The Humber
+2020-07-17,x,0,0,East of England
+2020-07-17,x,0,0,London
+2020-07-17,x,0,0,West Midlands
+2020-07-17,x,0,0,South West
+2020-07-17,x,0,0,South East
+2020-07-17,x,0,0,North East
+2020-07-18,x,0,0,South East
+2020-07-18,x,0,0,East Midlands
+2020-07-18,x,0,0,London
+2020-07-18,x,0,0,North West
+2020-07-18,x,0,0,West Midlands
+2020-07-18,x,0,0,Yorkshire and The Humber
+2020-07-18,x,0,0,East of England
+2020-07-18,x,0,0,South West
+2020-07-18,x,0,0,North East
+2020-07-19,x,0,0,Yorkshire and The Humber
+2020-07-19,x,0,0,West Midlands
+2020-07-19,x,0,0,North West
+2020-07-19,x,0,0,East Midlands
+2020-07-19,x,0,0,North East
+2020-07-19,x,0,0,South East
+2020-07-19,x,0,0,South West
+2020-07-19,x,0,0,London
+2020-07-19,x,0,0,East of England
+2020-07-20,x,0,0,West Midlands
+2020-07-20,x,0,0,Yorkshire and The Humber
+2020-07-20,x,0,0,London
+2020-07-20,x,0,0,South East
+2020-07-20,x,0,0,North West
+2020-07-20,x,0,0,East Midlands
+2020-07-20,x,0,0,South West
+2020-07-20,x,0,0,East of England
+2020-07-20,x,0,0,North East
+2020-07-21,x,0,0,North West
+2020-07-21,x,0,0,Yorkshire and The Humber
+2020-07-21,x,0,0,West Midlands
+2020-07-21,x,0,0,South East
+2020-07-21,x,0,0,South West
+2020-07-21,x,0,0,London
+2020-07-21,x,0,0,East of England
+2020-07-21,x,0,0,East Midlands
+2020-07-21,x,0,0,North East
+2020-07-22,x,0,0,East Midlands
+2020-07-22,x,0,0,North West
+2020-07-22,x,0,0,West Midlands
+2020-07-22,x,0,0,London
+2020-07-22,x,0,0,South East
+2020-07-22,x,0,0,Yorkshire and The Humber
+2020-07-22,x,0,0,East of England
+2020-07-22,x,0,0,North East
+2020-07-22,x,0,0,South West
+2020-07-23,x,0,0,South West
+2020-07-23,x,0,0,East Midlands
+2020-07-23,x,0,0,South East
+2020-07-23,x,0,0,North West
+2020-07-23,x,0,0,West Midlands
+2020-07-23,x,0,0,Yorkshire and The Humber
+2020-07-23,x,0,0,London
+2020-07-23,x,0,0,East of England
+2020-07-23,x,0,0,North East
+2020-07-24,x,0,0,West Midlands
+2020-07-24,x,0,0,East Midlands
+2020-07-24,x,0,0,London
+2020-07-24,x,0,0,Yorkshire and The Humber
+2020-07-24,x,0,0,North West
+2020-07-24,x,0,0,South West
+2020-07-24,x,0,0,East of England
+2020-07-24,x,0,0,South East
+2020-07-24,x,0,0,North East
+2020-07-25,x,0,0,South West
+2020-07-25,x,0,0,West Midlands
+2020-07-25,x,0,0,London
+2020-07-25,x,0,0,North West
+2020-07-25,x,0,0,East of England
+2020-07-25,x,0,0,North East
+2020-07-25,x,0,0,East Midlands
+2020-07-25,x,0,0,South East
+2020-07-25,x,0,0,Yorkshire and The Humber
+2020-07-26,x,0,0,North West
+2020-07-26,x,0,0,East of England
+2020-07-26,x,0,0,West Midlands
+2020-07-26,x,0,0,Yorkshire and The Humber
+2020-07-26,x,0,0,London
+2020-07-26,x,0,0,East Midlands
+2020-07-26,x,0,0,South East
+2020-07-26,x,0,0,South West
+2020-07-26,x,0,0,North East
+2020-07-27,x,0,0,South East
+2020-07-27,x,0,0,North West
+2020-07-27,x,0,0,Yorkshire and The Humber
+2020-07-27,x,0,0,East of England
+2020-07-27,x,0,0,London
+2020-07-27,x,0,0,East Midlands
+2020-07-27,x,0,0,North East
+2020-07-27,x,0,0,South West
+2020-07-27,x,0,0,West Midlands
+2020-07-28,x,0,0,East Midlands
+2020-07-28,x,0,0,West Midlands
+2020-07-28,x,0,0,North West
+2020-07-28,x,0,0,South East
+2020-07-28,x,0,0,Yorkshire and The Humber
+2020-07-28,x,0,0,South West
+2020-07-28,x,0,0,London
+2020-07-28,x,0,0,East of England
+2020-07-28,x,0,0,North East
+2020-07-29,x,0,0,South East
+2020-07-29,x,0,0,London
+2020-07-29,x,0,0,East of England
+2020-07-29,x,0,0,West Midlands
+2020-07-29,x,0,0,North West
+2020-07-29,x,0,0,South West
+2020-07-29,x,0,0,East Midlands
+2020-07-29,x,0,0,Yorkshire and The Humber
+2020-07-29,x,0,0,North East
+2020-07-30,x,0,0,East of England
+2020-07-30,x,0,0,South East
+2020-07-30,x,0,0,West Midlands
+2020-07-30,x,0,0,Yorkshire and The Humber
+2020-07-30,x,0,0,North West
+2020-07-30,x,0,0,North East
+2020-07-30,x,0,0,London
+2020-07-30,x,0,0,South West
+2020-07-30,x,0,0,East Midlands
+2020-07-31,x,0,0,North West
+2020-07-31,x,0,0,London
+2020-07-31,x,0,0,Yorkshire and The Humber
+2020-07-31,x,0,0,South West
+2020-07-31,x,0,0,West Midlands
+2020-07-31,x,0,0,East Midlands
+2020-07-31,x,0,0,East of England
+2020-07-31,x,0,0,South East
+2020-07-31,x,0,0,North East
+2020-08-01,x,0,0,North West
+2020-08-01,x,0,0,East Midlands
+2020-08-01,x,0,0,South West
+2020-08-01,x,0,0,Yorkshire and The Humber
+2020-08-01,x,0,0,South East
+2020-08-01,x,0,0,London
+2020-08-01,x,0,0,East of England
+2020-08-01,x,0,0,West Midlands
+2020-08-01,x,0,0,North East
+2020-08-02,x,0,0,North West
+2020-08-02,x,0,0,London
+2020-08-02,x,0,0,East Midlands
+2020-08-02,x,0,0,Yorkshire and The Humber
+2020-08-02,x,0,0,West Midlands
+2020-08-02,x,0,0,South East
+2020-08-02,x,0,0,South West
+2020-08-02,x,0,0,North East
+2020-08-02,x,0,0,East of England
+2020-08-03,x,0,0,London
+2020-08-03,x,0,0,East Midlands
+2020-08-03,x,0,0,West Midlands
+2020-08-03,x,0,0,South West
+2020-08-03,x,0,0,Yorkshire and The Humber
+2020-08-03,x,0,0,South East
+2020-08-03,x,0,0,North West
+2020-08-03,x,0,0,East of England
+2020-08-03,x,0,0,North East
+2020-08-04,x,0,0,South West
+2020-08-04,x,0,0,Yorkshire and The Humber
+2020-08-04,x,0,0,North West
+2020-08-04,x,0,0,London
+2020-08-04,x,0,0,South East
+2020-08-04,x,0,0,West Midlands
+2020-08-04,x,0,0,North East
+2020-08-04,x,0,0,East Midlands
+2020-08-04,x,0,0,East of England
+2020-08-05,x,0,0,Yorkshire and The Humber
+2020-08-05,x,0,0,North West
+2020-08-05,x,0,0,East Midlands
+2020-08-05,x,0,0,West Midlands
+2020-08-05,x,0,0,South East
+2020-08-05,x,0,0,London
+2020-08-05,x,0,0,East of England
+2020-08-05,x,0,0,South West
+2020-08-05,x,0,0,North East
+2020-08-06,x,0,0,East of England
+2020-08-06,x,0,0,North East
+2020-08-06,x,0,0,North West
+2020-08-06,x,0,0,West Midlands
+2020-08-06,x,0,0,London
+2020-08-06,x,0,0,Yorkshire and The Humber
+2020-08-06,x,0,0,East Midlands
+2020-08-06,x,0,0,South East
+2020-08-06,x,0,0,South West
+2020-08-07,x,0,0,North West
+2020-08-07,x,0,0,East Midlands
+2020-08-07,x,0,0,London
+2020-08-07,x,0,0,Yorkshire and The Humber
+2020-08-07,x,0,0,South East
+2020-08-07,x,0,0,East of England
+2020-08-07,x,0,0,West Midlands
+2020-08-07,x,0,0,North East
+2020-08-07,x,0,0,South West
+2020-08-08,x,0,0,East Midlands
+2020-08-08,x,0,0,West Midlands
+2020-08-08,x,0,0,North West
+2020-08-08,x,0,0,East of England
+2020-08-08,x,0,0,Yorkshire and The Humber
+2020-08-08,x,0,0,South East
+2020-08-08,x,0,0,London
+2020-08-08,x,0,0,South West
+2020-08-08,x,0,0,North East
+2020-08-09,x,0,0,West Midlands
+2020-08-09,x,0,0,North West
+2020-08-09,x,0,0,Yorkshire and The Humber
+2020-08-09,x,0,0,London
+2020-08-09,x,0,0,East Midlands
+2020-08-09,x,0,0,South East
+2020-08-09,x,0,0,South West
+2020-08-09,x,0,0,East of England
+2020-08-09,x,0,0,North East
+2020-08-10,x,0,0,North West
+2020-08-10,x,0,0,London
+2020-08-10,x,0,0,West Midlands
+2020-08-10,x,0,0,Yorkshire and The Humber
+2020-08-10,x,0,0,South West
+2020-08-10,x,0,0,East Midlands
+2020-08-10,x,0,0,South East
+2020-08-10,x,0,0,East of England
+2020-08-10,x,0,0,North East
+2020-08-11,x,0,0,South East
+2020-08-11,x,0,0,Yorkshire and The Humber
+2020-08-11,x,0,0,North West
+2020-08-11,x,0,0,East Midlands
+2020-08-11,x,0,0,East of England
+2020-08-11,x,0,0,South West
+2020-08-11,x,0,0,London
+2020-08-11,x,0,0,West Midlands
+2020-08-11,x,0,0,North East
+2020-08-12,x,0,0,West Midlands
+2020-08-12,x,0,0,Yorkshire and The Humber
+2020-08-12,x,0,0,East of England
+2020-08-12,x,0,0,London
+2020-08-12,x,0,0,East Midlands
+2020-08-12,x,0,0,North West
+2020-08-12,x,0,0,South West
+2020-08-12,x,0,0,South East
+2020-08-12,x,0,0,North East
+2020-08-13,x,0,0,South East
+2020-08-13,x,0,0,Yorkshire and The Humber
+2020-08-13,x,0,0,West Midlands
+2020-08-13,x,0,0,North West
+2020-08-13,x,0,0,East Midlands
+2020-08-13,x,0,0,London
+2020-08-13,x,0,0,South West
+2020-08-13,x,0,0,East of England
+2020-08-13,x,0,0,North East
+2020-08-14,x,0,0,West Midlands
+2020-08-14,x,0,0,East of England
+2020-08-14,x,0,0,Yorkshire and The Humber
+2020-08-14,x,0,0,London
+2020-08-14,x,0,0,North West
+2020-08-14,x,0,0,East Midlands
+2020-08-14,x,0,0,South West
+2020-08-14,x,0,0,South East
+2020-08-14,x,0,0,North East
+2020-08-15,x,0,0,London
+2020-08-15,x,0,0,South East
+2020-08-15,x,0,0,East Midlands
+2020-08-15,x,0,0,North East
+2020-08-15,x,0,0,North West
+2020-08-15,x,0,0,Yorkshire and The Humber
+2020-08-15,x,0,0,East of England
+2020-08-15,x,0,0,West Midlands
+2020-08-15,x,0,0,South West
+2020-08-16,x,0,0,London
+2020-08-16,x,0,0,West Midlands
+2020-08-16,x,0,0,North West
+2020-08-16,x,0,0,East of England
+2020-08-16,x,0,0,Yorkshire and The Humber
+2020-08-16,x,0,0,South West
+2020-08-16,x,0,0,East Midlands
+2020-08-16,x,0,0,North East
+2020-08-16,x,0,0,South East
+2020-08-17,x,0,0,Yorkshire and The Humber
+2020-08-17,x,0,0,East of England
+2020-08-17,x,0,0,North West
+2020-08-17,x,0,0,South East
+2020-08-17,x,0,0,West Midlands
+2020-08-17,x,0,0,London
+2020-08-17,x,0,0,North East
+2020-08-17,x,0,0,South West
+2020-08-17,x,0,0,East Midlands
+2020-08-18,x,0,0,Yorkshire and The Humber
+2020-08-18,x,0,0,North West
+2020-08-18,x,0,0,East Midlands
+2020-08-18,x,0,0,London
+2020-08-18,x,0,0,West Midlands
+2020-08-18,x,0,0,South East
+2020-08-18,x,0,0,North East
+2020-08-18,x,0,0,South West
+2020-08-18,x,0,0,East of England
+2020-08-19,x,0,0,London
+2020-08-19,x,0,0,North West
+2020-08-19,x,0,0,East Midlands
+2020-08-19,x,0,0,West Midlands
+2020-08-19,x,0,0,South East
+2020-08-19,x,0,0,East of England
+2020-08-19,x,0,0,North East
+2020-08-19,x,0,0,Yorkshire and The Humber
+2020-08-19,x,0,0,South West
+2020-08-20,x,0,0,East of England
+2020-08-20,x,0,0,London
+2020-08-20,x,0,0,East Midlands
+2020-08-20,x,0,0,South East
+2020-08-20,x,0,0,West Midlands
+2020-08-20,x,0,0,North West
+2020-08-20,x,0,0,South West
+2020-08-20,x,0,0,Yorkshire and The Humber
+2020-08-20,x,0,0,North East
+2020-08-21,x,0,0,Yorkshire and The Humber
+2020-08-21,x,0,0,North West
+2020-08-21,x,0,0,West Midlands
+2020-08-21,x,0,0,East of England
+2020-08-21,x,0,0,London
+2020-08-21,x,0,0,South East
+2020-08-21,x,0,0,East Midlands
+2020-08-21,x,0,0,South West
+2020-08-21,x,0,0,North East
+2020-08-22,x,0,0,London
+2020-08-22,x,0,0,West Midlands
+2020-08-22,x,0,0,South West
+2020-08-22,x,0,0,East of England
+2020-08-22,x,0,0,North West
+2020-08-22,x,0,0,South East
+2020-08-22,x,0,0,Yorkshire and The Humber
+2020-08-22,x,0,0,East Midlands
+2020-08-22,x,0,0,North East
+2020-08-23,x,0,0,West Midlands
+2020-08-23,x,0,0,London
+2020-08-23,x,0,0,Yorkshire and The Humber
+2020-08-23,x,0,0,South West
+2020-08-23,x,0,0,South East
+2020-08-23,x,0,0,East of England
+2020-08-23,x,0,0,North West
+2020-08-23,x,0,0,North East
+2020-08-23,x,0,0,East Midlands
+2020-08-24,x,0,0,Yorkshire and The Humber
+2020-08-24,x,0,0,North West
+2020-08-24,x,0,0,East Midlands
+2020-08-24,x,0,0,West Midlands
+2020-08-24,x,0,0,London
+2020-08-24,x,0,0,South East
+2020-08-24,x,0,0,East of England
+2020-08-24,x,0,0,North East
+2020-08-24,x,0,0,South West
+2020-08-25,x,0,0,North West
+2020-08-25,x,0,0,London
+2020-08-25,x,0,0,East of England
+2020-08-25,x,0,0,Yorkshire and The Humber
+2020-08-25,x,0,0,South East
+2020-08-25,x,0,0,West Midlands
+2020-08-25,x,0,0,South West
+2020-08-25,x,0,0,East Midlands
+2020-08-25,x,0,0,North East
+2020-08-26,x,0,0,North West
+2020-08-26,x,0,0,North East
+2020-08-26,x,0,0,East of England
+2020-08-26,x,0,0,South West
+2020-08-26,x,0,0,South East
+2020-08-26,x,0,0,West Midlands
+2020-08-26,x,0,0,Yorkshire and The Humber
+2020-08-26,x,0,0,London
+2020-08-26,x,0,0,East Midlands
+2020-08-27,x,0,0,West Midlands
+2020-08-27,x,0,0,South East
+2020-08-27,x,0,0,North West
+2020-08-27,x,0,0,Yorkshire and The Humber
+2020-08-27,x,0,0,South West
+2020-08-27,x,0,0,London
+2020-08-27,x,0,0,East of England
+2020-08-27,x,0,0,East Midlands
+2020-08-27,x,0,0,North East
+2020-08-28,x,0,0,East Midlands
+2020-08-28,x,0,0,North East
+2020-08-28,x,0,0,London
+2020-08-28,x,0,0,Yorkshire and The Humber
+2020-08-28,x,0,0,South East
+2020-08-28,x,0,0,East of England
+2020-08-28,x,0,0,South West
+2020-08-28,x,0,0,North West
+2020-08-28,x,0,0,West Midlands
+2020-08-29,x,0,0,Yorkshire and The Humber
+2020-08-29,x,0,0,London
+2020-08-29,x,0,0,West Midlands
+2020-08-29,x,0,0,East of England
+2020-08-29,x,0,0,South East
+2020-08-29,x,0,0,South West
+2020-08-29,x,0,0,North West
+2020-08-29,x,0,0,East Midlands
+2020-08-29,x,0,0,North East
+2020-08-30,x,0,0,North West
+2020-08-30,x,0,0,Yorkshire and The Humber
+2020-08-30,x,0,0,London
+2020-08-30,x,0,0,East of England
+2020-08-30,x,0,0,East Midlands
+2020-08-30,x,0,0,South East
+2020-08-30,x,0,0,South West
+2020-08-30,x,0,0,West Midlands
+2020-08-30,x,0,0,North East
+2020-08-31,x,0,0,London
+2020-08-31,x,0,0,East of England
+2020-08-31,x,0,0,North East
+2020-08-31,x,0,0,North West
+2020-08-31,x,0,0,Yorkshire and The Humber
+2020-08-31,x,0,0,East Midlands
+2020-08-31,x,0,0,West Midlands
+2020-08-31,x,0,0,South East
+2020-08-31,x,0,0,South West
+2020-09-01,x,0,13,North East
+2020-09-01,x,2,55,South West
+2020-09-01,x,4,252,North West
+2020-09-01,x,8,67,East Midlands
+2020-09-01,x,1,125,Yorkshire and The Humber
+2020-09-01,x,6,134,London
+2020-09-01,x,2,55,East of England
+2020-09-01,x,1,120,West Midlands
+2020-09-01,x,2,49,South East
+2020-09-02,x,9,325,North West
+2020-09-02,x,2,202,West Midlands
+2020-09-02,x,5,95,East Midlands
+2020-09-02,x,6,140,London
+2020-09-02,x,3,71,South East
+2020-09-02,x,0,6,North East
+2020-09-02,x,3,197,Yorkshire and The Humber
+2020-09-02,x,4,53,East of England
+2020-09-02,x,2,49,South West
+2020-09-03,x,9,77,South East
+2020-09-03,x,3,101,East Midlands
+2020-09-03,x,4,133,London
+2020-09-03,x,5,332,North West
+2020-09-03,x,0,186,Yorkshire and The Humber
+2020-09-03,x,0,10,North East
+2020-09-03,x,3,197,West Midlands
+2020-09-03,x,2,67,East of England
+2020-09-03,x,7,41,South West
+2020-09-04,x,1,158,London
+2020-09-04,x,0,6,North East
+2020-09-04,x,1,260,West Midlands
+2020-09-04,x,4,397,North West
+2020-09-04,x,2,201,Yorkshire and The Humber
+2020-09-04,x,5,89,East Midlands
+2020-09-04,x,2,46,South West
+2020-09-04,x,0,75,South East
+2020-09-04,x,9,69,East of England
+2020-09-05,x,5,165,London
+2020-09-05,x,1,364,North West
+2020-09-05,x,1,227,Yorkshire and The Humber
+2020-09-05,x,1,201,West Midlands
+2020-09-05,x,2,88,South East
+2020-09-05,x,2,58,East of England
+2020-09-05,x,4,39,South West
+2020-09-05,x,0,18,North East
+2020-09-05,x,0,109,East Midlands
+2020-09-06,x,3,95,South East
+2020-09-06,x,6,253,North West
+2020-09-06,x,0,161,West Midlands
+2020-09-06,x,0,81,Yorkshire and The Humber
+2020-09-06,x,1,59,East Midlands
+2020-09-06,x,3,47,East of England
+2020-09-06,x,0,3,North East
+2020-09-06,x,5,138,London
+2020-09-06,x,5,20,South West
+2020-09-07,x,4,117,East Midlands
+2020-09-07,x,1,267,Yorkshire and The Humber
+2020-09-07,x,3,444,North West
+2020-09-07,x,10,239,London
+2020-09-07,x,0,91,South East
+2020-09-07,x,2,227,West Midlands
+2020-09-07,x,2,46,South West
+2020-09-07,x,0,27,North East
+2020-09-07,x,5,76,East of England
+2020-09-08,x,1,133,East Midlands
+2020-09-08,x,0,233,West Midlands
+2020-09-08,x,1,455,North West
+2020-09-08,x,0,228,Yorkshire and The Humber
+2020-09-08,x,3,57,East of England
+2020-09-08,x,4,147,London
+2020-09-08,x,0,33,North East
+2020-09-08,x,4,22,South West
+2020-09-08,x,1,84,South East
+2020-09-09,x,2,441,North West
+2020-09-09,x,0,123,East Midlands
+2020-09-09,x,1,178,West Midlands
+2020-09-09,x,4,71,East of England
+2020-09-09,x,4,206,Yorkshire and The Humber
+2020-09-09,x,3,129,London
+2020-09-09,x,0,8,North East
+2020-09-09,x,0,67,South East
+2020-09-09,x,1,43,South West
+2020-09-10,x,0,324,Yorkshire and The Humber
+2020-09-10,x,1,208,West Midlands
+2020-09-10,x,0,71,East of England
+2020-09-10,x,0,103,East Midlands
+2020-09-10,x,5,509,North West
+2020-09-10,x,7,144,London
+2020-09-10,x,0,17,North East
+2020-09-10,x,1,72,South East
+2020-09-10,x,2,23,South West
+2020-09-11,x,1,218,West Midlands
+2020-09-11,x,3,178,London
+2020-09-11,x,3,515,North West
+2020-09-11,x,2,95,East Midlands
+2020-09-11,x,1,237,Yorkshire and The Humber
+2020-09-11,x,3,24,North East
+2020-09-11,x,4,32,South West
+2020-09-11,x,1,53,South East
+2020-09-11,x,4,57,East of England
+2020-09-12,x,5,301,North West
+2020-09-12,x,0,30,East Midlands
+2020-09-12,x,5,56,South East
+2020-09-12,x,2,97,West Midlands
+2020-09-12,x,0,121,Yorkshire and The Humber
+2020-09-12,x,7,130,London
+2020-09-12,x,0,17,North East
+2020-09-12,x,3,52,East of England
+2020-09-12,x,2,26,South West
+2020-09-13,x,0,6,North East
+2020-09-13,x,0,9,Yorkshire and The Humber
+2020-09-13,x,0,25,South East
+2020-09-13,x,0,9,West Midlands
+2020-09-13,x,1,17,North West
+2020-09-13,x,0,65,London
+2020-09-13,x,0,15,East Midlands
+2020-09-13,x,2,35,East of England
+2020-09-13,x,1,29,South West
+2020-09-14,x,2,524,North West
+2020-09-14,x,6,45,South East
+2020-09-14,x,1,169,West Midlands
+2020-09-14,x,8,126,London
+2020-09-14,x,0,98,East Midlands
+2020-09-14,x,1,235,Yorkshire and The Humber
+2020-09-14,x,1,29,South West
+2020-09-14,x,10,48,East of England
+2020-09-14,x,2,37,North East
+2020-09-15,x,1,131,North East
+2020-09-15,x,0,125,East Midlands
+2020-09-15,x,8,596,North West
+2020-09-15,x,4,104,London
+2020-09-15,x,0,211,West Midlands
+2020-09-15,x,10,46,East of England
+2020-09-15,x,0,225,Yorkshire and The Humber
+2020-09-15,x,4,32,South West
+2020-09-15,x,2,57,South East
+2020-09-16,x,8,818,North West
+2020-09-16,x,4,326,Yorkshire and The Humber
+2020-09-16,x,2,208,North East
+2020-09-16,x,2,266,West Midlands
+2020-09-16,x,4,124,London
+2020-09-16,x,4,42,South East
+2020-09-16,x,0,111,East Midlands
+2020-09-16,x,3,26,South West
+2020-09-16,x,8,46,East of England
+2020-09-17,x,7,952,North West
+2020-09-17,x,2,219,North East
+2020-09-17,x,2,352,Yorkshire and The Humber
+2020-09-17,x,0,144,East Midlands
+2020-09-17,x,1,328,West Midlands
+2020-09-17,x,5,170,London
+2020-09-17,x,1,32,South West
+2020-09-17,x,1,58,South East
+2020-09-17,x,1,52,East of England
+2020-09-18,x,1,52,East of England
+2020-09-18,x,3,369,West Midlands
+2020-09-18,x,3,145,East Midlands
+2020-09-18,x,5,364,Yorkshire and The Humber
+2020-09-18,x,8,122,London
+2020-09-18,x,10,955,North West
+2020-09-18,x,1,325,North East
+2020-09-18,x,0,48,South East
+2020-09-18,x,3,42,South West
+2020-09-19,x,3,251,North East
+2020-09-19,x,1,49,East of England
+2020-09-19,x,3,85,London
+2020-09-19,x,6,572,North West
+2020-09-19,x,0,43,East Midlands
+2020-09-19,x,1,211,Yorkshire and The Humber
+2020-09-19,x,4,250,West Midlands
+2020-09-19,x,5,37,South East
+2020-09-19,x,2,56,South West
+2020-09-20,x,3,398,North West
+2020-09-20,x,4,85,Yorkshire and The Humber
+2020-09-20,x,1,301,West Midlands
+2020-09-20,x,0,29,East Midlands
+2020-09-20,x,6,151,London
+2020-09-20,x,1,391,North East
+2020-09-20,x,1,34,South East
+2020-09-20,x,2,39,South West
+2020-09-20,x,1,24,East of England
+2020-09-21,x,5,108,South East
+2020-09-21,x,16,448,West Midlands
+2020-09-21,x,5,78,East of England
+2020-09-21,x,6,660,North West
+2020-09-21,x,3,157,East Midlands
+2020-09-21,x,5,202,London
+2020-09-21,x,2,84,South West
+2020-09-21,x,5,391,Yorkshire and The Humber
+2020-09-21,x,5,429,North East
+2020-09-22,x,4,106,South East
+2020-09-22,x,12,1208,North West
+2020-09-22,x,16,283,London
+2020-09-22,x,4,447,Yorkshire and The Humber
+2020-09-22,x,1,344,North East
+2020-09-22,x,4,345,West Midlands
+2020-09-22,x,2,126,East of England
+2020-09-22,x,1,57,South West
+2020-09-22,x,3,144,East Midlands
+2020-09-23,x,9,1475,North West
+2020-09-23,x,5,488,West Midlands
+2020-09-23,x,1,414,North East
+2020-09-23,x,7,83,South West
+2020-09-23,x,30,400,London
+2020-09-23,x,2,175,East Midlands
+2020-09-23,x,6,441,Yorkshire and The Humber
+2020-09-23,x,6,119,South East
+2020-09-23,x,6,115,East of England
+2020-09-24,x,2,498,North East
+2020-09-24,x,14,1669,North West
+2020-09-24,x,6,134,South East
+2020-09-24,x,2,182,East Midlands
+2020-09-24,x,5,613,Yorkshire and The Humber
+2020-09-24,x,11,366,London
+2020-09-24,x,2,115,South West
+2020-09-24,x,13,377,West Midlands
+2020-09-24,x,14,140,East of England
+2020-09-25,x,2,347,North East
+2020-09-25,x,2,423,West Midlands
+2020-09-25,x,21,1568,North West
+2020-09-25,x,11,558,Yorkshire and The Humber
+2020-09-25,x,26,363,London
+2020-09-25,x,12,171,South East
+2020-09-25,x,14,121,East of England
+2020-09-25,x,7,91,South West
+2020-09-25,x,5,189,East Midlands
+2020-09-26,x,9,764,North West
+2020-09-26,x,11,213,London
+2020-09-26,x,0,228,North East
+2020-09-26,x,0,27,East of England
+2020-09-26,x,2,22,South West
+2020-09-26,x,1,40,East Midlands
+2020-09-26,x,1,239,West Midlands
+2020-09-26,x,5,480,Yorkshire and The Humber
+2020-09-26,x,4,39,South East
+2020-09-27,x,4,479,North East
+2020-09-27,x,4,343,North West
+2020-09-27,x,14,185,London
+2020-09-27,x,9,66,East of England
+2020-09-27,x,0,146,West Midlands
+2020-09-27,x,1,124,Yorkshire and The Humber
+2020-09-27,x,6,99,South East
+2020-09-27,x,1,52,East Midlands
+2020-09-27,x,3,52,South West
+2020-09-28,x,40,2235,North West
+2020-09-28,x,22,457,London
+2020-09-28,x,5,415,East Midlands
+2020-09-28,x,10,199,South East
+2020-09-28,x,4,501,West Midlands
+2020-09-28,x,13,1119,Yorkshire and The Humber
+2020-09-28,x,16,182,East of England
+2020-09-28,x,10,770,North East
+2020-09-28,x,35,143,South West
+2020-09-29,x,19,447,London
+2020-09-29,x,5,525,West Midlands
+2020-09-29,x,35,2380,North West
+2020-09-29,x,18,1040,Yorkshire and The Humber
+2020-09-29,x,4,134,East Midlands
+2020-09-29,x,5,180,East of England
+2020-09-29,x,7,169,South East
+2020-09-29,x,10,107,South West
+2020-09-29,x,3,820,North East
+2020-09-30,x,7,275,South West
+2020-09-30,x,45,2754,North West
+2020-09-30,x,22,1322,Yorkshire and The Humber
+2020-09-30,x,22,253,South East
+2020-09-30,x,15,239,East of England
+2020-09-30,x,4,738,North East
+2020-09-30,x,43,672,London
+2020-09-30,x,0,193,East Midlands
+2020-09-30,x,10,704,West Midlands
+2020-10-01,x,40,749,London
+2020-10-01,x,10,250,South West
+2020-10-01,x,63,2823,North West
+2020-10-01,x,13,672,West Midlands
+2020-10-01,x,15,865,North East
+2020-10-01,x,18,264,South East
+2020-10-01,x,1,278,East Midlands
+2020-10-01,x,37,1689,Yorkshire and The Humber
+2020-10-01,x,12,202,East of England
+2020-10-02,x,16,317,South East
+2020-10-02,x,21,1781,Yorkshire and The Humber
+2020-10-02,x,0,337,East Midlands
+2020-10-02,x,64,2707,North West
+2020-10-02,x,12,683,West Midlands
+2020-10-02,x,12,239,South West
+2020-10-02,x,12,936,North East
+2020-10-02,x,14,163,East of England
+2020-10-02,x,25,536,London
+2020-10-03,x,45,1920,North West
+2020-10-03,x,8,243,London
+2020-10-03,x,29,1243,Yorkshire and The Humber
+2020-10-03,x,7,133,South East
+2020-10-03,x,4,175,East Midlands
+2020-10-03,x,6,135,South West
+2020-10-03,x,4,380,West Midlands
+2020-10-03,x,3,94,East of England
+2020-10-03,x,11,917,North East
+2020-10-04,x,43,2351,North West
+2020-10-04,x,1,136,East Midlands
+2020-10-04,x,6,118,East of England
+2020-10-04,x,21,431,London
+2020-10-04,x,13,204,South East
+2020-10-04,x,7,545,West Midlands
+2020-10-04,x,26,1416,Yorkshire and The Humber
+2020-10-04,x,15,1047,North East
+2020-10-04,x,11,163,South West
+2020-10-05,x,34,507,London
+2020-10-05,x,75,3249,North West
+2020-10-05,x,35,1689,Yorkshire and The Humber
+2020-10-05,x,19,831,West Midlands
+2020-10-05,x,7,554,East Midlands
+2020-10-05,x,23,1013,North East
+2020-10-05,x,16,241,South East
+2020-10-05,x,8,222,South West
+2020-10-05,x,5,188,East of England
+2020-10-06,x,17,447,South West
+2020-10-06,x,62,3362,North West
+2020-10-06,x,40,1921,Yorkshire and The Humber
+2020-10-06,x,41,832,London
+2020-10-06,x,15,469,South East
+2020-10-06,x,16,1195,North East
+2020-10-06,x,6,868,West Midlands
+2020-10-06,x,12,489,East Midlands
+2020-10-06,x,28,343,East of England
+2020-10-07,x,40,2153,Yorkshire and The Humber
+2020-10-07,x,5,571,East Midlands
+2020-10-07,x,14,952,West Midlands
+2020-10-07,x,74,3362,North West
+2020-10-07,x,30,342,East of England
+2020-10-07,x,27,554,South West
+2020-10-07,x,17,1109,North East
+2020-10-07,x,50,742,London
+2020-10-07,x,23,523,South East
+2020-10-08,x,45,899,London
+2020-10-08,x,50,2795,North West
+2020-10-08,x,9,559,East Midlands
+2020-10-08,x,40,1748,Yorkshire and The Humber
+2020-10-08,x,15,761,West Midlands
+2020-10-08,x,12,522,South West
+2020-10-08,x,18,1034,North East
+2020-10-08,x,26,565,South East
+2020-10-08,x,25,341,East of England
+2020-10-09,x,6,476,West Midlands
+2020-10-09,x,22,929,Yorkshire and The Humber
+2020-10-09,x,8,149,East of England
+2020-10-09,x,41,1782,North West
+2020-10-09,x,11,212,South West
+2020-10-09,x,8,136,South East
+2020-10-09,x,19,853,North East
+2020-10-09,x,30,339,London
+2020-10-09,x,7,357,East Midlands
+2020-10-10,x,22,1613,North West
+2020-10-10,x,0,37,East of England
+2020-10-10,x,4,63,London
+2020-10-10,x,3,246,West Midlands
+2020-10-10,x,1,64,South West
+2020-10-10,x,3,163,East Midlands
+2020-10-10,x,26,836,Yorkshire and The Humber
+2020-10-10,x,12,641,North East
+2020-10-10,x,3,45,South East
+2020-10-11,x,11,737,North East
+2020-10-11,x,28,2304,North West
+2020-10-11,x,14,801,Yorkshire and The Humber
+2020-10-11,x,6,141,South West
+2020-10-11,x,3,120,South East
+2020-10-11,x,15,269,London
+2020-10-11,x,5,256,West Midlands
+2020-10-11,x,2,60,East of England
+2020-10-11,x,6,163,East Midlands
+2020-10-12,x,13,250,South East
+2020-10-12,x,45,2115,Yorkshire and The Humber
+2020-10-12,x,8,729,North East
+2020-10-12,x,13,528,East Midlands
+2020-10-12,x,15,1124,West Midlands
+2020-10-12,x,28,609,London
+2020-10-12,x,52,3608,North West
+2020-10-12,x,14,436,South West
+2020-10-12,x,10,213,East of England
+2020-10-13,x,55,3231,North West
+2020-10-13,x,19,526,South East
+2020-10-13,x,72,982,London
+2020-10-13,x,15,1086,West Midlands
+2020-10-13,x,17,990,North East
+2020-10-13,x,48,1969,Yorkshire and The Humber
+2020-10-13,x,6,520,East Midlands
+2020-10-13,x,18,438,East of England
+2020-10-13,x,12,194,South West
+2020-10-14,x,40,3080,North West
+2020-10-14,x,56,937,London
+2020-10-14,x,20,407,South East
+2020-10-14,x,19,277,East of England
+2020-10-14,x,59,1855,Yorkshire and The Humber
+2020-10-14,x,8,443,East Midlands
+2020-10-14,x,7,430,West Midlands
+2020-10-14,x,9,97,South West
+2020-10-14,x,15,1026,North East
+2020-10-15,x,73,1255,London
+2020-10-15,x,42,478,South East
+2020-10-15,x,3,104,South West
+2020-10-15,x,10,862,North East
+2020-10-15,x,39,3208,North West
+2020-10-15,x,26,527,East of England
+2020-10-15,x,16,1199,West Midlands
+2020-10-15,x,7,420,East Midlands
+2020-10-15,x,46,1956,Yorkshire and The Humber
+2020-10-16,x,42,2738,North West
+2020-10-16,x,6,431,West Midlands
+2020-10-16,x,6,86,South West
+2020-10-16,x,57,1084,London
+2020-10-16,x,33,1107,Yorkshire and The Humber
+2020-10-16,x,2,359,East Midlands
+2020-10-16,x,27,437,South East
+2020-10-16,x,18,375,East of England
+2020-10-16,x,2,140,North East
+2020-10-17,x,6,216,East Midlands
+2020-10-17,x,3,62,London
+2020-10-17,x,1,27,South West
+2020-10-17,x,5,30,East of England
+2020-10-17,x,3,147,North East
+2020-10-17,x,24,1180,Yorkshire and The Humber
+2020-10-17,x,2,31,South East
+2020-10-17,x,40,2820,North West
+2020-10-17,x,8,433,West Midlands
+2020-10-18,x,0,24,South West
+2020-10-18,x,7,179,East Midlands
+2020-10-18,x,2,83,London
+2020-10-18,x,40,2620,North West
+2020-10-18,x,20,1096,Yorkshire and The Humber
+2020-10-18,x,2,197,North East
+2020-10-18,x,1,39,East of England
+2020-10-18,x,1,48,South East
+2020-10-18,x,8,447,West Midlands
+2020-10-19,x,13,796,East Midlands
+2020-10-19,x,85,2972,Yorkshire and The Humber
+2020-10-19,x,42,745,South East
+2020-10-19,x,22,695,East of England
+2020-10-19,x,11,150,South West
+2020-10-19,x,32,1675,West Midlands
+2020-10-19,x,93,1670,London
+2020-10-19,x,71,4887,North West
+2020-10-19,x,12,1078,North East
+2020-10-20,x,47,4271,North West
+2020-10-20,x,67,2699,Yorkshire and The Humber
+2020-10-20,x,21,1077,North East
+2020-10-20,x,24,1648,West Midlands
+2020-10-20,x,65,841,South East
+2020-10-20,x,22,556,East of England
+2020-10-20,x,7,128,South West
+2020-10-20,x,84,1647,London
+2020-10-20,x,11,611,East Midlands
+2020-10-21,x,21,1671,West Midlands
+2020-10-21,x,102,1742,London
+2020-10-21,x,57,4266,North West
+2020-10-21,x,18,649,East Midlands
+2020-10-21,x,21,1048,North East
+2020-10-21,x,47,2697,Yorkshire and The Humber
+2020-10-21,x,15,195,South West
+2020-10-21,x,85,847,South East
+2020-10-21,x,19,507,East of England
+2020-10-22,x,54,2497,Yorkshire and The Humber
+2020-10-22,x,49,3720,North West
+2020-10-22,x,14,1618,West Midlands
+2020-10-22,x,13,618,East Midlands
+2020-10-22,x,62,808,South East
+2020-10-22,x,88,1677,London
+2020-10-22,x,15,501,East of England
+2020-10-22,x,10,905,North East
+2020-10-22,x,18,400,South West
+2020-10-23,x,19,450,East of England
+2020-10-23,x,12,552,East Midlands
+2020-10-23,x,15,755,North East
+2020-10-23,x,16,1203,West Midlands
+2020-10-23,x,6,187,South West
+2020-10-23,x,61,738,South East
+2020-10-23,x,73,1402,London
+2020-10-23,x,36,1718,Yorkshire and The Humber
+2020-10-23,x,58,3342,North West
+2020-10-24,x,18,1185,West Midlands
+2020-10-24,x,22,332,South East
+2020-10-24,x,48,2699,North West
+2020-10-24,x,9,344,East Midlands
+2020-10-24,x,11,262,South West
+2020-10-24,x,27,1762,Yorkshire and The Humber
+2020-10-24,x,12,647,North East
+2020-10-24,x,34,580,London
+2020-10-24,x,8,194,East of England
+2020-10-25,x,15,1235,West Midlands
+2020-10-25,x,25,2653,North West
+2020-10-25,x,3,50,South West
+2020-10-25,x,30,1715,Yorkshire and The Humber
+2020-10-25,x,4,43,East of England
+2020-10-25,x,8,300,East Midlands
+2020-10-25,x,10,108,London
+2020-10-25,x,3,49,South East
+2020-10-25,x,8,652,North East
+2020-10-26,x,15,827,East Midlands
+2020-10-26,x,75,2938,Yorkshire and The Humber
+2020-10-26,x,126,1853,London
+2020-10-26,x,59,4364,North West
+2020-10-26,x,21,286,South West
+2020-10-26,x,24,1729,West Midlands
+2020-10-26,x,40,603,East of England
+2020-10-26,x,17,1028,North East
+2020-10-26,x,113,950,South East
+2020-10-27,x,38,446,South West
+2020-10-27,x,56,2831,Yorkshire and The Humber
+2020-10-27,x,24,1955,West Midlands
+2020-10-27,x,116,837,South East
+2020-10-27,x,111,1450,London
+2020-10-27,x,18,478,East of England
+2020-10-27,x,16,915,North East
+2020-10-27,x,26,1016,East Midlands
+2020-10-27,x,37,3878,North West
+2020-10-28,x,13,642,East Midlands
+2020-10-28,x,40,3115,North West
+2020-10-28,x,91,1414,London
+2020-10-28,x,62,2656,Yorkshire and The Humber
+2020-10-28,x,22,804,North East
+2020-10-28,x,16,201,South West
+2020-10-28,x,31,1900,West Midlands
+2020-10-28,x,19,526,East of England
+2020-10-28,x,122,785,South East
+2020-10-29,x,41,2562,Yorkshire and The Humber
+2020-10-29,x,53,412,South East
+2020-10-29,x,14,151,South West
+2020-10-29,x,53,841,London
+2020-10-29,x,15,371,East of England
+2020-10-29,x,38,3495,North West
+2020-10-29,x,16,539,East Midlands
+2020-10-29,x,37,1468,West Midlands
+2020-10-29,x,20,771,North East
+2020-10-30,x,13,716,East Midlands
+2020-10-30,x,95,764,South East
+2020-10-30,x,23,870,North East
+2020-10-30,x,39,3329,North West
+2020-10-30,x,9,190,South West
+2020-10-30,x,65,1213,London
+2020-10-30,x,52,2635,Yorkshire and The Humber
+2020-10-30,x,26,1739,West Midlands
+2020-10-30,x,21,487,East of England
+2020-10-31,x,3,86,South West
+2020-10-31,x,77,619,South East
+2020-10-31,x,82,1047,London
+2020-10-31,x,16,1521,West Midlands
+2020-10-31,x,21,667,North East
+2020-10-31,x,55,2072,Yorkshire and The Humber
+2020-10-31,x,20,374,East of England
+2020-10-31,x,44,2570,North West
+2020-10-31,x,10,415,East Midlands
+2020-11-01,x,18,747,North East
+2020-11-01,x,13,249,South West
+2020-11-01,x,84,425,South East
+2020-11-01,x,50,2265,Yorkshire and The Humber
+2020-11-01,x,4,196,East Midlands
+2020-11-01,x,36,2433,North West
+2020-11-01,x,10,421,West Midlands
+2020-11-01,x,55,629,London
+2020-11-01,x,11,275,East of England
+2020-11-02,x,65,3436,Yorkshire and The Humber
+2020-11-02,x,53,4474,North West
+2020-11-02,x,197,1260,South East
+2020-11-02,x,144,1906,London
+2020-11-02,x,53,2636,West Midlands
+2020-11-02,x,28,1015,East Midlands
+2020-11-02,x,22,1236,North East
+2020-11-02,x,26,451,South West
+2020-11-02,x,44,728,East of England
+2020-11-03,x,28,527,East of England
+2020-11-03,x,46,2136,West Midlands
+2020-11-03,x,38,3241,North West
+2020-11-03,x,21,1162,North East
+2020-11-03,x,5,214,South West
+2020-11-03,x,121,826,South East
+2020-11-03,x,15,697,East Midlands
+2020-11-03,x,60,2862,Yorkshire and The Humber
+2020-11-03,x,110,1293,London
+2020-11-04,x,42,2918,North West
+2020-11-04,x,12,191,South West
+2020-11-04,x,43,2684,Yorkshire and The Humber
+2020-11-04,x,33,1493,West Midlands
+2020-11-04,x,115,1222,London
+2020-11-04,x,147,807,South East
+2020-11-04,x,31,470,East of England
+2020-11-04,x,16,1021,North East
+2020-11-04,x,16,676,East Midlands
+2020-11-05,x,46,1966,West Midlands
+2020-11-05,x,13,233,South West
+2020-11-05,x,39,2965,North West
+2020-11-05,x,13,533,East Midlands
+2020-11-05,x,110,1035,London
+2020-11-05,x,40,430,East of England
+2020-11-05,x,71,2680,Yorkshire and The Humber
+2020-11-05,x,20,1090,North East
+2020-11-05,x,126,628,South East
+2020-11-06,x,60,2710,Yorkshire and The Humber
+2020-11-06,x,17,1045,North East
+2020-11-06,x,35,464,East of England
+2020-11-06,x,14,182,South West
+2020-11-06,x,9,668,East Midlands
+2020-11-06,x,27,2241,North West
+2020-11-06,x,42,1942,West Midlands
+2020-11-06,x,133,1262,London
+2020-11-06,x,147,790,South East
+2020-11-07,x,73,602,London
+2020-11-07,x,3,455,East Midlands
+2020-11-07,x,35,1539,West Midlands
+2020-11-07,x,34,2141,North West
+2020-11-07,x,17,1071,North East
+2020-11-07,x,120,562,South East
+2020-11-07,x,41,2255,Yorkshire and The Humber
+2020-11-07,x,8,87,South West
+2020-11-07,x,24,300,East of England
+2020-11-08,x,65,452,East of England
+2020-11-08,x,50,1841,West Midlands
+2020-11-08,x,49,2330,North West
+2020-11-08,x,125,1020,London
+2020-11-08,x,239,1139,South East
+2020-11-08,x,17,980,North East
+2020-11-08,x,56,2314,Yorkshire and The Humber
+2020-11-08,x,12,371,East Midlands
+2020-11-08,x,56,759,South West
+2020-11-09,x,19,1186,East Midlands
+2020-11-09,x,15,250,South West
+2020-11-09,x,270,941,South East
+2020-11-09,x,49,1711,West Midlands
+2020-11-09,x,81,3374,Yorkshire and The Humber
+2020-11-09,x,207,1556,London
+2020-11-09,x,61,516,East of England
+2020-11-09,x,47,3332,North West
+2020-11-09,x,34,1534,North East
+2020-11-10,x,244,1055,South East
+2020-11-10,x,25,1252,North East
+2020-11-10,x,57,2736,Yorkshire and The Humber
+2020-11-10,x,36,2697,North West
+2020-11-10,x,26,884,East Midlands
+2020-11-10,x,165,1054,London
+2020-11-10,x,56,1730,West Midlands
+2020-11-10,x,61,827,South West
+2020-11-10,x,55,320,East of England
+2020-11-11,x,57,1606,West Midlands
+2020-11-11,x,36,1299,East Midlands
+2020-11-11,x,90,577,East of England
+2020-11-11,x,223,1535,London
+2020-11-11,x,62,2804,Yorkshire and The Humber
+2020-11-11,x,51,2677,North West
+2020-11-11,x,19,1321,North East
+2020-11-11,x,18,379,South West
+2020-11-11,x,350,945,South East
+2020-11-12,x,41,2488,Yorkshire and The Humber
+2020-11-12,x,17,1054,East Midlands
+2020-11-12,x,18,1157,North East
+2020-11-12,x,42,2373,North West
+2020-11-12,x,337,925,South East
+2020-11-12,x,71,450,East of England
+2020-11-12,x,220,1262,London
+2020-11-12,x,31,1470,West Midlands
+2020-11-12,x,31,579,South West
+2020-11-13,x,35,1401,West Midlands
+2020-11-13,x,74,2309,Yorkshire and The Humber
+2020-11-13,x,218,1091,London
+2020-11-13,x,40,2209,North West
+2020-11-13,x,294,1023,South East
+2020-11-13,x,11,1162,North East
+2020-11-13,x,11,885,East Midlands
+2020-11-13,x,80,442,East of England
+2020-11-13,x,48,685,South West
+2020-11-14,x,45,1772,North West
+2020-11-14,x,42,403,East of England
+2020-11-14,x,249,806,South East
+2020-11-14,x,33,1354,West Midlands
+2020-11-14,x,186,950,London
+2020-11-14,x,33,576,South West
+2020-11-14,x,10,840,North East
+2020-11-14,x,49,1943,Yorkshire and The Humber
+2020-11-14,x,21,807,East Midlands
+2020-11-15,x,23,404,South West
+2020-11-15,x,183,635,South East
+2020-11-15,x,120,681,London
+2020-11-15,x,9,586,East Midlands
+2020-11-15,x,22,1562,Yorkshire and The Humber
+2020-11-15,x,26,1150,West Midlands
+2020-11-15,x,34,1565,North West
+2020-11-15,x,13,760,North East
+2020-11-15,x,42,257,East of England
+2020-11-16,x,47,1582,West Midlands
+2020-11-16,x,54,2333,Yorkshire and The Humber
+2020-11-16,x,44,2270,North West
+2020-11-16,x,253,1187,London
+2020-11-16,x,85,485,East of England
+2020-11-16,x,368,1027,South East
+2020-11-16,x,24,1479,East Midlands
+2020-11-16,x,40,638,South West
+2020-11-16,x,10,1112,North East
+2020-11-17,x,42,1161,East Midlands
+2020-11-17,x,16,1025,North East
+2020-11-17,x,58,2099,Yorkshire and The Humber
+2020-11-17,x,114,542,East of England
+2020-11-17,x,41,2001,West Midlands
+2020-11-17,x,69,1979,North West
+2020-11-17,x,251,1021,London
+2020-11-17,x,33,465,South West
+2020-11-17,x,319,807,South East
+2020-11-18,x,329,726,South East
+2020-11-18,x,51,1795,North West
+2020-11-18,x,50,1835,West Midlands
+2020-11-18,x,22,320,South West
+2020-11-18,x,24,938,North East
+2020-11-18,x,109,452,East of England
+2020-11-18,x,45,1145,East Midlands
+2020-11-18,x,39,1793,Yorkshire and The Humber
+2020-11-18,x,247,948,London
+2020-11-19,x,33,1456,Yorkshire and The Humber
+2020-11-19,x,34,1686,West Midlands
+2020-11-19,x,288,593,South East
+2020-11-19,x,18,871,East Midlands
+2020-11-19,x,45,1441,North West
+2020-11-19,x,233,896,London
+2020-11-19,x,104,359,East of England
+2020-11-19,x,16,739,North East
+2020-11-19,x,17,324,South West
+2020-11-20,x,36,1241,Yorkshire and The Humber
+2020-11-20,x,18,659,North East
+2020-11-20,x,29,262,South West
+2020-11-20,x,43,1491,West Midlands
+2020-11-20,x,221,798,London
+2020-11-20,x,28,871,East Midlands
+2020-11-20,x,305,558,South East
+2020-11-20,x,29,1370,North West
+2020-11-20,x,72,303,East of England
+2020-11-21,x,12,937,Yorkshire and The Humber
+2020-11-21,x,182,575,London
+2020-11-21,x,19,197,South West
+2020-11-21,x,28,995,North West
+2020-11-21,x,295,483,South East
+2020-11-21,x,68,263,East of England
+2020-11-21,x,39,1108,West Midlands
+2020-11-21,x,17,479,North East
+2020-11-21,x,20,634,East Midlands
+2020-11-22,x,31,628,East Midlands
+2020-11-22,x,98,295,East of England
+2020-11-22,x,251,455,South East
+2020-11-22,x,201,564,London
+2020-11-22,x,32,995,West Midlands
+2020-11-22,x,20,998,North West
+2020-11-22,x,9,431,North East
+2020-11-22,x,28,847,Yorkshire and The Humber
+2020-11-22,x,13,142,South West
+2020-11-23,x,335,851,London
+2020-11-23,x,471,536,South East
+2020-11-23,x,144,315,East of England
+2020-11-23,x,14,617,North East
+2020-11-23,x,53,1492,West Midlands
+2020-11-23,x,42,1453,North West
+2020-11-23,x,31,280,South West
+2020-11-23,x,41,1251,Yorkshire and The Humber
+2020-11-23,x,34,927,East Midlands
+2020-11-24,x,319,404,South East
+2020-11-24,x,28,992,Yorkshire and The Humber
+2020-11-24,x,26,748,East Midlands
+2020-11-24,x,111,275,East of England
+2020-11-24,x,44,1294,West Midlands
+2020-11-24,x,320,767,London
+2020-11-24,x,31,1207,North West
+2020-11-24,x,16,183,South West
+2020-11-24,x,21,515,North East
+2020-11-25,x,25,1016,Yorkshire and The Humber
+2020-11-25,x,402,722,London
+2020-11-25,x,24,542,North East
+2020-11-25,x,37,768,East Midlands
+2020-11-25,x,420,415,South East
+2020-11-25,x,51,1274,West Midlands
+2020-11-25,x,48,1196,North West
+2020-11-25,x,130,323,East of England
+2020-11-25,x,23,184,South West
+2020-11-26,x,28,202,South West
+2020-11-26,x,48,1091,West Midlands
+2020-11-26,x,41,678,East Midlands
+2020-11-26,x,156,324,East of England
+2020-11-26,x,385,608,London
+2020-11-26,x,384,391,South East
+2020-11-26,x,22,450,North East
+2020-11-26,x,22,1003,North West
+2020-11-26,x,19,885,Yorkshire and The Humber
+2020-11-27,x,23,781,Yorkshire and The Humber
+2020-11-27,x,461,656,London
+2020-11-27,x,19,614,East Midlands
+2020-11-27,x,15,198,South West
+2020-11-27,x,34,927,North West
+2020-11-27,x,41,406,North East
+2020-11-27,x,515,443,South East
+2020-11-27,x,35,1009,West Midlands
+2020-11-27,x,146,290,East of England
+2020-11-28,x,24,778,North West
+2020-11-28,x,342,530,London
+2020-11-28,x,386,323,South East
+2020-11-28,x,18,646,Yorkshire and The Humber
+2020-11-28,x,35,481,East Midlands
+2020-11-28,x,42,779,West Midlands
+2020-11-28,x,80,178,East of England
+2020-11-28,x,23,117,South West
+2020-11-28,x,22,315,North East
+2020-11-29,x,25,455,East Midlands
+2020-11-29,x,19,644,Yorkshire and The Humber
+2020-11-29,x,351,528,London
+2020-11-29,x,25,657,North West
+2020-11-29,x,116,173,East of England
+2020-11-29,x,37,759,West Midlands
+2020-11-29,x,432,262,South East
+2020-11-29,x,18,129,South West
+2020-11-29,x,12,305,North East
+2020-11-30,x,55,793,East Midlands
+2020-11-30,x,28,181,South West
+2020-11-30,x,66,1073,West Midlands
+2020-11-30,x,650,404,South East
+2020-11-30,x,621,806,London
+2020-11-30,x,40,504,North East
+2020-11-30,x,32,1188,North West
+2020-11-30,x,26,981,Yorkshire and The Humber
+2020-11-30,x,269,389,East of England
+2020-12-01,x,29,409,North East
+2020-12-01,x,34,1011,North West
+2020-12-01,x,35,832,Yorkshire and The Humber
+2020-12-01,x,81,932,West Midlands
+2020-12-01,x,648,680,London
+2020-12-01,x,25,155,South West
+2020-12-01,x,568,451,South East
+2020-12-01,x,248,374,East of England
+2020-12-01,x,55,701,East Midlands
+2020-12-02,x,54,891,North West
+2020-12-02,x,76,900,West Midlands
+2020-12-02,x,659,442,South East
+2020-12-02,x,702,732,London
+2020-12-02,x,279,335,East of England
+2020-12-02,x,78,643,East Midlands
+2020-12-02,x,13,770,Yorkshire and The Humber
+2020-12-02,x,18,129,South West
+2020-12-02,x,54,413,North East
+2020-12-03,x,66,812,West Midlands
+2020-12-03,x,25,150,South West
+2020-12-03,x,39,833,North West
+2020-12-03,x,661,385,South East
+2020-12-03,x,625,604,London
+2020-12-03,x,63,691,East Midlands
+2020-12-03,x,47,361,North East
+2020-12-03,x,17,644,Yorkshire and The Humber
+2020-12-03,x,263,324,East of England
+2020-12-04,x,55,814,North West
+2020-12-04,x,252,250,East of England
+2020-12-04,x,39,298,North East
+2020-12-04,x,31,172,South West
+2020-12-04,x,27,491,Yorkshire and The Humber
+2020-12-04,x,536,448,London
+2020-12-04,x,626,407,South East
+2020-12-04,x,78,842,West Midlands
+2020-12-04,x,57,604,East Midlands
+2020-12-05,x,15,424,Yorkshire and The Humber
+2020-12-05,x,790,617,London
+2020-12-05,x,81,722,West Midlands
+2020-12-05,x,791,357,South East
+2020-12-05,x,27,255,North East
+2020-12-05,x,52,651,North West
+2020-12-05,x,353,281,East of England
+2020-12-05,x,55,546,East Midlands
+2020-12-05,x,29,114,South West
+2020-12-06,x,69,581,East Midlands
+2020-12-06,x,91,751,West Midlands
+2020-12-06,x,32,116,South West
+2020-12-06,x,906,710,London
+2020-12-06,x,446,322,East of England
+2020-12-06,x,861,382,South East
+2020-12-06,x,25,407,Yorkshire and The Humber
+2020-12-06,x,45,739,North West
+2020-12-06,x,46,282,North East
+2020-12-07,x,665,350,East of England
+2020-12-07,x,103,1041,North West
+2020-12-07,x,69,201,South West
+2020-12-07,x,1341,563,South East
+2020-12-07,x,152,1035,West Midlands
+2020-12-07,x,99,804,East Midlands
+2020-12-07,x,28,705,Yorkshire and The Humber
+2020-12-07,x,1313,871,London
+2020-12-07,x,71,441,North East
+2020-12-08,x,93,878,North West
+2020-12-08,x,30,601,Yorkshire and The Humber
+2020-12-08,x,1119,632,London
+2020-12-08,x,1203,466,South East
+2020-12-08,x,95,738,East Midlands
+2020-12-08,x,654,318,East of England
+2020-12-08,x,140,864,West Midlands
+2020-12-08,x,65,156,South West
+2020-12-08,x,59,369,North East
+2020-12-09,x,95,937,North West
+2020-12-09,x,1451,727,London
+2020-12-09,x,99,773,East Midlands
+2020-12-09,x,75,374,North East
+2020-12-09,x,701,327,East of England
+2020-12-09,x,1147,439,South East
+2020-12-09,x,22,648,Yorkshire and The Humber
+2020-12-09,x,73,189,South West
+2020-12-09,x,206,939,West Midlands
+2020-12-10,x,997,533,London
+2020-12-10,x,213,842,West Midlands
+2020-12-10,x,942,399,South East
+2020-12-10,x,142,935,North West
+2020-12-10,x,28,568,Yorkshire and The Humber
+2020-12-10,x,114,760,East Midlands
+2020-12-10,x,435,204,East of England
+2020-12-10,x,75,180,South West
+2020-12-10,x,82,355,North East
+2020-12-11,x,155,853,North West
+2020-12-11,x,69,170,South West
+2020-12-11,x,809,362,East of England
+2020-12-11,x,1477,509,South East
+2020-12-11,x,2101,869,London
+2020-12-11,x,89,325,North East
+2020-12-11,x,43,605,Yorkshire and The Humber
+2020-12-11,x,123,673,East Midlands
+2020-12-11,x,231,965,West Midlands
+2020-12-12,x,1639,453,South East
+2020-12-12,x,2385,954,London
+2020-12-12,x,143,508,East Midlands
+2020-12-12,x,940,387,East of England
+2020-12-12,x,81,278,North East
+2020-12-12,x,126,746,North West
+2020-12-12,x,54,140,South West
+2020-12-12,x,206,779,West Midlands
+2020-12-12,x,46,510,Yorkshire and The Humber
+2020-12-13,x,1222,391,East of England
+2020-12-13,x,153,785,North West
+2020-12-13,x,1998,564,South East
+2020-12-13,x,261,751,West Midlands
+2020-12-13,x,3113,1029,London
+2020-12-13,x,150,477,East Midlands
+2020-12-13,x,70,160,South West
+2020-12-13,x,91,307,North East
+2020-12-13,x,52,509,Yorkshire and The Humber
+2020-12-14,x,101,759,Yorkshire and The Humber
+2020-12-14,x,4038,1220,London
+2020-12-14,x,1499,543,East of England
+2020-12-14,x,248,854,East Midlands
+2020-12-14,x,450,1213,West Midlands
+2020-12-14,x,147,433,North East
+2020-12-14,x,288,1242,North West
+2020-12-14,x,126,207,South West
+2020-12-14,x,2542,672,South East
+2020-12-15,x,4291,1171,London
+2020-12-15,x,1432,357,East of England
+2020-12-15,x,2230,583,South East
+2020-12-15,x,142,196,South West
+2020-12-15,x,171,421,North East
+2020-12-15,x,456,1100,West Midlands
+2020-12-15,x,321,1031,North West
+2020-12-15,x,89,677,Yorkshire and The Humber
+2020-12-15,x,217,696,East Midlands
+2020-12-16,x,419,801,West Midlands
+2020-12-16,x,2117,558,South East
+2020-12-16,x,1012,246,East of England
+2020-12-16,x,318,1065,North West
+2020-12-16,x,4316,1128,London
+2020-12-16,x,165,391,North East
+2020-12-16,x,54,199,East Midlands
+2020-12-16,x,113,593,Yorkshire and The Humber
+2020-12-16,x,166,215,South West
+2020-12-17,x,4089,941,London
+2020-12-17,x,1790,378,South East
+2020-12-17,x,40,87,East Midlands
+2020-12-17,x,1111,214,East of England
+2020-12-17,x,237,447,West Midlands
+2020-12-17,x,111,507,Yorkshire and The Humber
+2020-12-17,x,313,893,North West
+2020-12-17,x,123,179,South West
+2020-12-17,x,153,274,North East
+2020-12-18,x,2327,529,London
+2020-12-18,x,32,196,Yorkshire and The Humber
+2020-12-18,x,337,983,North West
+2020-12-18,x,1559,489,South East
+2020-12-18,x,136,168,North East
+2020-12-18,x,936,189,East of England
+2020-12-18,x,139,193,South West
+2020-12-18,x,190,357,West Midlands
+2020-12-18,x,62,150,East Midlands
+2020-12-19,x,56,99,East Midlands
+2020-12-19,x,1075,222,East of England
+2020-12-19,x,2174,481,London
+2020-12-19,x,107,171,North East
+2020-12-19,x,172,409,North West
+2020-12-19,x,1243,222,South East
+2020-12-19,x,384,573,West Midlands
+2020-12-19,x,39,267,Yorkshire and The Humber
+2020-12-19,x,94,115,South West
+2020-12-20,x,181,538,Yorkshire and The Humber
+2020-12-20,x,2376,418,London
+2020-12-20,x,2242,529,South East
+2020-12-20,x,407,824,North West
+2020-12-20,x,215,352,West Midlands
+2020-12-20,x,1612,305,East of England
+2020-12-20,x,236,185,South West
+2020-12-20,x,139,197,East Midlands
+2020-12-20,x,233,328,North East
+2020-12-21,x,236,860,Yorkshire and The Humber
+2020-12-21,x,681,1044,North West
+2020-12-21,x,2301,402,London
+2020-12-21,x,1617,333,South East
+2020-12-21,x,1618,253,East of England
+2020-12-21,x,944,1072,West Midlands
+2020-12-21,x,240,249,South West
+2020-12-21,x,84,178,East Midlands
+2020-12-21,x,322,456,North East
+2020-12-22,x,2025,336,London
+2020-12-22,x,1878,373,East of England
+2020-12-22,x,71,85,South West
+2020-12-22,x,1364,218,South East
+2020-12-22,x,618,1018,North West
+2020-12-22,x,348,469,North East
+2020-12-22,x,317,982,Yorkshire and The Humber
+2020-12-22,x,203,278,East Midlands
+2020-12-22,x,988,932,West Midlands
+2020-12-23,x,1252,175,East of England
+2020-12-23,x,348,456,North East
+2020-12-23,x,891,833,West Midlands
+2020-12-23,x,1673,269,London
+2020-12-23,x,1744,376,South East
+2020-12-23,x,594,835,North West
+2020-12-23,x,482,431,South West
+2020-12-23,x,303,624,Yorkshire and The Humber
+2020-12-23,x,173,139,East Midlands
+2020-12-24,x,4181,599,London
+2020-12-24,x,229,328,North East
+2020-12-24,x,826,683,West Midlands
+2020-12-24,x,1808,239,East of England
+2020-12-24,x,697,943,North West
+2020-12-24,x,2921,469,South East
+2020-12-24,x,286,480,Yorkshire and The Humber
+2020-12-24,x,226,170,East Midlands
+2020-12-24,x,369,266,South West
+2020-12-25,x,2796,402,London
+2020-12-25,x,1214,212,East of England
+2020-12-25,x,391,309,West Midlands
+2020-12-25,x,1174,182,South East
+2020-12-25,x,306,271,North West
+2020-12-25,x,225,246,East Midlands
+2020-12-25,x,115,111,North East
+2020-12-25,x,121,277,Yorkshire and The Humber
+2020-12-25,x,6,3,South West
+2020-12-26,x,2507,324,East of England
+2020-12-26,x,240,158,East Midlands
+2020-12-26,x,694,701,North West
+2020-12-26,x,5005,553,London
+2020-12-26,x,39,38,South West
+2020-12-26,x,3172,415,South East
+2020-12-26,x,1257,795,West Midlands
+2020-12-26,x,357,396,North East
+2020-12-26,x,378,520,Yorkshire and The Humber
+2020-12-27,x,1062,973,North West
+2020-12-27,x,476,476,North East
+2020-12-27,x,2965,409,South East
+2020-12-27,x,4919,581,London
+2020-12-27,x,455,632,Yorkshire and The Humber
+2020-12-27,x,2119,295,East of England
+2020-12-27,x,348,218,South West
+2020-12-27,x,354,202,East Midlands
+2020-12-27,x,1329,889,West Midlands
+2020-12-28,x,1049,881,North West
+2020-12-28,x,1644,178,London
+2020-12-28,x,1337,674,West Midlands
+2020-12-28,x,426,671,Yorkshire and The Humber
+2020-12-28,x,284,138,South West
+2020-12-28,x,1631,230,South East
+2020-12-28,x,591,480,North East
+2020-12-28,x,986,136,East of England
+2020-12-28,x,230,142,East Midlands
+2020-12-29,x,2587,1235,West Midlands
+2020-12-29,x,2806,354,East of England
+2020-12-29,x,3501,392,London
+2020-12-29,x,1088,756,North East
+2020-12-29,x,2438,1813,North West
+2020-12-29,x,544,256,South West
+2020-12-29,x,3641,495,South East
+2020-12-29,x,417,244,East Midlands
+2020-12-29,x,833,962,Yorkshire and The Humber
+2020-12-30,x,2544,1090,West Midlands
+2020-12-30,x,556,266,South West
+2020-12-30,x,1786,169,East of England
+2020-12-30,x,357,242,East Midlands
+2020-12-30,x,5132,544,London
+2020-12-30,x,2977,2139,North West
+2020-12-30,x,985,796,North East
+2020-12-30,x,859,998,Yorkshire and The Humber
+2020-12-30,x,3586,320,South East
+2020-12-31,x,5305,445,London
+2020-12-31,x,503,262,South West
+2020-12-31,x,2556,198,South East
+2020-12-31,x,1832,1087,North West
+2020-12-31,x,419,190,East Midlands
+2020-12-31,x,2290,827,West Midlands
+2020-12-31,x,647,489,North East
+2020-12-31,x,1325,126,East of England
+2020-12-31,x,667,671,Yorkshire and The Humber
+2021-01-01,x,2962,255,London
+2021-01-01,x,379,124,South West
+2021-01-01,x,2189,247,East of England
+2021-01-01,x,1972,173,South East
+2021-01-01,x,1267,781,North West
+2021-01-01,x,1311,507,West Midlands
+2021-01-01,x,480,467,Yorkshire and The Humber
+2021-01-01,x,433,253,North East
+2021-01-01,x,642,324,East Midlands
+2021-01-02,x,4010,329,South East
+2021-01-02,x,2457,1409,North West
+2021-01-02,x,506,194,East Midlands
+2021-01-02,x,631,278,South West
+2021-01-02,x,2407,241,East of England
+2021-01-02,x,6651,523,London
+2021-01-02,x,3017,1062,West Midlands
+2021-01-02,x,861,561,North East
+2021-01-02,x,911,812,Yorkshire and The Humber
+2021-01-03,x,2036,166,South East
+2021-01-03,x,530,188,South West
+2021-01-03,x,2675,1552,North West
+2021-01-03,x,828,690,Yorkshire and The Humber
+2021-01-03,x,1393,116,East of England
+2021-01-03,x,3082,230,London
+2021-01-03,x,847,445,North East
+2021-01-03,x,2331,711,West Midlands
+2021-01-03,x,281,115,East Midlands
+2021-01-04,x,3928,216,London
+2021-01-04,x,3465,945,West Midlands
+2021-01-04,x,3491,1758,North West
+2021-01-04,x,2711,220,South East
+2021-01-04,x,831,273,South West
+2021-01-04,x,461,168,East Midlands
+2021-01-04,x,1256,585,North East
+2021-01-04,x,1263,847,Yorkshire and The Humber
+2021-01-04,x,1657,174,East of England
+2021-01-05,x,3344,280,South East
+2021-01-05,x,4016,239,London
+2021-01-05,x,1700,154,East of England
+2021-01-05,x,554,155,East Midlands
+2021-01-05,x,3514,1584,North West
+2021-01-05,x,787,251,South West
+2021-01-05,x,2779,746,West Midlands
+2021-01-05,x,951,660,Yorkshire and The Humber
+2021-01-05,x,861,399,North East
+2021-01-06,x,372,91,South West
+2021-01-06,x,1365,123,East of England
+2021-01-06,x,2343,177,South East
+2021-01-06,x,925,566,Yorkshire and The Humber
+2021-01-06,x,3370,785,West Midlands
+2021-01-06,x,3135,1428,North West
+2021-01-06,x,730,195,East Midlands
+2021-01-06,x,3727,231,London
+2021-01-06,x,782,342,North East
+2021-01-07,x,503,168,South West
+2021-01-07,x,1706,160,East of England
+2021-01-07,x,900,545,Yorkshire and The Humber
+2021-01-07,x,2399,184,South East
+2021-01-07,x,2978,169,London
+2021-01-07,x,2933,673,West Midlands
+2021-01-07,x,708,263,East Midlands
+2021-01-07,x,3203,1466,North West
+2021-01-07,x,813,314,North East
+2021-01-08,x,709,212,East Midlands
+2021-01-08,x,2799,573,West Midlands
+2021-01-08,x,428,108,South West
+2021-01-08,x,1636,121,East of England
+2021-01-08,x,2667,200,South East
+2021-01-08,x,3013,177,London
+2021-01-08,x,3061,1199,North West
+2021-01-08,x,589,240,North East
+2021-01-08,x,697,433,Yorkshire and The Humber
+2021-01-09,x,555,155,East Midlands
+2021-01-09,x,2858,1027,North West
+2021-01-09,x,1863,139,South East
+2021-01-09,x,374,82,South West
+2021-01-09,x,2530,487,West Midlands
+2021-01-09,x,1423,119,East of England
+2021-01-09,x,2226,113,London
+2021-01-09,x,700,446,Yorkshire and The Humber
+2021-01-09,x,561,190,North East
+2021-01-10,x,2108,122,London
+2021-01-10,x,3068,1012,North West
+2021-01-10,x,244,43,South West
+2021-01-10,x,1600,150,South East
+2021-01-10,x,1318,83,East of England
+2021-01-10,x,2481,526,West Midlands
+2021-01-10,x,499,134,East Midlands
+2021-01-10,x,679,357,Yorkshire and The Humber
+2021-01-10,x,600,158,North East
+2021-01-11,x,3826,711,West Midlands
+2021-01-11,x,1792,126,East of England
+2021-01-11,x,2323,108,London
+2021-01-11,x,4269,1373,North West
+2021-01-11,x,1016,258,East Midlands
+2021-01-11,x,672,139,South West
+2021-01-11,x,1135,557,Yorkshire and The Humber
+2021-01-11,x,2345,193,South East
+2021-01-11,x,1017,258,North East
+2021-01-12,x,1579,110,East of England
+2021-01-12,x,774,210,North East
+2021-01-12,x,3135,542,West Midlands
+2021-01-12,x,1980,131,South East
+2021-01-12,x,711,185,East Midlands
+2021-01-12,x,2239,111,London
+2021-01-12,x,3559,1064,North West
+2021-01-12,x,552,94,South West
+2021-01-12,x,1013,414,Yorkshire and The Humber
+2021-01-13,x,511,78,South West
+2021-01-13,x,1297,75,East of England
+2021-01-13,x,1834,90,London
+2021-01-13,x,936,389,Yorkshire and The Humber
+2021-01-13,x,614,152,North East
+2021-01-13,x,3080,823,North West
+2021-01-13,x,2140,362,West Midlands
+2021-01-13,x,601,134,East Midlands
+2021-01-13,x,2056,132,South East
+2021-01-14,x,2118,282,West Midlands
+2021-01-14,x,1539,75,London
+2021-01-14,x,2222,115,South East
+2021-01-14,x,537,76,South West
+2021-01-14,x,659,164,East Midlands
+2021-01-14,x,2960,781,North West
+2021-01-14,x,1257,66,East of England
+2021-01-14,x,482,206,Yorkshire and The Humber
+2021-01-14,x,725,158,North East
+2021-01-15,x,743,123,East Midlands
+2021-01-15,x,2301,108,South East
+2021-01-15,x,2427,116,London
+2021-01-15,x,2719,640,North West
+2021-01-15,x,533,75,South West
+2021-01-15,x,733,152,North East
+2021-01-15,x,2094,319,West Midlands
+2021-01-15,x,1362,75,East of England
+2021-01-15,x,889,342,Yorkshire and The Humber
+2021-01-16,x,745,247,Yorkshire and The Humber
+2021-01-16,x,1050,128,West Midlands
+2021-01-16,x,501,100,East Midlands
+2021-01-16,x,603,105,North East
+2021-01-16,x,1724,122,South East
+2021-01-16,x,240,26,South West
+2021-01-16,x,2109,91,London
+2021-01-16,x,1091,45,East of England
+2021-01-16,x,2489,493,North West
+2021-01-17,x,944,109,West Midlands
+2021-01-17,x,445,90,East Midlands
+2021-01-17,x,1578,90,London
+2021-01-17,x,2386,485,North West
+2021-01-17,x,1536,79,South East
+2021-01-17,x,953,43,East of England
+2021-01-17,x,697,234,Yorkshire and The Humber
+2021-01-17,x,543,113,North East
+2021-01-17,x,213,29,South West
+2021-01-18,x,2126,59,London
+2021-01-18,x,3409,568,North West
+2021-01-18,x,1349,54,East of England
+2021-01-18,x,1623,203,West Midlands
+2021-01-18,x,2272,134,South East
+2021-01-18,x,550,74,South West
+2021-01-18,x,949,152,East Midlands
+2021-01-18,x,1163,343,Yorkshire and The Humber
+2021-01-18,x,924,188,North East
+2021-01-19,x,977,39,East of England
+2021-01-19,x,1856,116,South East
+2021-01-19,x,765,126,East Midlands
+2021-01-19,x,1681,186,West Midlands
+2021-01-19,x,1656,49,London
+2021-01-19,x,3125,535,North West
+2021-01-19,x,456,57,South West
+2021-01-19,x,1010,328,Yorkshire and The Humber
+2021-01-19,x,745,130,North East
+2021-01-20,x,631,102,East Midlands
+2021-01-20,x,971,48,East of England
+2021-01-20,x,2745,418,North West
+2021-01-20,x,1436,177,West Midlands
+2021-01-20,x,793,123,North East
+2021-01-20,x,402,34,South West
+2021-01-20,x,942,268,Yorkshire and The Humber
+2021-01-20,x,1416,64,South East
+2021-01-20,x,1322,43,London
+2021-01-21,x,1309,142,West Midlands
+2021-01-21,x,396,42,South West
+2021-01-21,x,1438,64,South East
+2021-01-21,x,736,106,East Midlands
+2021-01-21,x,959,34,East of England
+2021-01-21,x,1310,34,London
+2021-01-21,x,2339,387,North West
+2021-01-21,x,974,233,Yorkshire and The Humber
+2021-01-21,x,694,77,North East
+2021-01-22,x,882,29,East of England
+2021-01-22,x,327,21,South West
+2021-01-22,x,1265,129,West Midlands
+2021-01-22,x,1415,77,South East
+2021-01-22,x,604,80,East Midlands
+2021-01-22,x,1396,40,London
+2021-01-22,x,2368,336,North West
+2021-01-22,x,838,195,Yorkshire and The Humber
+2021-01-22,x,580,109,North East
+2021-01-23,x,197,19,South West
+2021-01-23,x,1840,251,North West
+2021-01-23,x,832,175,Yorkshire and The Humber
+2021-01-23,x,870,80,West Midlands
+2021-01-23,x,447,68,East Midlands
+2021-01-23,x,714,27,East of England
+2021-01-23,x,1246,38,London
+2021-01-23,x,1177,49,South East
+2021-01-23,x,497,42,North East
+2021-01-24,x,1820,221,North West
+2021-01-24,x,532,40,West Midlands
+2021-01-24,x,128,21,South West
+2021-01-24,x,869,31,South East
+2021-01-24,x,616,24,East of England
+2021-01-24,x,336,47,East Midlands
+2021-01-24,x,1215,31,London
+2021-01-24,x,825,167,Yorkshire and The Humber
+2021-01-24,x,478,58,North East
+2021-01-25,x,1400,70,South East
+2021-01-25,x,842,29,East of England
+2021-01-25,x,2629,304,North West
+2021-01-25,x,388,42,South West
+2021-01-25,x,1004,27,London
+2021-01-25,x,671,75,East Midlands
+2021-01-25,x,787,79,North East
+2021-01-25,x,1136,72,West Midlands
+2021-01-25,x,1241,219,Yorkshire and The Humber
+2021-01-26,x,1169,56,South East
+2021-01-26,x,1244,84,West Midlands
+2021-01-26,x,779,23,East of England
+2021-01-26,x,909,18,London
+2021-01-26,x,306,22,South West
+2021-01-26,x,721,75,East Midlands
+2021-01-26,x,2214,256,North West
+2021-01-26,x,718,59,North East
+2021-01-26,x,1052,194,Yorkshire and The Humber
+2021-01-27,x,587,41,East Midlands
+2021-01-27,x,1074,44,South East
+2021-01-27,x,1067,88,West Midlands
+2021-01-27,x,2107,242,North West
+2021-01-27,x,298,17,South West
+2021-01-27,x,711,34,East of England
+2021-01-27,x,658,57,North East
+2021-01-27,x,1000,25,London
+2021-01-27,x,1096,190,Yorkshire and The Humber
+2021-01-28,x,606,63,East Midlands
+2021-01-28,x,673,20,East of England
+2021-01-28,x,245,15,South West
+2021-01-28,x,1048,32,London
+2021-01-28,x,1974,200,North West
+2021-01-28,x,985,64,West Midlands
+2021-01-28,x,626,51,North East
+2021-01-28,x,989,150,Yorkshire and The Humber
+2021-01-28,x,1037,46,South East
+2021-01-29,x,930,26,London
+2021-01-29,x,1904,154,North West
+2021-01-29,x,568,41,East Midlands
+2021-01-29,x,287,12,South West
+2021-01-29,x,1040,50,West Midlands
+2021-01-29,x,939,26,South East
+2021-01-29,x,577,22,East of England
+2021-01-29,x,609,39,North East
+2021-01-29,x,920,134,Yorkshire and The Humber
+2021-01-30,x,199,10,South West
+2021-01-30,x,1526,133,North West
+2021-01-30,x,574,18,East of England
+2021-01-30,x,766,22,South East
+2021-01-30,x,798,81,Yorkshire and The Humber
+2021-01-30,x,430,32,East Midlands
+2021-01-30,x,1005,21,London
+2021-01-30,x,705,43,West Midlands
+2021-01-30,x,546,37,North East
+2021-01-31,x,698,27,West Midlands
+2021-01-31,x,484,13,East of England
+2021-01-31,x,821,23,London
+2021-01-31,x,814,74,Yorkshire and The Humber
+2021-01-31,x,1515,103,North West
+2021-01-31,x,327,14,East Midlands
+2021-01-31,x,545,14,North East
+2021-01-31,x,635,29,South East
+2021-01-31,x,129,6,South West
+2021-02-01,x,620,18,East of England
+2021-02-01,x,951,22,South East
+2021-02-01,x,1965,154,North West
+2021-02-01,x,631,28,East Midlands
+2021-02-01,x,1131,126,Yorkshire and The Humber
+2021-02-01,x,1043,61,West Midlands
+2021-02-01,x,1107,30,London
+2021-02-01,x,741,40,North East
+2021-02-01,x,284,17,South West
+2021-02-02,x,227,21,South West
+2021-02-02,x,475,36,East Midlands
+2021-02-02,x,923,39,West Midlands
+2021-02-02,x,867,31,South East
+2021-02-02,x,1057,13,London
+2021-02-02,x,1796,140,North West
+2021-02-02,x,648,50,Yorkshire and The Humber
+2021-02-02,x,605,19,East of England
+2021-02-02,x,537,37,North East
+2021-02-03,x,332,5,East of England
+2021-02-03,x,184,10,South West
+2021-02-03,x,1722,100,North West
+2021-02-03,x,612,19,North East
+2021-02-03,x,1150,119,Yorkshire and The Humber
+2021-02-03,x,584,23,South East
+2021-02-03,x,377,25,East Midlands
+2021-02-03,x,387,12,London
+2021-02-03,x,687,30,West Midlands
+2021-02-04,x,1750,90,North West
+2021-02-04,x,441,23,East Midlands
+2021-02-04,x,627,14,London
+2021-02-04,x,315,8,East of England
+2021-02-04,x,205,8,South West
+2021-02-04,x,679,27,West Midlands
+2021-02-04,x,568,15,South East
+2021-02-04,x,1069,89,Yorkshire and The Humber
+2021-02-04,x,572,27,North East
+2021-02-05,x,1420,62,North West
+2021-02-05,x,350,10,East of England
+2021-02-05,x,197,9,South West
+2021-02-05,x,508,23,North East
+2021-02-05,x,402,18,London
+2021-02-05,x,434,19,South East
+2021-02-05,x,910,75,Yorkshire and The Humber
+2021-02-05,x,417,15,West Midlands
+2021-02-05,x,379,20,East Midlands
+2021-02-06,x,149,7,South West
+2021-02-06,x,301,15,South East
+2021-02-06,x,315,4,London
+2021-02-06,x,199,2,East of England
+2021-02-06,x,825,43,Yorkshire and The Humber
+2021-02-06,x,1258,56,North West
+2021-02-06,x,239,10,East Midlands
+2021-02-06,x,284,14,West Midlands
+2021-02-06,x,432,15,North East
+2021-02-07,x,275,18,West Midlands
+2021-02-07,x,761,59,Yorkshire and The Humber
+2021-02-07,x,289,5,East of England
+2021-02-07,x,232,14,East Midlands
+2021-02-07,x,1208,54,North West
+2021-02-07,x,390,9,South East
+2021-02-07,x,185,2,South West
+2021-02-07,x,445,16,North East
+2021-02-07,x,481,12,London
+2021-02-08,x,547,31,North East
+2021-02-08,x,399,13,East Midlands
+2021-02-08,x,384,14,West Midlands
+2021-02-08,x,405,14,London
+2021-02-08,x,957,52,Yorkshire and The Humber
+2021-02-08,x,281,11,South West
+2021-02-08,x,1585,72,North West
+2021-02-08,x,514,12,South East
+2021-02-08,x,283,0,East of England
+2021-02-09,x,1410,53,North West
+2021-02-09,x,425,5,South East
+2021-02-09,x,243,10,South West
+2021-02-09,x,395,7,East Midlands
+2021-02-09,x,310,9,West Midlands
+2021-02-09,x,370,8,London
+2021-02-09,x,495,14,North East
+2021-02-09,x,945,34,Yorkshire and The Humber
+2021-02-09,x,278,2,East of England
+2021-02-10,x,218,10,South West
+2021-02-10,x,261,3,East of England
+2021-02-10,x,836,46,Yorkshire and The Humber
+2021-02-10,x,420,10,South East
+2021-02-10,x,304,12,West Midlands
+2021-02-10,x,1226,40,North West
+2021-02-10,x,459,21,North East
+2021-02-10,x,268,4,London
+2021-02-10,x,287,6,East Midlands
+2021-02-11,x,353,12,East Midlands
+2021-02-11,x,388,9,South East
+2021-02-11,x,1276,45,North West
+2021-02-11,x,199,5,South West
+2021-02-11,x,858,43,Yorkshire and The Humber
+2021-02-11,x,469,18,North East
+2021-02-11,x,351,9,West Midlands
+2021-02-11,x,280,6,London
+2021-02-11,x,293,8,East of England
+2021-02-12,x,332,11,East Midlands
+2021-02-12,x,362,10,South East
+2021-02-12,x,254,5,London
+2021-02-12,x,839,28,Yorkshire and The Humber
+2021-02-12,x,374,5,West Midlands
+2021-02-12,x,198,3,South West
+2021-02-12,x,261,7,East of England
+2021-02-12,x,1165,31,North West
+2021-02-12,x,398,17,North East
+2021-02-13,x,262,3,South East
+2021-02-13,x,142,1,London
+2021-02-13,x,924,19,North West
+2021-02-13,x,222,5,West Midlands
+2021-02-13,x,245,5,East Midlands
+2021-02-13,x,639,38,Yorkshire and The Humber
+2021-02-13,x,387,9,North East
+2021-02-13,x,202,4,East of England
+2021-02-13,x,147,1,South West
+2021-02-14,x,697,22,Yorkshire and The Humber
+2021-02-14,x,223,4,East Midlands
+2021-02-14,x,121,4,South West
+2021-02-14,x,378,6,North East
+2021-02-14,x,967,20,North West
+2021-02-14,x,274,4,London
+2021-02-14,x,180,3,West Midlands
+2021-02-14,x,292,4,South East
+2021-02-14,x,176,3,East of England
+2021-02-15,x,453,5,South East
+2021-02-15,x,497,9,East Midlands
+2021-02-15,x,1014,22,Yorkshire and The Humber
+2021-02-15,x,306,4,East of England
+2021-02-15,x,354,6,West Midlands
+2021-02-15,x,184,1,South West
+2021-02-15,x,337,3,London
+2021-02-15,x,1489,31,North West
+2021-02-15,x,540,16,North East
+2021-02-16,x,1216,18,North West
+2021-02-16,x,957,26,Yorkshire and The Humber
+2021-02-16,x,331,8,West Midlands
+2021-02-16,x,267,2,East of England
+2021-02-16,x,413,6,South East
+2021-02-16,x,290,3,London
+2021-02-16,x,526,12,North East
+2021-02-16,x,341,13,East Midlands
+2021-02-16,x,188,7,South West
+2021-02-17,x,437,17,North East
+2021-02-17,x,186,7,South West
+2021-02-17,x,255,10,London
+2021-02-17,x,937,22,Yorkshire and The Humber
+2021-02-17,x,306,12,West Midlands
+2021-02-17,x,333,5,East Midlands
+2021-02-17,x,1145,23,North West
+2021-02-17,x,279,8,East of England
+2021-02-17,x,353,10,South East
+2021-02-18,x,328,8,East Midlands
+2021-02-18,x,315,3,West Midlands
+2021-02-18,x,257,3,East of England
+2021-02-18,x,443,5,North East
+2021-02-18,x,204,4,South West
+2021-02-18,x,355,12,South East
+2021-02-18,x,979,22,Yorkshire and The Humber
+2021-02-18,x,1131,22,North West
+2021-02-18,x,261,10,London
+2021-02-19,x,842,26,Yorkshire and The Humber
+2021-02-19,x,306,7,South East
+2021-02-19,x,310,10,West Midlands
+2021-02-19,x,311,8,East Midlands
+2021-02-19,x,161,3,South West
+2021-02-19,x,231,6,London
+2021-02-19,x,1007,12,North West
+2021-02-19,x,347,7,North East
+2021-02-19,x,233,4,East of England
+2021-02-20,x,705,17,Yorkshire and The Humber
+2021-02-20,x,510,16,North West
+2021-02-20,x,304,4,South East
+2021-02-20,x,84,1,South West
+2021-02-20,x,335,2,West Midlands
+2021-02-20,x,225,7,London
+2021-02-20,x,282,1,North East
+2021-02-20,x,189,2,East of England
+2021-02-20,x,236,8,East Midlands
+2021-02-21,x,338,6,West Midlands
+2021-02-21,x,104,1,East of England
+2021-02-21,x,688,15,Yorkshire and The Humber
+2021-02-21,x,86,2,London
+2021-02-21,x,917,8,North West
+2021-02-21,x,211,2,East Midlands
+2021-02-21,x,195,3,South East
+2021-02-21,x,300,7,North East
+2021-02-21,x,49,0,South West
+2021-02-22,x,895,15,Yorkshire and The Humber
+2021-02-22,x,238,2,East of England
+2021-02-22,x,363,4,East Midlands
+2021-02-22,x,212,5,London
+2021-02-22,x,385,8,South East
+2021-02-22,x,1110,10,North West
+2021-02-22,x,404,6,North East
+2021-02-22,x,462,5,West Midlands
+2021-02-22,x,127,2,South West
+2021-02-23,x,315,5,West Midlands
+2021-02-23,x,310,3,North East
+2021-02-23,x,815,6,Yorkshire and The Humber
+2021-02-23,x,314,7,South East
+2021-02-23,x,882,12,North West
+2021-02-23,x,86,0,South West
+2021-02-23,x,263,3,East Midlands
+2021-02-23,x,211,3,East of England
+2021-02-23,x,224,0,London
+2021-02-24,x,301,7,West Midlands
+2021-02-24,x,210,0,East of England
+2021-02-24,x,265,5,East Midlands
+2021-02-24,x,882,14,North West
+2021-02-24,x,323,2,North East
+2021-02-24,x,274,4,South East
+2021-02-24,x,97,0,South West
+2021-02-24,x,193,2,London
+2021-02-24,x,798,6,Yorkshire and The Humber
+2021-02-25,x,705,9,Yorkshire and The Humber
+2021-02-25,x,748,2,North West
+2021-02-25,x,231,10,West Midlands
+2021-02-25,x,270,3,South East
+2021-02-25,x,50,0,South West
+2021-02-25,x,234,3,East Midlands
+2021-02-25,x,342,2,North East
+2021-02-25,x,142,5,London
+2021-02-25,x,209,1,East of England
+2021-02-26,x,162,1,West Midlands
+2021-02-26,x,187,3,East of England
+2021-02-26,x,62,0,South West
+2021-02-26,x,153,5,London
+2021-02-26,x,656,15,Yorkshire and The Humber
+2021-02-26,x,275,1,North East
+2021-02-26,x,609,4,North West
+2021-02-26,x,230,8,South East
+2021-02-26,x,200,4,East Midlands
+2021-02-27,x,505,5,North West
+2021-02-27,x,148,1,East Midlands
+2021-02-27,x,190,4,South East
+2021-02-27,x,123,0,East of England
+2021-02-27,x,134,4,London
+2021-02-27,x,495,3,Yorkshire and The Humber
+2021-02-27,x,119,0,West Midlands
+2021-02-27,x,39,0,South West
+2021-02-27,x,227,0,North East
+2021-02-28,x,130,4,East Midlands
+2021-02-28,x,197,0,North East
+2021-02-28,x,434,6,Yorkshire and The Humber
+2021-02-28,x,98,4,West Midlands
+2021-02-28,x,165,2,South East
+2021-02-28,x,32,0,South West
+2021-02-28,x,136,6,London
+2021-02-28,x,149,2,East of England
+2021-02-28,x,423,11,North West
+2021-03-01,x,182,5,South East
+2021-03-01,x,555,8,North West
+2021-03-01,x,218,4,East Midlands
+2021-03-01,x,87,2,South West
+2021-03-01,x,174,0,East of England
+2021-03-01,x,278,4,North East
+2021-03-01,x,137,6,London
+2021-03-01,x,725,8,Yorkshire and The Humber
+2021-03-01,x,192,6,West Midlands
+2021-03-02,x,161,2,London
+2021-03-02,x,235,0,North East
+2021-03-02,x,87,0,South West
+2021-03-02,x,506,6,North West
+2021-03-02,x,171,5,East of England
+2021-03-02,x,198,4,West Midlands
+2021-03-02,x,659,4,Yorkshire and The Humber
+2021-03-02,x,226,3,South East
+2021-03-02,x,192,3,East Midlands
+2021-03-03,x,183,5,East Midlands
+2021-03-03,x,184,4,South East
+2021-03-03,x,513,5,North West
+2021-03-03,x,609,10,Yorkshire and The Humber
+2021-03-03,x,124,12,London
+2021-03-03,x,73,0,South West
+2021-03-03,x,174,1,West Midlands
+2021-03-03,x,136,3,East of England
+2021-03-03,x,253,3,North East
+2021-03-04,x,548,5,Yorkshire and The Humber
+2021-03-04,x,56,0,South West
+2021-03-04,x,128,4,East of England
+2021-03-04,x,153,2,South East
+2021-03-04,x,121,3,London
+2021-03-04,x,164,7,West Midlands
+2021-03-04,x,167,1,East Midlands
+2021-03-04,x,528,8,North West
+2021-03-04,x,206,1,North East
+2021-03-05,x,173,0,East Midlands
+2021-03-05,x,140,2,South East
+2021-03-05,x,429,5,North West
+2021-03-05,x,131,4,London
+2021-03-05,x,135,0,East of England
+2021-03-05,x,154,3,West Midlands
+2021-03-05,x,539,5,Yorkshire and The Humber
+2021-03-05,x,52,0,South West
+2021-03-05,x,191,0,North East
+2021-03-06,x,130,0,West Midlands
+2021-03-06,x,149,2,South East
+2021-03-06,x,411,3,North West
+2021-03-06,x,142,3,London
+2021-03-06,x,43,1,South West
+2021-03-06,x,122,5,East Midlands
+2021-03-06,x,455,3,Yorkshire and The Humber
+2021-03-06,x,124,1,East of England
+2021-03-06,x,167,0,North East
+2021-03-07,x,127,2,West Midlands
+2021-03-07,x,410,2,North West
+2021-03-07,x,153,0,North East
+2021-03-07,x,107,3,East Midlands
+2021-03-07,x,150,10,London
+2021-03-07,x,378,1,Yorkshire and The Humber
+2021-03-07,x,31,1,South West
+2021-03-07,x,98,0,East of England
+2021-03-07,x,133,3,South East
+2021-03-08,x,140,4,East of England
+2021-03-08,x,199,7,South East
+2021-03-08,x,69,1,South West
+2021-03-08,x,186,6,London
+2021-03-08,x,600,4,North West
+2021-03-08,x,647,7,Yorkshire and The Humber
+2021-03-08,x,226,1,North East
+2021-03-08,x,216,5,West Midlands
+2021-03-08,x,171,2,East Midlands
+2021-03-09,x,203,5,London
+2021-03-09,x,668,2,Yorkshire and The Humber
+2021-03-09,x,590,3,North West
+2021-03-09,x,189,2,South East
+2021-03-09,x,213,7,East of England
+2021-03-09,x,253,0,North East
+2021-03-09,x,263,1,West Midlands
+2021-03-09,x,341,2,East Midlands
+2021-03-09,x,55,1,South West
+2021-03-10,x,214,2,North East
+2021-03-10,x,544,5,North West
+2021-03-10,x,35,0,South West
+2021-03-10,x,227,1,East of England
+2021-03-10,x,146,8,London
+2021-03-10,x,345,8,East Midlands
+2021-03-10,x,669,1,Yorkshire and The Humber
+2021-03-10,x,176,2,South East
+2021-03-10,x,326,4,West Midlands
+2021-03-11,x,139,6,London
+2021-03-11,x,211,0,North East
+2021-03-11,x,496,3,North West
+2021-03-11,x,305,4,West Midlands
+2021-03-11,x,341,2,East Midlands
+2021-03-11,x,638,4,Yorkshire and The Humber
+2021-03-11,x,175,4,South East
+2021-03-11,x,180,3,East of England
+2021-03-11,x,29,0,South West
+2021-03-12,x,133,3,South East
+2021-03-12,x,54,0,South West
+2021-03-12,x,601,4,Yorkshire and The Humber
+2021-03-12,x,167,6,London
+2021-03-12,x,284,3,West Midlands
+2021-03-12,x,337,4,East Midlands
+2021-03-12,x,210,1,East of England
+2021-03-12,x,521,2,North West
+2021-03-12,x,216,0,North East
+2021-03-13,x,519,1,Yorkshire and The Humber
+2021-03-13,x,174,2,East of England
+2021-03-13,x,124,1,South East
+2021-03-13,x,413,1,North West
+2021-03-13,x,181,4,West Midlands
+2021-03-13,x,22,0,South West
+2021-03-13,x,250,1,East Midlands
+2021-03-13,x,132,3,London
+2021-03-13,x,192,1,North East
+2021-03-14,x,117,4,London
+2021-03-14,x,478,0,Yorkshire and The Humber
+2021-03-14,x,29,1,South West
+2021-03-14,x,97,1,South East
+2021-03-14,x,227,1,East Midlands
+2021-03-14,x,132,0,North East
+2021-03-14,x,401,8,North West
+2021-03-14,x,217,3,West Midlands
+2021-03-14,x,168,2,East of England
+2021-03-15,x,689,1,Yorkshire and The Humber
+2021-03-15,x,383,2,East Midlands
+2021-03-15,x,192,2,South East
+2021-03-15,x,211,4,East of England
+2021-03-15,x,195,1,North East
+2021-03-15,x,540,7,North West
+2021-03-15,x,187,24,London
+2021-03-15,x,39,1,South West
+2021-03-15,x,343,4,West Midlands
+2021-03-16,x,635,2,Yorkshire and The Humber
+2021-03-16,x,354,4,East Midlands
+2021-03-16,x,135,8,London
+2021-03-16,x,139,1,South East
+2021-03-16,x,34,1,South West
+2021-03-16,x,177,2,East of England
+2021-03-16,x,195,0,North East
+2021-03-16,x,518,3,North West
+2021-03-16,x,314,1,West Midlands
+2021-03-17,x,217,1,East of England
+2021-03-17,x,482,3,North West
+2021-03-17,x,22,0,South West
+2021-03-17,x,277,1,West Midlands
+2021-03-17,x,189,3,North East
+2021-03-17,x,344,3,East Midlands
+2021-03-17,x,152,1,South East
+2021-03-17,x,129,7,London
+2021-03-17,x,621,1,Yorkshire and The Humber
+2021-03-18,x,178,1,East of England
+2021-03-18,x,483,3,North West
+2021-03-18,x,132,4,London
+2021-03-18,x,179,0,North East
+2021-03-18,x,586,2,Yorkshire and The Humber
+2021-03-18,x,305,0,East Midlands
+2021-03-18,x,32,0,South West
+2021-03-18,x,129,3,South East
+2021-03-18,x,258,2,West Midlands
+2021-03-19,x,131,1,South East
+2021-03-19,x,21,0,South West
+2021-03-19,x,124,3,London
+2021-03-19,x,623,3,Yorkshire and The Humber
+2021-03-19,x,232,3,West Midlands
+2021-03-19,x,283,0,East Midlands
+2021-03-19,x,172,0,North East
+2021-03-19,x,390,4,North West
+2021-03-19,x,156,1,East of England
+2021-03-20,x,267,0,East Midlands
+2021-03-20,x,135,3,East of England
+2021-03-20,x,481,3,Yorkshire and The Humber
+2021-03-20,x,176,2,West Midlands
+2021-03-20,x,340,2,North West
+2021-03-20,x,110,9,London
+2021-03-20,x,16,1,South West
+2021-03-20,x,121,1,South East
+2021-03-20,x,147,0,North East
+2021-03-21,x,8,0,South West
+2021-03-21,x,131,1,London
+2021-03-21,x,229,0,East Midlands
+2021-03-21,x,455,2,Yorkshire and The Humber
+2021-03-21,x,116,2,South East
+2021-03-21,x,163,0,North East
+2021-03-21,x,387,0,North West
+2021-03-21,x,239,3,West Midlands
+2021-03-21,x,167,0,East of England
+2021-03-22,x,759,3,Yorkshire and The Humber
+2021-03-22,x,214,0,North East
+2021-03-22,x,24,1,South West
+2021-03-22,x,477,5,North West
+2021-03-22,x,320,0,East Midlands
+2021-03-22,x,154,5,London
+2021-03-22,x,221,4,East of England
+2021-03-22,x,144,3,South East
+2021-03-22,x,314,12,West Midlands
+2021-03-23,x,103,1,South East
+2021-03-23,x,648,1,Yorkshire and The Humber
+2021-03-23,x,309,0,East Midlands
+2021-03-23,x,127,3,East of England
+2021-03-23,x,128,4,London
+2021-03-23,x,19,0,South West
+2021-03-23,x,207,5,West Midlands
+2021-03-23,x,423,7,North West
+2021-03-23,x,60,0,North East
+2021-03-24,x,617,1,Yorkshire and The Humber
+2021-03-24,x,197,2,East of England
+2021-03-24,x,291,1,East Midlands
+2021-03-24,x,415,5,North West
+2021-03-24,x,253,1,West Midlands
+2021-03-24,x,124,4,London
+2021-03-24,x,29,0,South West
+2021-03-24,x,123,0,South East
+2021-03-24,x,34,0,North East
+2021-03-25,x,573,3,Yorkshire and The Humber
+2021-03-25,x,221,1,West Midlands
+2021-03-25,x,71,0,North East
+2021-03-25,x,460,2,North West
+2021-03-25,x,95,0,South East
+2021-03-25,x,282,0,East Midlands
+2021-03-25,x,159,1,East of England
+2021-03-25,x,79,4,London
+2021-03-25,x,23,0,South West
+2021-03-26,x,189,4,West Midlands
+2021-03-26,x,350,2,North West
+2021-03-26,x,131,0,East of England
+2021-03-26,x,93,2,London
+2021-03-26,x,253,0,East Midlands
+2021-03-26,x,71,1,South East
+2021-03-26,x,541,3,Yorkshire and The Humber
+2021-03-26,x,27,0,South West
+2021-03-26,x,136,0,North East
+2021-03-27,x,61,0,South East
+2021-03-27,x,273,2,North West
+2021-03-27,x,18,0,South West
+2021-03-27,x,246,0,East Midlands
+2021-03-27,x,152,4,West Midlands
+2021-03-27,x,411,2,Yorkshire and The Humber
+2021-03-27,x,98,1,East of England
+2021-03-27,x,48,2,London
+2021-03-27,x,145,0,North East
+2021-03-28,x,50,4,London
+2021-03-28,x,396,3,Yorkshire and The Humber
+2021-03-28,x,123,0,North East
+2021-03-28,x,291,6,North West
+2021-03-28,x,44,1,South East
+2021-03-28,x,174,1,East Midlands
+2021-03-28,x,10,0,South West
+2021-03-28,x,135,3,West Midlands
+2021-03-28,x,88,0,East of England
+2021-03-29,x,411,2,Yorkshire and The Humber
+2021-03-29,x,100,2,East of England
+2021-03-29,x,61,1,South East
+2021-03-29,x,61,4,London
+2021-03-29,x,322,2,North West
+2021-03-29,x,155,0,North East
+2021-03-29,x,169,5,West Midlands
+2021-03-29,x,225,1,East Midlands
+2021-03-29,x,20,1,South West
+2021-03-30,x,37,4,London
+2021-03-30,x,155,2,West Midlands
+2021-03-30,x,119,0,North East
+2021-03-30,x,439,0,Yorkshire and The Humber
+2021-03-30,x,276,7,North West
+2021-03-30,x,72,1,East of England
+2021-03-30,x,187,0,East Midlands
+2021-03-30,x,63,0,South East
+2021-03-30,x,18,1,South West
+2021-03-31,x,400,2,Yorkshire and The Humber
+2021-03-31,x,53,4,South East
+2021-03-31,x,121,1,East of England
+2021-03-31,x,265,4,North West
+2021-03-31,x,195,4,West Midlands
+2021-03-31,x,16,0,South West
+2021-03-31,x,123,0,North East
+2021-03-31,x,32,8,London
+2021-03-31,x,212,1,East Midlands
+2021-04-01,x,41,2,South East
+2021-04-01,x,53,6,London
+2021-04-01,x,15,0,South West
+2021-04-01,x,273,0,North West
+2021-04-01,x,408,1,Yorkshire and The Humber
+2021-04-01,x,124,4,East of England
+2021-04-01,x,224,1,East Midlands
+2021-04-01,x,93,0,North East
+2021-04-01,x,193,3,West Midlands
+2021-04-02,x,43,1,South East
+2021-04-02,x,322,3,Yorkshire and The Humber
+2021-04-02,x,81,2,East of England
+2021-04-02,x,166,2,East Midlands
+2021-04-02,x,198,2,North West
+2021-04-02,x,36,1,London
+2021-04-02,x,10,0,South West
+2021-04-02,x,147,3,West Midlands
+2021-04-02,x,67,1,North East
+2021-04-03,x,325,3,Yorkshire and The Humber
+2021-04-03,x,72,3,East of England
+2021-04-03,x,63,5,South East
+2021-04-03,x,59,2,London
+2021-04-03,x,61,0,North East
+2021-04-03,x,168,2,East Midlands
+2021-04-03,x,113,1,West Midlands
+2021-04-03,x,176,5,North West
+2021-04-03,x,22,5,South West
+2021-04-04,x,165,6,North West
+2021-04-04,x,61,2,North East
+2021-04-04,x,104,0,West Midlands
+2021-04-04,x,46,5,London
+2021-04-04,x,106,2,East Midlands
+2021-04-04,x,287,2,Yorkshire and The Humber
+2021-04-04,x,65,0,East of England
+2021-04-04,x,55,0,South East
+2021-04-04,x,17,1,South West
+2021-04-05,x,224,4,North West
+2021-04-05,x,339,1,Yorkshire and The Humber
+2021-04-05,x,145,2,East Midlands
+2021-04-05,x,48,3,South East
+2021-04-05,x,59,2,East of England
+2021-04-05,x,50,7,London
+2021-04-05,x,100,4,West Midlands
+2021-04-05,x,20,1,South West
+2021-04-05,x,74,0,North East
+2021-04-06,x,207,1,North West
+2021-04-06,x,113,4,West Midlands
+2021-04-06,x,328,0,Yorkshire and The Humber
+2021-04-06,x,89,2,East of England
+2021-04-06,x,48,12,London
+2021-04-06,x,87,11,South East
+2021-04-06,x,141,7,East Midlands
+2021-04-06,x,82,1,North East
+2021-04-06,x,17,2,South West
+2021-04-07,x,56,3,London
+2021-04-07,x,71,1,South East
+2021-04-07,x,351,1,Yorkshire and The Humber
+2021-04-07,x,122,8,West Midlands
+2021-04-07,x,95,3,East Midlands
+2021-04-07,x,51,1,East of England
+2021-04-07,x,210,6,North West
+2021-04-07,x,71,0,North East
+2021-04-07,x,18,1,South West
+2021-04-08,x,54,7,East of England
+2021-04-08,x,322,2,Yorkshire and The Humber
+2021-04-08,x,122,2,East Midlands
+2021-04-08,x,36,7,London
+2021-04-08,x,123,0,West Midlands
+2021-04-08,x,217,2,North West
+2021-04-08,x,41,0,South East
+2021-04-08,x,51,0,North East
+2021-04-08,x,21,0,South West
+2021-04-09,x,109,1,West Midlands
+2021-04-09,x,37,6,South East
+2021-04-09,x,160,2,North West
+2021-04-09,x,41,5,East of England
+2021-04-09,x,55,0,North East
+2021-04-09,x,71,2,East Midlands
+2021-04-09,x,51,11,London
+2021-04-09,x,288,1,Yorkshire and The Humber
+2021-04-09,x,13,0,South West
+2021-04-10,x,58,4,South East
+2021-04-10,x,80,1,East Midlands
+2021-04-10,x,27,0,North East
+2021-04-10,x,112,8,North West
+2021-04-10,x,31,1,East of England
+2021-04-10,x,253,1,Yorkshire and The Humber
+2021-04-10,x,46,12,London
+2021-04-10,x,89,2,West Midlands
+2021-04-10,x,8,1,South West
+2021-04-11,x,42,0,North East
+2021-04-11,x,45,1,East of England
+2021-04-11,x,33,11,London
+2021-04-11,x,123,0,North West
+2021-04-11,x,26,3,South East
+2021-04-11,x,209,0,Yorkshire and The Humber
+2021-04-11,x,69,2,West Midlands
+2021-04-11,x,75,2,East Midlands
+2021-04-11,x,5,1,South West
+2021-04-12,x,40,15,London
+2021-04-12,x,66,2,East of England
+2021-04-12,x,106,0,West Midlands
+2021-04-12,x,87,8,East Midlands
+2021-04-12,x,156,3,North West
+2021-04-12,x,322,0,Yorkshire and The Humber
+2021-04-12,x,81,1,South East
+2021-04-12,x,34,0,North East
+2021-04-12,x,11,1,South West
+2021-04-13,x,234,2,Yorkshire and The Humber
+2021-04-13,x,74,2,East Midlands
+2021-04-13,x,44,0,East of England
+2021-04-13,x,19,0,North East
+2021-04-13,x,30,1,London
+2021-04-13,x,34,6,South East
+2021-04-13,x,13,0,South West
+2021-04-13,x,110,1,West Midlands
+2021-04-13,x,149,2,North West
+2021-04-14,x,51,4,South East
+2021-04-14,x,90,3,West Midlands
+2021-04-14,x,141,5,North West
+2021-04-14,x,6,0,South West
+2021-04-14,x,125,7,East Midlands
+2021-04-14,x,60,1,East of England
+2021-04-14,x,40,15,London
+2021-04-14,x,205,3,Yorkshire and The Humber
+2021-04-14,x,33,0,North East
+2021-04-15,x,45,12,London
+2021-04-15,x,124,13,North West
+2021-04-15,x,84,4,West Midlands
+2021-04-15,x,204,3,Yorkshire and The Humber
+2021-04-15,x,5,0,South West
+2021-04-15,x,54,12,South East
+2021-04-15,x,48,2,East of England
+2021-04-15,x,94,3,East Midlands
+2021-04-15,x,22,0,North East
+2021-04-16,x,39,8,South East
+2021-04-16,x,114,5,North West
+2021-04-16,x,10,1,South West
+2021-04-16,x,23,1,North East
+2021-04-16,x,44,12,London
+2021-04-16,x,41,4,East of England
+2021-04-16,x,213,1,Yorkshire and The Humber
+2021-04-16,x,83,2,West Midlands
+2021-04-16,x,77,5,East Midlands
+2021-04-17,x,28,1,North East
+2021-04-17,x,70,5,West Midlands
+2021-04-17,x,17,7,London
+2021-04-17,x,155,3,Yorkshire and The Humber
+2021-04-17,x,68,4,East Midlands
+2021-04-17,x,32,6,South East
+2021-04-17,x,42,8,East of England
+2021-04-17,x,3,1,South West
+2021-04-17,x,84,8,North West
+2021-04-18,x,35,1,East of England
+2021-04-18,x,171,1,Yorkshire and The Humber
+2021-04-18,x,101,3,North West
+2021-04-18,x,61,2,East Midlands
+2021-04-18,x,5,0,South West
+2021-04-18,x,69,1,West Midlands
+2021-04-18,x,32,8,London
+2021-04-18,x,32,2,South East
+2021-04-18,x,27,0,North East
+2021-04-19,x,138,8,North West
+2021-04-19,x,52,3,East of England
+2021-04-19,x,55,16,London
+2021-04-19,x,89,3,West Midlands
+2021-04-19,x,252,2,Yorkshire and The Humber
+2021-04-19,x,90,11,East Midlands
+2021-04-19,x,31,1,North East
+2021-04-19,x,6,1,South West
+2021-04-19,x,55,5,South East
+2021-04-20,x,30,16,London
+2021-04-20,x,29,6,South East
+2021-04-20,x,25,1,North East
+2021-04-20,x,131,3,North West
+2021-04-20,x,255,2,Yorkshire and The Humber
+2021-04-20,x,50,3,East of England
+2021-04-20,x,79,6,West Midlands
+2021-04-20,x,95,9,East Midlands
+2021-04-20,x,6,2,South West
+2021-04-21,x,52,3,East of England
+2021-04-21,x,74,16,East Midlands
+2021-04-21,x,89,5,West Midlands
+2021-04-21,x,44,10,London
+2021-04-21,x,26,0,North East
+2021-04-21,x,6,0,South West
+2021-04-21,x,243,5,Yorkshire and The Humber
+2021-04-21,x,122,6,North West
+2021-04-21,x,34,3,South East
+2021-04-22,x,17,9,London
+2021-04-22,x,120,12,North West
+2021-04-22,x,19,1,South East
+2021-04-22,x,3,0,South West
+2021-04-22,x,67,4,West Midlands
+2021-04-22,x,30,3,East of England
+2021-04-22,x,15,0,North East
+2021-04-22,x,262,4,Yorkshire and The Humber
+2021-04-22,x,60,7,East Midlands
+2021-04-23,x,4,2,South West
+2021-04-23,x,25,8,East of England
+2021-04-23,x,50,10,West Midlands
+2021-04-23,x,15,8,South East
+2021-04-23,x,37,12,East Midlands
+2021-04-23,x,26,0,North East
+2021-04-23,x,14,11,London
+2021-04-23,x,197,2,Yorkshire and The Humber
+2021-04-23,x,102,12,North West
+2021-04-24,x,78,21,North West
+2021-04-24,x,22,12,London
+2021-04-24,x,7,8,South East
+2021-04-24,x,22,5,East of England
+2021-04-24,x,136,1,Yorkshire and The Humber
+2021-04-24,x,33,7,West Midlands
+2021-04-24,x,1,0,South West
+2021-04-24,x,39,9,East Midlands
+2021-04-24,x,17,1,North East
+2021-04-25,x,86,16,North West
+2021-04-25,x,141,2,Yorkshire and The Humber
+2021-04-25,x,11,1,North East
+2021-04-25,x,16,9,London
+2021-04-25,x,32,1,East Midlands
+2021-04-25,x,14,2,South East
+2021-04-25,x,52,8,West Midlands
+2021-04-25,x,3,7,South West
+2021-04-25,x,24,5,East of England
+2021-04-26,x,23,3,South East
+2021-04-26,x,73,8,West Midlands
+2021-04-26,x,15,16,London
+2021-04-26,x,166,27,North West
+2021-04-26,x,43,1,East Midlands
+2021-04-26,x,5,3,South West
+2021-04-26,x,239,5,Yorkshire and The Humber
+2021-04-26,x,41,1,North East
+2021-04-26,x,24,2,East of England
+2021-04-27,x,29,1,North East
+2021-04-27,x,18,8,South East
+2021-04-27,x,19,13,London
+2021-04-27,x,72,1,West Midlands
+2021-04-27,x,134,24,North West
+2021-04-27,x,201,5,Yorkshire and The Humber
+2021-04-27,x,4,0,South West
+2021-04-27,x,31,8,East of England
+2021-04-27,x,60,10,East Midlands
+2021-04-28,x,19,7,South East
+2021-04-28,x,64,8,West Midlands
+2021-04-28,x,21,15,London
+2021-04-28,x,108,4,Yorkshire and The Humber
+2021-04-28,x,146,33,North West
+2021-04-28,x,38,10,East of England
+2021-04-28,x,49,7,East Midlands
+2021-04-28,x,12,1,North East
+2021-04-28,x,0,3,South West
+2021-04-29,x,12,6,London
+2021-04-29,x,41,10,East of England
+2021-04-29,x,61,0,Yorkshire and The Humber
+2021-04-29,x,135,23,North West
+2021-04-29,x,50,11,West Midlands
+2021-04-29,x,2,0,South West
+2021-04-29,x,6,1,North East
+2021-04-29,x,59,7,East Midlands
+2021-04-29,x,19,2,South East
+2021-04-30,x,36,10,East of England
+2021-04-30,x,5,1,South West
+2021-04-30,x,58,1,Yorkshire and The Humber
+2021-04-30,x,85,43,North West
+2021-04-30,x,15,17,London
+2021-04-30,x,19,2,South East
+2021-04-30,x,39,11,East Midlands
+2021-04-30,x,54,8,West Midlands
+2021-04-30,x,13,2,North East
+2021-05-01,x,65,47,North West
+2021-05-01,x,13,20,London
+2021-05-01,x,162,3,Yorkshire and The Humber
+2021-05-01,x,17,4,South East
+2021-05-01,x,29,2,West Midlands
+2021-05-01,x,36,7,East Midlands
+2021-05-01,x,24,5,North East
+2021-05-01,x,30,5,East of England
+2021-05-01,x,2,0,South West
+2021-05-02,x,11,23,London
+2021-05-02,x,41,11,East Midlands
+2021-05-02,x,19,6,South East
+2021-05-02,x,0,0,South West
+2021-05-02,x,21,13,East of England
+2021-05-02,x,62,41,North West
+2021-05-02,x,110,8,Yorkshire and The Humber
+2021-05-02,x,32,10,West Midlands
+2021-05-02,x,23,4,North East
+2021-05-03,x,21,16,London
+2021-05-03,x,32,16,East of England
+2021-05-03,x,34,1,North East
+2021-05-03,x,78,11,East Midlands
+2021-05-03,x,19,8,South East
+2021-05-03,x,168,8,Yorkshire and The Humber
+2021-05-03,x,80,59,North West
+2021-05-03,x,0,5,South West
+2021-05-03,x,54,7,West Midlands
+2021-05-04,x,19,8,South East
+2021-05-04,x,9,1,North East
+2021-05-04,x,53,17,East of England
+2021-05-04,x,82,21,East Midlands
+2021-05-04,x,14,16,London
+2021-05-04,x,146,84,North West
+2021-05-04,x,53,6,Yorkshire and The Humber
+2021-05-04,x,63,7,West Midlands
+2021-05-04,x,1,2,South West
+2021-05-05,x,2,2,South West
+2021-05-05,x,25,3,North East
+2021-05-05,x,63,11,West Midlands
+2021-05-05,x,124,131,North West
+2021-05-05,x,16,16,London
+2021-05-05,x,16,10,South East
+2021-05-05,x,44,20,East of England
+2021-05-05,x,233,7,Yorkshire and The Humber
+2021-05-05,x,84,23,East Midlands
+2021-05-06,x,47,10,West Midlands
+2021-05-06,x,34,20,East of England
+2021-05-06,x,114,32,East Midlands
+2021-05-06,x,160,9,Yorkshire and The Humber
+2021-05-06,x,109,109,North West
+2021-05-06,x,29,28,London
+2021-05-06,x,31,10,South East
+2021-05-06,x,46,8,North East
+2021-05-06,x,1,2,South West
+2021-05-07,x,23,34,London
+2021-05-07,x,173,13,Yorkshire and The Humber
+2021-05-07,x,100,126,North West
+2021-05-07,x,24,11,South East
+2021-05-07,x,88,27,East Midlands
+2021-05-07,x,34,21,East of England
+2021-05-07,x,53,9,West Midlands
+2021-05-07,x,0,1,South West
+2021-05-07,x,44,4,North East
+2021-05-08,x,28,24,East of England
+2021-05-08,x,147,9,Yorkshire and The Humber
+2021-05-08,x,46,6,West Midlands
+2021-05-08,x,47,112,North West
+2021-05-08,x,50,17,East Midlands
+2021-05-08,x,27,5,North East
+2021-05-08,x,30,26,London
+2021-05-08,x,13,14,South East
+2021-05-08,x,0,2,South West
+2021-05-09,x,19,5,South East
+2021-05-09,x,36,23,East of England
+2021-05-09,x,21,36,London
+2021-05-09,x,30,4,North East
+2021-05-09,x,139,13,Yorkshire and The Humber
+2021-05-09,x,73,129,North West
+2021-05-09,x,38,5,West Midlands
+2021-05-09,x,67,15,East Midlands
+2021-05-09,x,1,2,South West
+2021-05-10,x,29,40,London
+2021-05-10,x,48,51,East of England
+2021-05-10,x,142,224,North West
+2021-05-10,x,2,2,South West
+2021-05-10,x,204,18,Yorkshire and The Humber
+2021-05-10,x,30,12,South East
+2021-05-10,x,102,41,East Midlands
+2021-05-10,x,49,23,West Midlands
+2021-05-10,x,36,9,North East
+2021-05-11,x,159,22,Yorkshire and The Humber
+2021-05-11,x,89,191,North West
+2021-05-11,x,15,6,South East
+2021-05-11,x,33,37,East of England
+2021-05-11,x,43,17,West Midlands
+2021-05-11,x,25,31,London
+2021-05-11,x,54,24,East Midlands
+2021-05-11,x,0,3,South West
+2021-05-11,x,55,11,North East
+2021-05-12,x,30,7,North East
+2021-05-12,x,110,192,North West
+2021-05-12,x,53,24,East Midlands
+2021-05-12,x,33,35,East of England
+2021-05-12,x,39,37,London
+2021-05-12,x,46,24,West Midlands
+2021-05-12,x,23,18,South East
+2021-05-12,x,171,35,Yorkshire and The Humber
+2021-05-12,x,1,5,South West
+2021-05-13,x,1,5,South West
+2021-05-13,x,90,159,North West
+2021-05-13,x,13,12,South East
+2021-05-13,x,40,41,East of England
+2021-05-13,x,21,26,London
+2021-05-13,x,62,33,East Midlands
+2021-05-13,x,155,26,Yorkshire and The Humber
+2021-05-13,x,40,22,West Midlands
+2021-05-13,x,39,9,North East
+2021-05-14,x,36,30,London
+2021-05-14,x,32,35,East of England
+2021-05-14,x,77,225,North West
+2021-05-14,x,144,22,Yorkshire and The Humber
+2021-05-14,x,57,25,East Midlands
+2021-05-14,x,47,10,West Midlands
+2021-05-14,x,7,21,South East
+2021-05-14,x,41,7,North East
+2021-05-14,x,0,2,South West
+2021-05-15,x,72,183,North West
+2021-05-15,x,20,16,South East
+2021-05-15,x,90,21,Yorkshire and The Humber
+2021-05-15,x,0,4,South West
+2021-05-15,x,44,17,West Midlands
+2021-05-15,x,15,34,London
+2021-05-15,x,46,24,East Midlands
+2021-05-15,x,22,7,North East
+2021-05-15,x,25,23,East of England
+2021-05-16,x,11,21,London
+2021-05-16,x,56,214,North West
+2021-05-16,x,37,21,East Midlands
+2021-05-16,x,94,38,Yorkshire and The Humber
+2021-05-16,x,28,31,East of England
+2021-05-16,x,34,11,West Midlands
+2021-05-16,x,9,12,South East
+2021-05-16,x,0,1,South West
+2021-05-16,x,24,5,North East
+2021-05-17,x,90,368,North West
+2021-05-17,x,48,43,East Midlands
+2021-05-17,x,30,99,East of England
+2021-05-17,x,22,42,London
+2021-05-17,x,15,28,South East
+2021-05-17,x,162,50,Yorkshire and The Humber
+2021-05-17,x,0,1,South West
+2021-05-17,x,48,10,North East
+2021-05-17,x,59,45,West Midlands
+2021-05-18,x,38,38,East Midlands
+2021-05-18,x,169,41,Yorkshire and The Humber
+2021-05-18,x,23,47,London
+2021-05-18,x,30,70,East of England
+2021-05-18,x,74,434,North West
+2021-05-18,x,43,46,West Midlands
+2021-05-18,x,38,8,North East
+2021-05-18,x,10,31,South East
+2021-05-18,x,3,0,South West
+2021-05-19,x,14,45,London
+2021-05-19,x,39,59,East Midlands
+2021-05-19,x,79,326,North West
+2021-05-19,x,16,8,Yorkshire and The Humber
+2021-05-19,x,1,1,South West
+2021-05-19,x,23,102,East of England
+2021-05-19,x,20,25,South East
+2021-05-19,x,35,41,West Midlands
+2021-05-19,x,13,9,North East
+2021-05-20,x,92,54,Yorkshire and The Humber
+2021-05-20,x,69,326,North West
+2021-05-20,x,49,61,East Midlands
+2021-05-20,x,24,56,London
+2021-05-20,x,39,32,West Midlands
+2021-05-20,x,11,10,North East
+2021-05-20,x,10,21,South East
+2021-05-20,x,33,63,East of England
+2021-05-20,x,0,0,South West
+2021-05-21,x,13,35,South East
+2021-05-21,x,57,329,North West
+2021-05-21,x,130,53,Yorkshire and The Humber
+2021-05-21,x,31,11,North East
+2021-05-21,x,19,48,London
+2021-05-21,x,24,66,East of England
+2021-05-21,x,30,38,East Midlands
+2021-05-21,x,1,1,South West
+2021-05-21,x,25,41,West Midlands
+2021-05-22,x,30,56,East of England
+2021-05-22,x,50,287,North West
+2021-05-22,x,18,36,London
+2021-05-22,x,21,32,West Midlands
+2021-05-22,x,3,23,South East
+2021-05-22,x,24,9,Yorkshire and The Humber
+2021-05-22,x,25,49,East Midlands
+2021-05-22,x,0,2,South West
+2021-05-22,x,7,5,North East
+2021-05-23,x,25,73,London
+2021-05-23,x,40,301,North West
+2021-05-23,x,21,51,East of England
+2021-05-23,x,14,46,South East
+2021-05-23,x,17,39,East Midlands
+2021-05-23,x,0,0,South West
+2021-05-23,x,1,3,North East
+2021-05-23,x,9,7,Yorkshire and The Humber
+2021-05-23,x,18,25,West Midlands
+2021-05-24,x,53,569,North West
+2021-05-24,x,36,65,East Midlands
+2021-05-24,x,26,89,South East
+2021-05-24,x,26,93,West Midlands
+2021-05-24,x,23,14,Yorkshire and The Humber
+2021-05-24,x,24,113,London
+2021-05-24,x,24,91,East of England
+2021-05-24,x,7,5,North East
+2021-05-24,x,3,1,South West
+2021-05-25,x,15,83,London
+2021-05-25,x,31,94,West Midlands
+2021-05-25,x,28,68,East Midlands
+2021-05-25,x,64,604,North West
+2021-05-25,x,21,19,Yorkshire and The Humber
+2021-05-25,x,39,91,East of England
+2021-05-25,x,12,9,North East
+2021-05-25,x,5,70,South East
+2021-05-25,x,2,3,South West
+2021-05-26,x,75,710,North West
+2021-05-26,x,36,79,East Midlands
+2021-05-26,x,10,62,South East
+2021-05-26,x,23,103,West Midlands
+2021-05-26,x,27,101,London
+2021-05-26,x,2,2,South West
+2021-05-26,x,5,20,North East
+2021-05-26,x,27,25,Yorkshire and The Humber
+2021-05-26,x,30,100,East of England
+2021-05-27,x,50,33,Yorkshire and The Humber
+2021-05-27,x,17,82,West Midlands
+2021-05-27,x,84,666,North West
+2021-05-27,x,4,71,South East
+2021-05-27,x,29,74,East Midlands
+2021-05-27,x,25,93,London
+2021-05-27,x,7,21,North East
+2021-05-27,x,19,101,East of England
+2021-05-27,x,0,1,South West
+2021-05-28,x,15,14,North East
+2021-05-28,x,5,75,South East
+2021-05-28,x,17,33,Yorkshire and The Humber
+2021-05-28,x,51,656,North West
+2021-05-28,x,16,98,London
+2021-05-28,x,15,113,West Midlands
+2021-05-28,x,14,81,East of England
+2021-05-28,x,37,60,East Midlands
+2021-05-28,x,1,5,South West
+2021-05-29,x,34,553,North West
+2021-05-29,x,15,90,West Midlands
+2021-05-29,x,11,65,London
+2021-05-29,x,2,46,South East
+2021-05-29,x,14,63,East Midlands
+2021-05-29,x,11,64,East of England
+2021-05-29,x,10,27,North East
+2021-05-29,x,13,20,Yorkshire and The Humber
+2021-05-29,x,1,3,South West
+2021-05-30,x,2,17,London
+2021-05-30,x,7,145,North West
+2021-05-30,x,0,17,South East
+2021-05-30,x,0,0,South West
+2021-05-30,x,0,1,Yorkshire and The Humber
+2021-05-30,x,1,17,West Midlands
+2021-05-30,x,0,5,East Midlands
+2021-05-30,x,0,21,East of England
+2021-05-30,x,4,11,North East

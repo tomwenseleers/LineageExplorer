@@ -1,6 +1,6 @@
 # ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT VOCs IN CASES EXPORTED FROM INDIA (GISAID GENOMIC EPIDEMIOLOGY METADATA)
 # T. Wenseleers
-# last update 24 MAY 2021
+# last update 29 MAY 2021
 
 library(nnet)
 # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
@@ -13,15 +13,16 @@ library(ggthemes)
 library(scales)
 
 today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-05-24")
+today = as.Date("2021-05-31")
 today_num = as.numeric(today)
-today # "2021-05-24"
+today # "2021-05-31"
 plotdir = "VOCs_GISAID"
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 
-# import GISAID genomic epidemiology metadata (file version metadata_2021-05-21_13-00.tsv.gz)
-GISAID = read_tsv(gzfile(".//data//GISAID_genomic_epidemiology//metadata_2021-05-21_13-00.tsv.gz"), col_types = cols(.default = "c")) 
+# import GISAID genomic epidemiology metadata (file version metadata_2021-05-31_10-15.tsv.gz)
+GISAID = read_tsv(gzfile(".//data//GISAID_genomic_epidemiology//metadata_2021-05-31_10-15.tsv.gz"), col_types = cols(.default = "c")) 
 GISAID = as.data.frame(GISAID)
+
 GISAID$date = as.Date(GISAID$date)
 GISAID = GISAID[!is.na(GISAID$date),]
 unique(GISAID$host)
@@ -34,7 +35,7 @@ unique(GISAID$host)
 GISAID[GISAID$host!="Human","strain"]
 GISAID = GISAID[GISAID$host=="Human",]
 GISAID = GISAID[GISAID$date>=as.Date("2019-09-01"),]
-range(GISAID$date) # "2019-12-24" "2021-05-18"
+range(GISAID$date) # "2019-12-24" "2021-05-26"
 
 firstdetB16172 = GISAID[GISAID$pango_lineage=="B.1.617.2",]
 firstdetB16172 = firstdetB16172[!is.na(firstdetB16172$date),]
@@ -44,8 +45,8 @@ firstdetB16172 # 10 dec Maharashtra India
 # GISAID = GISAID[grepl("2021-", GISAID$date),]
 GISAID = GISAID[GISAID$date>=as.Date("2020-06-01"),]
 sum(is.na(GISAID$purpose_of_sequencing)) == nrow(GISAID) # field purpose_of_sequencing left blank unfortunately
-range(GISAID$date) # "2021-06-01" "2021-05-18"
-nrow(GISAID) # 1446226
+range(GISAID$date) # "2021-06-01" "2021-05-23"
+nrow(GISAID) # 1589229
 GISAID$Week = lubridate::week(GISAID$date)
 GISAID$Year = lubridate::year(GISAID$date)
 GISAID$Year_Week = interaction(GISAID$Year,GISAID$Week)
@@ -59,10 +60,10 @@ unique(GISAID$country)
 unique(GISAID$division) # = city or province or region, sometimes just country
 unique(GISAID$location) # = city
 
-length(unique(GISAID$country[grepl("B.1.617",GISAID$pango_lineage,fixed=T)])) # B.1.617+ now found in 52 countries
+length(unique(GISAID$country[grepl("B.1.617",GISAID$pango_lineage,fixed=T)])) # B.1.617+ now found in 60 countries
 table(GISAID$pango_lineage[grepl("B.1.617",GISAID$pango_lineage,fixed=T)])
 # B.1.617 B.1.617.1 B.1.617.2 B.1.617.3 
-# 1      2225      6319        79 
+# 1      2737     13613        79 
 
 GISAID$pango_lineage[grepl("B.1.177",GISAID$pango_lineage,fixed=T)] = "B.1.177+"
 GISAID$pango_lineage[grepl("B.1.36\\>",GISAID$pango_lineage)] = "B.1.36+"
@@ -77,96 +78,119 @@ colnames(table_country_lineage) = c("Country","Lineage","Count")
 tblB1617 = table_country_lineage[grepl(sel_target_VOC, table_country_lineage$Lineage, fixed=T)&table_country_lineage$Count>10,]
 tblB1617
 #              Country  Lineage Count
-# 149628      Australia B.1.617+    95
-# 149632        Bahrain B.1.617+    19
-# 149636        Belgium B.1.617+    62
-# 149660        Denmark B.1.617+    90
-# 149670         France B.1.617+    50
-# 149675        Germany B.1.617+   260
-# 149688          India B.1.617+  2337
-# 149692        Ireland B.1.617+    90
-# 149693         Israel B.1.617+    36
-# 149694          Italy B.1.617+    57
-# 149696          Japan B.1.617+   141
-# 149723    Netherlands B.1.617+    31
-# 149724    New Zealand B.1.617+    15
-# 149737         Poland B.1.617+    26
-# 149750      Singapore B.1.617+   156
-# 149757          Spain B.1.617+    42
-# 149760         Sweden B.1.617+    13
-# 149761    Switzerland B.1.617+    44
-# 149772 United Kingdom B.1.617+  4001
-# 149774            USA B.1.617+   923
+# 151209      Australia B.1.617+   144
+# 151213        Bahrain B.1.617+    19
+# 151214     Bangladesh B.1.617+    20
+# 151217        Belgium B.1.617+   120
+# 151241        Denmark B.1.617+   105
+# 151251         France B.1.617+    86
+# 151256        Germany B.1.617+   420
+# 151270          India B.1.617+  3577
+# 151271      Indonesia B.1.617+    32
+# 151274        Ireland B.1.617+   155
+# 151275         Israel B.1.617+    36
+# 151276          Italy B.1.617+    81
+# 151278          Japan B.1.617+   165
+# 151296         Mexico B.1.617+    27
+# 151305    Netherlands B.1.617+    50
+# 151306    New Zealand B.1.617+    15
+# 151310         Norway B.1.617+    20
+# 151319         Poland B.1.617+    34
+# 151320       Portugal B.1.617+    52
+# 151323        Romania B.1.617+    19
+# 151332      Singapore B.1.617+   156
+# 151337   South Africa B.1.617+    14
+# 151339          Spain B.1.617+    65
+# 151342         Sweden B.1.617+    17
+# 151343    Switzerland B.1.617+    64
+# 151354 United Kingdom B.1.617+  9273
+# 151356            USA B.1.617+  1544
 
 sel_countries_target = unique(as.character(table_country_lineage[grepl(sel_target_VOC, table_country_lineage$Lineage)&table_country_lineage$Count>10,]$Country))
 sel_countries_target
-# [1] "Australia"      "Bahrain"        "Belgium"        "Denmark"        "France"         "Germany"        "India"          "Ireland"        "Israel"        
-# [10] "Italy"          "Japan"          "Netherlands"    "New Zealand"    "Poland"         "Singapore"      "Spain"          "Sweden"         "Switzerland"   
-# [19] "United Kingdom" "USA"  
+# [1] "Australia"      "Bahrain"        "Bangladesh"     "Belgium"        "Denmark"        "France"         "Germany"        "India"          "Indonesia"     
+# [10] "Ireland"        "Israel"         "Italy"          "Japan"          "Mexico"         "Netherlands"    "New Zealand"    "Norway"         "Poland"        
+# [19] "Portugal"       "Romania"        "Singapore"      "South Africa"   "Spain"          "Sweden"         "Switzerland"    "United Kingdom" "USA"   
+
+sel_ref_lineage = "B.1.1.7"
 
 sel_countries_ref = as.character(table_country_lineage[table_country_lineage$Lineage==sel_ref_lineage&table_country_lineage$Count>10&table_country_lineage$Country %in% sel_countries_target,]$Country)
 sel_countries_ref
-# [1] "Australia"      "Bahrain"        "Belgium"        "Denmark"        "France"         "Germany"        "India"          "Ireland"        "Israel"        
-# [10] "Italy"          "Japan"          "Netherlands"    "New Zealand"    "Poland"         "Singapore"      "Spain"          "Sweden"         "Switzerland"   
-# [19] "United Kingdom" "USA" 
+# [1] "Australia"      "Bahrain"        "Bangladesh"     "Belgium"        "Denmark"        "France"         "Germany"        "India"          "Indonesia"     
+# [10] "Ireland"        "Israel"         "Italy"          "Japan"          "Mexico"         "Netherlands"    "New Zealand"    "Norway"         "Poland"        
+# [19] "Portugal"       "Romania"        "Singapore"      "South Africa"   "Spain"          "Sweden"         "Switzerland"    "United Kingdom" "USA"  
 
 sel_countries = intersect(sel_countries_target, sel_countries_ref)
 sel_countries
-# [1] "Australia"      "Bahrain"        "Belgium"        "Denmark"        "France"         "Germany"        "India"          "Ireland"        "Israel"        
-# [10] "Italy"          "Japan"          "Netherlands"    "New Zealand"    "Poland"         "Singapore"      "Spain"          "Sweden"         "Switzerland"   
-# [19] "United Kingdom" "USA" 
+# [1] "Australia"      "Bahrain"        "Bangladesh"     "Belgium"        "Denmark"        "France"         "Germany"        "India"          "Indonesia"     
+# [10] "Ireland"        "Israel"         "Italy"          "Japan"          "Mexico"         "Netherlands"    "New Zealand"    "Norway"         "Poland"        
+# [19] "Portugal"       "Romania"        "Singapore"      "South Africa"   "Spain"          "Sweden"         "Switzerland"    "United Kingdom" "USA"  
 
-sel_ref_lineage = "B.1.1.7"
+
 tblB117 = table_country_lineage[table_country_lineage$Lineage==sel_ref_lineage&table_country_lineage$Count>10&table_country_lineage$Country %in% sel_countries,]
 tblB117
 #              Country Lineage  Count
-# 70287      Australia B.1.1.7    367
-# 70291        Bahrain B.1.1.7     12
-# 70295        Belgium B.1.1.7  11283
-# 70319        Denmark B.1.1.7  42504
-# 70329         France B.1.1.7  19435
-# 70334        Germany B.1.1.7  84395
-# 70347          India B.1.1.7    708
-# 70351        Ireland B.1.1.7   9939
-# 70352         Israel B.1.1.7   8085
-# 70353          Italy B.1.1.7  16029
-# 70355          Japan B.1.1.7   2560
-# 70382    Netherlands B.1.1.7  16897
-# 70383    New Zealand B.1.1.7    134
-# 70396         Poland B.1.1.7   9375
-# 70409      Singapore B.1.1.7    170
-# 70416          Spain B.1.1.7  11171
-# 70419         Sweden B.1.1.7  27164
-# 70420    Switzerland B.1.1.7  15574
-# 70431 United Kingdom B.1.1.7 236514
-# 70433            USA B.1.1.7 122229
+# 70569      Australia B.1.1.7    388
+# 70573        Bahrain B.1.1.7     12
+# 70574     Bangladesh B.1.1.7     73
+# 70577        Belgium B.1.1.7  13008
+# 70601        Denmark B.1.1.7  46633
+# 70611         France B.1.1.7  22532
+# 70616        Germany B.1.1.7  86477
+# 70630          India B.1.1.7   1032
+# 70631      Indonesia B.1.1.7     23
+# 70634        Ireland B.1.1.7  10655
+# 70635         Israel B.1.1.7   7544
+# 70636          Italy B.1.1.7  17674
+# 70638          Japan B.1.1.7   9020
+# 70656         Mexico B.1.1.7    369
+# 70665    Netherlands B.1.1.7  20280
+# 70666    New Zealand B.1.1.7    133
+# 70670         Norway B.1.1.7   5751
+# 70679         Poland B.1.1.7  10886
+# 70680       Portugal B.1.1.7   3947
+# 70683        Romania B.1.1.7    501
+# 70692      Singapore B.1.1.7    170
+# 70697   South Africa B.1.1.7     30
+# 70699          Spain B.1.1.7  12198
+# 70702         Sweden B.1.1.7  41027
+# 70703    Switzerland B.1.1.7  17363
+# 70714 United Kingdom B.1.1.7 242202
+# 70716            USA B.1.1.7 150809
 
 data.frame(Country=tblB1617$Country, Lineage="B.1.617", Perc=100*tblB1617$Count / (tblB1617$Count+tblB117$Count))
 #           Country Lineage        Perc
-# 1       Australia B.1.617 20.56277056
+# 1       Australia B.1.617 27.06766917
 # 2         Bahrain B.1.617 61.29032258
-# 3         Belgium B.1.617  0.54649625
-# 4         Denmark B.1.617  0.21129737
-# 5          France B.1.617  0.25660765
-# 6         Germany B.1.617  0.30712894
-# 7           India B.1.617 76.74876847
-# 8         Ireland B.1.617  0.89739755
-# 9          Israel B.1.617  0.44329516
-# 10          Italy B.1.617  0.35434539
-# 11          Japan B.1.617  5.22028878
-# 12    Netherlands B.1.617  0.18312854
-# 13    New Zealand B.1.617 10.06711409
-# 14         Poland B.1.617  0.27656632
-# 15      Singapore B.1.617 47.85276074
-# 16          Spain B.1.617  0.37456524
-# 17         Sweden B.1.617  0.04783457
-# 18    Switzerland B.1.617  0.28172621
-# 19 United Kingdom B.1.617  1.66351371
-# 20            USA B.1.617  0.74948032
+# 3      Bangladesh B.1.617 21.50537634
+# 4         Belgium B.1.617  0.91407678
+# 5         Denmark B.1.617  0.22465660
+# 6          France B.1.617  0.38022814
+# 7         Germany B.1.617  0.48333084
+# 8           India B.1.617 77.60902582
+# 9       Indonesia B.1.617 58.18181818
+# 10        Ireland B.1.617  1.43385754
+# 11         Israel B.1.617  0.47493404
+# 12          Italy B.1.617  0.45620952
+# 13          Japan B.1.617  1.79640719
+# 14         Mexico B.1.617  6.81818182
+# 15    Netherlands B.1.617  0.24594196
+# 16    New Zealand B.1.617 10.13513514
+# 17         Norway B.1.617  0.34656039
+# 18         Poland B.1.617  0.31135531
+# 19       Portugal B.1.617  1.30032508
+# 20        Romania B.1.617  3.65384615
+# 21      Singapore B.1.617 47.85276074
+# 22   South Africa B.1.617 31.81818182
+# 23          Spain B.1.617  0.53004974
+# 24         Sweden B.1.617  0.04141897
+# 25    Switzerland B.1.617  0.36724623
+# 26 United Kingdom B.1.617  3.68744408
+# 27            USA B.1.617  1.01343590
 
 
 GISAID_sel = GISAID[GISAID$country %in% sel_countries,]
-nrow(GISAID_sel) # 1297772
+nrow(GISAID_sel) # 1458602
 
 rowSums(table(GISAID_sel$LINEAGE1,GISAID_sel$country))
 
@@ -178,13 +202,13 @@ rowSums(table(GISAID_sel$LINEAGE1,GISAID_sel$country))
 GISAID_indiaexp = GISAID_sel[GISAID_sel$country_exposure=="India"&GISAID_sel$country!="India",]
 nrow(GISAID_indiaexp[is.na(GISAID_indiaexp$LINEAGE1),]) # 0 unknown pango clade
 GISAID_indiaexp = GISAID_indiaexp[!is.na(GISAID_indiaexp$LINEAGE1),]
-nrow(GISAID_indiaexp) # 443
+nrow(GISAID_indiaexp) # 486
 
 unique(GISAID_indiaexp$division_exposure) # just says "India"
-unique(GISAID_indiaexp$country[GISAID_indiaexp$LINEAGE1=="B.1.617+"]) # France Italy Japan Singapore Spain
+unique(GISAID_indiaexp$country[GISAID_indiaexp$LINEAGE1=="B.1.617+"]) # "Bangladesh"   "France"       "Italy"        "Japan"        "Singapore"    "South Africa" "Spain"        "USA" 
 table(GISAID_indiaexp$country, GISAID_indiaexp$LINEAGE2)
 
-sum(GISAID_indiaexp$LINEAGE1=="B.1.617+") # 197
+sum(GISAID_indiaexp$LINEAGE1=="B.1.617+") # 223
 unique(GISAID_indiaexp$country[GISAID_indiaexp$LINEAGE1=="B.1.1.7"]) # Italy Japan Singapore
 sum(GISAID_indiaexp$LINEAGE1=="B.1.1.7") # 86
 
@@ -203,8 +227,8 @@ remove = names(table(GISAID_indiaexp$LINEAGE1))[table(GISAID_indiaexp$LINEAGE1) 
 GISAID_indiaexp$LINEAGE1[(GISAID_indiaexp$LINEAGE1 %in% remove)] = "other" # minority VOCs
 GISAID_indiaexp$LINEAGE2[(GISAID_indiaexp$LINEAGE2 %in% remove)] = "other" # minority VOCs
 table(GISAID_indiaexp$LINEAGE1)
-# B.1.1 B.1.1.354   B.1.1.7   B.1.351   B.1.36+  B.1.617+     other 
-# 45        25        86        11        43       197        36
+# B.1     B.1.1 B.1.1.354   B.1.1.7   B.1.351   B.1.36+  B.1.617+     other 
+# 15        43        25        86        16        43       223        35 
 GISAID_indiaexp$LINEAGE1 = factor(GISAID_indiaexp$LINEAGE1)
 GISAID_indiaexp$LINEAGE1 = relevel(GISAID_indiaexp$LINEAGE1, ref="B.1.1.7") # we code UK strain as the reference level
 levels(GISAID_indiaexp$LINEAGE1)
@@ -220,16 +244,13 @@ levels(GISAID_indiaexp$LINEAGE2)
 levels_LINEAGE2 = c("B.1.1.7","B.1.1","B.1.1.354","B.1.36+",
                     "B.1.351","B.1.617.1","B.1.617.2","other")
 GISAID_indiaexp$LINEAGE2 = factor(GISAID_indiaexp$LINEAGE2, levels=levels_LINEAGE2)
-firstB16172 = GISAID_indiaexp[GISAID_indiaexp$LINEAGE2=="B.1.617.2",]
-firstB16172 = firstB16172[firstB16172$date==min(firstB16172$date),]
-firstB16172 # Japan 28/3/2021
 
 # select countries with >100 imported sequences
 
 # GISAID_indiaexp = GISAID_indiaexp[GISAID_indiaexp$division!="India",]
 table(GISAID_indiaexp$country)
-# France       Italy       Japan New Zealand   Singapore       Spain 
-# 2          11         123           3         303           1 
+# Bangladesh       France        Italy        Japan  New Zealand    Singapore South Africa        Spain          USA 
+#         21            3           11          132            3          303           10            1            2 
 
 sel_countries = names(table(GISAID_indiaexp$country))[table(GISAID_indiaexp$country) >= 100]
 sel_countries # "Japan"     "Singapore"
@@ -241,9 +262,9 @@ levels_countries = c("Singapore","Japan")
 GISAID_indiaexp$country = factor(GISAID_indiaexp$country, levels=levels_countries)
 levels(GISAID_indiaexp$country)
 table(GISAID_indiaexp$country)
-sum(table(GISAID_indiaexp$country)) # 426
+sum(table(GISAID_indiaexp$country)) # 435
 table(GISAID_indiaexp$LINEAGE2)
-range(GISAID_indiaexp$date) # "2020-06-17" "2021-05-10"
+range(GISAID_indiaexp$date) # "2020-06-17" "2021-05-18"
 
 # aggregated data to make Muller plots of raw data
 # aggregated by week for selected variant lineages
@@ -393,7 +414,7 @@ BIC(fit1_indiaexp_multi, fit2_indiaexp_multi, fit3_indiaexp_multi)
 fit1_indiaexp_multi1 = nnet::multinom(LINEAGE1 ~ scale(DATE_NUM), data=GISAID_indiaexp, maxit=1000)
 
 # growth rate advantage compared to UK type B.1.1.7 (difference in growth rate per day) 
-max(GISAID_indiaexp$date) # 2021-05-03
+max(GISAID_indiaexp$date) # 2021-05-18
 emtrindiaexp = emtrends(fit1_indiaexp_multi, trt.vs.ctrl ~ LINEAGE2,  
                      var="DATE_NUM",  mode="latent",
                      at=list(DATE_NUM=max(GISAID_indiaexp$DATE_NUM)))
@@ -402,16 +423,16 @@ delta_r_indiaexp = data.frame(confint(emtrindiaexp,
                            p.value=as.data.frame(emtrindiaexp$contrasts)$p.value)
 delta_r_indiaexp
 #              contrast      estimate         SE df   asymp.LCL  asymp.UCL   p.value
-# 1     B.1.1 - B.1.1.7 -0.04871833 0.007221062 NA -0.0628713474 -0.03456531 5.811651e-05
-# 2 B.1.1.354 - B.1.1.7 -0.05474720 0.007618034 NA -0.0696782731 -0.03981613 2.907219e-05
-# 3 (B.1.36+) - B.1.1.7 -0.05142842 0.007314199 NA -0.0657639893 -0.03709285 3.701764e-05
-# 4   B.1.351 - B.1.1.7  0.06078333 0.031292142 NA -0.0005481407  0.12211480 2.982309e-01
-# 5 B.1.617.1 - B.1.1.7  0.03786766 0.012865118 NA  0.0126524884  0.06308282 5.533983e-02
-# 6 B.1.617.2 - B.1.1.7  0.14158751 0.017865548 NA  0.1065716778  0.17660334 9.594031e-06
-# 7     other - B.1.1.7 -0.04584409 0.007181736 NA -0.0599200367 -0.03176815 1.049410e-04
+# 1     B.1.1 - B.1.1.7 -0.05097728 0.007586084 NA -0.0658457367 -0.03610883 6.067628e-05
+# 2 B.1.1.354 - B.1.1.7 -0.05723849 0.007992997 NA -0.0729044757 -0.04157250 3.024051e-05
+# 3 (B.1.36+) - B.1.1.7 -0.05378562 0.007685445 NA -0.0688488115 -0.03872242 3.898059e-05
+# 4   B.1.351 - B.1.1.7  0.05933189 0.030197494 NA  0.0001458888  0.11851789 2.886990e-01
+# 5 B.1.617.1 - B.1.1.7  0.03778126 0.012741647 NA  0.0128080945  0.06275443 5.316742e-02
+# 6 B.1.617.2 - B.1.1.7  0.13846057 0.017180158 NA  0.1047880824  0.17213307 7.900114e-06
+# 7     other - B.1.1.7 -0.04810091 0.007593806 NA -0.0629844988 -0.03321733 1.138353e-04
 
 # avg growth advantage of B.1.617+ over B.1.1.7 :
-max(GISAID_indiaexp$date) # 2021-05-10
+max(GISAID_indiaexp$date) # 2021-05-18
 emtrindiaexp1 = emtrends(fit1_indiaexp_multi1, trt.vs.ctrl ~ LINEAGE1,  
                       var="DATE_NUM",  mode="latent",
                       at=list(DATE_NUM=max(GISAID_indiaexp$DATE_NUM)))
@@ -420,16 +441,16 @@ delta_r_indiaexp1 = data.frame(confint(emtrindiaexp1,
                             p.value=as.data.frame(emtrindiaexp1$contrasts)$p.value)
 delta_r_indiaexp1
 #         contrast      estimate           SE df     asymp.LCL     asymp.UCL      p.value
-# 1      B.1.1 - B.1.1.7 -0.04802674 0.007126377 NA -0.061994188 -0.03405930 1.091042e-04
-# 2  B.1.1.354 - B.1.1.7 -0.05405761 0.007527852 NA -0.068811925 -0.03930329 5.891306e-05
-# 3  (B.1.36+) - B.1.1.7 -0.05073738 0.007220470 NA -0.064889246 -0.03658552 7.284621e-05
-# 4    B.1.351 - B.1.1.7  0.05183113 0.028334812 NA -0.003704084  0.10736634 3.295470e-01
-# 5 (B.1.617+) - B.1.1.7  0.08631062 0.012665660 NA  0.061486379  0.11113485 9.806339e-05
-# 6      other - B.1.1.7 -0.04514971 0.007086709 NA -0.059039400 -0.03126001 1.858295e-04
+# 1      B.1.1 - B.1.1.7 -0.05021939 0.007487918 NA -0.06489544 -0.03554334 1.142863e-04
+# 2  B.1.1.354 - B.1.1.7 -0.05648026 0.007899235 NA -0.07196248 -0.04099804 6.146195e-05
+# 3  (B.1.36+) - B.1.1.7 -0.05303216 0.007588416 NA -0.06790519 -0.03815914 7.682811e-05
+# 4    B.1.351 - B.1.1.7  0.04990058 0.026964275 NA -0.00294843  0.10274958 3.200341e-01
+# 5 (B.1.617+) - B.1.1.7  0.08607712 0.012412628 NA  0.06174882  0.11040543 8.282994e-05
+# 6      other - B.1.1.7 -0.04734199 0.007496183 NA -0.06203424 -0.03264974 2.016813e-04
 
 
 # pairwise growth rate difference (differences in growth rate per day) 
-max(GISAID_indiaexp$date) # 2021-05-10
+max(GISAID_indiaexp$date) # 2021-05-18
 emtrindiaexp_pairw = emtrends(fit1_indiaexp_multi, pairwise ~ LINEAGE2,  
                            var="DATE_NUM",  mode="latent",
                            at=list(DATE_NUM=max(GISAID_indiaexp$DATE_NUM)))
@@ -438,34 +459,34 @@ delta_r_indiaexp_pairw = data.frame(confint(emtrindiaexp_pairw,
                                  p.value=as.data.frame(emtrindiaexp_pairw$contrasts)$p.value)
 delta_r_indiaexp_pairw
 #                  contrast      estimate           SE df     asymp.LCL     asymp.UCL p.value
-# 1        B.1.1.7 - B.1.1  0.048718327 0.007221062 NA  0.0345653063  0.0628713474 1.901069e-04
-# 2    B.1.1.7 - B.1.1.354  0.054747201 0.007618034 NA  0.0398161279  0.0696782731 9.594132e-05
-# 3    B.1.1.7 - (B.1.36+)  0.051428422 0.007314199 NA  0.0370928549  0.0657639893 1.218055e-04
-# 4      B.1.1.7 - B.1.351 -0.060783331 0.031292142 NA -0.1221148019  0.0005481407 5.470466e-01
-# 5    B.1.1.7 - B.1.617.1 -0.037867656 0.012865118 NA -0.0630828244 -0.0126524884 1.360129e-01
-# 6    B.1.1.7 - B.1.617.2 -0.141587508 0.017865548 NA -0.1766033378 -0.1065716778 3.203204e-05
-# 7        B.1.1.7 - other  0.045844093 0.007181736 NA  0.0317681500  0.0599200367 3.403049e-04
-# 8      B.1.1 - B.1.1.354  0.006028874 0.003420229 NA -0.0006746521  0.0127323995 6.516053e-01
-# 9      B.1.1 - (B.1.36+)  0.002710095 0.002862429 NA -0.0029001633  0.0083203539 9.751905e-01
-# 10       B.1.1 - B.1.351 -0.109501657 0.031993581 NA -0.1722079244 -0.0467953905 6.024620e-02
-# 11     B.1.1 - B.1.617.1 -0.086585983 0.014287093 NA -0.1145881718 -0.0585837946 5.786184e-04
-# 12     B.1.1 - B.1.617.2 -0.190305835 0.019129139 NA -0.2277982577 -0.1528134115 2.154288e-06
-# 13         B.1.1 - other -0.002874233 0.002988413 NA -0.0087314151  0.0029829482 9.730204e-01
-# 14 B.1.1.354 - (B.1.36+) -0.003318778 0.003411074 NA -0.0100043609  0.0033668041 9.713235e-01
-# 15   B.1.1.354 - B.1.351 -0.115530531 0.032086474 NA -0.1784188636 -0.0526421986 4.402389e-02
-# 16 B.1.1.354 - B.1.617.1 -0.092614857 0.014494189 NA -0.1210229463 -0.0642067676 3.368058e-04
-# 17 B.1.1.354 - B.1.617.2 -0.196334708 0.019283806 NA -0.2341302731 -0.1585391435 1.620806e-06
-# 18     B.1.1.354 - other -0.008903107 0.003596377 NA -0.0159518769 -0.0018543375 2.799294e-01
-# 19   (B.1.36+) - B.1.351 -0.112211753 0.032015511 NA -0.1749610016 -0.0494625039 5.213882e-02
-# 20 (B.1.36+) - B.1.617.1 -0.089296079 0.014336293 NA -0.1173946970 -0.0611974600 4.381853e-04
-# 21 (B.1.36+) - B.1.617.2 -0.193015930 0.019165576 NA -0.2305797682 -0.1554520915 1.853640e-06
-# 22     (B.1.36+) - other -0.005584329 0.003045870 NA -0.0115541247  0.0003854672 6.104306e-01
-# 23   B.1.351 - B.1.617.1  0.022915674 0.031762292 NA -0.0393372732  0.0851686217 9.947071e-01
-# 24   B.1.351 - B.1.617.2 -0.080804177 0.032533740 NA -0.1445691354 -0.0170392189 2.766854e-01
-# 25       B.1.351 - other  0.106627424 0.031982916 NA  0.0439420609  0.1693127870 7.031795e-02
-# 26 B.1.617.1 - B.1.617.2 -0.103719851 0.017765102 NA -0.1385388105 -0.0689008922 8.392346e-04
-# 27     B.1.617.1 - other  0.083711750 0.014263003 NA  0.0557567776  0.1116667219 7.968469e-04
-# 28     B.1.617.2 - other  0.187431601 0.019111738 NA  0.1499732820  0.2248899202 2.566746e-06
+# 1        B.1.1.7 - B.1.1  0.050977284 0.007586084 NA  0.0361088320  0.0658457367 1.983622e-04
+# 2    B.1.1.7 - B.1.1.354  0.057238490 0.007992997 NA  0.0415725049  0.0729044757 9.975035e-05
+# 3    B.1.1.7 - (B.1.36+)  0.053785616 0.007685445 NA  0.0387224205  0.0688488115 1.281817e-04
+# 4      B.1.1.7 - B.1.351 -0.059331890 0.030197494 NA -0.1185178916 -0.0001458888 5.342010e-01
+# 5    B.1.1.7 - B.1.617.1 -0.037781263 0.012741647 NA -0.0627544316 -0.0128080945 1.312506e-01
+# 6    B.1.1.7 - B.1.617.2 -0.138460574 0.017180158 NA -0.1721330651 -0.1047880824 2.642337e-05
+# 7        B.1.1.7 - other  0.048100913 0.007593806 NA  0.0332173270  0.0629844988 3.686705e-04
+# 8      B.1.1 - B.1.1.354  0.006261206 0.003489584 NA -0.0005782524  0.0131006642 6.332679e-01
+# 9      B.1.1 - (B.1.36+)  0.002808332 0.002916199 NA -0.0029073129  0.0085239761 9.728385e-01
+# 10       B.1.1 - B.1.351 -0.110309175 0.031024035 NA -0.1711151665 -0.0495031826 4.767623e-02
+# 11     B.1.1 - B.1.617.1 -0.088758547 0.014391916 NA -0.1169661844 -0.0605509105 4.848098e-04
+# 12     B.1.1 - B.1.617.2 -0.189437858 0.018656428 NA -0.2260037851 -0.1528719313 1.675353e-06
+# 13         B.1.1 - other -0.002876371 0.003175047 NA -0.0090993489  0.0033466059 9.804590e-01
+# 14 B.1.1.354 - (B.1.36+) -0.003452874 0.003478457 NA -0.0102705238  0.0033647752 9.681427e-01
+# 15   B.1.1.354 - B.1.351 -0.116570380 0.031126994 NA -0.1775781675 -0.0555625934 3.403988e-02
+# 16 B.1.1.354 - B.1.617.1 -0.095019753 0.014612811 NA -0.1236603360 -0.0663791707 2.806939e-04
+# 17 B.1.1.354 - B.1.617.2 -0.195699064 0.018826840 NA -0.2325989922 -0.1587991359 1.254298e-06
+# 18     B.1.1.354 - other -0.009137577 0.003779385 NA -0.0165450354 -0.0017301193 3.038122e-01
+# 19   (B.1.36+) - B.1.351 -0.113117506 0.031049264 NA -0.1739729463 -0.0522620660 4.081829e-02
+# 20 (B.1.36+) - B.1.617.1 -0.091566879 0.014446387 NA -0.1198812776 -0.0632524805 3.661774e-04
+# 21 (B.1.36+) - B.1.617.2 -0.192246190 0.018698123 NA -0.2288938371 -0.1555985424 1.436137e-06
+# 22     (B.1.36+) - other -0.005684703 0.003232466 NA -0.0120202195  0.0006508133 6.539721e-01
+# 23   B.1.351 - B.1.617.1  0.021550627 0.030616973 NA -0.0384575381  0.0815587923 9.954356e-01
+# 24   B.1.351 - B.1.617.2 -0.079128684 0.031108610 NA -0.1401004379 -0.0181569293 2.536195e-01
+# 25       B.1.351 - other  0.107432803 0.031024151 NA  0.0466265842  0.1682390220 5.614076e-02
+# 26 B.1.617.1 - B.1.617.2 -0.100679311 0.016943954 NA -0.1338888498 -0.0674697716 7.051872e-04
+# 27     B.1.617.1 - other  0.085882176 0.014391950 NA  0.0576744730  0.1140898790 6.757439e-04
+# 28     B.1.617.2 - other  0.186561487 0.018657078 NA  0.1499942850  0.2231286884 2.023200e-06
 
 
 
