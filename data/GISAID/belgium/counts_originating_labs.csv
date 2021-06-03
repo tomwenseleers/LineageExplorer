@@ -2,7 +2,7 @@
 "1","'[Run20210508template bulk upload 20210508.xlsx]intermediaire'!R97",1
 "2","#VALUE!",3
 "3","Algemeen Klinisch Labo Lier",1
-"4","Algemeen Medisch Labo",171
+"4","Algemeen Medisch Labo",190
 "5","ALGEMEEN MEDISCH LABO",6
 "6","Algemeen Medisch Laboratorium",14
 "7","Algemeen Medisch Laboratorium (AML)",52
@@ -59,7 +59,7 @@
 "58","Cliniques Cud-Luxembourg",15
 "59","Cliniques Saint-Pierre Ottignies",15
 "60","Cliniques Sud-Luxembourg",10
-"61","Cliniques universitaires Saint-Luc",104
+"61","Cliniques universitaires Saint-Luc",187
 "62","CUB Hopital Erasme Laboratoire d'Anatomie Pathologique",9
 "63","CUSL/UCLouvain COVID testing federal platform",9
 "64","Department of Clinical Microbiology",2073
@@ -75,70 +75,71 @@
 "74","Heilig Hart Lier",1
 "75","Heilig Hart Mol",1
 "76","Hopital Sainte Therese Bastogne",1
-"77","Hospital AZ Rivierenland",35
-"78","I.F.A.C. Hopital Princesse Paola",47
-"79","Imeda Hospital",45
-"80","Imelda hospital",7
-"81","Imelda Hospital",35
-"82","Imelda hospital Bonheiden",7
-"83","Imelda Ziekenhuis",16
-"84","Institut de Pathologie et Genetique (IPG)",2
-"85","Institute information KU Leuven, Clinical and Epidemiological Virology",1
-"86","Instituut Tropische Geneeskunde",1
-"87","jessa",46
-"88","Jessa",1364
-"89","Klinisch Laboratorium GZA",14
-"90","Klinisch Laboratorium ZNA",174
-"91","KU Leuven, Clincal and Epidemiological Virology",1
-"92","KU Leuven, Clinical and Epidemiological Virology",183
-"93","KU Leuven, Rega Institute, Clinical and Epidemiological Virology",3974
-"94","Lab voor klinische biologie",3170
-"95","Labo Klinische Biologie, UZA",33
-"96","Labo Luc Olivier",70
-"97","Labo Medicom",5
-"98","Labo Somedi",2
-"99","Laboratoire de biologie moléculaire - Plateforme Clinique",1
-"100","Laboratoire Hospitalier Universitaire de Bruxelles (LHUB-ULB)",28
-"101","Laboratoire Vivalia - Cliniques St-Joseph",12
-"102","Laboratoire Vivalia -Cliniques St-Joseph",1
-"103","Landstuhl Regional Medical Center",4
-"104","LHUB-ULB",601
-"105","Libramont",23
-"106","LKO",52
-"107","LKOLMC",8
-"108","Marche en Famenne",108
-"109","Microbiology Department - University Hospital Brussel",6
-"110","National Plateform bis UMONS/Jolimont",1
-"111","National Platform bis UMONS/Jolimont",431
-"112","OLVZ Aalst",137
-"113","Plateforme BIS Namur",42
-"114","Plateforme Clinique de testing Namuroise",27
-"115","Plateforme de testing namuroise",22
-"116","Plateforme de testing Namuroise",743
-"117","Platform BIS UZA/UAntwerpen",1639
-"118","Platform BIS UZA/UAntwerpen (PLBIS)",9
-"119","Platform BIS UZA/UAntwerpen, University Hospital Antwerp, Edegem, Belgium",23
-"120","Queen Astrid Military Hospital",10
-"121","Saint-Luc Bouge",1
-"122","SCIENSANO National Influenza Centre",1
-"123","SFZ",2
-"124","Somedi",2
-"125","Somedi laboratories",22
-"126","ST. JOZEFKLINIEK-Campus Willebroek",1
-"127","St. Nikolaus-Hospital Eupen",123
-"128","STZ",3
-"129","Synlab",143
-"130","SYNLAB",1964
-"131","SYNLAB - Laboratoire J. Collard",248
-"132","The Institute of Tropical Medicine in Antwerp, Belgium",1
-"133","Trudo",4
-"134","Univeritair Ziekenhuis Antwerpen (UZA)",6
-"135","Universitair Ziekemhuis Antwerpen (UZA)",1
-"136","University Hospital Antwerp (UZA), Drie Eikenstraat 655, 2650 Edegem, Belgium",4
-"137","University Hospital Basel, Clinical Virology",1
-"138","University Hospital Laboratory of Brussels Universitair Laboratorium van Brussel (LHUB-ULB)",1
-"139","University of Liège COVID-19 testing center",947
-"140","UZ Leuven, National Reference Laboratory for Coronaviruses, Laboratory Medicine, Leuven, Belgium",951
-"141","UZA/UAntwerpen (BIS lab), University Hospital Antwerp, Edegem, Belgium",7
-"142","Vivalia - Clinique Saint-Joseph",27
-"143","ZNA Middelheim",1
+"77","Hôpitaux Iris Sud Etterbeek-Ixelles",6
+"78","Hospital AZ Rivierenland",35
+"79","I.F.A.C. Hopital Princesse Paola",47
+"80","Imeda Hospital",45
+"81","Imelda hospital",7
+"82","Imelda Hospital",35
+"83","Imelda hospital Bonheiden",7
+"84","Imelda Ziekenhuis",16
+"85","Institut de Pathologie et Genetique (IPG)",2
+"86","Institute information KU Leuven, Clinical and Epidemiological Virology",1
+"87","Instituut Tropische Geneeskunde",1
+"88","jessa",46
+"89","Jessa",1364
+"90","Klinisch Laboratorium GZA",14
+"91","Klinisch Laboratorium ZNA",174
+"92","KU Leuven, Clincal and Epidemiological Virology",1
+"93","KU Leuven, Clinical and Epidemiological Virology",183
+"94","KU Leuven, Rega Institute, Clinical and Epidemiological Virology",3974
+"95","Lab voor klinische biologie",3170
+"96","Labo Klinische Biologie, UZA",33
+"97","Labo Luc Olivier",70
+"98","Labo Medicom",5
+"99","Labo Somedi",2
+"100","Laboratoire de biologie moléculaire - Plateforme Clinique",1
+"101","Laboratoire Hospitalier Universitaire de Bruxelles (LHUB-ULB)",28
+"102","Laboratoire Vivalia - Cliniques St-Joseph",12
+"103","Laboratoire Vivalia -Cliniques St-Joseph",1
+"104","Landstuhl Regional Medical Center",4
+"105","LHUB-ULB",614
+"106","Libramont",23
+"107","LKO",52
+"108","LKOLMC",8
+"109","Marche en Famenne",108
+"110","Microbiology Department - University Hospital Brussel",6
+"111","National Plateform bis UMONS/Jolimont",1
+"112","National Platform bis UMONS/Jolimont",431
+"113","OLVZ Aalst",137
+"114","Plateforme BIS Namur",42
+"115","Plateforme Clinique de testing Namuroise",27
+"116","Plateforme de testing namuroise",22
+"117","Plateforme de testing Namuroise",743
+"118","Platform BIS UZA/UAntwerpen",1645
+"119","Platform BIS UZA/UAntwerpen (PLBIS)",9
+"120","Platform BIS UZA/UAntwerpen, University Hospital Antwerp, Edegem, Belgium",23
+"121","Queen Astrid Military Hospital",10
+"122","Saint-Luc Bouge",1
+"123","SCIENSANO National Influenza Centre",1
+"124","SFZ",2
+"125","Somedi",2
+"126","Somedi laboratories",22
+"127","ST. JOZEFKLINIEK-Campus Willebroek",1
+"128","St. Nikolaus-Hospital Eupen",123
+"129","STZ",3
+"130","Synlab",143
+"131","SYNLAB",1964
+"132","SYNLAB - Laboratoire J. Collard",248
+"133","The Institute of Tropical Medicine in Antwerp, Belgium",1
+"134","Trudo",4
+"135","Univeritair Ziekenhuis Antwerpen (UZA)",6
+"136","Universitair Ziekemhuis Antwerpen (UZA)",1
+"137","University Hospital Antwerp (UZA), Drie Eikenstraat 655, 2650 Edegem, Belgium",4
+"138","University Hospital Basel, Clinical Virology",1
+"139","University Hospital Laboratory of Brussels Universitair Laboratorium van Brussel (LHUB-ULB)",1
+"140","University of Liège COVID-19 testing center",947
+"141","UZ Leuven, National Reference Laboratory for Coronaviruses, Laboratory Medicine, Leuven, Belgium",951
+"142","UZA/UAntwerpen (BIS lab), University Hospital Antwerp, Edegem, Belgium",7
+"143","Vivalia - Clinique Saint-Joseph",27
+"144","ZNA Middelheim",1

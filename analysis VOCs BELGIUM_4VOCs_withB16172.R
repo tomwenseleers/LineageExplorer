@@ -1,9 +1,9 @@
 # ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT SARS-CoV2 VARIANTS OF CONCERN IN BELGIUM ####
 # Tom Wenseleers
 
-# Data: weekly Sciensano report from the 21st of May 2021 with baseline surveillance data on B.1.617.2 manually added from GISAID
+# Data: weekly Sciensano report from the 28th of May 2021 with baseline surveillance data on B.1.617.2 & data from later week manually added from GISAID (attempt to use only baseline surveillance)
 
-# Tom Wenseleers, last update 21 MAY 2021
+# Tom Wenseleers, last update 3 JUNE 2021
 
 library(lme4)
 library(splines)
@@ -41,14 +41,14 @@ library(nnet)
 library(mclogit)
 
 
-dat="2021_05_21" # desired file version for Belgian data (date/path in //data)
+dat="2021_06_03" # desired file version for Belgian data (date/path in //data)
 suppressWarnings(dir.create(paste0(".//plots//",dat)))
 filedate = as.Date(gsub("_","-",dat)) # file date
 filedate_num = as.numeric(filedate)
 today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-05-21")
+today = as.Date("2021-06-03")
 today_num = as.numeric(today)
-today # "2021-05-21"
+today # "2021-06-03"
 
 set_sum_contrasts() # we use effect coding for all models
 
@@ -67,7 +67,7 @@ be_seqdata$baselinesurv_n_allVOCs = be_seqdata$baselinesurv_n_B.1.1.7+be_seqdata
 be_seqdata$baselinesurv_propVOCs = be_seqdata$baselinesurv_n_allVOCs / be_seqdata$baselinesurv_total_sequenced
 
 head(be_seqdata)
-range(be_seqdata$collection_date) # "2020-12-03" "2021-05-06"
+range(be_seqdata$collection_date) # "2020-12-03" "2021-05-27"
 
 
 # BASELINE SURVEILLANCE DATA ####
@@ -135,10 +135,10 @@ rownames(delta_r_4VOCs) = delta_r_4VOCs[,"contrast"]
 delta_r_4VOCs = delta_r_4VOCs[,-1]
 delta_r_4VOCs
 #                        estimate   asymp.LCL    asymp.UCL
-# wild type - B.1.1.7 -0.023674900 -0.027655907 -0.01969389
-# B.1.351 - B.1.1.7   -0.048702341 -0.056676301 -0.04072838
-# P.1 - B.1.1.7        0.004365824 -0.002000211  0.01073186
-# B.1.617.2 - B.1.1.7  0.100101646  0.025601231  0.17460206
+# wild type - B.1.1.7 -0.018197206 -0.022659064 -0.013735349
+# B.1.351 - B.1.1.7   -0.049185901 -0.058141981 -0.040229821
+# P.1 - B.1.1.7        0.002114385 -0.004069589  0.008298359
+# B.1.617.2 - B.1.1.7  0.075281080  0.039830001  0.110732160
 
 # pairwise contrasts in growth rate (here with Tukey correction)
 emtrends(be_seq_mfit0, revpairwise ~ variant|1, 
@@ -146,16 +146,16 @@ emtrends(be_seq_mfit0, revpairwise ~ variant|1,
          at=list(collection_date_num=today_num), 
          df=NA)$contrasts
 # contrast            estimate      SE df z.ratio p.value
-# wild type - B.1.1.7   -0.02367 0.00203 NA -11.656 <.0001 
-# B.1.351 - B.1.1.7     -0.04870 0.00407 NA -11.971 <.0001 
-# B.1.351 - wild type   -0.02503 0.00434 NA  -5.765 <.0001 
-# P.1 - B.1.1.7          0.00437 0.00325 NA   1.344 0.6635 
-# P.1 - wild type        0.02804 0.00374 NA   7.491 <.0001 
-# P.1 - B.1.351          0.05307 0.00513 NA  10.343 <.0001 
-# B.1.617.2 - B.1.1.7    0.10010 0.03801 NA   2.633 0.0644 
-# B.1.617.2 - wild type  0.12378 0.03806 NA   3.252 0.0101 
-# B.1.617.2 - B.1.351    0.14880 0.03823 NA   3.893 0.0009 
-# B.1.617.2 - P.1        0.09574 0.03813 NA   2.511 0.0882 
+# wild type - B.1.1.7   -0.01820 0.00228 NA  -7.994 <.0001 
+# B.1.351 - B.1.1.7     -0.04919 0.00457 NA -10.764 <.0001 
+# B.1.351 - wild type   -0.03099 0.00488 NA  -6.356 <.0001 
+# P.1 - B.1.1.7          0.00211 0.00316 NA   0.670 0.9628 
+# P.1 - wild type        0.02031 0.00381 NA   5.334 <.0001 
+# P.1 - B.1.351          0.05130 0.00549 NA   9.347 <.0001 
+# B.1.617.2 - B.1.1.7    0.07528 0.01809 NA   4.162 0.0003 
+# B.1.617.2 - wild type  0.09348 0.01823 NA   5.129 <.0001 
+# B.1.617.2 - B.1.351    0.12447 0.01866 NA   6.671 <.0001 
+# B.1.617.2 - P.1        0.07317 0.01832 NA   3.995 0.0006 
 # 
 # Degrees-of-freedom method: user-specified 
 # P value adjustment: tukey method for comparing a family of 5 estimates 
@@ -166,25 +166,25 @@ confint(emtrends(be_seq_mfit0, revpairwise ~ variant|1,
          at=list(collection_date_num=today_num), 
          df=NA))
 # contrast              estimate      SE df asymp.LCL asymp.UCL
-# wild type - B.1.1.7   -0.02367 0.00203 NA  -0.02922   -0.0181
-# B.1.351 - B.1.1.7     -0.04870 0.00407 NA  -0.05980   -0.0376
-# B.1.351 - wild type   -0.02503 0.00434 NA  -0.03687   -0.0132
-# P.1 - B.1.1.7          0.00437 0.00325 NA  -0.00449    0.0132
-# P.1 - wild type        0.02804 0.00374 NA   0.01783    0.0383
-# P.1 - B.1.351          0.05307 0.00513 NA   0.03907    0.0671
-# B.1.617.2 - B.1.1.7    0.10010 0.03801 NA  -0.00358    0.2038
-# B.1.617.2 - wild type  0.12378 0.03806 NA   0.01995    0.2276
-# B.1.617.2 - B.1.351    0.14880 0.03823 NA   0.04453    0.2531
-# B.1.617.2 - P.1        0.09574 0.03813 NA  -0.00827    0.1997
+# wild type - B.1.1.7   -0.01820 0.00228 NA  -0.02441   -0.0120
+# B.1.351 - B.1.1.7     -0.04919 0.00457 NA  -0.06165   -0.0367
+# B.1.351 - wild type   -0.03099 0.00488 NA  -0.04429   -0.0177
+# P.1 - B.1.1.7          0.00211 0.00316 NA  -0.00649    0.0107
+# P.1 - wild type        0.02031 0.00381 NA   0.00992    0.0307
+# P.1 - B.1.351          0.05130 0.00549 NA   0.03633    0.0663
+# B.1.617.2 - B.1.1.7    0.07528 0.01809 NA   0.02594    0.1246
+# B.1.617.2 - wild type  0.09348 0.01823 NA   0.04376    0.1432
+# B.1.617.2 - B.1.351    0.12447 0.01866 NA   0.07357    0.1754
+# B.1.617.2 - P.1        0.07317 0.01832 NA   0.02320    0.1231
 
 
 # implied transmission advantage (assuming no immune evasion advantage of B.1.351, if there is such an advantage, transm advantage would be less)
 exp(delta_r_4VOCs*4.7) 
 #                       estimate asymp.LCL asymp.UCL
-# wild type - B.1.1.7 0.8946953 0.8781106 0.9115933
-# B.1.351 - B.1.1.7   0.7954073 0.7661490 0.8257829
-# P.1 - B.1.1.7       1.0207313 0.9906431 1.0517335
-# B.1.617.2 - B.1.1.7 1.6007587 1.1278642 2.2719300
+# wild type - B.1.1.7 0.9180285 0.8989772 0.9374835
+# B.1.351 - B.1.1.7   0.7936016 0.7608894 0.8277202
+# P.1 - B.1.1.7       1.0099872 0.9810547 1.0397729
+# B.1.617.2 - B.1.1.7 1.4245003 1.2058696 1.6827698
 
 # with confidence intervals (in % increase or decrease):
 exp(data.frame(confint(emtrends(be_seq_mfit0, revpairwise ~ variant|1, 
@@ -192,16 +192,16 @@ exp(data.frame(confint(emtrends(be_seq_mfit0, revpairwise ~ variant|1,
                                 at=list(collection_date_num=today_num), 
                                 df=NA))$contrasts)[,c(2,5,6)]*4.7)
 #   estimate asymp.LCL asymp.UCL
-# 1  0.8946953 0.8716977 0.9182997
-# 2  0.7954073 0.7549828 0.8379963
-# 3  0.8890258 0.8408989 0.9399073
-# 4  1.0207313 0.9790993 1.0641336
-# 5  1.1408703 1.0874128 1.1969558
-# 6  1.2832814 1.2015813 1.3705365
-# 7  1.6007587 0.9832958 2.6059590
-# 8  1.7891663 1.0982976 2.9146164
-# 9  2.0125020 1.2327790 3.2853936
-# 10 1.5682469 0.9618705 2.5568912
+# 1  0.9180285 0.8916222 0.9452168
+# 2  0.7936016 0.7484452 0.8414825
+# 3  0.8644629 0.8120818 0.9202228
+# 4  1.0099872 0.9699477 1.0516794
+# 5  1.1001697 1.0477456 1.1552170
+# 6  1.2726627 1.1861879 1.3654417
+# 7  1.4245003 1.1296728 1.7962732
+# 8  1.5516951 1.2283499 1.9601562
+# 9  1.7949817 1.4130845 2.2800895
+# 10 1.4104143 1.1152230 1.7837404
 
 
 # for all 4 variants together compared to wild type
@@ -211,12 +211,12 @@ rownames(delta_r_allVOCs) = delta_r_allVOCs[,"contrast"]
 delta_r_allVOCs = delta_r_allVOCs[,-1]
 delta_r_allVOCs
 #                        estimate  asymp.LCL  asymp.UCL
-# (all VOCs) - wild type 0.05969318 0.05715543 0.06223092
+# (all VOCs) - wild type 0.0521646 0.05042665 0.05390256
 
 # implied transmission advantage (assuming no immune evasion advantage of B.1.351, if there is such an advantage, transm advantage would be less)
 exp(delta_r_allVOCs*4.7) 
 #                          estimate asymp.LCL asymp.UCL
-# (all VOCs) - wild type   1.323868  1.308172  1.339753
+# (all VOCs) - wild type   1.277843  1.267448  1.288324
 
 
 
@@ -241,7 +241,7 @@ exp(delta_r_allVOCs*4.7)
 # plot(Effect("collection_date_num",be_seq_mfit0), style="stacked")
 
 # extrapolate = 30*6
-date.from = as.numeric(as.Date("2020-11-01")) # min(be_basseqdata_long$collection_date_num)
+date.from = as.numeric(as.Date("2020-02-01")) # min(be_basseqdata_long$collection_date_num)
 date.to = as.numeric(as.Date("2021-06-14")) # max(be_basseqdata_long$collection_date_num)+extrapolate
 
 be_seq_mfit0_preds = data.frame(emmeans(be_seq_mfit0, ~ variant+collection_date_num, at=list(collection_date_num=seq(date.from, date.to)), mode="prob", df=NA))
@@ -373,18 +373,18 @@ ggsave(file=paste0(".\\plots\\",dat,"\\baseline_surveillance_4VOCs_multinomial f
 # estimated share of different variants of concern among lab diagnoses today
 be_seq_mfit0_preds2[be_seq_mfit0_preds2$collection_date==today,]
 #                     variant collection_date_num        prob          SE df    asymp.LCL   asymp.UCL collection_date
-# 1006           B.1.1.7 (UK)               18768 0.856663378 0.030619336 NA  0.796650582 0.916676174      2021-05-21
-# 1008 B.1.351 (South Africa)               18768 0.003290052 0.000701096 NA  0.001915929 0.004664175      2021-05-21
-# 1009           P.1 (Brazil)               18768 0.074080279 0.009002785 NA  0.056435144 0.091725413      2021-05-21
-# 1010      B.1.617.2 (India)               18768 0.040189945 0.032833985 NA -0.024163484 0.104543374      2021-05-21
-# 4041               all VOCs               18768 0.971982204 0.002876337 NA  0.966344687 0.977619721      2021-05-21
+# 2441           B.1.1.7 (UK)               18781 0.831649993 0.0247327379 NA 0.7831747171 0.880125268      2021-06-03
+# 2443 B.1.351 (South Africa)               18781 0.001966892 0.0005082554 NA 0.0009707294 0.002963054      2021-06-03
+# 2444           P.1 (Brazil)               18781 0.073279632 0.0092191202 NA 0.0552104887 0.091348776      2021-06-03
+# 2445      B.1.617.2 (India)               18781 0.072348310 0.0256006520 NA 0.0221719536 0.122524666      2021-06-03
+# 9781               all VOCs               18781 0.977274802 0.0028387363 NA 0.9717109814 0.982838623      2021-06-03
 
 # estimated share of different variants of concern among new infections today
 be_seq_mfit0_preds2[be_seq_mfit0_preds2$collection_date==(today+7),]
 # variant collection_date_num        prob          SE df    asymp.LCL   asymp.UCL collection_date
-# 1041           B.1.1.7 (UK)               18775 0.825133249 0.072058831 NA  0.683900535 0.966365962      2021-05-28
-# 1043 B.1.351 (South Africa)               18775 0.002253505 0.000570838 NA  0.001134683 0.003372327      2021-05-28
-# 1044           P.1 (Brazil)               18775 0.073567986 0.011869240 NA  0.050304703 0.096831268      2021-05-28
-# 1045      B.1.617.2 (India)               18775 0.078009312 0.079721752 NA -0.078242451 0.234261076      2021-05-28
-# 4181               all VOCs               18775 0.975931498 0.002796955 NA  0.970449567 0.981413430      2021-05-28
+# 2476           B.1.1.7 (UK)               18788 0.793383680 0.0472500049 NA 0.7007753717 0.885991988      2021-06-10
+# 2478 B.1.351 (South Africa)               18788 0.001329826 0.0003910474 NA 0.0005633877 0.002096265      2021-06-10
+# 2479           P.1 (Brazil)               18788 0.070950231 0.0108833771 NA 0.0496192042 0.092281259      2021-06-10
+# 2480      B.1.617.2 (India)               18788 0.116904214 0.0513524609 NA 0.0162552403 0.217553188      2021-06-10
+# 992                all VOCs               18788 0.979853791 0.0028227106 NA 0.9743213803 0.985386202      2021-06-10
 
