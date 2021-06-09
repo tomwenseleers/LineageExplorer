@@ -447,8 +447,8 @@ muller_belgiumbyprovince_raw2 = ggplot(data=data_agbyweekregion2, aes(x=collecti
 # coord_cartesian(xlim=c(1,max(GISAID_belgium$Week)))
 muller_belgiumbyprovince_raw2
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\belgium_muller plots by state_raw data.png"), width=8, height=6)
-ggsave(file=paste0(".\\plots\\",plotdir,"\\belgium_muller plots by state_raw data.pdf"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",plotdir,"\\belgium_muller plots by province_raw data.png"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",plotdir,"\\belgium_muller plots by province_raw data.pdf"), width=8, height=6)
 
 
 

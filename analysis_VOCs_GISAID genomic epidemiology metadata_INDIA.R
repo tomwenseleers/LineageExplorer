@@ -1,6 +1,6 @@
 # ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT VOCs IN INDIA BASED ON ANALYSIS OF GISAID GENOMIC EPIDEMIOLOGY METADATA
 # T. Wenseleers
-# last update 1 JUNE 2021
+# last update 8 JUNE 2021
 
 library(nnet)
 # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
@@ -13,14 +13,14 @@ library(ggthemes)
 library(scales)
 
 today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-05-31")
+today = as.Date("2021-06-08")
 today_num = as.numeric(today)
-today # "2021-05-31"
+today # "2021-06-08"
 plotdir = "VOCs_GISAID"
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 
-# import GISAID genomic epidemiology metadata (file version metadata_2021-05-31_10-15.tsv.gz)
-GISAID = read_tsv(gzfile(".//data//GISAID_genomic_epidemiology//metadata_2021-05-31_10-15.tsv.gz"), col_types = cols(.default = "c")) 
+# import GISAID genomic epidemiology metadata (file version metadata_2021-06-04_12-59.tsv.gz)
+GISAID = read_tsv(gzfile(".//data//GISAID_genomic_epidemiology//metadata_2021-06-04_12-59.tsv.gz"), col_types = cols(.default = "c")) 
 GISAID = as.data.frame(GISAID)
 GISAID$date = as.Date(GISAID$date)
 GISAID = GISAID[!is.na(GISAID$date),]
@@ -34,19 +34,19 @@ unique(GISAID$host)
 GISAID[GISAID$host!="Human","strain"]
 GISAID = GISAID[GISAID$host=="Human",]
 GISAID = GISAID[GISAID$date>=as.Date("2019-09-01"),]
-range(GISAID$date) # "2019-12-24" "2021-05-26"
+range(GISAID$date) # "2019-12-24" "2021-06-02"
 
 firstdetB16172 = GISAID[GISAID$pango_lineage=="B.1.617.2",]
 firstdetB16172 = firstdetB16172[!is.na(firstdetB16172$date),]
 firstdetB16172 = firstdetB16172[firstdetB16172$date==min(firstdetB16172$date),]
-firstdetB16172 # 10 dec Maharashtra India
+firstdetB16172 # 21 nov Varanasi, Uttar Pradesh
 
 
 # GISAID = GISAID[grepl("2021-", GISAID$date),]
 GISAID = GISAID[GISAID$date>=as.Date("2020-06-01"),]
 sum(is.na(GISAID$purpose_of_sequencing)) == nrow(GISAID) # field purpose_of_sequencing left blank unfortunately
-range(GISAID$date) # "2020-06-01" "2021-05-26"
-nrow(GISAID) # 1589229
+range(GISAID$date) # "2020-06-01" "2021-06-02"
+nrow(GISAID) # 1640010
 GISAID$Week = lubridate::week(GISAID$date)
 GISAID$Year = lubridate::year(GISAID$date)
 GISAID$Year_Week = interaction(GISAID$Year,GISAID$Week)
@@ -63,7 +63,7 @@ unique(GISAID$location) # = city
 length(unique(GISAID$country[grepl("B.1.617",GISAID$pango_lineage,fixed=T)])) # B.1.617+ now found in 60 countries
 table(GISAID$pango_lineage[grepl("B.1.617",GISAID$pango_lineage,fixed=T)])
 # B.1.617 B.1.617.1 B.1.617.2 B.1.617.3 
-# 1      2737     13613        79 
+# 1      2922     21684        84
 
 GISAID$pango_lineage[grepl("B.1.177",GISAID$pango_lineage,fixed=T)] = "B.1.177+"
 GISAID$pango_lineage[grepl("B.1.36\\>",GISAID$pango_lineage)] = "B.1.36+"
@@ -185,7 +185,7 @@ data.frame(Country=tblB1617$Country, Lineage="B.1.617", Perc=100*tblB1617$Count 
 # 25            USA B.1.617  1.4526353
 
 GISAID_sel = GISAID[GISAID$country %in% sel_countries,]
-nrow(GISAID_sel) # 1457634
+nrow(GISAID_sel) # 1506684
 
 rowSums(table(GISAID_sel$LINEAGE1,GISAID_sel$country))
 
@@ -197,13 +197,13 @@ rowSums(table(GISAID_sel$LINEAGE1,GISAID_sel$country))
 GISAID_india = GISAID_sel[GISAID_sel$country=="India",]
 nrow(GISAID_india[is.na(GISAID_india$LINEAGE1),]) # 0 unknown pango clade
 GISAID_india = GISAID_india[!is.na(GISAID_india$LINEAGE1),]
-nrow(GISAID_india) # 13650
+nrow(GISAID_india) # 14814
 
 unique(GISAID_india$division) # best data for West Bengal, Maharashtra & Karnataka (B.1.617 most common, B.1.1.7 most common in Punjab IN, Telangana)
 unique(GISAID_india$division[GISAID_india$LINEAGE1=="B.1.617+"])
-sum(GISAID_india$LINEAGE1=="B.1.617+") # 3577
+sum(GISAID_india$LINEAGE1=="B.1.617+") # 4321
 unique(GISAID_india$division[GISAID_india$LINEAGE1=="B.1.1.7"])
-sum(GISAID_india$LINEAGE1=="B.1.1.7") # 1032
+sum(GISAID_india$LINEAGE1=="B.1.1.7") # 1077
 
 table(GISAID_india$LINEAGE1)
 table(GISAID_india$LINEAGE2)
@@ -223,26 +223,30 @@ table(GISAID_india$LINEAGE1)
 GISAID_india$LINEAGE1 = factor(GISAID_india$LINEAGE1)
 GISAID_india$LINEAGE1 = relevel(GISAID_india$LINEAGE1, ref="B.1.1.7") # we code UK strain as the reference level
 levels(GISAID_india$LINEAGE1)
-# [1] "B.1.1.7"   "B.1"       "B.1.1"     "B.1.1.216" "B.1.1.306" "B.1.1.326" "B.1.351"   "B.1.36+"   "B.1.525"   "B.1.617+"  "B.1.618"   "other" 
-levels_LINEAGE1 = c("B.1.1.7","B.1","B.1.1","B.1.1.216","B.1.1.306","B.1.1.326","B.1.36+",
+# "B.1.1.7"   "B.1"       "B.1.1"     "B.1.1.216" "B.1.1.306" "B.1.351"   "B.1.36+"   "B.1.525"   "B.1.617+"  "B.1.618"   "other"  
+levels_LINEAGE1 = c("B.1.1.7","B.1","B.1.1","B.1.1.216","B.1.1.306","B.1.36+",
                     "B.1.525","B.1.351","B.1.618","B.1.617+","other")
 GISAID_india$LINEAGE1 = factor(GISAID_india$LINEAGE1, levels=levels_LINEAGE1)
 
 GISAID_india$LINEAGE2 = factor(GISAID_india$LINEAGE2)
 GISAID_india$LINEAGE2 = relevel(GISAID_india$LINEAGE2, ref="B.1.1.7") # we code UK strain as the reference level
 levels(GISAID_india$LINEAGE2)
-# "B.1.1.7"   "B.1"       "B.1.1"     "B.1.1.216" "B.1.1.306" "B.1.1.326" "B.1.351"   "B.1.36+"   "B.1.525"   "B.1.617.1" "B.1.617.2" "B.1.618"   "other" 
-levels_LINEAGE2 = c("B.1.1.7","B.1","B.1.1","B.1.1.216","B.1.1.306","B.1.1.326","B.1.36+",
+# "B.1.1.7"   "B.1"       "B.1.1"     "B.1.1.216" "B.1.1.306" "B.1.351"   "B.1.36+"   "B.1.525"   "B.1.617.1" "B.1.617.2" "B.1.618"   "other"   
+levels_LINEAGE2 = c("B.1.1.7","B.1","B.1.1","B.1.1.216","B.1.1.306","B.1.36+",
                     "B.1.525","B.1.351","B.1.618","B.1.617.1","B.1.617.2","other")
 GISAID_india$LINEAGE2 = factor(GISAID_india$LINEAGE2, levels=levels_LINEAGE2)
 firstB16172 = GISAID_india[GISAID_india$LINEAGE2=="B.1.617.2",]
 firstB16172 = firstB16172[firstB16172$date==min(firstB16172$date),]
-firstB16172 # Maharashtra B.1.617.2
+firstB16172 # 21 nov Varanasi, Uttar Pradesh
 
 # select states of India with a total of > 300 sequences submitted
 
 GISAID_india = GISAID_india[GISAID_india$division!="India",]
 table(GISAID_india$division)
+
+# nrow(GISAID_india[GISAID_india$division=="Delhi"&grepl("Dhar",GISAID_india$authors),]) # 59
+# nrow(GISAID_india[grepl("Dhar",GISAID_india$authors),]) # 59
+
 
 # states with at least 1 B.1.617.2 sequence
 sel_states2 = names(table(GISAID_india[GISAID_india$pango_lineage=="B.1.617.2",]$division))[table(GISAID_india[GISAID_india$pango_lineage=="B.1.617.2",]$division) > 1]
@@ -251,8 +255,8 @@ sel_states2
 # [8] "Jharkhand"         "Karnataka"         "Maharashtra"       "Odisha"            "Puducherry"        "Punjab IN"         "Sikkim"           
 # [15] "Tamil Nadu"        "Telangana"         "West Bengal"    
 
-# states with at least 300 seqs over the last year
-sel_states = names(table(GISAID_india$division))[table(GISAID_india$division) > 300]
+# states with at least 350 seqs over the last year
+sel_states = names(table(GISAID_india$division))[table(GISAID_india$division) > 350]
 sel_states = sel_states[sel_states %in% sel_states2]
 sel_states
 # "Maharashtra"    "Chhattisgarh"   "Gujarat"        "Delhi"          "Karnataka"      "Andhra Pradesh" "West Bengal"    "Telangana"      "Odisha" "Jharkhand"  
@@ -266,8 +270,8 @@ levels(GISAID_india$division)
 # "Maharashtra"    "Chhattisgarh"   "Gujarat"        "Delhi"          "Karnataka"      "Andhra Pradesh" "West Bengal"    "Telangana"      "Odisha"
 table(GISAID_india$division)
 # Maharashtra   Chhattisgarh        Gujarat          Delhi Andhra Pradesh      Telangana      Karnataka    West Bengal         Odisha      Jharkhand 
-# 3733            550           1572            437           1005           1673            806           1224            594            378 
-sum(table(GISAID_india$division)) # 11972
+# 3797            550           1619            437           1219           1898            922           1315            594            378 
+sum(table(GISAID_india$division)) # 12729
 table(GISAID_india$LINEAGE1)
 
 # aggregated data to make Muller plots of raw data
@@ -415,14 +419,14 @@ fit4_india_multi = nnet::multinom(LINEAGE2 ~ division * ns(DATE_NUM, df=2), data
 fit5_india_multi = nnet::multinom(LINEAGE2 ~ division + ns(DATE_NUM, df=3), data=GISAID_india, maxit=1000)
 fit6_india_multi = nnet::multinom(LINEAGE2 ~ division * ns(DATE_NUM, df=3), data=GISAID_india, maxit=1000)
 BIC(fit1_india_multi, fit2_india_multi, fit3_india_multi, fit4_india_multi, fit5_india_multi, fit6_india_multi) 
-# fit5_india_multi has best BIC
+# fit4_india_multi has best BIC, but I'll use the slightly simpler fit3_india_multi
 
 # equivalent fit with B.1.617.1,2&3 all recoded to B.1.617+
-fit5_india_multi1 = nnet::multinom(LINEAGE1 ~ division + ns(DATE_NUM, df=3), data=GISAID_india, maxit=1000)
+fit3_india_multi1 = nnet::multinom(LINEAGE1 ~ division + ns(DATE_NUM, df=2), data=GISAID_india, maxit=1000)
 
 # growth rate advantage compared to UK type B.1.1.7 (difference in growth rate per day) 
-max(GISAID_india$date) # 2021-05-07
-emtrindia = emtrends(fit5_india_multi, trt.vs.ctrl ~ LINEAGE2,  
+max(GISAID_india$date) # 2021-05-16
+emtrindia = emtrends(fit3_india_multi, trt.vs.ctrl ~ LINEAGE2,  
                      var="DATE_NUM",  mode="latent",
                      at=list(DATE_NUM=max(GISAID_india$DATE_NUM)))
 delta_r_india = data.frame(confint(emtrindia, 
@@ -430,22 +434,21 @@ delta_r_india = data.frame(confint(emtrindia,
                            p.value=as.data.frame(emtrindia$contrasts)$p.value)
 delta_r_india
 #               contrast     estimate           SE df    asymp.LCL    asymp.UCL p.value
-# 1        B.1 - B.1.1.7  0.063229201 0.006795533 NA  0.049910201  0.076548201 4.884981e-14
-# 2      B.1.1 - B.1.1.7  0.054263232 0.008132227 NA  0.038324361  0.070202104 4.958875e-09
-# 3  B.1.1.216 - B.1.1.7 -0.069605734 0.016508685 NA -0.101962162 -0.037249305 4.786372e-04
-# 4  B.1.1.306 - B.1.1.7  0.002916035 0.010907500 NA -0.018462272  0.024294342 9.995147e-01
-# 5  B.1.1.326 - B.1.1.7  0.052494605 0.022554098 NA  0.008289386  0.096699824 1.672380e-01
-# 6  (B.1.36+) - B.1.1.7 -0.069338572 0.008814103 NA -0.086613896 -0.052063248 6.840750e-12
-# 7    B.1.525 - B.1.1.7  0.036057035 0.021357585 NA -0.005803061  0.077917132 5.042862e-01
-# 8    B.1.351 - B.1.1.7 -0.019205299 0.018484612 NA -0.055434473  0.017023874 8.792733e-01
-# 9    B.1.618 - B.1.1.7 -0.045218572 0.024534766 NA -0.093305829  0.002868685 4.059583e-01
-# 10 B.1.617.1 - B.1.1.7  0.009201712 0.007250477 NA -0.005008962  0.023412385 7.682902e-01
-# 11 B.1.617.2 - B.1.1.7  0.112322340 0.007970182 NA  0.096701071  0.127943609 1.221245e-15
-# 12     other - B.1.1.7  0.043613413 0.006910477 NA  0.030069127  0.057157699 3.273390e-08
+# 1        B.1 - B.1.1.7  0.042277631 0.003807543 NA  0.034814984  0.049740278 2.775558e-15
+# 2      B.1.1 - B.1.1.7  0.011051415 0.004173099 NA  0.002872292  0.019230539 7.499933e-02
+# 3  B.1.1.216 - B.1.1.7 -0.033484155 0.005843331 NA -0.044936874 -0.022031436 7.067854e-07
+# 4  B.1.1.306 - B.1.1.7 -0.006155248 0.004471662 NA -0.014919545  0.002609048 6.859396e-01
+# 5  (B.1.36+) - B.1.1.7 -0.017178358 0.004048167 NA -0.025112619 -0.009244097 4.313630e-04
+# 6    B.1.525 - B.1.1.7 -0.051636247 0.015142153 NA -0.081314321 -0.021958172 8.359990e-03
+# 7    B.1.351 - B.1.1.7 -0.018432704 0.010154006 NA -0.038334191  0.001468782 4.049730e-01
+# 8    B.1.618 - B.1.1.7  0.012732586 0.008399823 NA -0.003730765  0.029195938 5.970366e-01
+# 9  B.1.617.1 - B.1.1.7  0.005721352 0.004788643 NA -0.003664215  0.015106919 7.911520e-01
+# 10 B.1.617.2 - B.1.1.7  0.089176885 0.005597130 NA  0.078206712  0.100147057 0.000000e+00
+# 11     other - B.1.1.7  0.023236473 0.003834935 NA  0.015720138  0.030752808 1.465993e-07
 
 # avg growth advantage of B.1.617+ over B.1.1.7 :
-max(GISAID_india$date) # 2021-05-07
-emtrindia1 = emtrends(fit5_india_multi1, trt.vs.ctrl ~ LINEAGE1,  
+max(GISAID_india$date) # 2021-05-16
+emtrindia1 = emtrends(fit3_india_multi1, trt.vs.ctrl ~ LINEAGE1,  
                       var="DATE_NUM",  mode="latent",
                       at=list(DATE_NUM=max(GISAID_india$DATE_NUM)))
 delta_r_india1 = data.frame(confint(emtrindia1, 
@@ -453,22 +456,21 @@ delta_r_india1 = data.frame(confint(emtrindia1,
                             p.value=as.data.frame(emtrindia1$contrasts)$p.value)
 delta_r_india1
 #                contrast      estimate           SE df     asymp.LCL     asymp.UCL      p.value
-# 1         B.1 - B.1.1.7  0.06188047 0.006544554 NA  0.049053379  0.07470756 3.830269e-14
-# 2       B.1.1 - B.1.1.7  0.05508620 0.007873572 NA  0.039654283  0.07051812 1.026655e-09
-# 3   B.1.1.216 - B.1.1.7 -0.06537531 0.016383637 NA -0.097486644 -0.03326397 1.084230e-03
-# 4   B.1.1.306 - B.1.1.7  0.01020836 0.010709352 NA -0.010781589  0.03119830 8.995092e-01
-# 5   B.1.1.326 - B.1.1.7  0.05417255 0.022077210 NA  0.010902011  0.09744308 1.190887e-01
-# 6   (B.1.36+) - B.1.1.7 -0.06519412 0.008669192 NA -0.082185423 -0.04820281 6.075929e-11
-# 7     B.1.525 - B.1.1.7  0.03734195 0.020880986 NA -0.003584028  0.07826793 4.211301e-01
-# 8     B.1.351 - B.1.1.7 -0.01414275 0.018129538 NA -0.049675989  0.02139049 9.505942e-01
-# 9     B.1.618 - B.1.1.7 -0.03789139 0.024473297 NA -0.085858173  0.01007539 5.756644e-01
-# 10 (B.1.617+) - B.1.1.7  0.07306817 0.006650680 NA  0.060033078  0.08610327 1.754152e-14
-# 11      other - B.1.1.7  0.04774345 0.006754216 NA  0.034505431  0.06098147 6.984704e-10
+# 1         B.1 - B.1.1.7  0.042653240 0.003750514 NA  0.0353023676  0.050004112 3.808065e-14
+# 2       B.1.1 - B.1.1.7  0.012388836 0.004129562 NA  0.0042950446  0.020482628 2.726749e-02
+# 3   B.1.1.216 - B.1.1.7 -0.031914320 0.005807350 NA -0.0432965159 -0.020532123 2.200478e-06
+# 4   B.1.1.306 - B.1.1.7 -0.003587874 0.004445151 NA -0.0123002103  0.005124462 9.347585e-01
+# 5   (B.1.36+) - B.1.1.7 -0.015745203 0.004004480 NA -0.0235938396 -0.007896566 1.323542e-03
+# 6     B.1.525 - B.1.1.7 -0.050028978 0.015105907 NA -0.0796360116 -0.020421944 1.072388e-02
+# 7     B.1.351 - B.1.1.7 -0.016160646 0.009937404 NA -0.0356375993  0.003316307 5.029251e-01
+# 8     B.1.618 - B.1.1.7  0.015909515 0.008369239 NA -0.0004938925  0.032312922 3.361977e-01
+# 9  (B.1.617+) - B.1.1.7  0.057198880 0.004042808 NA  0.0492751223  0.065122638 2.164935e-14
+# 10      other - B.1.1.7  0.023902906 0.003800319 NA  0.0164544180  0.031351393 5.340649e-08
 
 
 # pairwise growth rate difference (differences in growth rate per day) 
-max(GISAID_india$date) # 2021-05-07
-emtrindia_pairw = emtrends(fit5_india_multi, pairwise ~ LINEAGE2,  
+max(GISAID_india$date) # 2021-05-16
+emtrindia_pairw = emtrends(fit3_india_multi, pairwise ~ LINEAGE2,  
                            var="DATE_NUM",  mode="latent",
                            at=list(DATE_NUM=max(GISAID_india$DATE_NUM)))
 delta_r_india_pairw = data.frame(confint(emtrindia_pairw, 
@@ -476,84 +478,72 @@ delta_r_india_pairw = data.frame(confint(emtrindia_pairw,
                                  p.value=as.data.frame(emtrindia_pairw$contrasts)$p.value)
 delta_r_india_pairw
 #                  contrast      estimate           SE df     asymp.LCL     asymp.UCL p.value
-# 1          B.1.1.7 - B.1 -0.0632292013 0.006795533 NA -0.076548201 -0.049910201 1.314504e-13
-# 2        B.1.1.7 - B.1.1 -0.0542632323 0.008132227 NA -0.070202104 -0.038324361 3.207649e-08
-# 3    B.1.1.7 - B.1.1.216  0.0696057335 0.016508685 NA  0.037249305  0.101962162 2.802719e-03
-# 4    B.1.1.7 - B.1.1.306 -0.0029160352 0.010907500 NA -0.024294342  0.018462272 1.000000e+00
-# 5    B.1.1.7 - B.1.1.326 -0.0524946048 0.022554098 NA -0.096699824 -0.008289386 5.008241e-01
-# 6    B.1.1.7 - (B.1.36+)  0.0693385718 0.008814103 NA  0.052063248  0.086613896 4.423306e-11
-# 7      B.1.1.7 - B.1.525 -0.0360570352 0.021357585 NA -0.077917132  0.005803061 8.965055e-01
-# 8      B.1.1.7 - B.1.351  0.0192052992 0.018484612 NA -0.017023874  0.055434473 9.980139e-01
-# 9      B.1.1.7 - B.1.618  0.0452185720 0.024534766 NA -0.002868685  0.093305829 8.246837e-01
-# 10   B.1.1.7 - B.1.617.1 -0.0092017118 0.007250477 NA -0.023412385  0.005008962 9.878563e-01
-# 11   B.1.1.7 - B.1.617.2 -0.1123223400 0.007970182 NA -0.127943609 -0.096701071 1.443290e-15
-# 12       B.1.1.7 - other -0.0436134133 0.006910477 NA -0.057157699 -0.030069127 2.111267e-07
-# 13           B.1 - B.1.1  0.0089659690 0.006395497 NA -0.003568974  0.021500912 9.725888e-01
-# 14       B.1 - B.1.1.216  0.1328349349 0.015702093 NA  0.102059398  0.163610472 1.545541e-12
-# 15       B.1 - B.1.1.306  0.0603131662 0.009619443 NA  0.041459404  0.079166929 2.608418e-07
-# 16       B.1 - B.1.1.326  0.0107345965 0.021971318 NA -0.032328396  0.053797589 9.999994e-01
-# 17       B.1 - (B.1.36+)  0.1325677731 0.007274891 NA  0.118309249  0.146826298 1.332268e-15
-# 18         B.1 - B.1.525  0.0271721662 0.020904620 NA -0.013800135  0.068144468 9.851476e-01
-# 19         B.1 - B.1.351  0.0824345006 0.017999546 NA  0.047156039  0.117712962 6.678519e-04
-# 20         B.1 - B.1.618  0.1084477733 0.024054392 NA  0.061302031  0.155593516 8.925536e-04
-# 21       B.1 - B.1.617.1  0.0540274895 0.005457174 NA  0.043331625  0.064723354 1.217915e-13
-# 22       B.1 - B.1.617.2 -0.0490931387 0.006104432 NA -0.061057605 -0.037128672 1.623157e-11
-# 23           B.1 - other  0.0196157880 0.004812901 NA  0.010182676  0.029048900 4.737454e-03
-# 24     B.1.1 - B.1.1.216  0.1238689658 0.016153812 NA  0.092208077  0.155529855 1.366798e-10
-# 25     B.1.1 - B.1.1.306  0.0513471971 0.010412949 NA  0.030938193  0.071756201 1.515831e-04
-# 26     B.1.1 - B.1.1.326  0.0017686275 0.022310811 NA -0.041959759  0.045497014 1.000000e+00
-# 27     B.1.1 - (B.1.36+)  0.1236018041 0.008259413 NA  0.107413653  0.139789956 1.332268e-15
-# 28       B.1.1 - B.1.525  0.0182061971 0.021350829 NA -0.023640658  0.060053052 9.997216e-01
-# 29       B.1.1 - B.1.351  0.0734685315 0.018510473 NA  0.037188672  0.109748391 6.969541e-03
-# 30       B.1.1 - B.1.618  0.0994818043 0.024398829 NA  0.051660979  0.147302630 4.708848e-03
-# 31     B.1.1 - B.1.617.1  0.0450615205 0.007134900 NA  0.031077373  0.059045668 2.063622e-07
-# 32     B.1.1 - B.1.617.2 -0.0580591077 0.007734750 NA -0.073218939 -0.042899277 3.398379e-10
-# 33         B.1.1 - other  0.0106498189 0.006402961 NA -0.001899753  0.023199391 9.060118e-01
-# 34 B.1.1.216 - B.1.1.306 -0.0725217687 0.017624604 NA -0.107065358 -0.037978179 4.100930e-03
-# 35 B.1.1.216 - B.1.1.326 -0.1221003383 0.026503572 NA -0.174046386 -0.070154291 5.975234e-04
-# 36 B.1.1.216 - (B.1.36+) -0.0002671618 0.016134136 NA -0.031889487  0.031355164 1.000000e+00
-# 37   B.1.1.216 - B.1.525 -0.1056627687 0.025947384 NA -0.156518706 -0.054806831 4.798220e-03
-# 38   B.1.1.216 - B.1.351 -0.0504004343 0.023651578 NA -0.096756676 -0.004044193 6.420777e-01
-# 39   B.1.1.216 - B.1.618 -0.0243871616 0.027839553 NA -0.078951684  0.030177361 9.996330e-01
-# 40 B.1.1.216 - B.1.617.1 -0.0788074453 0.016181090 NA -0.110521800 -0.047093091 1.971441e-04
-# 41 B.1.1.216 - B.1.617.2 -0.1819280736 0.016528524 NA -0.214323386 -0.149532761 7.027712e-14
-# 42     B.1.1.216 - other -0.1132191469 0.015618764 NA -0.143831362 -0.082606932 1.421494e-09
-# 43 B.1.1.306 - B.1.1.326 -0.0495785696 0.023082567 NA -0.094819569 -0.004337570 6.300762e-01
-# 44 B.1.1.306 - (B.1.36+)  0.0722546069 0.010647097 NA  0.051386680  0.093122534 1.752528e-08
-# 45   B.1.1.306 - B.1.525 -0.0331410000 0.022596706 NA -0.077429731  0.011147731 9.612208e-01
-# 46   B.1.1.306 - B.1.351  0.0221213344 0.019909221 NA -0.016900022  0.061142691 9.962696e-01
-# 47   B.1.1.306 - B.1.618  0.0481346071 0.025428898 NA -0.001705117  0.097974332 7.970312e-01
-# 48 B.1.1.306 - B.1.617.1 -0.0062856766 0.010209625 NA -0.026296175  0.013724822 9.999916e-01
-# 49 B.1.1.306 - B.1.617.2 -0.1094063049 0.010777533 NA -0.130529882 -0.088282728 1.153522e-13
-# 50     B.1.1.306 - other -0.0406973782 0.009529943 NA -0.059375724 -0.022019032 2.279168e-03
-# 51 B.1.1.326 - (B.1.36+)  0.1218331766 0.022377748 NA  0.077973597  0.165692756 1.493016e-05
-# 52   B.1.1.326 - B.1.525  0.0164375696 0.029865962 NA -0.042098641  0.074973780 9.999976e-01
-# 53   B.1.1.326 - B.1.351  0.0716999040 0.027895586 NA  0.017025560  0.126374248 3.373871e-01
-# 54   B.1.1.326 - B.1.618  0.0977131767 0.032229926 NA  0.034543683  0.160882670 1.237826e-01
-# 55 B.1.1.326 - B.1.617.1  0.0432928930 0.022232010 NA -0.000281046  0.086866832 7.646327e-01
-# 56 B.1.1.326 - B.1.617.2 -0.0598277352 0.022467667 NA -0.103863553 -0.015791917 2.830882e-01
-# 57     B.1.1.326 - other  0.0088811914 0.021953829 NA -0.034147523  0.051909906 9.999999e-01
-# 58   (B.1.36+) - B.1.525 -0.1053956069 0.021796875 NA -0.148116697 -0.062674517 2.290913e-04
-# 59   (B.1.36+) - B.1.351 -0.0501332726 0.019000622 NA -0.087373807 -0.012892738 2.968391e-01
-# 60   (B.1.36+) - B.1.618 -0.0241199998 0.024488996 NA -0.072117550  0.023877551 9.988149e-01
-# 61 (B.1.36+) - B.1.617.1 -0.0785402836 0.008171860 NA -0.094556835 -0.062523732 1.281197e-13
-# 62 (B.1.36+) - B.1.617.2 -0.1816609118 0.008880237 NA -0.199065856 -0.164255967 1.332268e-15
-# 63     (B.1.36+) - other -0.1129519851 0.007104970 NA -0.126877471 -0.099026500 1.332268e-15
-# 64     B.1.525 - B.1.351  0.0552623344 0.026401015 NA  0.003517296  0.107007372 6.685467e-01
-# 65     B.1.525 - B.1.618  0.0812756071 0.031945444 NA  0.018663687  0.143887527 3.536363e-01
-# 66   B.1.525 - B.1.617.1  0.0268553234 0.020987312 NA -0.014279052  0.067989698 9.869800e-01
-# 67   B.1.525 - B.1.617.2 -0.0762653049 0.021217040 NA -0.117849939 -0.034680671 2.475498e-02
-# 68       B.1.525 - other -0.0075563782 0.020976558 NA -0.048669676  0.033556920 1.000000e+00
-# 69     B.1.351 - B.1.618  0.0260132727 0.029860968 NA -0.032513148  0.084539694 9.996533e-01
-# 70   B.1.351 - B.1.617.1 -0.0284070110 0.018093008 NA -0.063868656  0.007054633 9.363740e-01
-# 71   B.1.351 - B.1.617.2 -0.1315276393 0.018442071 NA -0.167673433 -0.095381845 2.703544e-09
-# 72       B.1.351 - other -0.0628187126 0.018062656 NA -0.098220867 -0.027416558 3.565174e-02
-# 73   B.1.618 - B.1.617.1 -0.0544202837 0.024327896 NA -0.102102084 -0.006738483 5.660634e-01
-# 74   B.1.618 - B.1.617.2 -0.1575409120 0.024582146 NA -0.205721032 -0.109360792 1.276890e-07
-# 75       B.1.618 - other -0.0888319853 0.024009127 NA -0.135889009 -0.041774962 1.758160e-02
-# 76 B.1.617.1 - B.1.617.2 -0.1031206282 0.006445088 NA -0.115752769 -0.090488487 1.332268e-15
-# 77     B.1.617.1 - other -0.0344117016 0.005684718 NA -0.045553543 -0.023269860 7.804298e-07
-# 78     B.1.617.2 - other  0.0687089267 0.006503390 NA  0.055962516  0.081455337 1.015854e-13
+# 1          B.1.1.7 - B.1 -0.042277631 0.003807543 NA -0.049740278 -0.0348149843 3.774758e-14
+# 2        B.1.1.7 - B.1.1 -0.011051415 0.004173099 NA -0.019230539 -0.0028722920 2.644421e-01
+# 3    B.1.1.7 - B.1.1.216  0.033484155 0.005843331 NA  0.022031436  0.0449368737 4.167164e-06
+# 4    B.1.1.7 - B.1.1.306  0.006155248 0.004471662 NA -0.002609048  0.0149195445 9.660465e-01
+# 5    B.1.1.7 - (B.1.36+)  0.017178358 0.004048167 NA  0.009244097  0.0251126187 2.345443e-03
+# 6      B.1.1.7 - B.1.525  0.051636247 0.015142153 NA  0.021958172  0.0813143213 3.928512e-02
+# 7      B.1.1.7 - B.1.351  0.018432704 0.010154006 NA -0.001468782  0.0383341907 8.067440e-01
+# 8      B.1.1.7 - B.1.618 -0.012732586 0.008399823 NA -0.029195938  0.0037307649 9.336814e-01
+# 9    B.1.1.7 - B.1.617.1 -0.005721352 0.004788643 NA -0.015106919  0.0036642150 9.885528e-01
+# 10   B.1.1.7 - B.1.617.2 -0.089176885 0.005597130 NA -0.100147057 -0.0782067122 0.000000e+00
+# 11       B.1.1.7 - other -0.023236473 0.003834935 NA -0.030752808 -0.0157201379 8.692612e-07
+# 12           B.1 - B.1.1  0.031226216 0.002390849 NA  0.026540238  0.0359121943 0.000000e+00
+# 13       B.1 - B.1.1.216  0.075761786 0.004695025 NA  0.066559706  0.0849638654 0.000000e+00
+# 14       B.1 - B.1.1.306  0.048432880 0.002808971 NA  0.042927397  0.0539383625 0.000000e+00
+# 15       B.1 - (B.1.36+)  0.059455989 0.002056396 NA  0.055425527  0.0634864514 0.000000e+00
+# 16         B.1 - B.1.525  0.093913878 0.014897040 NA  0.064716216  0.1231115401 2.620343e-07
+# 17         B.1 - B.1.351  0.060710335 0.009784962 NA  0.041532163  0.0798885077 4.282276e-07
+# 18         B.1 - B.1.618  0.029545045 0.007753979 NA  0.014347525  0.0447425651 1.101173e-02
+# 19       B.1 - B.1.617.1  0.036556279 0.003719128 NA  0.029266922  0.0438456363 8.826273e-14
+# 20       B.1 - B.1.617.2 -0.046899253 0.004596381 NA -0.055907996 -0.0378905111 8.226753e-14
+# 21           B.1 - other  0.019041158 0.001762884 NA  0.015585969  0.0224963475 5.984102e-14
+# 22     B.1.1 - B.1.1.216  0.044535570 0.004845682 NA  0.035038207  0.0540329328 1.333378e-13
+# 23     B.1.1 - B.1.1.306  0.017206664 0.003065968 NA  0.011197477  0.0232158501 7.227233e-06
+# 24     B.1.1 - (B.1.36+)  0.028229773 0.002418563 NA  0.023489476  0.0329700701 2.331468e-15
+# 25       B.1.1 - B.1.525  0.062687662 0.015002349 NA  0.033283599  0.0920917250 2.988017e-03
+# 26       B.1.1 - B.1.351  0.029484119 0.009943194 NA  0.009995817  0.0489724222 1.310502e-01
+# 27       B.1.1 - B.1.618 -0.001681171 0.007901345 NA -0.017167523  0.0138051805 1.000000e+00
+# 28     B.1.1 - B.1.617.1  0.005330063 0.004167623 NA -0.002838327  0.0134984537 9.804170e-01
+# 29     B.1.1 - B.1.617.2 -0.078125469 0.005015651 NA -0.087955964 -0.0682949747 0.000000e+00
+# 30         B.1.1 - other -0.012185057 0.002205094 NA -0.016506962 -0.0078631530 1.075547e-05
+# 31 B.1.1.216 - B.1.1.306 -0.027328906 0.005070084 NA -0.037266088 -0.0173917241 1.993595e-05
+# 32 B.1.1.216 - (B.1.36+) -0.016305797 0.004645145 NA -0.025410113 -0.0072014810 2.901911e-02
+# 33   B.1.1.216 - B.1.525  0.018152092 0.015578533 NA -0.012381272  0.0486854565 9.906643e-01
+# 34   B.1.1.216 - B.1.351 -0.015051451 0.010765081 NA -0.036150621  0.0060477202 9.619979e-01
+# 35   B.1.1.216 - B.1.618 -0.046216741 0.008755952 NA -0.063378092 -0.0290553901 3.292123e-05
+# 36 B.1.1.216 - B.1.617.1 -0.039205507 0.005874883 NA -0.050720066 -0.0276909466 4.110579e-08
+# 37 B.1.1.216 - B.1.617.2 -0.122661039 0.006492062 NA -0.135385246 -0.1099368322 0.000000e+00
+# 38     B.1.1.216 - other -0.056720627 0.004605914 NA -0.065748053 -0.0476932018 0.000000e+00
+# 39 B.1.1.306 - (B.1.36+)  0.011023109 0.002743064 NA  0.005646802  0.0163994167 5.343771e-03
+# 40   B.1.1.306 - B.1.525  0.045480998 0.015085428 NA  0.015914102  0.0750478948 1.159609e-01
+# 41   B.1.1.306 - B.1.351  0.012277456 0.010070838 NA -0.007461024  0.0320159353 9.865443e-01
+# 42   B.1.1.306 - B.1.618 -0.018887835 0.008064496 NA -0.034693957 -0.0030817130 4.527322e-01
+# 43 B.1.1.306 - B.1.617.1 -0.011876600 0.004469184 NA -0.020636040 -0.0031171605 2.596357e-01
+# 44 B.1.1.306 - B.1.617.2 -0.095332133 0.005262016 NA -0.105645495 -0.0850187713 0.000000e+00
+# 45     B.1.1.306 - other -0.029391721 0.002567881 NA -0.034424675 -0.0243587678 1.387779e-14
+# 46   (B.1.36+) - B.1.525  0.034457889 0.014973289 NA  0.005110781  0.0638049967 4.810140e-01
+# 47   (B.1.36+) - B.1.351  0.001254346 0.009897608 NA -0.018144609  0.0206533015 1.000000e+00
+# 48   (B.1.36+) - B.1.618 -0.029910944 0.007823843 NA -0.045245394 -0.0145764939 1.054715e-02
+# 49 (B.1.36+) - B.1.617.1 -0.022899710 0.004049926 NA -0.030837420 -0.0149619996 5.941757e-06
+# 50 (B.1.36+) - B.1.617.2 -0.106355242 0.004916705 NA -0.115991808 -0.0967186767 0.000000e+00
+# 51     (B.1.36+) - other -0.040414830 0.001808231 NA -0.043958898 -0.0368707626 0.000000e+00
+# 52     B.1.525 - B.1.351 -0.033203543 0.017189993 NA -0.066895310  0.0004882245 7.373554e-01
+# 53     B.1.525 - B.1.618 -0.064368833 0.016773280 NA -0.097243857 -0.0314938088 1.003936e-02
+# 54   B.1.525 - B.1.617.1 -0.057357599 0.015081378 NA -0.086916556 -0.0277986409 1.127868e-02
+# 55   B.1.525 - B.1.617.2 -0.140813131 0.015415243 NA -0.171026453 -0.1105998093 1.568745e-13
+# 56       B.1.525 - other -0.074872719 0.014897524 NA -0.104071330 -0.0456741093 9.942397e-05
+# 57     B.1.351 - B.1.618 -0.031165291 0.012339906 NA -0.055351063 -0.0069795185 3.337467e-01
+# 58   B.1.351 - B.1.617.1 -0.024154056 0.010111493 NA -0.043972218 -0.0043358937 4.210456e-01
+# 59   B.1.351 - B.1.617.2 -0.107609589 0.010558499 NA -0.128303867 -0.0869153103 8.026912e-14
+# 60       B.1.351 - other -0.041669177 0.009790760 NA -0.060858714 -0.0224796394 2.237984e-03
+# 61   B.1.618 - B.1.617.1  0.007011235 0.008452295 NA -0.009554960  0.0235774290 9.995476e-01
+# 62   B.1.618 - B.1.617.2 -0.076444298 0.008943639 NA -0.093973508 -0.0589150880 1.881051e-12
+# 63       B.1.618 - other -0.010503886 0.007738975 NA -0.025671999  0.0046642258 9.693626e-01
+# 64 B.1.617.1 - B.1.617.2 -0.083455533 0.005095159 NA -0.093441861 -0.0734692047 0.000000e+00
+# 65     B.1.617.1 - other -0.017515121 0.003802441 NA -0.024967769 -0.0100624726 5.713438e-04
+# 66     B.1.617.2 - other  0.065940412 0.004710899 NA  0.056707220  0.0751736032 0.000000e+00
 
 
 
@@ -561,21 +551,21 @@ delta_r_india_pairw
 
 # extrapolate = 30
 date.from = as.numeric(as.Date("2020-06-01"))
-date.to = as.numeric(as.Date("2021-06-14")) # max(GISAID_india$DATE_NUM)+extrapolate
+date.to = as.numeric(as.Date("2021-06-30")) # max(GISAID_india$DATE_NUM)+extrapolate
 
-fit_india_multi_predsbystate = data.frame(emmeans(fit5_india_multi, 
+fit_india_multi_predsbystate = data.frame(emmeans(fit3_india_multi, 
                                                   ~ LINEAGE2,
                                                   by=c("DATE_NUM", "division"),
-                                                  at=list(DATE_NUM=seq(date.from, date.to, by=3)), # by=3 just to speed up things a bit
+                                                  at=list(DATE_NUM=seq(date.from, date.to, by=7)), # by=7 just to speed up things a bit
                                                   mode="prob", df=NA))
 fit_india_multi_predsbystate$collection_date = as.Date(fit_india_multi_predsbystate$DATE_NUM, origin="1970-01-01")
 fit_india_multi_predsbystate$LINEAGE2 = factor(fit_india_multi_predsbystate$LINEAGE2, levels=levels_LINEAGE2) 
 fit_india_multi_predsbystate$STATE = factor(fit_india_multi_predsbystate$division, levels=levels_STATES) 
 
-fit_india_multi_preds = data.frame(emmeans(fit5_india_multi, 
+fit_india_multi_preds = data.frame(emmeans(fit3_india_multi, 
                                            ~ LINEAGE2,
                                            by=c("DATE_NUM"),
-                                           at=list(DATE_NUM=seq(date.from, date.to, by=3)), # by=3 just to speed up things a bit
+                                           at=list(DATE_NUM=seq(date.from, date.to, by=7)), # by=7 just to speed up things a bit
                                            mode="prob", df=NA))
 fit_india_multi_preds$collection_date = as.Date(fit_india_multi_preds$DATE_NUM, origin="1970-01-01")
 fit_india_multi_preds$LINEAGE2 = factor(fit_india_multi_preds$LINEAGE2, levels=levels_LINEAGE2) 
@@ -586,7 +576,7 @@ muller_india_mfit = ggplot(data=fit_india_multi_preds,
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE2, group=LINEAGE2), position="stack") +
   scale_fill_manual("", values=lineage_cols2) +
   annotate("rect", xmin=max(GISAID_india$DATE_NUM)+1, 
-           xmax=as.Date("2021-06-14"), ymin=0, ymax=1, alpha=0.4, fill="white") + # extrapolated part
+           xmax=as.Date("2021-06-30"), ymin=0, ymax=1, alpha=0.4, fill="white") + # extrapolated part
   scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01")),
                      labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01"))),1,1),
                      limits=as.Date(c("2020-06-01",NA)), expand=c(0,0)) +
@@ -602,7 +592,7 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\india_muller plots_multinom fit.pdf")
 
 
 library(ggpubr)
-ggarrange(muller_india_raw2+coord_cartesian(xlim=c(as.Date("2020-06-01"),as.Date("2021-06-14")))+
+ggarrange(muller_india_raw2+coord_cartesian(xlim=c(as.Date("2020-06-01"),as.Date("2021-06-30")))+
             theme(legend.background = element_rect(fill = alpha("white", 0)),
                   legend.key = element_rect(fill = alpha("white", 0)),
                   legend.text=element_text(color = "white")) +
@@ -620,7 +610,7 @@ muller_indiabystate_mfit = ggplot(data=fit_india_multi_predsbystate,
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE2, group=LINEAGE2), position="stack") +
   scale_fill_manual("", values=lineage_cols2) +
   annotate("rect", xmin=max(GISAID_india$DATE_NUM)+1, 
-           xmax=as.Date("2021-06-14"), ymin=0, ymax=1, alpha=0.4, fill="white") + # extrapolated part
+           xmax=as.Date("2021-06-30"), ymin=0, ymax=1, alpha=0.4, fill="white") + # extrapolated part
   scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01")),
                      labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01"))),1,1),
                      limits=as.Date(c("2020-06-01",NA)), expand=c(0,0)) +
@@ -635,7 +625,7 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\india_muller plots by state_multinom 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\india_muller plots by state_multinom fit.pdf"), width=6, height=8)
 
 ggarrange(muller_indiabystate_raw2+
-            coord_cartesian(xlim=c(as.Date("2020-06-01"),as.Date("2021-06-14")))+
+            coord_cartesian(xlim=c(as.Date("2020-06-01"),as.Date("2021-06-30")))+
             theme(legend.background = element_rect(fill = alpha("white", 0)),
                   legend.key = element_rect(fill = alpha("white", 0)),
                   legend.text=element_text(color = "white")) +
@@ -643,7 +633,7 @@ ggarrange(muller_indiabystate_raw2+
                    fill = guide_legend(override.aes = list(alpha = 0)))+
             ggtitle("SPREAD OF SARS-CoV2 VARIANTS B.1.617.1 & B.1.617.2 IN INDIA\nRaw GISAID data"), 
           muller_indiabystate_mfit+ggtitle("\nMultinomial fit")+
-            coord_cartesian(xlim=c(as.Date("2020-06-01"),as.Date("2021-05-31"))), nrow=2)
+            coord_cartesian(xlim=c(as.Date("2020-06-01"),as.Date("2021-06-30"))), nrow=2)
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\india_muller plots by state multipanel_multinom fit.png"), width=7, height=11)
 ggsave(file=paste0(".\\plots\\",plotdir,"\\india_muller plots by state multipanel_multinom fit.pdf"), width=7, height=11)
@@ -693,7 +683,7 @@ plot_india_mfit_logit = qplot(data=fit_india_multi_preds2, x=collection_date, y=
   # guides(colour=FALSE) +
   theme(legend.position = "right") +
   xlab("Collection date")+
-  coord_cartesian(xlim=c(as.Date("2021-01-01"),as.Date("2021-06-14")), ylim=c(0.005, 0.95), expand=c(0,0))
+  coord_cartesian(xlim=c(as.Date("2021-01-01"),as.Date("2021-06-30")), ylim=c(0.005, 0.95), expand=c(0,0))
 plot_india_mfit_logit
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\india_multinom fit_logit scale.png"), width=8, height=6)
@@ -716,7 +706,7 @@ plot_india_mfit = qplot(data=fit_india_multi_preds, x=collection_date, y=100*pro
                      limits=as.Date(c("2020-06-01",NA)), expand=c(0,0)) +
   # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
   #                     labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
-  coord_cartesian(xlim=as.Date(c("2021-01-01","2021-06-14")),
+  coord_cartesian(xlim=as.Date(c("2021-01-01","2021-06-30")),
                   ylim=c(0,100), expand=c(0,0)) +
   scale_fill_manual("variant", values=lineage_cols2) +
   scale_colour_manual("variant", values=lineage_cols2) +
