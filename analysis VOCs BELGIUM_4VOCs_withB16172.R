@@ -1,7 +1,10 @@
 # ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT SARS-CoV2 VARIANTS OF CONCERN IN BELGIUM ####
 # Tom Wenseleers
 
-# Data: weekly Sciensano report from the 28th of May 2021 with baseline surveillance data on B.1.617.2 & data from later week manually added from GISAID (attempt to use only baseline surveillance)
+# Data: baseline surveillance sequencing results provided in weekly Sciensano reports up to the 4th of June 2021, section 3.4.1,
+# https://covid-19.sciensano.be/nl/covid-19-epidemiologische-situatie (federal test platform) combined with
+# baseline surveillance VOC PCR data from the 8th of June 2021 report "Genomic surveillance of SARS-CoV-2 in Belgium", 
+# https://www.uzleuven.be/nl/laboratoriumgeneeskunde/genomic-surveillance-sars-cov-2-belgium for week 22 (n=230)
 
 # Tom Wenseleers, last update 9 JUNE 2021
 
@@ -53,7 +56,6 @@ set_sum_contrasts() # we use effect coding for all models
 
 # 1. ASSESSMENT OF GROWTH RATE ADVANTAGES OF VOCs B.1.1.7, B.1.351, P.1 and B.1.617.2 IN BELGIUM BASED ON BASELINE SURVEILLANCE SEQUENCING DATA ####
 # (baseline surveillance sequencing results, i.e. randomly sampled)
-# data from weekly Sciensano report of 21/5/2021 + baseline surveillance data on B.1.617.2 manually added from GISAID
 
 be_seqdata = read.csv(paste0(".\\data\\",dat,"\\baseline_surveillance_4VOCs_withB16172.csv"))
 be_seqdata$collection_date = as.Date(be_seqdata$collection_date)
