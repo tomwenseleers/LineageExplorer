@@ -1,6 +1,6 @@
 # ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT VOCs IN THE USA (GISAID GENOMIC EPIDEMIOLOGY METADATA)
 # T. Wenseleers
-# last update 8 JUNE 2021
+# last update 12 JUNE 2021
 
 library(nnet)
 # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
@@ -13,14 +13,14 @@ library(ggthemes)
 library(scales)
 
 today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-06-05")
+today = as.Date("2021-06-11")
 today_num = as.numeric(today)
-today # "2021-06-04"
+today # "2021-06-11"
 plotdir = "VOCs_GISAID"
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 
-# import GISAID genomic epidemiology metadata (file version metadata_2021-06-07_10-10.tsv.gz)
-GISAID = read_tsv(gzfile(".//data//GISAID_genomic_epidemiology//metadata_2021-06-07_10-10.tsv.gz"), col_types = cols(.default = "c")) 
+# import GISAID genomic epidemiology metadata (file version metadata_2021-06-10_09-46.tsv.gz)
+GISAID = read_tsv(gzfile(".//data//GISAID_genomic_epidemiology//metadata_2021-06-10_09-46.tsv.gz"), col_types = cols(.default = "c")) 
 GISAID = as.data.frame(GISAID)
 
 GISAID$date = as.Date(GISAID$date)
@@ -36,12 +36,12 @@ unique(GISAID$host)
 GISAID[GISAID$host!="Human","strain"]
 GISAID = GISAID[GISAID$host=="Human",]
 GISAID = GISAID[GISAID$date>=as.Date("2020-01-01"),]
-range(GISAID$date) # "2020-01-01" "2021-05-31"
+range(GISAID$date) # "2020-01-01" "2021-06-06"
 
 firstdetB16172 = GISAID[GISAID$pango_lineage=="B.1.617.2",]
 firstdetB16172 = firstdetB16172[!is.na(firstdetB16172$date),]
 firstdetB16172 = firstdetB16172[firstdetB16172$date==min(firstdetB16172$date),]
-firstdetB16172 # 21 nov Uttar Pradesh, Varanasi India, 28 yr old male B.1.617.2
+firstdetB16172 # 7 sept 63r old male from Madhya Pradesh
 
 # GISAID = GISAID[grepl("2021-", GISAID$date),]
 sum(is.na(GISAID$purpose_of_sequencing)) == nrow(GISAID) # field purpose_of_sequencing left blank unfortunately
@@ -77,35 +77,44 @@ colnames(table_country_lineage) = c("Country","Lineage","Count")
 tblB1617 = table_country_lineage[grepl(sel_target_VOC, table_country_lineage$Lineage, fixed=T)&table_country_lineage$Count>10,]
 tblB1617
 #              Country  Lineage Count
-# 167996      Australia B.1.617+   144
-# 168000        Bahrain B.1.617+    19
-# 168001     Bangladesh B.1.617+    20
-# 168004        Belgium B.1.617+   135
-# 168029 Czech Republic B.1.617+    13
-# 168031        Denmark B.1.617+   105
-# 168041         France B.1.617+    91
-# 168046        Germany B.1.617+   421
-# 168060          India B.1.617+  3932
-# 168061      Indonesia B.1.617+    32
-# 168062           Iran B.1.617+    11
-# 168064        Ireland B.1.617+   184
-# 168065         Israel B.1.617+    36
-# 168066          Italy B.1.617+   133
-# 168068          Japan B.1.617+   165
-# 168086         Mexico B.1.617+    28
-# 168095    Netherlands B.1.617+    50
-# 168096    New Zealand B.1.617+    15
-# 168100         Norway B.1.617+    37
-# 168109         Poland B.1.617+    41
-# 168110       Portugal B.1.617+    77
-# 168113        Romania B.1.617+    19
-# 168125      Singapore B.1.617+   292
-# 168130   South Africa B.1.617+    14
-# 168132          Spain B.1.617+    86
-# 168135         Sweden B.1.617+    18
-# 168136    Switzerland B.1.617+    75
-# 168148 United Kingdom B.1.617+ 12253
-# 168150            USA B.1.617+  1658
+# 169500      Australia B.1.617+   219
+# 169504        Bahrain B.1.617+    22
+# 169505     Bangladesh B.1.617+    44
+# 169508        Belgium B.1.617+   206
+# 169516         Brazil B.1.617+    14
+# 169522         Canada B.1.617+    52
+# 169533 Czech Republic B.1.617+    15
+# 169535        Denmark B.1.617+   121
+# 169545         France B.1.617+   121
+# 169550        Germany B.1.617+   634
+# 169564          India B.1.617+  6250
+# 169565      Indonesia B.1.617+    34
+# 169566           Iran B.1.617+    11
+# 169568        Ireland B.1.617+   236
+# 169569         Israel B.1.617+    36
+# 169570          Italy B.1.617+   150
+# 169572          Japan B.1.617+   167
+# 169583     Luxembourg B.1.617+    58
+# 169586       Malaysia B.1.617+    12
+# 169590         Mexico B.1.617+    37
+# 169599    Netherlands B.1.617+    62
+# 169600    New Zealand B.1.617+    17
+# 169604         Norway B.1.617+    56
+# 169613         Poland B.1.617+    64
+# 169614       Portugal B.1.617+    74
+# 169615          Qatar B.1.617+    23
+# 169617        Romania B.1.617+    19
+# 169618         Russia B.1.617+   168
+# 169629      Singapore B.1.617+   305
+# 169634   South Africa B.1.617+    21
+# 169635    South Korea B.1.617+    32
+# 169637          Spain B.1.617+   172
+# 169640         Sweden B.1.617+    42
+# 169641    Switzerland B.1.617+    95
+# 169643       Thailand B.1.617+    93
+# 169653 United Kingdom B.1.617+ 22792
+# 169655            USA B.1.617+  2198
+# 169658        Vietnam B.1.617+    54
 
 sel_countries_target = unique(as.character(table_country_lineage[grepl(sel_target_VOC, table_country_lineage$Lineage)&table_country_lineage$Count>100,]$Country))
 sel_countries_target
@@ -269,7 +278,7 @@ table(GISAID_sel$LINEAGE2)
 # B.1.1.7       B.1     B.1.2   B.1.351   B.1.429   B.1.526       P.1 B.1.617.1 B.1.617.2     other 
 #  153268     36382     84349      1724     30058     19870     11978       235      1420    177186
 
-range(GISAID_sel$date) # "2020-01-03" "2021-06-01"
+range(GISAID_sel$date) # "2020-01-03" "2021-06-04"
 
 # aggregated data to make Muller plots of raw data
 # aggregated by week for selected variant lineages
@@ -431,16 +440,16 @@ delta_r_usa = data.frame(confint(emtrusa,
                          p.value=as.data.frame(emtrusa$contrasts)$p.value)
 delta_r_usa
 #                         contrast      estimate         SE df   asymp.LCL  asymp.UCL   p.value
-# 1        B.1 - B.1.1.7 -0.047397512 0.0003975381 NA -0.048176672 -0.046618351 4.551914e-15
-# 2      B.1.2 - B.1.1.7 -0.065623372 0.0003772277 NA -0.066362725 -0.064884020 4.551914e-15
-# 3  B.1.1.519 - B.1.1.7 -0.051627731 0.0009920338 NA -0.053572082 -0.049683381 4.551914e-15
-# 4    B.1.351 - B.1.1.7 -0.010651130 0.0018366240 NA -0.014250847 -0.007051413 2.286988e-07
-# 5    B.1.429 - B.1.1.7 -0.057214440 0.0005614526 NA -0.058314867 -0.056114013 4.551914e-15
-# 6    B.1.526 - B.1.1.7 -0.017357306 0.0007556718 NA -0.018838395 -0.015876216 4.551914e-15
-# 7        P.1 - B.1.1.7  0.005939672 0.0012129550 NA  0.003562324  0.008317021 1.856053e-05
-# 8  B.1.617.1 - B.1.1.7  0.024899792 0.0063396675 NA  0.012474272  0.037325312 1.085243e-03
-# 9  B.1.617.2 - B.1.1.7  0.070329433 0.0023281113 NA  0.065766419  0.074892447 4.551914e-15
-# 10     other - B.1.1.7 -0.045866540 0.0003325045 NA -0.046518237 -0.045214844 4.551914e-15
+# 1        B.1 - B.1.1.7 -0.044903415 0.0004486334 NA -0.045782721 -0.044024110 4.551914e-15
+# 2      B.1.2 - B.1.1.7 -0.062716997 0.0004330041 NA -0.063565669 -0.061868325 4.551914e-15
+# 3  B.1.1.519 - B.1.1.7 -0.051655999 0.0010049880 NA -0.053625739 -0.049686258 4.551914e-15
+# 4    B.1.351 - B.1.1.7 -0.008783653 0.0017264225 NA -0.012167379 -0.005399927 7.666043e-06
+# 5    B.1.429 - B.1.1.7 -0.055160278 0.0005827699 NA -0.056302486 -0.054018070 4.551914e-15
+# 6    B.1.526 - B.1.1.7 -0.015917926 0.0007399809 NA -0.017368262 -0.014467590 4.551914e-15
+# 7        P.1 - B.1.1.7  0.007315964 0.0011573052 NA  0.005047687  0.009584240 1.419977e-08
+# 8  B.1.617.1 - B.1.1.7  0.041004528 0.0051546644 NA  0.030901572  0.051107485 9.845458e-13
+# 9  B.1.617.2 - B.1.1.7  0.080220388 0.0019608439 NA  0.076377205  0.084063572 4.551914e-15
+# 10     other - B.1.1.7 -0.042480694 0.0003901294 NA -0.043245334 -0.041716054 4.551914e-15
 
 
 # fitted prop of different LINEAGES in the USA today
@@ -450,22 +459,22 @@ multinom_preds_today_avg = data.frame(emmeans(fit3_usa_multi, ~ LINEAGE2|1,
                                               mode="prob", df=NA))
 multinom_preds_today_avg
 #    LINEAGE2         prob           SE df    asymp.LCL    asymp.UCL
-# 1    B.1.1.7 0.665085245 9.537197e-03 NA 0.6463926827 0.683777807
-# 2        B.1 0.001076100 4.081378e-05 NA 0.0009961066 0.001156094
-# 3      B.1.2 0.001750906 5.527119e-05 NA 0.0016425761 0.001859235
-# 4  B.1.1.519 0.003013862 1.803726e-04 NA 0.0026603378 0.003367386
-# 5    B.1.351 0.005903325 5.750782e-04 NA 0.0047761926 0.007030458
-# 6    B.1.429 0.003212750 1.273375e-04 NA 0.0029631730 0.003462327
-# 7    B.1.526 0.028532949 1.085721e-03 NA 0.0264049747 0.030660923
-# 8        P.1 0.103897931 3.941544e-03 NA 0.0961726456 0.111623216
-# 9  B.1.617.1 0.002086205 5.948964e-04 NA 0.0009202299 0.003252181
-# 10 B.1.617.2 0.170913478 1.079366e-02 NA 0.1497582914 0.192068664
-# 11     other 0.014527250 3.663528e-04 NA 0.0138092116 0.015245288
+# 1    B.1.1.7 0.5675888177 1.191686e-02 NA 0.544232193 0.5909454428
+# 2        B.1 0.0007500372 3.323333e-05 NA 0.000684901 0.0008151733
+# 3      B.1.2 0.0012017610 4.577302e-05 NA 0.001112048 0.0012914745
+# 4  B.1.1.519 0.0018026213 1.208983e-04 NA 0.001565665 0.0020395777
+# 5    B.1.351 0.0059424142 5.928059e-04 NA 0.004780536 0.0071042923
+# 6    B.1.429 0.0021943493 9.992451e-05 NA 0.001998501 0.0023901977
+# 7    B.1.526 0.0240660663 1.065506e-03 NA 0.021977713 0.0261544194
+# 8        P.1 0.0935439279 4.100515e-03 NA 0.085507067 0.1015807892
+# 9  B.1.617.1 0.0044971781 1.105183e-03 NA 0.002331059 0.0066632975
+# 10 B.1.617.2 0.2865557253 1.416023e-02 NA 0.258802185 0.3143092654
+# 11     other 0.0118571017 3.807589e-04 NA 0.011110828 0.0126033755
 
-# 33% [30%-37%] non-B.1.1.7
+# 43% [39%-47%] non-B.1.1.7
 colSums(multinom_preds_today_avg[-1, c("prob","asymp.LCL","asymp.UCL")])
 #      prob asymp.LCL asymp.UCL 
-# 0.3349148 0.3001037 0.3697258  
+# 0.4324112 0.3898705 0.4749519 
 
 
 # PLOT MULTINOMIAL FIT
@@ -528,28 +537,28 @@ fit_usa_multi_preds_bystate_withCI$collection_date = as.Date(fit_usa_multi_preds
 fit_usa_multi_preds_bystate_withCI$LINEAGE2 = factor(fit_usa_multi_preds_bystate_withCI$LINEAGE2, levels=levels_LINEAGE2)
 fit_usa_multi_preds2 = fit_usa_multi_preds_bystate_withCI
 
-fit_usa_multi_preds_bystate_withCI[fit_usa_multi_preds_bystate_withCI$collection_date==as.Date("2021-06-06")&fit_usa_multi_preds_bystate_withCI$LINEAGE2=="B.1.617.2",]
+fit_usa_multi_preds_bystate_withCI[fit_usa_multi_preds_bystate_withCI$collection_date==as.Date("2021-06-13")&fit_usa_multi_preds_bystate_withCI$LINEAGE2=="B.1.617.2",]
 #        LINEAGE2 DATE_NUM         STATE       prob          SE df  asymp.LCL  asymp.UCL collection_date
-# 351  B.1.617.2    18784       Arizona 0.09958093 0.026942362 NA 0.04677487 0.15238699      2021-06-06
-# 780  B.1.617.2    18784    California 0.27977698 0.020279348 NA 0.24003019 0.31952377      2021-06-06
-# 1209 B.1.617.2    18784      Colorado 0.24743118 0.022232888 NA 0.20385552 0.29100684      2021-06-06
-# 1638 B.1.617.2    18784       Florida 0.10825029 0.013355180 NA 0.08207462 0.13442596      2021-06-06
-# 2067 B.1.617.2    18784      Illinois 0.11127194 0.014085080 NA 0.08366569 0.13887819      2021-06-06
-# 2496 B.1.617.2    18784       Indiana 0.18384167 0.025889384 NA 0.13309941 0.23458393      2021-06-06
-# 2925 B.1.617.2    18784        Kansas 0.21435103 0.028973733 NA 0.15756356 0.27113850      2021-06-06
-# 3354 B.1.617.2    18784      Maryland 0.13447865 0.023356819 NA 0.08870013 0.18025717      2021-06-06
-# 3783 B.1.617.2    18784 Massachusetts 0.18646085 0.016972203 NA 0.15319594 0.21972576      2021-06-06
-# 4212 B.1.617.2    18784     Minnesota 0.05709520 0.009506131 NA 0.03846352 0.07572687      2021-06-06
-# 4641 B.1.617.2    18784      Missouri 0.24650529 0.044577100 NA 0.15913578 0.33387480      2021-06-06
-# 5070 B.1.617.2    18784      Nebraska 0.11007176 0.037991369 NA 0.03561005 0.18453347      2021-06-06
-# 5499 B.1.617.2    18784    New Jersey 0.27974676 0.028308616 NA 0.22426290 0.33523063      2021-06-06
-# 5928 B.1.617.2    18784      New York 0.18491593 0.018647379 NA 0.14836774 0.22146412      2021-06-06
-# 6357 B.1.617.2    18784        Oregon 0.05574835 0.020272323 NA 0.01601533 0.09548137      2021-06-06
-# 6786 B.1.617.2    18784         Texas 0.18787694 0.019606641 NA 0.14944863 0.22630525      2021-06-06
-# 7215 B.1.617.2    18784          Utah 0.41954464 0.046294134 NA 0.32880981 0.51027948      2021-06-06
-# 7644 B.1.617.2    18784      Virginia 0.19976433 0.031238521 NA 0.13853795 0.26099071      2021-06-06
-# 8073 B.1.617.2    18784    Washington 0.18881715 0.017361974 NA 0.15478830 0.22284599      2021-06-06
-# 8502 B.1.617.2    18784     Wisconsin 0.12031708 0.025105098 NA 0.07111199 0.16952217      2021-06-06
+# 362  B.1.617.2    18791       Arizona 0.2425780 0.04367862 NA 0.15696950 0.3281865      2021-06-13
+# 791  B.1.617.2    18791    California 0.4198529 0.02409480 NA 0.37262801 0.4670779      2021-06-13
+# 1220 B.1.617.2    18791      Colorado 0.4302180 0.02681023 NA 0.37767095 0.4827651      2021-06-13
+# 1649 B.1.617.2    18791       Florida 0.1935387 0.02109506 NA 0.15219310 0.2348842      2021-06-13
+# 2078 B.1.617.2    18791      Illinois 0.2177921 0.02336059 NA 0.17200621 0.2635780      2021-06-13
+# 2507 B.1.617.2    18791       Indiana 0.2896677 0.03429757 NA 0.22244566 0.3568897      2021-06-13
+# 2936 B.1.617.2    18791        Kansas 0.3933147 0.03587644 NA 0.32299815 0.4636312      2021-06-13
+# 3365 B.1.617.2    18791      Maryland 0.2455503 0.03563444 NA 0.17570808 0.3153925      2021-06-13
+# 3794 B.1.617.2    18791 Massachusetts 0.3283536 0.02410497 NA 0.28110868 0.3755984      2021-06-13
+# 4223 B.1.617.2    18791     Minnesota 0.1185615 0.01774051 NA 0.08379073 0.1533322      2021-06-13
+# 4652 B.1.617.2    18791      Missouri 0.5313979 0.04471123 NA 0.44376549 0.6190303      2021-06-13
+# 5081 B.1.617.2    18791      Nebraska 0.1823259 0.05796164 NA 0.06872313 0.2959286      2021-06-13
+# 5510 B.1.617.2    18791    New Jersey 0.4502863 0.03413220 NA 0.38338838 0.5171842      2021-06-13
+# 5939 B.1.617.2    18791      New York 0.3216130 0.02618866 NA 0.27028420 0.3729419      2021-06-13
+# 6368 B.1.617.2    18791        Oregon 0.1149993 0.03685883 NA 0.04275734 0.1872413      2021-06-13
+# 6797 B.1.617.2    18791         Texas 0.3397006 0.02477120 NA 0.29114989 0.3882512      2021-06-13
+# 7226 B.1.617.2    18791          Utah 0.6378122 0.02987422 NA 0.57925977 0.6963646      2021-06-13
+# 7655 B.1.617.2    18791      Virginia 0.3498320 0.04350665 NA 0.26456054 0.4351035      2021-06-13
+# 8084 B.1.617.2    18791    Washington 0.3283849 0.02540988 NA 0.27858249 0.3781874      2021-06-13
+# 8513 B.1.617.2    18791     Wisconsin 0.2237085 0.04136560 NA 0.14263341 0.3047836      2021-06-13
 
 # fit_usa_multi_preds2 = fit_usa_multi_preds_bystate # without CIs
 # fit_usa_multi_preds2$asymp.LCL = NA
@@ -618,7 +627,7 @@ plot_usa_mfit = qplot(data=fit_usa_multi_preds2, x=collection_date, y=100*prob, 
                      limits=as.Date(c("2020-11-01",NA)), expand=c(0,0)) +
   # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
   #                     labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
-  coord_cartesian(xlim=as.Date(c("2020-11-01","2021-06-14")),
+  coord_cartesian(xlim=as.Date(c("2020-11-01",NA)),
                   ylim=c(0,100), expand=c(0,0)) +
   scale_fill_manual("variant", values=lineage_cols2) +
   scale_colour_manual("variant", values=lineage_cols2) +
@@ -637,6 +646,112 @@ plot_usa_mfit
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\usa_multinom fit by state_response scale.png"), width=10, height=6)
 ggsave(file=paste0(".\\plots\\",plotdir,"\\usa_multinom fit by state_response scale.pdf"), width=10, height=6)
+
+
+
+
+# overall multinomial model predictions with confidence intervals
+fit_usa_multi_preds_withCI = data.frame(emmeans(fit3_usa_multi,
+                                                        ~ LINEAGE2,
+                                                        by=c("DATE_NUM"),
+                                                        at=list(DATE_NUM=seq(date.from, date.to, by=7)),  # by=7 to speed up things a bit
+                                                        mode="prob", df=NA))
+fit_usa_multi_preds_withCI$collection_date = as.Date(fit_usa_multi_preds_withCI$DATE_NUM, origin="1970-01-01")
+fit_usa_multi_preds_withCI$LINEAGE2 = factor(fit_usa_multi_preds_withCI$LINEAGE2, levels=levels_LINEAGE2)
+fit_usa_multi_preds3 = fit_usa_multi_preds_withCI
+
+fit_usa_multi_preds_withCI[fit_usa_multi_preds_withCI$collection_date==as.Date("2021-06-13")&fit_usa_multi_preds_withCI$LINEAGE2=="B.1.617.2",]
+#        LINEAGE2 DATE_NUM         STATE       prob          SE df  asymp.LCL  asymp.UCL collection_date
+# 362 B.1.617.2    18791 0.3179744 0.01571049 NA 0.2871824 0.3487664      2021-06-13
+
+# fit_usa_multi_preds2 = fit_usa_multi_preds # without CIs
+# fit_usa_multi_preds2$asymp.LCL = NA
+# fit_usa_multi_preds2$asymp.UCL = NA
+
+
+# on logit scale:
+
+ymin = 0.001
+ymax = 0.999
+fit_usa_multi_preds3$asymp.LCL[fit_usa_multi_preds3$asymp.LCL<ymin] = ymin
+fit_usa_multi_preds3$asymp.UCL[fit_usa_multi_preds3$asymp.UCL<ymin] = ymin
+fit_usa_multi_preds3$asymp.UCL[fit_usa_multi_preds3$asymp.UCL>ymax] = ymax
+fit_usa_multi_preds3$prob[fit_usa_multi_preds3$prob<ymin] = ymin
+
+plot_usa_avg_mfit_logit = qplot(data=fit_usa_multi_preds3, x=collection_date, y=prob, geom="blank") +
+  # facet_wrap(~ STATE) +
+  geom_ribbon(aes(y=prob, ymin=asymp.LCL, ymax=asymp.UCL, colour=NULL,
+                  fill=LINEAGE2
+  ), alpha=I(0.3)) +
+  geom_line(aes(y=prob,
+                colour=LINEAGE2
+  ), alpha=I(1)) +
+  ylab("Share (%)") +
+  theme_hc() + xlab("") +
+  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN THE USA\n(GISAID data 20 states, multinomial fit)") +
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
+                     limits=as.Date(c("2020-11-01",NA)), expand=c(0,0)) +
+  scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
+                      labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
+  scale_fill_manual("variant", values=lineage_cols2) +
+  scale_colour_manual("variant", values=lineage_cols2) +
+  geom_point(data=data_agbyweek2,
+             aes(x=collection_date, y=prop, size=total,
+                 colour=LINEAGE2
+             ),
+             alpha=I(1)) +
+  scale_size_continuous("total number\nsequenced", trans="sqrt",
+                        range=c(0.5, 3), limits=c(1,max(data_agbyweek2$total)), breaks=c(100,1000,10000)) +
+  # guides(fill=FALSE) +
+  # guides(colour=FALSE) +
+  theme(legend.position = "right") +
+  xlab("Collection date")+
+  coord_cartesian(xlim=c(as.Date("2020-11-01"),as.Date(date.to, origin="1970-01-01")), ylim=c(0.001, 0.9901), expand=c(0,0))
+plot_usa_avg_mfit_logit
+
+ggsave(file=paste0(".\\plots\\",plotdir,"\\usa_multinom fit_logit scale.png"), width=10, height=6)
+ggsave(file=paste0(".\\plots\\",plotdir,"\\usa_multinom fit_logit scale.pdf"), width=10, height=6)
+
+
+# on response scale:
+plot_usa_avg_mfit = qplot(data=fit_usa_multi_preds3, x=collection_date, y=100*prob, geom="blank") +
+  # facet_wrap(~ STATE) +
+  geom_ribbon(aes(y=100*prob, ymin=100*asymp.LCL, ymax=100*asymp.UCL, colour=NULL,
+                  fill=LINEAGE2
+  ), alpha=I(0.3)) +
+  geom_line(aes(y=100*prob,
+                colour=LINEAGE2
+  ), alpha=I(1)) +
+  ylab("Share (%)") +
+  theme_hc() + xlab("") +
+  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN THE USA\n(GISAID data 20 states, multinomial fit)") +
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01"))),1,1),
+                     limits=as.Date(c("2020-11-01",NA)), expand=c(0,0)) +
+  # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
+  #                     labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
+  coord_cartesian(xlim=as.Date(c("2020-11-01",NA)),
+                  ylim=c(0,100), expand=c(0,0)) +
+  scale_fill_manual("variant", values=lineage_cols2) +
+  scale_colour_manual("variant", values=lineage_cols2) +
+  geom_point(data=data_agbyweek2,
+             aes(x=collection_date, y=100*prop, size=total,
+                 colour=LINEAGE2
+             ),
+             alpha=I(1)) +
+  scale_size_continuous("total number\nsequenced", trans="sqrt",
+                        range=c(0.5, 3), limits=c(1,max(data_agbyweek2$total)), breaks=c(100,1000,10000)) +
+  # guides(fill=FALSE) +
+  # guides(colour=FALSE) +
+  theme(legend.position = "right") +
+  xlab("Collection date")
+plot_usa_avg_mfit
+
+ggsave(file=paste0(".\\plots\\",plotdir,"\\usa_multinom fit_response scale.png"), width=10, height=6)
+ggsave(file=paste0(".\\plots\\",plotdir,"\\usa_multinom fit_response scale.pdf"), width=10, height=6)
+
+
 
 
 

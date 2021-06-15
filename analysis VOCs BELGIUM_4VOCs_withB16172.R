@@ -6,7 +6,7 @@
 # baseline surveillance VOC PCR data from the 8th of June 2021 report "Genomic surveillance of SARS-CoV-2 in Belgium", 
 # https://www.uzleuven.be/nl/laboratoriumgeneeskunde/genomic-surveillance-sars-cov-2-belgium for week 22 (n=230)
 
-# Tom Wenseleers, last update 9 JUNE 2021
+# Tom Wenseleers, last update 11 JUNE 2021
 
 library(lme4)
 library(splines)
@@ -49,7 +49,7 @@ suppressWarnings(dir.create(paste0(".//plots//",dat)))
 filedate = as.Date(gsub("_","-",dat)) # file date
 filedate_num = as.numeric(filedate)
 # today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-06-09")
+today = as.Date("2021-06-11")
 today_num = as.numeric(today)
 
 set_sum_contrasts() # we use effect coding for all models
@@ -68,7 +68,7 @@ be_seqdata$baselinesurv_n_allVOCs = be_seqdata$baselinesurv_n_B.1.1.7+be_seqdata
 be_seqdata$baselinesurv_propVOCs = be_seqdata$baselinesurv_n_allVOCs / be_seqdata$baselinesurv_total_sequenced
 
 head(be_seqdata)
-range(be_seqdata$collection_date) # "2020-12-03" "2021-06-03"
+range(be_seqdata$collection_date) # "2020-12-03" "2021-06-03" 
 
 
 # BASELINE SURVEILLANCE DATA ####
@@ -373,18 +373,18 @@ ggsave(file=paste0(".\\plots\\",dat,"\\baseline_surveillance_4VOCs_multinomial f
 # estimated share of different variants of concern among lab diagnoses today
 be_seq_mfit0_preds2[be_seq_mfit0_preds2$collection_date==today,]
 #                     variant collection_date_num        prob          SE df    asymp.LCL   asymp.UCL collection_date
-# 2471           B.1.1.7 (UK)               18787 0.778425705 0.0280347831 NA 0.723478540 0.833372870      2021-06-09
-# 2473 B.1.351 (South Africa)               18787 0.001495316 0.0004006385 NA 0.000710079 0.002280553      2021-06-09
-# 2474           P.1 (Brazil)               18787 0.093999825 0.0103104489 NA 0.073791716 0.114207933      2021-06-09
-# 2475      B.1.617.2 (India)               18787 0.104045189 0.0301796102 NA 0.044894240 0.163196138      2021-06-09
-# 9901               all VOCs               18787 0.974868041 0.0113782437 NA 0.952567093 0.997168989      2021-06-09
+# 2481           B.1.1.7 (UK)               18789 0.760817312 0.0335950982 NA 0.6949721295 0.826662494      2021-06-11
+# 2483 B.1.351 (South Africa)               18789 0.001325673 0.0003673059 NA 0.0006057662 0.002045579      2021-06-11
+# 2484           P.1 (Brazil)               18789 0.093316373 0.0107946075 NA 0.0721593305 0.114473415      2021-06-11
+# 2485      B.1.617.2 (India)               18789 0.123567185 0.0369041100 NA 0.0512364582 0.195897911      2021-06-11
+# 497                all VOCs               18789 0.979026542           NA NA 0.8189736844 1.139079399      2021-06-11
 
 # estimated share of different variants of concern among new infections today (assuming 1 week between infection & diagnosis)
 be_seq_mfit0_preds2[be_seq_mfit0_preds2$collection_date==(today+7),]
 #                      variant collection_date_num        prob          SE df    asymp.LCL   asymp.UCL collection_date
-# 2506            B.1.1.7 (UK)               18794 0.7047033262 0.0560044086 NA 0.5949367023 0.814469950      2021-06-16
-# 2508  B.1.351 (South Africa)               18794 0.0009621933 0.0002952326 NA 0.0003835481 0.001540839      2021-06-16
-# 2509            P.1 (Brazil)               18794 0.0898675184 0.0128603565 NA 0.0646616828 0.115073354      2021-06-16
-# 2510       B.1.617.2 (India)               18794 0.1862832980 0.0634814912 NA 0.0618618615 0.310704734      2021-06-16
-# 10041               all VOCs               18794 0.9770194857 0.0114410641 NA 0.9545954122 0.999443559      2021-06-16
+# 2516           B.1.1.7 (UK)               18796 0.6770004885 0.0649812683 NA 0.5496395429 0.804361434      2021-06-18
+# 2518 B.1.351 (South Africa)               18796 0.0008384652 0.0002675848 NA 0.0003140086 0.001362922      2021-06-18
+# 2519           P.1 (Brazil)               18796 0.0876905909 0.0136297166 NA 0.0609768372 0.114404344      2021-06-18
+# 2520      B.1.617.2 (India)               18796 0.2174575602 0.0740995503 NA 0.0722251102 0.362690010      2021-06-18
+# 5041               all VOCs               18796 0.9829871048           NA NA 0.6831554990 1.282818711      2021-06-18
 

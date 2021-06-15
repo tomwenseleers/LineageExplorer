@@ -192,7 +192,7 @@ rowSums(table(GISAID_sel$LINEAGE1,GISAID_sel$country))
 
 
 
-# ANALYSIS VOCs IN INDIA ####
+# ANALYSIS VOC LINEAGE FREQUENCIES IN INDIA ####
 
 GISAID_india = GISAID_sel[GISAID_sel$country=="India",]
 nrow(GISAID_india[is.na(GISAID_india$LINEAGE1),]) # 0 unknown pango clade
