@@ -387,3 +387,9 @@ be_seq_mfit0_preds[as.character(be_seq_mfit0_preds$collection_date)==as.characte
 # 1009 B.1.617.2 (delta)             18800.5 0.257322285 0.0458682023 NA 0.1674222605 0.347222310      2021-06-22
 # 1010             other             18800.5 0.024909541 0.0031596918 NA 0.0187166591 0.031102423      2021-06-22
 
+# estimated date that B.1.617.2 would make out >50% of all lab diagnoses: "2021-07-05" ["2021-06-29"-"2021-07-14"] 95% CLs (7 days earlier for infections)
+be_seq_mfit0_preds[be_seq_mfit0_preds$variant=="B.1.617.2 (delta)","collection_date"][which(be_seq_mfit0_preds[be_seq_mfit0_preds$variant=="B.1.617.2 (delta)","prob"] >= 0.5)[1]]
+be_seq_mfit0_preds[be_seq_mfit0_preds$variant=="B.1.617.2 (delta)","collection_date"][which(be_seq_mfit0_preds[be_seq_mfit0_preds$variant=="B.1.617.2 (delta)","asymp.LCL"] >= 0.5)[1]]
+be_seq_mfit0_preds[be_seq_mfit0_preds$variant=="B.1.617.2 (delta)","collection_date"][which(be_seq_mfit0_preds[be_seq_mfit0_preds$variant=="B.1.617.2 (delta)","asymp.UCL"] >= 0.5)[1]]
+
+
