@@ -163,46 +163,61 @@ delta_r_4VOCs
 # B.1.617.2 (delta) - B.1.1.7 (alpha)  0.086126188  0.068457745  0.1037946310
 # other - B.1.1.7 (alpha)             -0.004315329 -0.007882082 -0.0007485765
 
-# pairwise contrasts in growth rate (here with Tukey correction)
+# pairwise contrasts in growth rate today (no Tukey correction applied)
 emtrends(be_seq_mfit0, revpairwise ~ variant|1, 
          var="collection_date_num",  mode="latent",
          at=list(collection_date_num=today_num), 
-         df=NA)$contrasts
+         df=NA, adjust="none")$contrasts
 # contrast                            estimate      SE df z.ratio p.value
 # B.1.351 (beta) - B.1.1.7 (alpha)    -0.03549 0.00372 NA -9.533  <.0001 
-# P.1 (gamma) - B.1.1.7 (alpha)        0.00605 0.00220 NA  2.750  0.0471 
+# P.1 (gamma) - B.1.1.7 (alpha)        0.00605 0.00220 NA  2.750  0.0060 
 # P.1 (gamma) - B.1.351 (beta)         0.04154 0.00428 NA  9.718  <.0001 
 # B.1.617.2 (delta) - B.1.1.7 (alpha)  0.08613 0.00901 NA  9.554  <.0001 
 # B.1.617.2 (delta) - B.1.351 (beta)   0.12162 0.00975 NA 12.472  <.0001 
 # B.1.617.2 (delta) - P.1 (gamma)      0.08007 0.00922 NA  8.682  <.0001 
-# other - B.1.1.7 (alpha)             -0.00432 0.00182 NA -2.371  0.1232 
+# other - B.1.1.7 (alpha)             -0.00432 0.00182 NA -2.371  0.0177 
 # other - B.1.351 (beta)               0.03117 0.00396 NA  7.865  <.0001 
-# other - P.1 (gamma)                 -0.01037 0.00278 NA -3.731  0.0018 
+# other - P.1 (gamma)                 -0.01037 0.00278 NA -3.731  0.0002 
 # other - B.1.617.2 (delta)           -0.09044 0.00918 NA -9.848  <.0001 
 # 
-# Degrees-of-freedom method: user-specified 
-# P value adjustment: tukey method for comparing a family of 5 estimates 
+# Degrees-of-freedom method: user-specified
 
-# confidence intervals:
+# pairwise contrasts in growth rate today with confidence intervals:
 confint(emtrends(be_seq_mfit0, revpairwise ~ variant|1, 
          var="collection_date_num",  mode="latent",
          at=list(collection_date_num=today_num), 
-         df=NA))
+         df=NA, adjust="none"))$contrasts
 # contrast                            estimate      SE df asymp.LCL asymp.UCL
-# B.1.351 (beta) - B.1.1.7 (alpha)    -0.03549 0.00372 NA -4.56e-02 -0.025335
-# P.1 (gamma) - B.1.1.7 (alpha)        0.00605 0.00220 NA  4.79e-05  0.012060
-# P.1 (gamma) - B.1.351 (beta)         0.04154 0.00428 NA  2.99e-02  0.053205
-# B.1.617.2 (delta) - B.1.1.7 (alpha)  0.08613 0.00901 NA  6.15e-02  0.110716
-# B.1.617.2 (delta) - B.1.351 (beta)   0.12162 0.00975 NA  9.50e-02  0.148216
-# B.1.617.2 (delta) - P.1 (gamma)      0.08007 0.00922 NA  5.49e-02  0.105230
-# other - B.1.1.7 (alpha)             -0.00432 0.00182 NA -9.28e-03  0.000649
-# other - B.1.351 (beta)               0.03117 0.00396 NA  2.04e-02  0.041986
-# other - P.1 (gamma)                 -0.01037 0.00278 NA -1.79e-02 -0.002788
-# other - B.1.617.2 (delta)           -0.09044 0.00918 NA -1.15e-01 -0.065391
+# B.1.351 (beta) - B.1.1.7 (alpha)    -0.03549 0.00372 NA  -0.04279 -0.028193
+# P.1 (gamma) - B.1.1.7 (alpha)        0.00605 0.00220 NA   0.00174  0.010369
+# P.1 (gamma) - B.1.351 (beta)         0.04154 0.00428 NA   0.03316  0.049922
+# B.1.617.2 (delta) - B.1.1.7 (alpha)  0.08613 0.00901 NA   0.06846  0.103795
+# B.1.617.2 (delta) - B.1.351 (beta)   0.12162 0.00975 NA   0.10250  0.140729
+# B.1.617.2 (delta) - P.1 (gamma)      0.08007 0.00922 NA   0.06200  0.098149
+# other - B.1.1.7 (alpha)             -0.00432 0.00182 NA  -0.00788 -0.000749
+# other - B.1.351 (beta)               0.03117 0.00396 NA   0.02341  0.038943
+# other - P.1 (gamma)                 -0.01037 0.00278 NA  -0.01582 -0.004922
+# other - B.1.617.2 (delta)           -0.09044 0.00918 NA  -0.10844 -0.072442
 # 
 # Degrees-of-freedom method: user-specified 
 # Confidence level used: 0.95 
-# Conf-level adjustment: tukey method for comparing a family of 5 estimates 
+
+# pairwise contrasts in growth rate evaluated on the 21st of January, when B.1.1.7 made up 16% of all diagnosed infections, with confidence intervals:
+confint(emtrends(be_seq_mfit0, revpairwise ~ variant|1, 
+                 var="collection_date_num",  mode="latent",
+                 at=list(collection_date_num=as.numeric(as.Date("2021-01-21"))), 
+                 df=NA, adjust="none"))$contrasts
+# contrast                            estimate      SE df asymp.LCL asymp.UCL
+# B.1.351 (beta) - B.1.1.7 (alpha)     -0.0172 0.00392 NA   -0.0249  -0.00955
+# P.1 (gamma) - B.1.1.7 (alpha)         0.0262 0.00545 NA    0.0155   0.03693
+# P.1 (gamma) - B.1.351 (beta)          0.0435 0.00660 NA    0.0305   0.05641
+# B.1.617.2 (delta) - B.1.1.7 (alpha)   0.0641 0.08623 NA   -0.1049   0.23310
+# B.1.617.2 (delta) - B.1.351 (beta)    0.0813 0.08632 NA   -0.0878   0.25052
+# B.1.617.2 (delta) - P.1 (gamma)       0.0379 0.08636 NA   -0.1314   0.20713
+# other - B.1.1.7 (alpha)              -0.0774 0.00201 NA   -0.0814  -0.07351
+# other - B.1.351 (beta)               -0.0602 0.00396 NA   -0.0680  -0.05245
+# other - P.1 (gamma)                  -0.1037 0.00569 NA   -0.1148  -0.09253
+# other - B.1.617.2 (delta)            -0.1415 0.08625 NA   -0.3106   0.02750
 
 
 # implied increase in infectiousness (due to combination of increased transmissibility and/or immune escape)
