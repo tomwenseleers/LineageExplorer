@@ -1354,7 +1354,8 @@ ggtitle("Re VALUES IN ENGLAND BY REGION BASED ON NEW CONFIRMED CASES") +
   # coord_cartesian(xlim=c(as.Date("2020-01-01"),NA))
 
 # calculate above-average intrinsic growth rates per day of each variant over time based on multinomial fit using emtrends weighted effect contrasts ####
-above_avg_r_variants1 = do.call(rbind, lapply(seq(date.from,
+# for best model fit3_sanger_multi
+above_avg_r_variants3 = do.call(rbind, lapply(seq(date.from,
                                                   date.to), 
        function (dat) { 
   wt = as.data.frame(emmeans(fit3_sanger_multi, ~ LINEAGE2, at=list(DATE_NUM=dat), type="response"))$prob   # important: these should sum to 1
@@ -1368,7 +1369,23 @@ above_avg_r_variants1 = do.call(rbind, lapply(seq(date.from,
   out = as.data.frame(confint(contrast(EMT, cons), adjust="none", df=NA))
   # sum(out$estimate*wt) # should sum to zero
   return(out) } ))
-above_avg_r_variants = above_avg_r_variants1
+
+# for simpler model fit1_sanger_multi
+above_avg_r_variants1 = do.call(rbind, lapply(seq(date.from,
+                                                  date.to), 
+                                              function (dat) { 
+                                                wt = as.data.frame(emmeans(fit3_sanger_multi, ~ LINEAGE2, at=list(DATE_NUM=dat), type="response"))$prob   # important: these should sum to 1
+                                                # wt = rep(1/length(levels_LINEAGE2), length(levels_LINEAGE2)) # this would give equal weights, equivalent to emmeans:::eff.emmc(levs=levels_LINEAGE2)
+                                                cons = lapply(seq_along(wt), function (i) { con = -wt; con[i] = 1 + con[i]; con })
+                                                names(cons) = seq_along(cons)
+                                                EMT = emtrends(fit1_sanger_multi,  ~ LINEAGE2, by=c("DATE_NUM","REGION"),
+                                                               var="DATE_NUM", mode="latent",
+                                                               at=list(DATE_NUM=dat,
+                                                                       REGION=levels(SGTF_predsbyregion$REGION)))
+                                                out = as.data.frame(confint(contrast(EMT, cons), adjust="none", df=NA))
+                                                # sum(out$estimate*wt) # should sum to zero
+                                                return(out) } ))
+above_avg_r_variants = above_avg_r_variants3
 above_avg_r_variants$contrast = factor(above_avg_r_variants$contrast, 
                                        levels=1:length(levels_LINEAGE2), 
                                        labels=levels(data_agbyweeknhsregion1$LINEAGE2))
