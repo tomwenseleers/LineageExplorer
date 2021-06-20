@@ -1040,13 +1040,23 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\sanger S dropout_multinom fit_respons
 # cases_uk_ltla = cases_uk_ltla[!is.na(cases_uk_ltla$REGION),]
 # cases_uk_ltla$REGION = factor(cases_uk_ltla$REGION, levels=levels_REGION)
 
-# total new cases by region :
+# daily new cases by region :
 cases_uk_region = read.csv("https://api.coronavirus.data.gov.uk/v2/data?areaType=region&metric=newCasesBySpecimenDateRollingSum&metric=newCasesBySpecimenDate&format=csv")
 cases_uk_region$date = as.Date(cases_uk_region$date)
 cases_uk_region$DATE_NUM = as.numeric(cases_uk_region$date)
 cases_uk_region$REGION = factor(cases_uk_region$areaName, levels=levels_REGION)
 cases_uk_region$areaName = NULL
-# total new cases by region & age group :
+
+ggplot(data=cases_uk_region, 
+       aes(x=date, y=newCasesBySpecimenDate, group=REGION, colour=REGION, fill=REGION)) +
+  facet_wrap(~REGION) +
+  geom_point(cex=I(0.2)) +
+  geom_smooth(method="gam", se=TRUE, formula = y ~ s(x, k = 30)) + 
+  scale_y_log10() + ylab("New cases (per day)") + ggtitle("CONFIRMED SARS-CoV2 CASES PER DAY IN ENGLAND BY ONS REGION")
+
+ggsave(file=paste0(".\\plots\\",plotdir,"\\confirmed cases England by ONS region.png"), width=8, height=6)
+
+# daily  new cases by ONS region & age group :
 cases_uk_age_region = read.csv("https://api.coronavirus.data.gov.uk/v2/data?areaType=region&metric=newCasesBySpecimenDateAgeDemographics&format=csv")
 cases_uk_age_region$date = as.Date(cases_uk_age_region$date)
 cases_uk_age_region$DATE_NUM = as.numeric(cases_uk_age_region$date)
@@ -1077,11 +1087,23 @@ ggplot(data=cases_ENG_age[cases_ENG_age$age %in% c("00_59","60+"),],
   geom_smooth(method="gam", se=TRUE, formula = y ~ s(x, k = 30)) + 
   scale_y_log10()
 
-# daily hospital admissions by region
+# daily hospital admissions by NHS region
 hosps_uk_nhsregion = read.csv("https://api.coronavirus.data.gov.uk/v2/data?areaType=nhsRegion&metric=newAdmissions&format=csv") # &metric=newCasesBySpecimenDate gives NAs
 hosps_uk_nhsregion$date = as.Date(hosps_uk_nhsregion$date)
 hosps_uk_nhsregion$DATE_NUM = as.numeric(hosps_uk_nhsregion$date)
 hosps_uk_nhsregion$REGION = factor(hosps_uk_nhsregion$areaName, levels=levels_NHSREGION)
+
+ggplot(data=hosps_uk_nhsregion, 
+       aes(x=date, y=newAdmissions, group=REGION, colour=REGION, fill=REGION)) +
+  facet_wrap(~REGION) +
+  geom_point(cex=I(0.2)) +
+  geom_smooth(method="gam", se=TRUE, formula = y ~ s(x, k = 30)) + 
+  # scale_y_log10() + 
+  ylab("New hospital admissions (per day)") + 
+  ggtitle("HOSPITAL ADMISSIONS PER DAY IN ENGLAND BY NHS REGION")
+
+ggsave(file=paste0(".\\plots\\",plotdir,"\\hospital admissions England by NHS region.png"), width=8, height=6)
+
 
 # daily hospital admission also see 
 # https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
@@ -1437,9 +1459,9 @@ above_avg_r_variants2$Re_LOWER[above_avg_r_variants2$Re_LOWER>=ymax] = ymax
 above_avg_r_variants2$Re_LOWER[above_avg_r_variants2$Re_LOWER<=ymin] = ymin
 above_avg_r_variants2$Re_UPPER[above_avg_r_variants2$Re_UPPER>=ymax] = ymax
 above_avg_r_variants2$Re_UPPER[above_avg_r_variants2$Re_UPPER<=ymin] = ymin
-# above_avg_r_variants2$Re[above_avg_r_variants2$prob<0.001] = NA
-# above_avg_r_variants2$Re_LOWER[above_avg_r_variants2$prob<0.001] = NA
-# above_avg_r_variants2$Re_UPPER[above_avg_r_variants2$prob<0.001] = NA
+above_avg_r_variants2$Re[above_avg_r_variants2$prob<0.01] = NA
+above_avg_r_variants2$Re_LOWER[above_avg_r_variants2$prob<0.01] = NA
+above_avg_r_variants2$Re_UPPER[above_avg_r_variants2$prob<0.01] = NA
 qplot(data=above_avg_r_variants2[!(above_avg_r_variants2$LINEAGE2 %in% c("other")),], 
       x=collection_date, y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribbon", colour=LINEAGE2, fill=LINEAGE2, alpha=I(0.5),
       group=LINEAGE2, linetype=I(0)) +
@@ -1461,7 +1483,7 @@ ggtitle("Re VALUES OF SARS-CoV2 VARIANTS IN ENGLAND BY REGION") +
   theme(legend.position="right",  
         axis.title.x=element_blank())
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\sanger_Re values per variant.png"), width=8, height=6)
-ggsave(file=paste0(".\\plots\\",plotdir,"\\sanger_Re values per variant.pdf"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",plotdir,"\\sanger_Re values per variant_with clipping.png"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",plotdir,"\\sanger_Re values per variant_with clipping.pdf"), width=8, height=6)
 
 

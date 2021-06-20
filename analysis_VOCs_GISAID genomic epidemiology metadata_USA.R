@@ -1,6 +1,6 @@
 # ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT VOCs IN THE USA (GISAID GENOMIC EPIDEMIOLOGY METADATA)
 # T. Wenseleers
-# last update 12 JUNE 2021
+# last update 19 JUNE 2021
 
 library(nnet)
 # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
@@ -13,14 +13,14 @@ library(ggthemes)
 library(scales)
 
 today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-06-11")
+today = as.Date("2021-06-20")
 today_num = as.numeric(today)
-today # "2021-06-11"
+today # "2021-06-20"
 plotdir = "VOCs_GISAID"
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 
-# import GISAID genomic epidemiology metadata (file version metadata_2021-06-10_09-46.tsv.gz)
-GISAID = read_tsv(gzfile(".//data//GISAID_genomic_epidemiology//metadata_2021-06-10_09-46.tsv.gz"), col_types = cols(.default = "c")) 
+# import GISAID genomic epidemiology metadata (file version metadata_2021-06-17_05-53.tsv.gz)
+GISAID = read_tsv(gzfile(".//data//GISAID_genomic_epidemiology//metadata_2021-06-17_05-53.tsv.gz"), col_types = cols(.default = "c")) 
 GISAID = as.data.frame(GISAID)
 
 GISAID$date = as.Date(GISAID$date)
@@ -36,7 +36,7 @@ unique(GISAID$host)
 GISAID[GISAID$host!="Human","strain"]
 GISAID = GISAID[GISAID$host=="Human",]
 GISAID = GISAID[GISAID$date>=as.Date("2020-01-01"),]
-range(GISAID$date) # "2020-01-01" "2021-06-06"
+range(GISAID$date) # "2020-01-01" "2021-06-11"
 
 firstdetB16172 = GISAID[GISAID$pango_lineage=="B.1.617.2",]
 firstdetB16172 = firstdetB16172[!is.na(firstdetB16172$date),]
@@ -45,7 +45,7 @@ firstdetB16172 # 7 sept 63r old male from Madhya Pradesh
 
 # GISAID = GISAID[grepl("2021-", GISAID$date),]
 sum(is.na(GISAID$purpose_of_sequencing)) == nrow(GISAID) # field purpose_of_sequencing left blank unfortunately
-nrow(GISAID) # 1743096
+nrow(GISAID) # 1901769
 GISAID$Week = lubridate::week(GISAID$date)
 GISAID$Year = lubridate::year(GISAID$date)
 GISAID$Year_Week = interaction(GISAID$Year,GISAID$Week)
@@ -59,10 +59,10 @@ unique(GISAID$country)
 unique(GISAID$division) # = city or province or region, sometimes just country
 unique(GISAID$location) # = city
 
-length(unique(GISAID$country[grepl("B.1.617",GISAID$pango_lineage,fixed=T)])) # B.1.617+ now found in 61 countries
+length(unique(GISAID$country[grepl("B.1.617",GISAID$pango_lineage,fixed=T)])) # B.1.617+ now found in 67 countries
 table(GISAID$pango_lineage[grepl("B.1.617",GISAID$pango_lineage,fixed=T)])
 # B.1.617 B.1.617.1 B.1.617.2 B.1.617.3 
-# 1      2791     17357        81 
+# 2      4388     51068       147
 
 GISAID$pango_lineage[grepl("B.1.177",GISAID$pango_lineage,fixed=T)] = "B.1.177+"
 GISAID$pango_lineage[grepl("B.1.36\\>",GISAID$pango_lineage)] = "B.1.36+"
@@ -77,61 +77,67 @@ colnames(table_country_lineage) = c("Country","Lineage","Count")
 tblB1617 = table_country_lineage[grepl(sel_target_VOC, table_country_lineage$Lineage, fixed=T)&table_country_lineage$Count>10,]
 tblB1617
 #              Country  Lineage Count
-# 169500      Australia B.1.617+   219
-# 169504        Bahrain B.1.617+    22
-# 169505     Bangladesh B.1.617+    44
-# 169508        Belgium B.1.617+   206
-# 169516         Brazil B.1.617+    14
-# 169522         Canada B.1.617+    52
-# 169533 Czech Republic B.1.617+    15
-# 169535        Denmark B.1.617+   121
-# 169545         France B.1.617+   121
-# 169550        Germany B.1.617+   634
-# 169564          India B.1.617+  6250
-# 169565      Indonesia B.1.617+    34
-# 169566           Iran B.1.617+    11
-# 169568        Ireland B.1.617+   236
-# 169569         Israel B.1.617+    36
-# 169570          Italy B.1.617+   150
-# 169572          Japan B.1.617+   167
-# 169583     Luxembourg B.1.617+    58
-# 169586       Malaysia B.1.617+    12
-# 169590         Mexico B.1.617+    37
-# 169599    Netherlands B.1.617+    62
-# 169600    New Zealand B.1.617+    17
-# 169604         Norway B.1.617+    56
-# 169613         Poland B.1.617+    64
-# 169614       Portugal B.1.617+    74
-# 169615          Qatar B.1.617+    23
-# 169617        Romania B.1.617+    19
-# 169618         Russia B.1.617+   168
-# 169629      Singapore B.1.617+   305
-# 169634   South Africa B.1.617+    21
-# 169635    South Korea B.1.617+    32
-# 169637          Spain B.1.617+   172
-# 169640         Sweden B.1.617+    42
-# 169641    Switzerland B.1.617+    95
-# 169643       Thailand B.1.617+    93
-# 169653 United Kingdom B.1.617+ 22792
-# 169655            USA B.1.617+  2198
-# 169658        Vietnam B.1.617+    54
+# 170497      Australia B.1.617+   252
+# 170501        Bahrain B.1.617+    24
+# 170502     Bangladesh B.1.617+    44
+# 170505        Belgium B.1.617+   247
+# 170513         Brazil B.1.617+    16
+# 170519         Canada B.1.617+   346
+# 170530 Czech Republic B.1.617+    17
+# 170532        Denmark B.1.617+   121
+# 170542        Finland B.1.617+    19
+# 170543         France B.1.617+   141
+# 170548        Germany B.1.617+   836
+# 170562          India B.1.617+  7435
+# 170563      Indonesia B.1.617+    75
+# 170564           Iran B.1.617+    11
+# 170566        Ireland B.1.617+   299
+# 170567         Israel B.1.617+    63
+# 170568          Italy B.1.617+   184
+# 170570          Japan B.1.617+   170
+# 170581     Luxembourg B.1.617+    58
+# 170583         Malawi B.1.617+    26
+# 170584       Malaysia B.1.617+    12
+# 170588         Mexico B.1.617+    48
+# 170596          Nepal B.1.617+    34
+# 170597    Netherlands B.1.617+    85
+# 170598    New Zealand B.1.617+    17
+# 170602         Norway B.1.617+    69
+# 170611         Poland B.1.617+    71
+# 170612       Portugal B.1.617+   126
+# 170613          Qatar B.1.617+    23
+# 170615        Romania B.1.617+    19
+# 170616         Russia B.1.617+   278
+# 170627      Singapore B.1.617+   762
+# 170632   South Africa B.1.617+    21
+# 170633    South Korea B.1.617+    32
+# 170635          Spain B.1.617+   264
+# 170638         Sweden B.1.617+    42
+# 170639    Switzerland B.1.617+   113
+# 170641       Thailand B.1.617+    94
+# 170651 United Kingdom B.1.617+ 40092
+# 170653            USA B.1.617+  2859
+# 170656        Vietnam B.1.617+    54
 
 sel_countries_target = unique(as.character(table_country_lineage[grepl(sel_target_VOC, table_country_lineage$Lineage)&table_country_lineage$Count>100,]$Country))
 sel_countries_target
-# [1] "Australia"      "Belgium"        "Denmark"        "Germany"        "India"          "Ireland"        "Italy"          "Japan"          "Singapore"     
-# [10] "United Kingdom" "USA"     
+# [1] "Australia"      "Belgium"        "Canada"         "Denmark"        "France"         "Germany"        "India"          "Ireland"       
+# [9] "Italy"          "Japan"          "Portugal"       "Russia"         "Singapore"      "Spain"          "Switzerland"    "United Kingdom"
+# [17] "USA"    
 
 sel_ref_lineage = "B.1.1.7"
 
 sel_countries_ref = as.character(table_country_lineage[table_country_lineage$Lineage==sel_ref_lineage&table_country_lineage$Count>10&table_country_lineage$Country %in% sel_countries_target,]$Country)
 sel_countries_ref
-# [1] "Australia"      "Belgium"        "Denmark"        "Germany"        "India"          "Ireland"        "Italy"          "Japan"          "Singapore"     
-# [10] "United Kingdom" "USA" 
+# [1] "Australia"      "Belgium"        "Canada"         "Denmark"        "France"         "Germany"        "India"          "Ireland"       
+# [9] "Italy"          "Japan"          "Portugal"       "Russia"         "Singapore"      "Spain"          "Switzerland"    "United Kingdom"
+# [17] "USA"
 
 sel_countries = intersect(sel_countries_target, sel_countries_ref)
 sel_countries
-# [1] "Australia"      "Belgium"        "Denmark"        "Germany"        "India"          "Ireland"        "Italy"          "Japan"          "Singapore"     
-# [10] "United Kingdom" "USA"
+# [1] "Australia"      "Belgium"        "Canada"         "Denmark"        "France"         "Germany"        "India"          "Ireland"       
+# [9] "Italy"          "Japan"          "Portugal"       "Russia"         "Singapore"      "Spain"          "Switzerland"    "United Kingdom"
+# [17] "USA" 
 
 # sel_countries = sel_countries[!(sel_countries %in% c("Japan","USA"))] # Japan is almost only import & for USA we do separate analysis by state
 
@@ -140,50 +146,10 @@ sel_countries = "USA"
 
 tblB117 = table_country_lineage[table_country_lineage$Lineage==sel_ref_lineage&table_country_lineage$Count>10&table_country_lineage$Country %in% sel_countries,]
 tblB117
-#              Country Lineage  Count
-# 77750      Australia B.1.1.7    388
-# 77758        Belgium B.1.1.7  13532
-# 77785        Denmark B.1.1.7  46633
-# 77800        Germany B.1.1.7  86479
-# 77814          India B.1.1.7   1050
-# 77818        Ireland B.1.1.7  11146
-# 77820          Italy B.1.1.7  18194
-# 77822          Japan B.1.1.7  11349
-# 77879      Singapore B.1.1.7    182
-# 77902 United Kingdom B.1.1.7 244477
-# 77904            USA B.1.1.7 153269
+
 
 data.frame(Country=tblB1617$Country, Lineage="B.1.617", Perc=100*tblB1617$Count / (tblB1617$Count+tblB117$Count))
-#           Country Lineage        Perc
-# 1       Australia B.1.617 27.067669173
-# 2         Bahrain B.1.617  0.140211055
-# 3      Bangladesh B.1.617  0.042869698
-# 4         Belgium B.1.617  0.155863948
-# 5  Czech Republic B.1.617  1.222953904
-# 6         Denmark B.1.617  0.933250378
-# 7          France B.1.617  0.497675690
-# 8         Germany B.1.617  3.576890399
-# 9           India B.1.617 95.576081672
-# 10      Indonesia B.1.617  0.013087453
-# 11           Iran B.1.617  0.007176409
-# 12        Ireland B.1.617 32.167832168
-# 13         Israel B.1.617  0.265330189
-# 14          Italy B.1.617  0.284394646
-# 15          Japan B.1.617  0.190434421
-# 16         Mexico B.1.617  2.597402597
-# 17    Netherlands B.1.617  0.446588067
-# 18    New Zealand B.1.617  0.082376847
-# 19         Norway B.1.617  0.324960478
-# 20         Poland B.1.617 18.385650224
-# 21       Portugal B.1.617  0.031485889
-# 22        Romania B.1.617  0.012394969
-# 23      Singapore B.1.617 42.941176471
-# 24   South Africa B.1.617  0.103351543
-# 25          Spain B.1.617  0.184079283
-# 26         Sweden B.1.617  0.020809970
-# 27    Switzerland B.1.617  6.666666667
-# 28 United Kingdom B.1.617 52.365485705
-# 29            USA B.1.617  8.351803345
+
 
 
 
@@ -193,7 +159,7 @@ data.frame(Country=tblB1617$Country, Lineage="B.1.617", Perc=100*tblB1617$Count 
 # ANALYSIS OF VOCs ACROSS DIFFERENT STATES OF THE USA ####
 
 GISAID_sel = GISAID[GISAID$country %in% sel_countries,]
-nrow(GISAID_sel) # 1316040
+nrow(GISAID_sel) # 548865
 unique(GISAID_sel$country)
 
 rowSums(table(GISAID_sel$LINEAGE1,GISAID_sel$country))
@@ -201,15 +167,15 @@ rowSums(table(GISAID_sel$LINEAGE1,GISAID_sel$country))
 # GISAID_sel = GISAID_sel[GISAID_sel$country_exposure=="India"&GISAID_sel$country!="India",]
 # nrow(GISAID_sel[is.na(GISAID_sel$LINEAGE1),]) # 0 unknown pango clade
 GISAID_sel = GISAID_sel[!is.na(GISAID_sel$LINEAGE1),]
-nrow(GISAID_sel) # 516488
+nrow(GISAID_sel) # 548859
 
 GISAID_sel = GISAID_sel[GISAID_sel$country==GISAID_sel$country_exposure,] # we remove travel-related cases
-nrow(GISAID_sel) # 516470
+nrow(GISAID_sel) # 548841
 
-sum(GISAID_sel$LINEAGE1=="B.1.617+") # 1656
+sum(GISAID_sel$LINEAGE1=="B.1.617+") # 2857
 unique(GISAID_sel$country[GISAID_sel$LINEAGE1=="B.1.1.7"])
-sum(GISAID_sel$LINEAGE1=="B.1.1.7") # 153268
-sum(GISAID_sel$LINEAGE1=="B.1.1.519") # 153268
+sum(GISAID_sel$LINEAGE1=="B.1.1.7") # 170343
+sum(GISAID_sel$LINEAGE1=="B.1.1.519") # 11884
 
 table(GISAID_sel$LINEAGE1)
 table(GISAID_sel$LINEAGE2)
@@ -229,12 +195,12 @@ remove2 = remove2[!(remove2 %in% c("B.1.351","B.1.1.7","P.1","B.1.617.2","B.1.61
 GISAID_sel$LINEAGE1[(GISAID_sel$LINEAGE1 %in% remove1)] = "other" # minority VOCs
 GISAID_sel$LINEAGE2[(GISAID_sel$LINEAGE2 %in% remove2)] = "other" # minority VOCs
 table(GISAID_sel$LINEAGE1)
-#     B.1 B.1.1.519   B.1.1.7     B.1.2   B.1.351   B.1.429   B.1.526  B.1.617+     other       P.1 
-#   36382     11407    153268     84349      1724     30058     19870      1656    165778     11978 
+#   B.1 B.1.1.519   B.1.1.7     B.1.2   B.1.351   B.1.429   B.1.526  B.1.617+     other       P.1 
+# 36685     11884    170343     86050      2195     31400     21468      2857    172188     13771 
 GISAID_sel$LINEAGE1 = factor(GISAID_sel$LINEAGE1)
 GISAID_sel$LINEAGE1 = relevel(GISAID_sel$LINEAGE1, ref="B.1.1.7") # we code UK strain as the reference level
 levels(GISAID_sel$LINEAGE1)
-# "B.1.1.7"   "B.1"       "B.1.2"     "B.1.1.519" "B.1.351"   "B.1.429"   "B.1.526"   "P.1"       "B.1.617+"  "other"  
+# "B.1.1.7"   "B.1"       "B.1.1.519" "B.1.2"     "B.1.351"   "B.1.429"   "B.1.526"   "B.1.617+"  "other"     "P.1"  
 levels_LINEAGE1 = c("B.1.1.7","B.1","B.1.2","B.1.1.519",
                     "B.1.351","B.1.429","B.1.526",
                     "P.1","B.1.617+","other")
@@ -243,7 +209,7 @@ GISAID_sel$LINEAGE1 = factor(GISAID_sel$LINEAGE1, levels=levels_LINEAGE1)
 GISAID_sel$LINEAGE2 = factor(GISAID_sel$LINEAGE2)
 GISAID_sel$LINEAGE2 = relevel(GISAID_sel$LINEAGE2, ref="B.1.1.7") # we code UK strain as the reference level
 levels(GISAID_sel$LINEAGE2)
-# "B.1.1.7"   "B.1"       "B.1.1.519" "B.1.2"     "B.1.351"   "B.1.429"   "B.1.526"   "B.1.617.1" "B.1.617.2" "other"     "P.1"   
+# "B.1.1.7"   "B.1"       "B.1.1.519" "B.1.2"     "B.1.351"   "B.1.429"   "B.1.526"   "B.1.617.1" "B.1.617.2" "other"     "P.1"  
 levels_LINEAGE2 = c("B.1.1.7","B.1","B.1.2","B.1.1.519",
                     "B.1.351","B.1.429","B.1.526",
                     "P.1","B.1.617.1","B.1.617.2","other")
@@ -275,10 +241,10 @@ levels(GISAID_sel$state)
 table(GISAID_sel$state)
 sum(table(GISAID_sel$state)) # 
 table(GISAID_sel$LINEAGE2)
-# B.1.1.7       B.1     B.1.2   B.1.351   B.1.429   B.1.526       P.1 B.1.617.1 B.1.617.2     other 
-#  153268     36382     84349      1724     30058     19870     11978       235      1420    177186
+# B.1.1.7       B.1     B.1.2 B.1.1.519   B.1.351   B.1.429   B.1.526       P.1 B.1.617.1 B.1.617.2     other 
+# 120406     28680     58520      8432      1511     26150     15792     11794       148      2110    132639 
 
-range(GISAID_sel$date) # "2020-01-03" "2021-06-04"
+range(GISAID_sel$date) # "2020-01-03" "2021-06-10"
 
 # aggregated data to make Muller plots of raw data
 # aggregated by week for selected variant lineages
@@ -397,7 +363,7 @@ muller_usabystate_raw2 = ggplot(data=data_agbyweekregion2, aes(x=collection_date
   scale_fill_manual("", values=lineage_cols2) +
   scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01")),
                      labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01"))),1,1),
-                     limits=as.Date(c("2020-06-01",NA)), expand=c(0,0)) +
+                     limits=as.Date(c("2020-11-01",NA)), expand=c(0,0)) +
   # guides(color = guide_legend(reverse=F, nrow=2, byrow=T), fill = guide_legend(reverse=F, nrow=2, byrow=T)) +
   theme_hc() +
   # labs(title = "MAIN SARS-CoV2 VARIANT LINEAGES IN THE UK") +
@@ -440,52 +406,53 @@ delta_r_usa = data.frame(confint(emtrusa,
                          p.value=as.data.frame(emtrusa$contrasts)$p.value)
 delta_r_usa
 #                         contrast      estimate         SE df   asymp.LCL  asymp.UCL   p.value
-# 1        B.1 - B.1.1.7 -0.044903415 0.0004486334 NA -0.045782721 -0.044024110 4.551914e-15
-# 2      B.1.2 - B.1.1.7 -0.062716997 0.0004330041 NA -0.063565669 -0.061868325 4.551914e-15
-# 3  B.1.1.519 - B.1.1.7 -0.051655999 0.0010049880 NA -0.053625739 -0.049686258 4.551914e-15
-# 4    B.1.351 - B.1.1.7 -0.008783653 0.0017264225 NA -0.012167379 -0.005399927 7.666043e-06
-# 5    B.1.429 - B.1.1.7 -0.055160278 0.0005827699 NA -0.056302486 -0.054018070 4.551914e-15
-# 6    B.1.526 - B.1.1.7 -0.015917926 0.0007399809 NA -0.017368262 -0.014467590 4.551914e-15
-# 7        P.1 - B.1.1.7  0.007315964 0.0011573052 NA  0.005047687  0.009584240 1.419977e-08
-# 8  B.1.617.1 - B.1.1.7  0.041004528 0.0051546644 NA  0.030901572  0.051107485 9.845458e-13
-# 9  B.1.617.2 - B.1.1.7  0.080220388 0.0019608439 NA  0.076377205  0.084063572 4.551914e-15
-# 10     other - B.1.1.7 -0.042480694 0.0003901294 NA -0.043245334 -0.041716054 4.551914e-15
+# 1        B.1 - B.1.1.7 -0.040274934 0.0004724243 NA -0.041200869 -0.039349000 4.551914e-15
+# 2      B.1.2 - B.1.1.7 -0.059516562 0.0004611431 NA -0.060420386 -0.058612738 4.551914e-15
+# 3  B.1.1.519 - B.1.1.7 -0.050002034 0.0010141462 NA -0.051989724 -0.048014344 4.551914e-15
+# 4    B.1.351 - B.1.1.7 -0.007934835 0.0017588405 NA -0.011382099 -0.004487571 1.020970e-04
+# 5    B.1.429 - B.1.1.7 -0.053428584 0.0005997507 NA -0.054604074 -0.052253095 4.551914e-15
+# 6    B.1.526 - B.1.1.7 -0.014372432 0.0007484794 NA -0.015839425 -0.012905439 4.551914e-15
+# 7        P.1 - B.1.1.7  0.007427670 0.0010833246 NA  0.005304393  0.009550947 7.028446e-10
+# 8  B.1.617.1 - B.1.1.7  0.030022583 0.0045490953 NA  0.021106520  0.038938646 3.032166e-09
+# 9  B.1.617.2 - B.1.1.7  0.076747739 0.0015577844 NA  0.073694537  0.079800940 4.551914e-15
+# 10     other - B.1.1.7 -0.037975088 0.0004159872 NA -0.038790408 -0.037159768 4.551914e-15
 
 
 # fitted prop of different LINEAGES in the USA today
-# 76% [74%-78%] now estimated to be B.1.617.2 across all regions
+# 40% [38%-43%] now estimated to be B.1.617.2 across all regions
 multinom_preds_today_avg = data.frame(emmeans(fit3_usa_multi, ~ LINEAGE2|1,
                                               at=list(DATE_NUM=today_num), 
                                               mode="prob", df=NA))
 multinom_preds_today_avg
 #    LINEAGE2         prob           SE df    asymp.LCL    asymp.UCL
-# 1    B.1.1.7 0.5675888177 1.191686e-02 NA 0.544232193 0.5909454428
-# 2        B.1 0.0007500372 3.323333e-05 NA 0.000684901 0.0008151733
-# 3      B.1.2 0.0012017610 4.577302e-05 NA 0.001112048 0.0012914745
-# 4  B.1.1.519 0.0018026213 1.208983e-04 NA 0.001565665 0.0020395777
-# 5    B.1.351 0.0059424142 5.928059e-04 NA 0.004780536 0.0071042923
-# 6    B.1.429 0.0021943493 9.992451e-05 NA 0.001998501 0.0023901977
-# 7    B.1.526 0.0240660663 1.065506e-03 NA 0.021977713 0.0261544194
-# 8        P.1 0.0935439279 4.100515e-03 NA 0.085507067 0.1015807892
-# 9  B.1.617.1 0.0044971781 1.105183e-03 NA 0.002331059 0.0066632975
-# 10 B.1.617.2 0.2865557253 1.416023e-02 NA 0.258802185 0.3143092654
-# 11     other 0.0118571017 3.807589e-04 NA 0.011110828 0.0126033755
+# 1    B.1.1.7 0.4666974585 1.213980e-02 NA 0.4429038918 0.4904910253
+# 2        B.1 0.0005680809 2.832902e-05 NA 0.0005125570 0.0006236047
+# 3      B.1.2 0.0006974004 3.093873e-05 NA 0.0006367616 0.0007580392
+# 4  B.1.1.519 0.0010776650 8.032164e-05 NA 0.0009202374 0.0012350925
+# 5    B.1.351 0.0049237895 5.432170e-04 NA 0.0038591037 0.0059884752
+# 6    B.1.429 0.0012669685 6.456660e-05 NA 0.0011404202 0.0013935167
+# 7    B.1.526 0.0192161859 9.899106e-04 NA 0.0172759967 0.0211563750
+# 8        P.1 0.0883881999 4.172842e-03 NA 0.0802095801 0.0965668198
+# 9  B.1.617.1 0.0031596598 7.889526e-04 NA 0.0016133411 0.0047059784
+# 10 B.1.617.2 0.4048570255 1.472066e-02 NA 0.3760050700 0.4337089811
+# 11     other 0.0091475662 3.450284e-04 NA 0.0084713231 0.0098238094
 
-# 43% [39%-47%] non-B.1.1.7
+# 53% [49%-57%] non-B.1.1.7
 colSums(multinom_preds_today_avg[-1, c("prob","asymp.LCL","asymp.UCL")])
 #      prob asymp.LCL asymp.UCL 
-# 0.4324112 0.3898705 0.4749519 
+# 0.5333025 0.4906444 0.5759607
 
 
 # PLOT MULTINOMIAL FIT
 
 # extrapolate = 30
-date.from = as.numeric(as.Date("2020-11-01"))
+date.from = as.numeric(as.Date("2020-06-01"))
 date.to = as.numeric(as.Date("2021-07-31")) # max(GISAID_sel$DATE_NUM)+extrapolate
 
 # multinomial model predictions (fastest, but no confidence intervals)
 predgrid = expand.grid(list(DATE_NUM=seq(date.from, date.to), STATE=levels_states))
 fit_usa_multi_preds_bystate = data.frame(predgrid, as.data.frame(predict(fit3_usa_multi, newdata=predgrid, type="prob")))
+library(tidyr)
 fit_usa_multi_preds_bystate = gather(fit_usa_multi_preds_bystate, LINEAGE2, prob, all_of(levels_LINEAGE2), factor_key=TRUE)
 fit_usa_multi_preds_bystate$collection_date = as.Date(fit_usa_multi_preds_bystate$DATE_NUM, origin="1970-01-01")
 fit_usa_multi_preds_bystate$LINEAGE2 = factor(fit_usa_multi_preds_bystate$LINEAGE2, levels=levels_LINEAGE2) 
@@ -537,28 +504,28 @@ fit_usa_multi_preds_bystate_withCI$collection_date = as.Date(fit_usa_multi_preds
 fit_usa_multi_preds_bystate_withCI$LINEAGE2 = factor(fit_usa_multi_preds_bystate_withCI$LINEAGE2, levels=levels_LINEAGE2)
 fit_usa_multi_preds2 = fit_usa_multi_preds_bystate_withCI
 
-fit_usa_multi_preds_bystate_withCI[fit_usa_multi_preds_bystate_withCI$collection_date==as.Date("2021-06-13")&fit_usa_multi_preds_bystate_withCI$LINEAGE2=="B.1.617.2",]
+fit_usa_multi_preds_bystate_withCI[fit_usa_multi_preds_bystate_withCI$collection_date==as.Date("2021-06-21")&fit_usa_multi_preds_bystate_withCI$LINEAGE2=="B.1.617.2",]
 #        LINEAGE2 DATE_NUM         STATE       prob          SE df  asymp.LCL  asymp.UCL collection_date
-# 362  B.1.617.2    18791       Arizona 0.2425780 0.04367862 NA 0.15696950 0.3281865      2021-06-13
-# 791  B.1.617.2    18791    California 0.4198529 0.02409480 NA 0.37262801 0.4670779      2021-06-13
-# 1220 B.1.617.2    18791      Colorado 0.4302180 0.02681023 NA 0.37767095 0.4827651      2021-06-13
-# 1649 B.1.617.2    18791       Florida 0.1935387 0.02109506 NA 0.15219310 0.2348842      2021-06-13
-# 2078 B.1.617.2    18791      Illinois 0.2177921 0.02336059 NA 0.17200621 0.2635780      2021-06-13
-# 2507 B.1.617.2    18791       Indiana 0.2896677 0.03429757 NA 0.22244566 0.3568897      2021-06-13
-# 2936 B.1.617.2    18791        Kansas 0.3933147 0.03587644 NA 0.32299815 0.4636312      2021-06-13
-# 3365 B.1.617.2    18791      Maryland 0.2455503 0.03563444 NA 0.17570808 0.3153925      2021-06-13
-# 3794 B.1.617.2    18791 Massachusetts 0.3283536 0.02410497 NA 0.28110868 0.3755984      2021-06-13
-# 4223 B.1.617.2    18791     Minnesota 0.1185615 0.01774051 NA 0.08379073 0.1533322      2021-06-13
-# 4652 B.1.617.2    18791      Missouri 0.5313979 0.04471123 NA 0.44376549 0.6190303      2021-06-13
-# 5081 B.1.617.2    18791      Nebraska 0.1823259 0.05796164 NA 0.06872313 0.2959286      2021-06-13
-# 5510 B.1.617.2    18791    New Jersey 0.4502863 0.03413220 NA 0.38338838 0.5171842      2021-06-13
-# 5939 B.1.617.2    18791      New York 0.3216130 0.02618866 NA 0.27028420 0.3729419      2021-06-13
-# 6368 B.1.617.2    18791        Oregon 0.1149993 0.03685883 NA 0.04275734 0.1872413      2021-06-13
-# 6797 B.1.617.2    18791         Texas 0.3397006 0.02477120 NA 0.29114989 0.3882512      2021-06-13
-# 7226 B.1.617.2    18791          Utah 0.6378122 0.02987422 NA 0.57925977 0.6963646      2021-06-13
-# 7655 B.1.617.2    18791      Virginia 0.3498320 0.04350665 NA 0.26456054 0.4351035      2021-06-13
-# 8084 B.1.617.2    18791    Washington 0.3283849 0.02540988 NA 0.27858249 0.3781874      2021-06-13
-# 8513 B.1.617.2    18791     Wisconsin 0.2237085 0.04136560 NA 0.14263341 0.3047836      2021-06-13
+# 615   B.1.617.2    18799       Arizona 0.3415259 0.04045846 NA 0.26222877 0.4208230      2021-06-21
+# 1286  B.1.617.2    18799    California 0.5298582 0.02065233 NA 0.48938040 0.5703360      2021-06-21
+# 1957  B.1.617.2    18799      Colorado 0.5735638 0.02395763 NA 0.52660767 0.6205198      2021-06-21
+# 2628  B.1.617.2    18799       Florida 0.2797337 0.02345015 NA 0.23377227 0.3256952      2021-06-21
+# 3299  B.1.617.2    18799      Illinois 0.2938156 0.02675727 NA 0.24137234 0.3462589      2021-06-21
+# 3970  B.1.617.2    18799       Indiana 0.4238384 0.03151071 NA 0.36207853 0.4855982      2021-06-21
+# 4641  B.1.617.2    18799        Kansas 0.5822103 0.02959658 NA 0.52420206 0.6402185      2021-06-21
+# 5312  B.1.617.2    18799      Maryland 0.3372405 0.03817511 NA 0.26241864 0.4120623      2021-06-21
+# 5983  B.1.617.2    18799 Massachusetts 0.4400967 0.02592195 NA 0.38929066 0.4909028      2021-06-21
+# 6654  B.1.617.2    18799     Minnesota 0.1770255 0.02348268 NA 0.13100029 0.2230507      2021-06-21
+# 7325  B.1.617.2    18799      Missouri 0.7127919 0.02808481 NA 0.65774667 0.7678371      2021-06-21
+# 7996  B.1.617.2    18799      Nebraska 0.2327069 0.06940555 NA 0.09667449 0.3687392      2021-06-21
+# 8667  B.1.617.2    18799    New Jersey 0.5641522 0.03021256 NA 0.50493669 0.6233677      2021-06-21
+# 9338  B.1.617.2    18799      New York 0.4297980 0.02844750 NA 0.37404198 0.4855541      2021-06-21
+# 10009 B.1.617.2    18799        Oregon 0.1345187 0.03766101 NA 0.06070446 0.2083329      2021-06-21
+# 10680 B.1.617.2    18799         Texas 0.4653436 0.02431382 NA 0.41768935 0.5129978      2021-06-21
+# 11351 B.1.617.2    18799          Utah 0.7575435 0.02195991 NA 0.71450290 0.8005842      2021-06-21
+# 12022 B.1.617.2    18799      Virginia 0.4180612 0.04118245 NA 0.33734505 0.4987773      2021-06-21
+# 12693 B.1.617.2    18799    Washington 0.4248052 0.02174424 NA 0.38218725 0.4674231      2021-06-21
+# 13364 B.1.617.2    18799     Wisconsin 0.3118342 0.04667627 NA 0.22035044 0.4033180      2021-06-21
 
 # fit_usa_multi_preds2 = fit_usa_multi_preds_bystate # without CIs
 # fit_usa_multi_preds2$asymp.LCL = NA

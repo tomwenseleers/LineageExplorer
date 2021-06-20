@@ -392,7 +392,7 @@ be_seq_mfit0_preds[as.character(be_seq_mfit0_preds$collection_date)==as.characte
 # 973       P.1 (gamma)             18793.5 0.09236308 0.0077862360 NA 0.077102339 0.107623823      2021-06-15
 # 974 B.1.617.2 (delta)             18793.5 0.15979264 0.0245195428 NA 0.111735223 0.207850065      2021-06-15
 # 975             other             18793.5 0.02913351 0.0030060993 NA 0.023241668 0.035025361      2021-06-15
-
+  
 # estimated share of different variants of concern among new infections today (assuming 1 week between infection & diagnosis)
 be_seq_mfit0_preds[as.character(be_seq_mfit0_preds$collection_date)==as.character(today+7),]
 #                variant collection_date_num        prob          SE df    asymp.LCL   asymp.UCL collection_date
@@ -401,6 +401,24 @@ be_seq_mfit0_preds[as.character(be_seq_mfit0_preds$collection_date)==as.characte
 # 1008       P.1 (gamma)             18800.5 0.084916842 0.0093772513 NA 0.0665377674 0.103295917      2021-06-22
 # 1009 B.1.617.2 (delta)             18800.5 0.257322285 0.0458682023 NA 0.1674222605 0.347222310      2021-06-22
 # 1010             other             18800.5 0.024909541 0.0031596918 NA 0.0187166591 0.031102423      2021-06-22
+
+be_seq_mfit0_preds[as.character(be_seq_mfit0_preds$collection_date)=="2021-06-18",]
+# variant collection_date_num        prob           SE df   asymp.LCL   asymp.UCL collection_date
+# 986   B.1.1.7 (alpha)             18796.5 0.683213464 0.0289560655 NA 0.626460618 0.739966309      2021-06-18
+# 987    B.1.351 (beta)             18796.5 0.002219871 0.0005102583 NA 0.001219784 0.003219959      2021-06-18
+# 988       P.1 (gamma)             18796.5 0.089733534 0.0084121318 NA 0.073246059 0.106221010      2021-06-18
+# 989 B.1.617.2 (delta)             18796.5 0.197395945 0.0327659897 NA 0.133175785 0.261616105      2021-06-18
+# 990             other             18796.5 0.027437186 0.0030659363 NA 0.021428061 0.033446310      2021-06-18
+
+be_seq_mfit0_preds[as.character(be_seq_mfit0_preds$collection_date)=="2021-06-25",]
+# variant collection_date_num        prob           SE df   asymp.LCL   asymp.UCL collection_date
+# 1021   B.1.1.7 (alpha)             18803.5 0.585996105 0.0487410937 NA 0.490465317 0.681526894      2021-06-25
+# 1022    B.1.351 (beta)             18803.5 0.001485166 0.0003929662 NA 0.000714966 0.002255365      2021-06-25
+# 1023       P.1 (gamma)             18803.5 0.080296532 0.0102027547 NA 0.060299501 0.100293564      2021-06-25
+# 1024 B.1.617.2 (delta)             18803.5 0.309389405 0.0567070787 NA 0.198245573 0.420533237      2021-06-25
+# 1025             other             18803.5 0.022832791 0.0032432436 NA 0.016476151 0.029189432      2021-06-25
+
+
 
 # estimated date that B.1.617.2 would make out >50% of all lab diagnoses: "2021-07-05" ["2021-06-29"-"2021-07-14"] 95% CLs (7 days earlier for infections)
 be_seq_mfit0_preds[be_seq_mfit0_preds$variant=="B.1.617.2 (delta)","collection_date"][which(be_seq_mfit0_preds[be_seq_mfit0_preds$variant=="B.1.617.2 (delta)","prob"] >= 0.5)[1]]

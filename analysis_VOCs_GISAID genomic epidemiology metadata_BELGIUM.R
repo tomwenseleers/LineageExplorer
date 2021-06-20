@@ -1,6 +1,6 @@
 # ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT VOCs IN BELGIUM BASED ON ANALYSIS OF GISAID PATIENT METADATA
 # T. Wenseleers
-# last update 3 JUNE 2021
+# last update 19 JUNE 2021
 
 library(nnet)
 # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
@@ -13,9 +13,9 @@ library(ggthemes)
 library(scales)
 
 today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-06-03")
+today = as.Date("2021-06-19")
 today_num = as.numeric(today)
-today # "2021-06-03"
+today # "2021-06-19"
 plotdir = "VOCs_belgium"
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 
@@ -23,16 +23,18 @@ suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 d1 = read_tsv(".//data//GISAID//Belgium//gisaid_hcov-19_2021_05_29_08_belgium_subm_jan_dec_2020.tsv", col_types = cols(.default = "c"))
 d2 = read_tsv(".//data//GISAID//Belgium//gisaid_hcov-19_2021_05_29_08_belgium_subm_jan_feb_2021.tsv", col_types = cols(.default = "c"))
 d3 = read_tsv(".//data//GISAID//Belgium//gisaid_hcov-19_2021_05_29_09_belgium_subm_mar_apr_2021.tsv", col_types = cols(.default = "c"))
-d4 = read_tsv(".//data//GISAID//Belgium//gisaid_hcov-19_2021_06_03_08_belgium_subm_may_2021.tsv", col_types = cols(.default = "c")) # downloaded 3/6/2021
+d4 = read_tsv(".//data//GISAID//Belgium//gisaid_hcov-19_2021_06_18_22_belgium_subm_may_2021.tsv", col_types = cols(.default = "c")) # downloaded 3/6/2021
+d5 = read_tsv(".//data//GISAID//Belgium//gisaid_hcov-19_2021_06_18_22_belgium_subm_june_2021.tsv", col_types = cols(.default = "c")) # downloaded 3/6/2021
 d1 = as.data.frame(d1)
 d2 = as.data.frame(d2)
 d3 = as.data.frame(d3)
 d4 = as.data.frame(d4)
-GISAID_belgium1 = rbind(d1, d2, d3, d4)
+d5 = as.data.frame(d5)
+GISAID_belgium1 = rbind(d1, d2, d3, d4, d5)
 GISAID_belgium1 = GISAID_belgium1[GISAID_belgium1[,"Host"]=="Human",]
 GISAID_belgium1[,"Collection date"] = as.Date(GISAID_belgium1[,"Collection date"])
 GISAID_belgium1 = GISAID_belgium1[!is.na(GISAID_belgium1[,"Collection date"]),]
-nrow(GISAID_belgium1) # 23497
+nrow(GISAID_belgium1) # 27500
 unique(GISAID_belgium1[,"Virus name"])
 unique(GISAID_belgium1[,"Location"])
 unique(GISAID_belgium1[,"Host"])
@@ -40,20 +42,20 @@ unique(GISAID_belgium1[,"Additional location information"]) # ZIP codes # someti
 
 # anonymous records without location info are assumed to be active surveillance of cluster outbreaks & included in active surveillance (cf weekly Sciensano report)
 GISAID_belgium1[,"Additional location information"][grepl("nknown",GISAID_belgium1[,"Additional location information"])] = NA
-sum(is.na(GISAID_belgium1[,"Additional location information"])) # 6193
+sum(is.na(GISAID_belgium1[,"Additional location information"])) # 6349
 unique(GISAID_belgium1[,"Additional location information"])
 
 library(stringr)
 ZIP = str_extract(GISAID_belgium1[,"Additional location information"],"[0-9]{4}") # extract ZIP codes
 unique(ZIP)
-sum(!is.na(ZIP)) # 17229
-sum(is.na(ZIP)) # 6268 - anonymous records, these are assumed to be active surveillance of cluster outbreaks
+sum(!is.na(ZIP)) # 21067
+sum(is.na(ZIP)) # 6433 - anonymous records, these are assumed to be active surveillance of cluster outbreaks
 
 muni = read.csv(".//data//GISAID//Belgium//mapping_municips.csv") # post codes & cities & provinces
 province = muni$province_label_nl[match(ZIP, muni$postcode)] # province
 city = muni$municipality_label_nl[match(ZIP, muni$postcode)] # city
-sum(is.na(city)) # 6298
-sum(is.na(ZIP))  # 6268
+sum(is.na(city)) # 6466
+sum(is.na(ZIP))  # 6433
 wrongZIP = which(is.na(city)&!is.na(ZIP))
 ZIP[wrongZIP] = NA
 
@@ -61,24 +63,24 @@ anonym = grepl("Belgium$",GISAID_belgium1[,"Additional location information"])|
   is.na(GISAID_belgium1[,"Additional location information"])|
   grepl("CHU|infected|travel|Travel",GISAID_belgium1[,"Additional location information"]) |
   is.na(ZIP)
-sum(anonym) # 6302
+sum(anonym) # 6516
 unique(GISAID_belgium1[!is.na(GISAID_belgium1[,"Sampling strategy"]),"Sampling strategy"])
 traveller = grepl("travel|Travel|infected",GISAID_belgium1[,"Additional location information"])|grepl("travel|Travel",GISAID_belgium1[,"Sampling strategy"])|
   grepl("travel|Travel|Holiday",GISAID_belgium1[,"Additional host information"])  
-sum(traveller) # 143
+sum(traveller) # 196
 Sdropout = grepl("S-gene dropout",GISAID_belgium1[,"Sampling strategy"])|
   grepl("S-gene dropout",GISAID_belgium1[,"Additional host information"])  
 sum(Sdropout) # 61 - should be much higher though...
 actsurv = anonym|traveller|grepl("Longitudinal|Outbreak|Active|active|dropout|Atypical|travel|Travel|Atypische|CLUSTER|cluster|Cluster",GISAID_belgium1[,"Sampling strategy"])|
   grepl("Longitudinal|Outbreak|Active|active|dropout|Atypical|travel|Travel|Atypische|CLUSTER|cluster|Cluster|HR contact|Outbreak|Nurse|Holiday",GISAID_belgium1[,"Additional host information"])  
-sum(actsurv) # 6995
+sum(actsurv) # 7522
 sum(actsurv[GISAID_belgium1[,"Collection date"]>=as.Date("2020-11-30")]) # 4333 # In Sciensano weekly report of 21st of May 2021 this is 4710
 sum(actsurv[GISAID_belgium1[,"Collection date"]>=as.Date("2020-11-30")&GISAID_belgium1[,"Collection date"]<=as.Date("2021-01-31")]) # 1172 # In Sciensano weekly report of 21st of May 2021 this is 1975
 
 reinfection = grepl("Breakthrough",GISAID_belgium1[,"Sampling strategy"])
-sum(reinfection) # 14
+sum(reinfection) # 17
 infectionpostvaccination = grepl("Vaccination|vaccination",GISAID_belgium1[,"Sampling strategy"])
-sum(infectionpostvaccination) # 74
+sum(infectionpostvaccination) # 141
 
 asymptomatic = grepl("Asymptomatic|asympto",GISAID_belgium1[,"Patient status"])
 symptomatic = grepl("Ho|Out|Am|Dec|dec| sympto|Not hosp|Relea",GISAID_belgium1[,"Patient status"])|grepl(" symptoms|ILI",GISAID_belgium1[,"Additional host information"])
@@ -100,7 +102,7 @@ died[unknown] = NA
 # sum(bassurv) # 8856
 
 bassurv = !actsurv
-sum(bassurv) # 16502
+sum(bassurv) # 19978
 purpose_of_sequencing = rep("active_surveillance", nrow(GISAID_belgium1))
 purpose_of_sequencing[bassurv] = "baseline_surveillance"
 
@@ -111,7 +113,7 @@ GISAID_belgium1[,"Gender"][grepl("M|m",GISAID_belgium1[,"Gender"])] = "M"
 GISAID_belgium1[,"Gender"][grepl("unknown",GISAID_belgium1[,"Gender"])] = NA
 unique(GISAID_belgium1[,"Gender"]) # "F" "M" NA 
 
-sum(!is.na(GISAID_belgium1[,"Gender"] )) # 20830 with gender info
+sum(!is.na(GISAID_belgium1[,"Gender"] )) # 24655 with gender info
 
 GISAID_belgium1[,"Patient age"][grepl("nknown",GISAID_belgium1[,"Patient age"])] = NA
 GISAID_belgium1[,"Patient age"][grepl("month",GISAID_belgium1[,"Patient age"])] = 0
@@ -124,7 +126,8 @@ GISAID_belgium1[,"Patient age"][grepl("2020-1994",GISAID_belgium1[,"Patient age"
 GISAID_belgium1[,"Patient age"][grepl("2020-1985",GISAID_belgium1[,"Patient age"])] = as.character(2021-1985)
 GISAID_belgium1[,"Patient age"][grepl("2020-1972",GISAID_belgium1[,"Patient age"])] = as.character(2021-1972)
 GISAID_belgium1[,"Patient age"] = as.numeric(GISAID_belgium1[,"Patient age"])
-sum(!is.na(GISAID_belgium1[,"Patient age"] )) # 20832 with age info
+GISAID_belgium1[,"Patient age"][GISAID_belgium1[,"Patient age"]>200] = NA
+sum(!is.na(GISAID_belgium1[,"Patient age"] )) # 24664 with age info
 
 GISAID_belgium1[,"Virus name"] = gsub("hCoV-19/","",GISAID_belgium1[,"Virus name"])
 
@@ -190,14 +193,14 @@ GISAID_belgium1[grepl("B.1.617", GISAID_belgium1$LINEAGE1, fixed=TRUE),"LINEAGE1
 # get extra fields "genbank_accession", "Nextstrain_clade", "originating_lab", "submitting_lab", "authors", "url", "title", "paper_url"
 # from genomic epidemiology GISAID metadata
 # (check with Emmanuel André & Lize Cuypers which labs were doing active surveillance vs baseline surveillance)
-# we use genomic epidemiology GISAID data file version metadata_2021-06-01_08-07.tsv.gz with data for all countries :
-GISAID = read_tsv(gzfile(".//data//GISAID_genomic_epidemiology//metadata_2021-06-01_08-07.tsv.gz"), col_types = cols(.default = "c")) 
+# we use genomic epidemiology GISAID data file version metadata_2021-06-17_05-53.tsv.gz with data for all countries :
+GISAID = read_tsv(gzfile(".//data//GISAID_genomic_epidemiology//metadata_2021-06-17_05-53.tsv.gz"), col_types = cols(.default = "c")) 
 GISAID = as.data.frame(GISAID)
 GISAID$date = as.Date(GISAID$date)
 GISAID = GISAID[!is.na(GISAID$date),]
 GISAID = GISAID[GISAID$host=="Human",]
 GISAID_genepi_belgium = GISAID[GISAID$country=="Belgium",]
-nrow(GISAID_genepi_belgium) # 22822
+nrow(GISAID_genepi_belgium) # 26868
 
 # add (genbank_accession,) Nextstrain_clade, originating_lab, submitting_lab, authors, url, title & paper_url to GISAID_belgium1
 # GISAID_belgium1$genbank_accession = GISAID_genepi_belgium$genbank_accession[match(GISAID_belgium1$gisaid_epi_isl,GISAID_genepi_belgium$gisaid_epi_isl)]
@@ -231,7 +234,7 @@ GISAID_belgium1$originating_lab_does_baseline_surveillance = labnames$do_baselin
 GISAID_belgium1$purpose_of_sequencing[GISAID_belgium1$originating_lab_does_baseline_surveillance=="no"] = "active_surveillance"
 
 # write parsed & cleaned up file to csv
-write.csv(GISAID_belgium1, ".//data//GISAID//Belgium//gisaid_hcov-19_2021_06_03_ALL PARSED.csv",row.names=F)
+write.csv(GISAID_belgium1, ".//data//GISAID//Belgium//gisaid_hcov-19_2021_06_19_ALL PARSED.csv",row.names=F)
 
 
 
@@ -240,8 +243,8 @@ write.csv(GISAID_belgium1, ".//data//GISAID//Belgium//gisaid_hcov-19_2021_06_03_
 
 # GISAID_belgium = GISAID_sel[GISAID_sel$country=="Belgium",]
 GISAID_belgium = GISAID_belgium1[GISAID_belgium1$purpose_of_sequencing=="baseline_surveillance",]
-nrow(GISAID_belgium) # 15374
-sum(!is.na(GISAID_belgium$age)) # 14129 with age info
+nrow(GISAID_belgium) # 18743
+sum(!is.na(GISAID_belgium$age)) # 17344 with age info
 
 # plot age distribution of B.1.617.2 & B.1.1.7 cases in Belgium
 df = GISAID_belgium[GISAID_belgium$date>=as.Date("2021-04-01")&GISAID_belgium$pango_lineage %in% c("B.1.1.7","B.1.617.2"),]
@@ -310,8 +313,8 @@ GISAID_belgium$LINEAGE2 = factor(GISAID_belgium$LINEAGE2, levels=levels_LINEAGE2
 
 # use data from Nov 1 onwards
 GISAID_belgium = GISAID_belgium[GISAID_belgium$date>=as.Date("2021-02-01"),]
-nrow(GISAID_belgium) # 13233
-range(GISAID_belgium$date) # "2021-02-01" "2021-05-30"
+nrow(GISAID_belgium) # 16602
+range(GISAID_belgium$date) # "2021-02-01" "2021-06-14"
 
 # write.csv(GISAID_belgium, ".//data//GISAID//Belgium//gisaid_hcov-19_2021_05_24_10_ALL PARSED_BASELINE SELECTION.csv",row.names=F)
 
@@ -340,7 +343,7 @@ data_agbyweek2$collection_date_num = as.numeric(data_agbyweek2$collection_date)
 data_agbyweek2$prop = data_agbyweek2$count/data_agbyweek2$total
 data_agbyweek2$floor_date = NULL
 
-write.csv(data_agbyweek2, ".//data//GISAID//Belgium//gisaid_hcov-19_2021_06_03_BASELINE SELECTION_aggregated counts by week.csv",row.names=F)
+write.csv(data_agbyweek2, ".//data//GISAID//Belgium//gisaid_hcov-19_2021_06_19_BASELINE SELECTION_aggregated counts by week.csv",row.names=F)
 
 
 # aggregated by week and province for selected variant lineages
@@ -375,16 +378,16 @@ data_agbyweekregion2$floor_date = NULL
 
 # MULLER PLOT (RAW DATA)
 library(scales)
-n1 = length(levels(GISAID_belgium$LINEAGE1))
+n1 = length(levels(data_agbyweek1$LINEAGE1))
 lineage_cols1 = hcl(h = seq(15, 320, length = n1), l = 65, c = 200)
-lineage_cols1[which(levels(GISAID_belgium$LINEAGE1)=="B.1.617+")] = "magenta"
-lineage_cols1[which(levels(GISAID_belgium$LINEAGE1)=="other")] = "grey75"
+lineage_cols1[which(levels(data_agbyweek1$LINEAGE1)=="B.1.617+")] = "magenta"
+lineage_cols1[which(levels(data_agbyweek1$LINEAGE1)=="other")] = "grey75"
 
-n2 = length(levels(GISAID_belgium$LINEAGE2))
+n2 = length(levels(data_agbyweek2$LINEAGE2))
 lineage_cols2 = hcl(h = seq(15, 320, length = n2), l = 65, c = 200)
-lineage_cols2[which(levels(GISAID_belgium$LINEAGE2)=="B.1.617.1")] = muted("magenta")
-lineage_cols2[which(levels(GISAID_belgium$LINEAGE2)=="B.1.617.2")] = "magenta"
-lineage_cols2[which(levels(GISAID_belgium$LINEAGE2)=="other")] = "grey75"
+lineage_cols2[which(levels(data_agbyweek2$LINEAGE2)=="B.1.617.1")] = muted("magenta")
+lineage_cols2[which(levels(data_agbyweek2$LINEAGE2)=="B.1.617.2")] = "magenta"
+lineage_cols2[which(levels(data_agbyweek2$LINEAGE2)=="other")] = "grey75"
 
 muller_belgium_raw1 = ggplot(data=data_agbyweek1, aes(x=collection_date, y=count, group=LINEAGE1)) + 
   # facet_wrap(~ province, ncol=1) +
@@ -463,7 +466,7 @@ fit4_belgium_multi = nnet::multinom(LINEAGE2 ~ province * DATE_NUM, data=GISAID_
 fit5_belgium_multi = nnet::multinom(LINEAGE2 ~ province * ns(DATE_NUM, df=2), data=GISAID_belgium, maxit=1000)
 fit6_belgium_multi = nnet::multinom(LINEAGE2 ~ province * ns(DATE_NUM, df=3), data=GISAID_belgium, maxit=1000)
 BIC(fit1_belgium_multi, fit2_belgium_multi, fit3_belgium_multi, fit4_belgium_multi, fit5_belgium_multi, fit6_belgium_multi) 
-# fit2_belgium_multi fits best (lowest BIC)
+# fit3_belgium_multi fits best (lowest BIC), but I will use slightly simpler fit2_belgium_multi
 
 # equivalent fit with B.1.617.1,2&3 all recoded to B.1.617+
 fit2_belgium_multi1 = nnet::multinom(LINEAGE1 ~ province + ns(DATE_NUM, df=2), data=GISAID_belgium, maxit=1000)
@@ -477,42 +480,18 @@ delta_r_belgium = data.frame(confint(emtrbelgium,
                            p.value=as.data.frame(emtrbelgium$contrasts)$p.value)
 delta_r_belgium
 #               contrast     estimate           SE df    asymp.LCL    asymp.UCL p.value
-# 1         B.1 - B.1.1.7 -0.025571153 0.022693021 NA  -0.070048658  0.01890635 8.548631e-01
-# 2       B.1.1 - B.1.1.7  0.046574141 0.015848318 NA   0.015512009  0.07763627 3.877118e-02
-# 3     B.1.221 - B.1.1.7 -0.052429661 0.019347071 NA  -0.090349223 -0.01451010 7.179123e-02
-# 4     B.1.258 - B.1.1.7 -1.569758630 1.441235173 NA  -4.394527662  1.25501040 8.710519e-01
-# 5     B.1.160 - B.1.1.7 -0.065320057 0.024071753 NA  -0.112499827 -0.01814029 7.112924e-02
-# 6  (B.1.177+) - B.1.1.7 -0.092408925 0.030863963 NA  -0.152901180 -0.03191667 3.312954e-02
-# 7   B.1.214.2 - B.1.1.7 -0.027649085 0.006442588 NA  -0.040276326 -0.01502184 3.696292e-04
-# 8     B.1.351 - B.1.1.7 -0.058741562 0.007234555 NA  -0.072921029 -0.04456210 1.224243e-12
-# 9     B.1.620 - B.1.1.7 -0.091846291 0.052142084 NA  -0.194042897  0.01035031 4.749712e-01
-# 10        P.1 - B.1.1.7  0.005288836 0.003857032 NA  -0.002270807  0.01284848 7.264389e-01
-# 11  B.1.617.1 - B.1.1.7 -2.496613492 3.960172621 NA -10.258409201  5.26518222 9.848196e-01
-# 12  B.1.617.2 - B.1.1.7  0.020494209 0.028238384 NA  -0.034852008  0.07584043 9.727602e-01
-# 13      other - B.1.1.7  0.026536966 0.004282854 NA   0.018142727  0.03493120 5.533290e-08
-
-
-# avg growth advantage of B.1.617+ over B.1.1.7 :
-emtrbelgium1 = emtrends(fit2_belgium_multi1, trt.vs.ctrl ~ LINEAGE1,  
-                      var="DATE_NUM",  mode="latent",
-                      at=list(DATE_NUM=max(GISAID_belgium$DATE_NUM)))
-delta_r_belgium1 = data.frame(confint(emtrbelgium1, 
-                                    adjust="none", df=NA)$contrasts, 
-                            p.value=as.data.frame(emtrbelgium1$contrasts)$p.value)
-delta_r_belgium1
-#                contrast      estimate           SE df     asymp.LCL     asymp.UCL      p.value
-# 1         B.1 - B.1.1.7 -0.025490836 0.022672610 NA -0.069928334  0.01894666 8.424097e-01
-# 2       B.1.1 - B.1.1.7  0.046589653 0.015850809 NA  0.015522638  0.07765667 3.651131e-02
-# 3     B.1.221 - B.1.1.7 -0.052417537 0.019345943 NA -0.090334888 -0.01450019 6.784953e-02
-# 4     B.1.258 - B.1.1.7 -1.123758508 1.181130072 NA -3.438730911  1.19121389 9.114190e-01
-# 5     B.1.160 - B.1.1.7 -0.065317572 0.024074736 NA -0.112503187 -0.01813196 6.721726e-02
-# 6  (B.1.177+) - B.1.1.7 -0.092308151 0.030845956 NA -0.152765114 -0.03185119 3.137967e-02
-# 7   B.1.214.2 - B.1.1.7 -0.027628785 0.006442662 NA -0.040256170 -0.01500140 3.602238e-04
-# 8     B.1.351 - B.1.1.7 -0.058749336 0.007234548 NA -0.072928790 -0.04456988 1.626699e-12
-# 9         P.1 - B.1.1.7  0.005299635 0.003857641 NA -0.002261201  0.01286047 7.071449e-01
-# 10    B.1.620 - B.1.1.7 -0.091866930 0.052134417 NA -0.194048510  0.01031465 4.565968e-01
-# 11 (B.1.617+) - B.1.1.7  0.038481841 0.022408932 NA -0.005438858  0.08240254 4.854358e-01
-# 12      other - B.1.1.7  0.026543835 0.004283296 NA  0.018148728  0.03493894 5.869722e-08
+# 1         B.1 - B.1.1.7 -0.040379977 0.026972062 NA -0.093244248  0.012484293 6.294801e-01
+# 2       B.1.1 - B.1.1.7 -0.130988112 0.079340825 NA -0.286493271  0.024517046 5.286969e-01
+# 3     B.1.221 - B.1.1.7 -0.053189773 0.022514889 NA -0.097318146 -0.009061401 1.550842e-01
+# 4     B.1.258 - B.1.1.7 -1.369927769 1.444852768 NA -4.201787157  1.461931618 9.125105e-01
+# 5  (B.1.177+) - B.1.1.7 -0.097088283 0.037557850 NA -0.170700315 -0.023476250 9.270252e-02
+# 6   B.1.214.2 - B.1.1.7 -0.039567059 0.006250476 NA -0.051817767 -0.027316351 2.967756e-08
+# 7     B.1.351 - B.1.1.7 -0.049911908 0.006759831 NA -0.063160933 -0.036662884 1.039293e-10
+# 8     B.1.620 - B.1.1.7 -0.018452948 0.027743600 NA -0.072829406  0.035923510 9.773097e-01
+# 9         P.1 - B.1.1.7  0.007000191 0.003065980 NA  0.000990981  0.013009400 1.836461e-01
+# 10  B.1.617.1 - B.1.1.7 -0.261597973 0.236740864 NA -0.725601541  0.202405595 8.512178e-01
+# 11  B.1.617.2 - B.1.1.7  0.097799410 0.010151886 NA  0.077902079  0.117696741 4.896084e-14
+# 12      other - B.1.1.7  0.028809062 0.003265089 NA  0.022409606  0.035208518 7.371881e-14
 
 
 # pairwise growth rate difference (differences in growth rate per day) 
@@ -523,128 +502,36 @@ delta_r_belgium_pairw = data.frame(confint(emtrbelgium_pairw,
                                          adjust="none", df=NA)$contrasts, 
                                  p.value=as.data.frame(emtrbelgium_pairw$contrasts)$p.value)
 delta_r_belgium_pairw
-#                  contrast      estimate           SE df     asymp.LCL     asymp.UCL p.value
-# 1           B.1.1.7 - B.1  0.0255711528 0.022693021 NA  -0.018906352  0.070048658 9.974428e-01
-# 2         B.1.1.7 - B.1.1 -0.0465741413 0.015848318 NA  -0.077636273 -0.015512009 1.721120e-01
-# 3       B.1.1.7 - B.1.221  0.0524296610 0.019347071 NA   0.014510099  0.090349223 2.826766e-01
-# 4       B.1.1.7 - B.1.258  1.5697586302 1.441235173 NA  -1.255010401  4.394527662 9.981823e-01
-# 5       B.1.1.7 - B.1.160  0.0653200575 0.024071753 NA   0.018140288  0.112499827 2.806522e-01
-# 6    B.1.1.7 - (B.1.177+)  0.0924089245 0.030863963 NA   0.031916669  0.152901180 1.508698e-01
-# 7     B.1.1.7 - B.1.214.2  0.0276490847 0.006442588 NA   0.015021844  0.040276326 2.339247e-03
-# 8       B.1.1.7 - B.1.351  0.0587415621 0.007234555 NA   0.044562095  0.072921029 8.572254e-12
-# 9       B.1.1.7 - B.1.620  0.0918462914 0.052142084 NA  -0.010350315  0.194042897 8.897959e-01
-# 10          B.1.1.7 - P.1 -0.0052888364 0.003857032 NA  -0.012848480  0.002270807 9.839458e-01
-# 11    B.1.1.7 - B.1.617.1  2.4966134923 3.960172621 NA  -5.265182216 10.258409201 9.999960e-01
-# 12    B.1.1.7 - B.1.617.2 -0.0204942090 0.028238384 NA  -0.075840426  0.034852008 9.999789e-01
-# 13        B.1.1.7 - other -0.0265369658 0.004282854 NA  -0.034931205 -0.018142727 3.838710e-07
-# 14            B.1 - B.1.1 -0.0721452941 0.027620875 NA  -0.126281215 -0.018009373 3.409674e-01
-# 15          B.1 - B.1.221  0.0268585082 0.029692338 NA  -0.031337406  0.085054422 9.997447e-01
-# 16          B.1 - B.1.258  1.5441874774 1.441376152 NA  -1.280857868  4.369232823 9.984635e-01
-# 17          B.1 - B.1.160  0.0397489046 0.032943744 NA  -0.024819647  0.104317456 9.950164e-01
-# 18       B.1 - (B.1.177+)  0.0668377717 0.038131037 NA  -0.007897687  0.141573230 8.933067e-01
-# 19        B.1 - B.1.214.2  0.0020779318 0.023528252 NA  -0.044036594  0.048192457 1.000000e+00
-# 20          B.1 - B.1.351  0.0331704093 0.023719500 NA  -0.013318956  0.079659774 9.809759e-01
-# 21          B.1 - B.1.620  0.0662751386 0.056861163 NA  -0.045170694  0.177720971 9.964317e-01
-# 22              B.1 - P.1 -0.0308599892 0.022988107 NA  -0.075915852  0.014195873 9.866750e-01
-# 23        B.1 - B.1.617.1  2.4710423395 3.960237502 NA  -5.290880535 10.232965214 9.999965e-01
-# 24        B.1 - B.1.617.2 -0.0460653618 0.036221551 NA  -0.117058297  0.024927573 9.918293e-01
-# 25            B.1 - other -0.0521081186 0.023032485 NA  -0.097250959 -0.006965279 5.848205e-01
-# 26        B.1.1 - B.1.221  0.0990038023 0.024921692 NA   0.050158184  0.147849421 7.703817e-03
-# 27        B.1.1 - B.1.258  1.6163327715 1.441302659 NA  -1.208568532  4.441234075 9.975621e-01
-# 28        B.1.1 - B.1.160  0.1118941987 0.028691573 NA   0.055659748  0.168128649 9.971634e-03
-# 29     B.1.1 - (B.1.177+)  0.1389830658 0.034587875 NA   0.071192076  0.206774055 6.533728e-03
-# 30      B.1.1 - B.1.214.2  0.0742232259 0.017029001 NA   0.040846997  0.107599455 1.799868e-03
-# 31        B.1.1 - B.1.351  0.1053157034 0.017362086 NA   0.071286641  0.139344766 7.480827e-07
-# 32        B.1.1 - B.1.620  0.1384204327 0.054484922 NA   0.031631948  0.245208917 3.871089e-01
-# 33            B.1.1 - P.1  0.0412853049 0.016248097 NA   0.009439620  0.073130990 3.868401e-01
-# 34      B.1.1 - B.1.617.1  2.5431876336 3.960204257 NA  -5.218670081 10.305045348 9.999950e-01
-# 35      B.1.1 - B.1.617.2  0.0260799323 0.032333872 NA  -0.037293293  0.089453157 9.999290e-01
-# 36          B.1.1 - other  0.0200371755 0.016343716 NA  -0.011995920  0.052070271 9.941993e-01
-# 37      B.1.221 - B.1.258  1.5173289692 1.441282583 NA  -1.307532986  4.342190924 9.987158e-01
-# 38      B.1.221 - B.1.160  0.0128903965 0.030549062 NA  -0.046984664  0.072765457 1.000000e+00
-# 39   B.1.221 - (B.1.177+)  0.0399792635 0.035996835 NA  -0.030573237  0.110531764 9.977872e-01
-# 40    B.1.221 - B.1.214.2 -0.0247805763 0.020297814 NA  -0.064563561  0.015002408 9.944255e-01
-# 41      B.1.221 - B.1.351  0.0063119011 0.020526902 NA  -0.033920088  0.046543891 1.000000e+00
-# 42      B.1.221 - B.1.620  0.0394166304 0.055612756 NA  -0.069582369  0.148415630 9.999840e-01
-# 43          B.1.221 - P.1 -0.0577184974 0.019698282 NA  -0.096326420 -0.019110575 1.756083e-01
-# 44    B.1.221 - B.1.617.1  2.4441838313 3.960219944 NA  -5.317704630 10.206072292 9.999969e-01
-# 45    B.1.221 - B.1.617.2 -0.0729238700 0.034229950 NA  -0.140013339 -0.005834401 6.793243e-01
-# 46        B.1.221 - other -0.0789666268 0.019701927 NA  -0.117581694 -0.040351560 6.779665e-03
-# 47      B.1.258 - B.1.160 -1.5044385728 1.441321281 NA  -4.329376375  1.320499229 9.988245e-01
-# 48   B.1.258 - (B.1.177+) -1.4773497057 1.441352877 NA  -4.302349433  1.347650022 9.990269e-01
-# 49    B.1.258 - B.1.214.2 -1.5421095456 1.441247650 NA  -4.366903032  1.282683941 9.984832e-01
-# 50      B.1.258 - B.1.351 -1.5110170681 1.441246370 NA  -4.335808046  1.313773910 9.987696e-01
-# 51      B.1.258 - B.1.620 -1.4779123388 1.442177604 NA  -4.304528501  1.348703824 9.990288e-01
-# 52          B.1.258 - P.1 -1.5750474666 1.441240429 NA  -4.399826801  1.249731868 9.981194e-01
-# 53    B.1.258 - B.1.617.1  0.9268548621 4.214274012 NA  -7.332970423  9.186680147 1.000000e+00
-# 54    B.1.258 - B.1.617.2 -1.5902528392 1.441511292 NA  -4.415563055  1.235057377 9.979318e-01
-# 55        B.1.258 - other -1.5962955960 1.441229633 NA  -4.421053770  1.228462578 9.978472e-01
-# 56   B.1.160 - (B.1.177+)  0.0270888671 0.038721637 NA  -0.048804147  0.102981881 9.999863e-01
-# 57    B.1.160 - B.1.214.2 -0.0376709728 0.024838624 NA  -0.086353782  0.011011837 9.628575e-01
-# 58      B.1.160 - B.1.351 -0.0065784953 0.024997881 NA  -0.055573442  0.042416451 1.000000e+00
-# 59      B.1.160 - B.1.620  0.0265262340 0.057427554 NA  -0.086029703  0.139082171 9.999999e-01
-# 60          B.1.160 - P.1 -0.0706088938 0.024357414 NA  -0.118348549 -0.022869239 1.887295e-01
-# 61    B.1.160 - B.1.617.1  2.4312934349 3.960245885 NA  -5.330645869 10.193232739 9.999971e-01
-# 62    B.1.160 - B.1.617.2 -0.0858142665 0.037105587 NA  -0.158539881 -0.013088652 5.480569e-01
-# 63        B.1.160 - other -0.0918570233 0.024355932 NA  -0.139593772 -0.044120274 1.552666e-02
-# 64 (B.1.177+) - B.1.214.2 -0.0647598398 0.031454770 NA  -0.126410056 -0.003109624 7.278787e-01
-# 65   (B.1.177+) - B.1.351 -0.0336673624 0.031557415 NA  -0.095518760  0.028184035 9.985278e-01
-# 66   (B.1.177+) - B.1.620 -0.0005626331 0.060615153 NA  -0.119366150  0.118240884 1.000000e+00
-# 67       (B.1.177+) - P.1 -0.0976977609 0.031091703 NA  -0.158636380 -0.036759142 1.037820e-01
-# 68 (B.1.177+) - B.1.617.1  2.4042045678 3.960293180 NA  -5.357827433 10.166236569 9.999975e-01
-# 69 (B.1.177+) - B.1.617.2 -0.1129031335 0.041831553 NA  -0.194891471 -0.030914796 2.888878e-01
-# 70     (B.1.177+) - other -0.1189458903 0.031067821 NA  -0.179837700 -0.058054081 1.277731e-02
-# 71    B.1.214.2 - B.1.351  0.0310924775 0.009581814 NA   0.012312468  0.049872487 7.868469e-02
-# 72    B.1.214.2 - B.1.620  0.0641972068 0.052523704 NA  -0.038747361  0.167141774 9.943645e-01
-# 73        B.1.214.2 - P.1 -0.0329379210 0.007368181 NA  -0.047379291 -0.018496551 1.153193e-03
-# 74  B.1.214.2 - B.1.617.1  2.4689644077 3.960176786 NA  -5.292839465 10.230768280 9.999965e-01
-# 75  B.1.214.2 - B.1.617.2 -0.0481432937 0.028949302 NA  -0.104882882  0.008596295 9.256815e-01
-# 76      B.1.214.2 - other -0.0541860505 0.007590943 NA  -0.069064026 -0.039308075 2.419172e-09
-# 77      B.1.351 - B.1.620  0.0331047293 0.052623924 NA  -0.070036266  0.136245724 9.999961e-01
-# 78          B.1.351 - P.1 -0.0640303985 0.008132429 NA  -0.079969667 -0.048091130 3.617107e-11
-# 79    B.1.351 - B.1.617.1  2.4378719302 3.960179067 NA  -5.323936413 10.199680274 9.999970e-01
-# 80    B.1.351 - B.1.617.2 -0.0792357711 0.029151155 NA  -0.136370985 -0.022100558 2.781114e-01
-# 81        B.1.351 - other -0.0852785279 0.008268975 NA  -0.101485422 -0.069071634 7.571721e-14
-# 82          B.1.620 - P.1 -0.0971351278 0.052268805 NA  -0.199580103  0.005309848 8.454401e-01
-# 83    B.1.620 - B.1.617.1  2.4047672009 3.960513965 NA  -5.357697530 10.167231932 9.999975e-01
-# 84    B.1.620 - B.1.617.2 -0.1123405004 0.059308578 NA  -0.228583177  0.003902176 8.268524e-01
-# 85        B.1.620 - other -0.1183832572 0.052307778 NA  -0.220904618 -0.015861896 5.842147e-01
-# 86        P.1 - B.1.617.1  2.5019023287 3.960174251 NA  -5.259896575 10.263701232 9.999959e-01
-# 87        P.1 - B.1.617.2 -0.0152053726 0.028445164 NA  -0.070956870  0.040546125 9.999995e-01
-# 88            P.1 - other -0.0212481294 0.005605752 NA  -0.032235202 -0.010261057 1.455939e-02
-# 89  B.1.617.1 - B.1.617.2 -2.5171077013 3.960272718 NA -10.279099597  5.244884195 9.999956e-01
-# 90      B.1.617.1 - other -2.5231504581 3.960174822 NA -10.284950481  5.238649565 9.999955e-01
-# 91      B.1.617.2 - other -0.0060427568 0.028525655 NA  -0.061952013  0.049866500 1.000000e+00
+
 
 # estimated proportion of different LINEAGES in Belgium today
-today # "2021-06-03"
-# 62% [58%-65%] 95% CLs now estimated to be B.1.617.2 across all provinces
+today # "2021-06-19"
+# 29% [20%-38%] 95% CLs now estimated to be B.1.617.2 across all provinces
 multinom_preds_today_avg = data.frame(emmeans(fit2_belgium_multi, ~ LINEAGE2|1,
                                               at=list(DATE_NUM=today_num), 
                                               mode="prob", df=NA))
 multinom_preds_today_avg
 #    LINEAGE2         prob           SE df    asymp.LCL    asymp.UCL
-# 1    B.1.1.7 8.135461e-01 1.694109e-02 NA  7.803422e-01 8.467500e-01
-# 2        B.1 2.271596e-04 2.522467e-04 NA -2.672349e-04 7.215540e-04
-# 3      B.1.1 7.730407e-03 4.567008e-03 NA -1.220763e-03 1.668158e-02
-# 4    B.1.221 1.832953e-04 1.937086e-04 NA -1.963666e-04 5.629572e-04
-# 5    B.1.258 9.843938e-48 8.823933e-46 NA -1.719615e-45 1.739303e-45
-# 6    B.1.160 6.493338e-05 8.708438e-05 NA -1.057489e-04 2.356156e-04
-# 7   B.1.177+ 9.647403e-06 1.696255e-05 NA -2.359858e-05 4.289339e-05
-# 8  B.1.214.2 5.622821e-03 1.579650e-03 NA  2.526763e-03 8.718879e-03
-# 9    B.1.351 1.350115e-03 4.631194e-04 NA  4.424177e-04 2.257812e-03
-# 10   B.1.620 2.291534e-05 4.999045e-05 NA -7.506414e-05 1.208948e-04
-# 11       P.1 8.338785e-02 1.017312e-02 NA  6.344891e-02 1.033268e-01
-# 12 B.1.617.1 1.410855e-55 2.658013e-53 NA -5.195501e-53 5.223718e-53
-# 13 B.1.617.2 1.900155e-02 1.103772e-02 NA -2.631991e-03 4.063509e-02
-# 14     other 6.885321e-02 1.056597e-02 NA  4.814430e-02 8.956213e-02
+# 1    B.1.1.7 5.786440e-01 3.738720e-02 NA  5.053664e-01 6.519215e-01
+# 2        B.1 4.062952e-05 6.482387e-05 NA -8.642293e-05 1.676820e-04
+# 3      B.1.1 6.917755e-08 3.499962e-07 NA -6.168024e-07 7.551575e-07
+# 4    B.1.221 3.615152e-05 5.198101e-05 NA -6.572939e-05 1.380324e-04
+# 5    B.1.258 4.424507e-48 4.527626e-46 NA -8.829740e-46 8.918230e-46
+# 6   B.1.177+ 1.113567e-06 2.759549e-06 NA -4.295050e-06 6.522183e-06
+# 7  B.1.214.2 1.373001e-03 4.693797e-04 NA  4.530335e-04 2.292968e-03
+# 8    B.1.351 8.016106e-04 2.993170e-04 NA  2.149600e-04 1.388261e-03
+# 9    B.1.620 2.399086e-04 3.050556e-04 NA -3.579894e-04 8.378067e-04
+# 10       P.1 6.548067e-02 9.014592e-03 NA  4.781239e-02 8.314894e-02
+# 11 B.1.617.1 5.097477e-10 5.900896e-09 NA -1.105580e-08 1.207529e-08
+# 12 B.1.617.2 2.904556e-01 4.528007e-02 NA  2.017083e-01 3.792029e-01
+# 13     other 6.292731e-02 9.782610e-03 NA  4.375374e-02 8.210087e-02
 
 
 # PLOT MULTINOMIAL FIT
 
 # extrapolate = 30
 date.from = as.numeric(as.Date("2021-02-01"))
-date.to = as.numeric(as.Date("2021-06-01")) # max(GISAID_belgium$DATE_NUM)+extrapolate
+date.to = as.numeric(as.Date("2021-07-31")) # max(GISAID_belgium$DATE_NUM)+extrapolate
 
 fit_belgium_multi_predsbyprovince = data.frame(emmeans(fit2_belgium_multi,
                                                   ~ LINEAGE2,
@@ -667,12 +554,12 @@ muller_belgium_mfit = ggplot(data=fit_belgium_multi_preds,
                            aes(x=collection_date, y=prob, group=LINEAGE2)) + 
   # facet_wrap(~ province, ncol=1) +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE2, group=LINEAGE2), position="stack") +
-  scale_fill_manual("", values=lineage_cols2) +
+  scale_fill_manual("", values=lineage_cols1) +
   annotate("rect", xmin=max(GISAID_belgium$DATE_NUM)+1, 
-           xmax=as.Date("2021-06-14"), ymin=0, ymax=1, alpha=0.4, fill="white") + # extrapolated part
+           xmax=as.Date("2021-07-31"), ymin=0, ymax=1, alpha=0.4, fill="white") + # extrapolated part
   scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01")),
                      labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01"))),1,1),
-                     limits=as.Date(c("2020-11-01",NA)), expand=c(0,0)) +
+                     limits=as.Date(c("2021-02-01",NA)), expand=c(0,0)) +
   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
   theme_hc() + theme(legend.position="right", 
                      axis.title.x=element_blank()) + 
@@ -685,13 +572,13 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\belgium_muller plots_multinom fit.pdf
 
 
 library(ggpubr)
-ggarrange(muller_belgium_raw2+coord_cartesian(xlim=c(as.Date("2020-11-01"),as.Date("2021-06-14")))+
+ggarrange(muller_belgium_raw2+coord_cartesian(xlim=c(as.Date("2021-02-01"),as.Date("2021-07-31")))+
             theme(legend.background = element_rect(fill = alpha("white", 0)),
                   legend.key = element_rect(fill = alpha("white", 0)),
                   legend.text=element_text(color = "white")) +
             guides(colour = guide_legend(override.aes = list(alpha = 0)),
                    fill = guide_legend(override.aes = list(alpha = 0))), 
-          muller_belgium_mfit+ggtitle("Multinomial fit"), ncol=1)
+          muller_belgium_mfit+ggtitle("Multinomial fit")+coord_cartesian(xlim=c(as.Date("2021-02-01"),as.Date("2021-07-31"))), ncol=1)
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\belgium_muller plots multipanel_multinom fit.png"), width=8, height=8)
 ggsave(file=paste0(".\\plots\\",plotdir,"\\belgium_muller plots multipanel_multinom fit.pdf"), width=8, height=8)
@@ -701,12 +588,12 @@ muller_belgiumbyprovince_mfit = ggplot(data=fit_belgium_multi_predsbyprovince,
                                   aes(x=collection_date, y=prob, group=LINEAGE2)) +
   facet_wrap(~ province, ncol=3) +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE2, group=LINEAGE2), position="stack") +
-  scale_fill_manual("", values=lineage_cols2) +
+  scale_fill_manual("", values=lineage_cols1) +
   annotate("rect", xmin=max(GISAID_belgium$DATE_NUM)+1,
-           xmax=as.Date("2021-06-14"), ymin=0, ymax=1, alpha=0.4, fill="white") + # extrapolated part
+           xmax=as.Date("2021-07-31"), ymin=0, ymax=1, alpha=0.4, fill="white") + # extrapolated part
   scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01")),
                      labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01"))),1,1),
-                     limits=as.Date(c("2020-11-01",NA)), expand=c(0,0)) +
+                     limits=as.Date(c("2021-02-01",NA)), expand=c(0,0)) +
   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
   theme_hc() + theme(legend.position="right",
                      axis.title.x=element_blank()) +
@@ -718,7 +605,7 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\belgium_muller plots by province_mult
 ggsave(file=paste0(".\\plots\\",plotdir,"\\belgium_muller plots by province_multinom fit.pdf"), width=8, height=6)
 
 ggarrange(muller_belgiumbyprovince_raw2 +
-            coord_cartesian(xlim=c(as.Date("2020-11-01"),as.Date("2021-06-14")))+
+            coord_cartesian(xlim=c(as.Date("2021-02-01"),as.Date("2021-07-31")))+
             theme(legend.background = element_rect(fill = alpha("white", 0)),
                   legend.key = element_rect(fill = alpha("white", 0)),
                   legend.text=element_text(color = "white")) +
@@ -726,7 +613,7 @@ ggarrange(muller_belgiumbyprovince_raw2 +
                    fill = guide_legend(override.aes = list(alpha = 0)))+
             ggtitle("SARS-CoV2 LINEAGE FREQUENCIES IN BELGIUM\nRaw GISAID data"),
           muller_belgiumbyprovince_mfit+ggtitle("\nMultinomial fit")+
-            coord_cartesian(xlim=c(as.Date("2020-11-01"),as.Date("2021-06-14"))), nrow=2)
+            coord_cartesian(xlim=c(as.Date("2021-02-01"),as.Date("2021-07-31"))), nrow=2)
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\belgium_muller plots by province multipanel_multinom fit.png"), width=8, height=12)
 ggsave(file=paste0(".\\plots\\",plotdir,"\\belgium_muller plots by province multipanel_multinom fit.pdf"), width=8, height=12)
@@ -761,7 +648,7 @@ plot_belgium_mfit_logit = qplot(data=fit_belgium_multi_preds2, x=collection_date
   ggtitle("SARS-CoV2 LINEAGE FREQUENCIES IN BELGIUM\n(multinomial fit)") +
   scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01")),
                      labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01"))),1,1),
-                     limits=as.Date(c("2020-06-14",NA)), expand=c(0,0)) +
+                     limits=as.Date(c("2021-02-01",NA)), expand=c(0,0)) +
   scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
                       labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
   scale_fill_manual("variant", values=lineage_cols2) +
@@ -777,7 +664,7 @@ plot_belgium_mfit_logit = qplot(data=fit_belgium_multi_preds2, x=collection_date
   # guides(colour=FALSE) +
   theme(legend.position = "right") +
   xlab("Collection date")+
-  coord_cartesian(xlim=c(as.Date("2020-11-01"),as.Date("2021-06-14")), ylim=c(0.005, 0.95), expand=c(0,0))
+  coord_cartesian(xlim=c(as.Date("2021-02-01"),as.Date("2021-07-31")), ylim=c(0.005, 0.95), expand=c(0,0))
 plot_belgium_mfit_logit
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\belgium_multinom fit_logit scale.png"), width=8, height=6)
