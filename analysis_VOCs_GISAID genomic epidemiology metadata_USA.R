@@ -627,9 +627,9 @@ fit_usa_multi_preds_withCI$collection_date = as.Date(fit_usa_multi_preds_withCI$
 fit_usa_multi_preds_withCI$LINEAGE2 = factor(fit_usa_multi_preds_withCI$LINEAGE2, levels=levels_LINEAGE2)
 fit_usa_multi_preds3 = fit_usa_multi_preds_withCI
 
-fit_usa_multi_preds_withCI[fit_usa_multi_preds_withCI$collection_date==as.Date("2021-06-13")&fit_usa_multi_preds_withCI$LINEAGE2=="B.1.617.2",]
+fit_usa_multi_preds_withCI[fit_usa_multi_preds_withCI$collection_date==as.Date("2021-06-21")&fit_usa_multi_preds_withCI$LINEAGE2=="B.1.617.2",]
 #        LINEAGE2 DATE_NUM         STATE       prob          SE df  asymp.LCL  asymp.UCL collection_date
-# 362 B.1.617.2    18791 0.3179744 0.01571049 NA 0.2871824 0.3487664      2021-06-13
+# 615 B.1.617.2    18799 0.4215232 0.01522866 NA 0.3916756 0.4513708      2021-06-21
 
 # fit_usa_multi_preds2 = fit_usa_multi_preds # without CIs
 # fit_usa_multi_preds2$asymp.LCL = NA

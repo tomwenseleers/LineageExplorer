@@ -1098,7 +1098,7 @@ ggplot(data=hosps_uk_nhsregion,
   facet_wrap(~REGION) +
   geom_point(cex=I(0.2)) +
   geom_smooth(method="gam", se=TRUE, formula = y ~ s(x, k = 30)) + 
-  # scale_y_log10() + 
+  scale_y_log10() + 
   ylab("New hospital admissions (per day)") + 
   ggtitle("HOSPITAL ADMISSIONS PER DAY IN ENGLAND BY NHS REGION")
 

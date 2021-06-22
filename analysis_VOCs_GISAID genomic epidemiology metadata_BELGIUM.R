@@ -1,6 +1,6 @@
 # ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT VOCs IN BELGIUM BASED ON ANALYSIS OF GISAID PATIENT METADATA
 # T. Wenseleers
-# last update 19 JUNE 2021
+# last update 21 JUNE 2021
 
 library(nnet)
 # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
@@ -13,9 +13,9 @@ library(ggthemes)
 library(scales)
 
 today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-06-19")
+today = as.Date("2021-06-21")
 today_num = as.numeric(today)
-today # "2021-06-19"
+today # "2021-06-21"
 plotdir = "VOCs_belgium"
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 
@@ -24,7 +24,7 @@ d1 = read_tsv(".//data//GISAID//Belgium//gisaid_hcov-19_2021_05_29_08_belgium_su
 d2 = read_tsv(".//data//GISAID//Belgium//gisaid_hcov-19_2021_05_29_08_belgium_subm_jan_feb_2021.tsv", col_types = cols(.default = "c"))
 d3 = read_tsv(".//data//GISAID//Belgium//gisaid_hcov-19_2021_05_29_09_belgium_subm_mar_apr_2021.tsv", col_types = cols(.default = "c"))
 d4 = read_tsv(".//data//GISAID//Belgium//gisaid_hcov-19_2021_06_18_22_belgium_subm_may_2021.tsv", col_types = cols(.default = "c")) # downloaded 3/6/2021
-d5 = read_tsv(".//data//GISAID//Belgium//gisaid_hcov-19_2021_06_18_22_belgium_subm_june_2021.tsv", col_types = cols(.default = "c")) # downloaded 3/6/2021
+d5 = read_tsv(".//data//GISAID//Belgium//gisaid_hcov-19_2021_06_21_13_belgium_subm_june_2021.tsv", col_types = cols(.default = "c")) # downloaded 3/6/2021
 d1 = as.data.frame(d1)
 d2 = as.data.frame(d2)
 d3 = as.data.frame(d3)
@@ -34,7 +34,7 @@ GISAID_belgium1 = rbind(d1, d2, d3, d4, d5)
 GISAID_belgium1 = GISAID_belgium1[GISAID_belgium1[,"Host"]=="Human",]
 GISAID_belgium1[,"Collection date"] = as.Date(GISAID_belgium1[,"Collection date"])
 GISAID_belgium1 = GISAID_belgium1[!is.na(GISAID_belgium1[,"Collection date"]),]
-nrow(GISAID_belgium1) # 27500
+nrow(GISAID_belgium1) # 27507
 unique(GISAID_belgium1[,"Virus name"])
 unique(GISAID_belgium1[,"Location"])
 unique(GISAID_belgium1[,"Host"])
@@ -48,7 +48,7 @@ unique(GISAID_belgium1[,"Additional location information"])
 library(stringr)
 ZIP = str_extract(GISAID_belgium1[,"Additional location information"],"[0-9]{4}") # extract ZIP codes
 unique(ZIP)
-sum(!is.na(ZIP)) # 21067
+sum(!is.na(ZIP)) # 21074
 sum(is.na(ZIP)) # 6433 - anonymous records, these are assumed to be active surveillance of cluster outbreaks
 
 muni = read.csv(".//data//GISAID//Belgium//mapping_municips.csv") # post codes & cities & provinces
@@ -102,7 +102,7 @@ died[unknown] = NA
 # sum(bassurv) # 8856
 
 bassurv = !actsurv
-sum(bassurv) # 19978
+sum(bassurv) # 19985
 purpose_of_sequencing = rep("active_surveillance", nrow(GISAID_belgium1))
 purpose_of_sequencing[bassurv] = "baseline_surveillance"
 
@@ -113,7 +113,7 @@ GISAID_belgium1[,"Gender"][grepl("M|m",GISAID_belgium1[,"Gender"])] = "M"
 GISAID_belgium1[,"Gender"][grepl("unknown",GISAID_belgium1[,"Gender"])] = NA
 unique(GISAID_belgium1[,"Gender"]) # "F" "M" NA 
 
-sum(!is.na(GISAID_belgium1[,"Gender"] )) # 24655 with gender info
+sum(!is.na(GISAID_belgium1[,"Gender"] )) # 24662 with gender info
 
 GISAID_belgium1[,"Patient age"][grepl("nknown",GISAID_belgium1[,"Patient age"])] = NA
 GISAID_belgium1[,"Patient age"][grepl("month",GISAID_belgium1[,"Patient age"])] = 0
@@ -127,7 +127,7 @@ GISAID_belgium1[,"Patient age"][grepl("2020-1985",GISAID_belgium1[,"Patient age"
 GISAID_belgium1[,"Patient age"][grepl("2020-1972",GISAID_belgium1[,"Patient age"])] = as.character(2021-1972)
 GISAID_belgium1[,"Patient age"] = as.numeric(GISAID_belgium1[,"Patient age"])
 GISAID_belgium1[,"Patient age"][GISAID_belgium1[,"Patient age"]>200] = NA
-sum(!is.na(GISAID_belgium1[,"Patient age"] )) # 24664 with age info
+sum(!is.na(GISAID_belgium1[,"Patient age"] )) # 24671 with age info
 
 GISAID_belgium1[,"Virus name"] = gsub("hCoV-19/","",GISAID_belgium1[,"Virus name"])
 
@@ -193,14 +193,14 @@ GISAID_belgium1[grepl("B.1.617", GISAID_belgium1$LINEAGE1, fixed=TRUE),"LINEAGE1
 # get extra fields "genbank_accession", "Nextstrain_clade", "originating_lab", "submitting_lab", "authors", "url", "title", "paper_url"
 # from genomic epidemiology GISAID metadata
 # (check with Emmanuel André & Lize Cuypers which labs were doing active surveillance vs baseline surveillance)
-# we use genomic epidemiology GISAID data file version metadata_2021-06-17_05-53.tsv.gz with data for all countries :
-GISAID = read_tsv(gzfile(".//data//GISAID_genomic_epidemiology//metadata_2021-06-17_05-53.tsv.gz"), col_types = cols(.default = "c")) 
+# we use genomic epidemiology GISAID data file version metadata_2021-06-18_18-18.tsv.gz with data for all countries :
+GISAID = read_tsv(gzfile(".//data//GISAID_genomic_epidemiology//metadata_2021-06-18_18-18.tsv.gz"), col_types = cols(.default = "c")) 
 GISAID = as.data.frame(GISAID)
 GISAID$date = as.Date(GISAID$date)
 GISAID = GISAID[!is.na(GISAID$date),]
 GISAID = GISAID[GISAID$host=="Human",]
 GISAID_genepi_belgium = GISAID[GISAID$country=="Belgium",]
-nrow(GISAID_genepi_belgium) # 26868
+nrow(GISAID_genepi_belgium) # 26995
 
 # add (genbank_accession,) Nextstrain_clade, originating_lab, submitting_lab, authors, url, title & paper_url to GISAID_belgium1
 # GISAID_belgium1$genbank_accession = GISAID_genepi_belgium$genbank_accession[match(GISAID_belgium1$gisaid_epi_isl,GISAID_genepi_belgium$gisaid_epi_isl)]
@@ -234,7 +234,7 @@ GISAID_belgium1$originating_lab_does_baseline_surveillance = labnames$do_baselin
 GISAID_belgium1$purpose_of_sequencing[GISAID_belgium1$originating_lab_does_baseline_surveillance=="no"] = "active_surveillance"
 
 # write parsed & cleaned up file to csv
-write.csv(GISAID_belgium1, ".//data//GISAID//Belgium//gisaid_hcov-19_2021_06_19_ALL PARSED.csv",row.names=F)
+write.csv(GISAID_belgium1, ".//data//GISAID//Belgium//gisaid_hcov-19_2021_06_21_ALL PARSED.csv",row.names=F)
 
 
 
@@ -242,9 +242,9 @@ write.csv(GISAID_belgium1, ".//data//GISAID//Belgium//gisaid_hcov-19_2021_06_19_
 # ANALYSIS OF VOC LINEAGE FREQUENCIES IN BELGIUM USING MULTINOMIAL FITS ####
 
 # GISAID_belgium = GISAID_sel[GISAID_sel$country=="Belgium",]
-GISAID_belgium = GISAID_belgium1[GISAID_belgium1$purpose_of_sequencing=="baseline_surveillance",]
-nrow(GISAID_belgium) # 18743
-sum(!is.na(GISAID_belgium$age)) # 17344 with age info
+GISAID_belgium = GISAID_belgium1 # [GISAID_belgium1$purpose_of_sequencing=="baseline_surveillance",]
+nrow(GISAID_belgium) # 18750
+sum(!is.na(GISAID_belgium$age)) # 17351 with age info
 
 # plot age distribution of B.1.617.2 & B.1.1.7 cases in Belgium
 df = GISAID_belgium[GISAID_belgium$date>=as.Date("2021-04-01")&GISAID_belgium$pango_lineage %in% c("B.1.1.7","B.1.617.2"),]
@@ -263,9 +263,9 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\belgium_B1672_B117_age distribution.p
 
 unique(GISAID_belgium$province) # 
 unique(GISAID_belgium$province[GISAID_belgium$LINEAGE1=="B.1.617+"]) # "Belgium"         "Hasselt"         "Brussels"        "Brugge"          "Gent"            "Liège"           "Halle-Vilvoorde" "Antwerpen"       "Mechelen"
-sum(GISAID_belgium$LINEAGE1=="B.1.617+") # 44 among baseline surveillance
+sum(GISAID_belgium$LINEAGE1=="B.1.617+") # 171 among baseline surveillance
 unique(GISAID_belgium$province[GISAID_belgium$LINEAGE1=="B.1.1.7"])
-sum(GISAID_belgium$LINEAGE1=="B.1.1.7") # 10632 among baseline surveillance
+sum(GISAID_belgium$LINEAGE1=="B.1.1.7") # 13339 among baseline surveillance
 
 table(GISAID_belgium$LINEAGE1)
 table(GISAID_belgium$LINEAGE2)
@@ -313,7 +313,7 @@ GISAID_belgium$LINEAGE2 = factor(GISAID_belgium$LINEAGE2, levels=levels_LINEAGE2
 
 # use data from Nov 1 onwards
 GISAID_belgium = GISAID_belgium[GISAID_belgium$date>=as.Date("2021-02-01"),]
-nrow(GISAID_belgium) # 16602
+nrow(GISAID_belgium) # 16609
 range(GISAID_belgium$date) # "2021-02-01" "2021-06-14"
 
 # write.csv(GISAID_belgium, ".//data//GISAID//Belgium//gisaid_hcov-19_2021_05_24_10_ALL PARSED_BASELINE SELECTION.csv",row.names=F)
@@ -343,7 +343,7 @@ data_agbyweek2$collection_date_num = as.numeric(data_agbyweek2$collection_date)
 data_agbyweek2$prop = data_agbyweek2$count/data_agbyweek2$total
 data_agbyweek2$floor_date = NULL
 
-write.csv(data_agbyweek2, ".//data//GISAID//Belgium//gisaid_hcov-19_2021_06_19_BASELINE SELECTION_aggregated counts by week.csv",row.names=F)
+write.csv(data_agbyweek2, ".//data//GISAID//Belgium//gisaid_hcov-19_2021_06_21_BASELINE SELECTION_aggregated counts by week.csv",row.names=F)
 
 
 # aggregated by week and province for selected variant lineages
@@ -466,7 +466,7 @@ fit4_belgium_multi = nnet::multinom(LINEAGE2 ~ province * DATE_NUM, data=GISAID_
 fit5_belgium_multi = nnet::multinom(LINEAGE2 ~ province * ns(DATE_NUM, df=2), data=GISAID_belgium, maxit=1000)
 fit6_belgium_multi = nnet::multinom(LINEAGE2 ~ province * ns(DATE_NUM, df=3), data=GISAID_belgium, maxit=1000)
 BIC(fit1_belgium_multi, fit2_belgium_multi, fit3_belgium_multi, fit4_belgium_multi, fit5_belgium_multi, fit6_belgium_multi) 
-# fit3_belgium_multi fits best (lowest BIC), but I will use slightly simpler fit2_belgium_multi
+# fit2_belgium_multi fits best (lowest BIC)
 
 # equivalent fit with B.1.617.1,2&3 all recoded to B.1.617+
 fit2_belgium_multi1 = nnet::multinom(LINEAGE1 ~ province + ns(DATE_NUM, df=2), data=GISAID_belgium, maxit=1000)
