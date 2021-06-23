@@ -134,7 +134,7 @@ muller_nl_raw = ggplot(data=data_agbyweek1,
   xlab("") +
   theme(plot.title = element_text(hjust = 0)) +
   theme(legend.position = "right") +
-  ggtitle("Spread of SARS-CoV2 variants of concern in Netherlands\n(baseline surveillance, whole genome sequencing+VOC PCR)")
+  ggtitle("Spread of SARS-CoV2 variants of concern in Netherlands\n(baseline surveillance))")
 muller_nl_raw
 
 ggsave(file=paste0(".\\plots\\",dat,"\\muller plot_netherlands_raw data.png"), width=7, height=5)
