@@ -59,7 +59,7 @@ set_sum_contrasts() # we use effect coding for all models
 # IN BELGIUM BASED ON BASELINE SURVEILLANCE SEQUENCING & VOC PCR DATA ####
 # (baseline surveillance, i.e. randomly sampled, excluding travellers & surge testing)
 
-be_baseline = read.csv(paste0(".\\data\\",dat,"\\VOC_baseline_surveillance_belgium_22 june 2021.csv"))
+  be_baseline = read.csv(paste0(".\\data\\",dat,"\\VOC_baseline_surveillance_belgium_22 june 2021.csv"))
 be_baseline$week_startdate = as.Date(be_baseline$week_startdate)
 be_baseline$collection_date = be_baseline$week_startdate+3.5 # we use the week midpoint
 # except for last VOC PCR datapoint which is from 14 & 15/6 only, so we take the midpoint of that
@@ -403,7 +403,7 @@ be_seq_mfit0_preds[as.character(be_seq_mfit0_preds$collection_date)==as.characte
 # 1253 B.1.617.2 (delta)             18807.5 0.4599146867 0.0470136723 NA  0.3677695822 0.5520597911      2021-06-29
 # 1254             other             18807.5 0.0171298959 0.0024716702 NA  0.0122855114 0.0219742805      2021-06-29
 
-
+  
 
 # estimated date that B.1.617.2 would make out >50% of all lab diagnoses: "2021-07-01" ["2021-06-28"-"2021-07-06"] 95% CLs (7 days earlier for infections)
 be_seq_mfit0_preds[be_seq_mfit0_preds$variant=="B.1.617.2 (delta)","collection_date"][which(be_seq_mfit0_preds[be_seq_mfit0_preds$variant=="B.1.617.2 (delta)","prob"] >= 0.5)[1]]
