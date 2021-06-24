@@ -541,7 +541,7 @@ qplot(data=above_avg_r_variants2[!(above_avg_r_variants2$variant %in% c("other")
   geom_line(aes(colour=variant), lwd=I(0.72)) + theme_hc() + xlab("") +
   scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
                      labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A","M","J","J")) +
-  scale_y_continuous(limits=c(1/ymax,ymax), trans="log2") +
+  # scale_y_continuous(limits=c(1/ymax,ymax), trans="log2") +
   geom_hline(yintercept=1, colour=I("red")) +
   ggtitle("Re VALUES OF SARS-CoV2 VARIANTS IN BELGIUM\n(based on case data Sciensano & multinomial fit to\nbaseline surveillance lineage frequencies federal test platform)") +
   # labs(tag = tag) +
@@ -554,5 +554,5 @@ qplot(data=above_avg_r_variants2[!(above_avg_r_variants2$variant %in% c("other")
   theme(legend.position="right",  
         axis.title.x=element_blank())
 
-ggsave(file=paste0(".\\plots\\",dat,"\\belgium_Re values per variant_with clipping.png"), width=8, height=6)
-ggsave(file=paste0(".\\plots\\",dat,"\\belgium_Re values per variant_with clipping.pdf"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",dat,"\\belgium_Re values per variant_avgRe_from_cases_with clipping.png"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",dat,"\\belgium_Re values per variant_avgRe_from_cases_with clipping.pdf"), width=8, height=6)
