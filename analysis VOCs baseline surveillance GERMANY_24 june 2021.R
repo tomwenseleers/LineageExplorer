@@ -420,7 +420,7 @@ de_seq_mfit0_preds[as.character(de_seq_mfit0_preds$collection_date)==as.characte
 
   
 
-# estimated date that B.1.617.2 would make out >50% of all lab diagnoses: "2021-07-03" ["2021-06-28"-"2021-07-10"] 95% CLs (7 days earlier for infections)
+# estimated date that B.1.617.2 would make   out >50% of all lab diagnoses: "2021-07-03" ["2021-06-28"-"2021-07-10"] 95% CLs (7 days earlier for infections)
 de_seq_mfit0_preds[de_seq_mfit0_preds$variant=="B.1.617.2 (delta)","collection_date"][which(de_seq_mfit0_preds[de_seq_mfit0_preds$variant=="B.1.617.2 (delta)","prob"] >= 0.5)[1]]
 de_seq_mfit0_preds[de_seq_mfit0_preds$variant=="B.1.617.2 (delta)","collection_date"][which(de_seq_mfit0_preds[de_seq_mfit0_preds$variant=="B.1.617.2 (delta)","asymp.LCL"] >= 0.5)[1]]
 de_seq_mfit0_preds[de_seq_mfit0_preds$variant=="B.1.617.2 (delta)","collection_date"][which(de_seq_mfit0_preds[de_seq_mfit0_preds$variant=="B.1.617.2 (delta)","asymp.UCL"] >= 0.5)[1]]

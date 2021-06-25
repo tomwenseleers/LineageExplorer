@@ -425,7 +425,7 @@ Re.from.r <- function(r, gamma_mean=4.7, gamma_sd=2.9) { # Nishiura et al. 2020,
 }
 
 source("scripts/downloadData.R") # download latest data with new confirmed cases per day from Sciensano website, code adapted from https://github.com/JoFAM/covidBE_analysis by Joris Meys
-range(cases_tot$DATE) # "2020-03-01" "2021-06-21"
+range(cases_tot$DATE) # "2020-03-01" "2021-06-23"
 cases_tot = cases_tot[cases_tot$DATE>=as.Date("2020-08-01"),]
 
 # smooth out weekday effects in case nrs using GAM & correct for unequal testing intensity
@@ -533,7 +533,7 @@ above_avg_r_variants2$Re_UPPER[above_avg_r_variants2$Re_UPPER<=ymin] = ymin
 above_avg_r_variants2$Re[above_avg_r_variants2$prob<0.01] = NA
 above_avg_r_variants2$Re_LOWER[above_avg_r_variants2$prob<0.01] = NA
 above_avg_r_variants2$Re_UPPER[above_avg_r_variants2$prob<0.01] = NA
-qplot(data=above_avg_r_variants2[!(above_avg_r_variants2$variant %in% c("other")),], 
+qplot(data=above_avg_r_variants2[!((above_avg_r_variants2$variant %in% c("other"))|above_avg_r_variants2$collection_date>max(cases_tot$DATE)),], 
       x=collection_date, y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribbon", colour=variant, fill=variant, alpha=I(0.5),
       group=variant, linetype=I(0)) +
   # facet_wrap(~ REGION) +
@@ -552,7 +552,7 @@ qplot(data=above_avg_r_variants2[!(above_avg_r_variants2$variant %in% c("other")
   scale_fill_manual("variant", values=c(head(colours_VARIANTS,-1),"black")) +
   scale_colour_manual("variant", values=c(head(colours_VARIANTS,-1),"black")) +
   theme(legend.position="right",  
-        axis.title.x=element_blank())
+        axis.title.x=element_blank()) 
 
 ggsave(file=paste0(".\\plots\\",dat,"\\belgium_Re values per variant_avgRe_from_cases_with clipping.png"), width=8, height=6)
 ggsave(file=paste0(".\\plots\\",dat,"\\belgium_Re values per variant_avgRe_from_cases_with clipping.pdf"), width=8, height=6)
