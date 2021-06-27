@@ -449,24 +449,24 @@ ggplot(data=nl_seq_mfit0_preds,
 ggsave(file=paste0(".\\plots\\",dat,"\\cases per day_stacked area multinomial fit raw case data.png"), width=8, height=6)
 
 ggplot(data=nl_seq_mfit0_preds, 
-       aes(x=collection_date, y=smoothed_cases, group=variant)) + 
+       aes(x=collection_date-7, y=smoothed_cases, group=variant)) + 
   # facet_wrap(~ REGION, scale="free", ncol=3) +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), position="stack") +
   scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01")),
                      labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01"))),1,1),
-                     limits=c(as.Date("2021-03-01"),max(cases_tot$date)), expand=c(0,0)) +
+                     limits=c(as.Date("2021-03-01"),today), expand=c(0,0)) +
   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
   theme_hc() + theme(legend.position="right") + 
-  ylab("New confirmed cases per day (smoothed)") + xlab("Date of diagnosis") +
+  ylab("New confirmed cases per day (smoothed)") + xlab("Date of infection") +
   ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT\nIN THE NETHERLANDS\n(case data & multinomial fit to baseline surveillance data RIVM)") +
   scale_fill_manual("variant", values=colours_VARIANTS) +
   scale_colour_manual("variant", values=colours_VARIANTS) +
-  coord_cartesian(xlim=c(as.Date("2021-05-01"),NA))
+  coord_cartesian(xlim=c(as.Date("2021-05-01"),today))
 
 ggsave(file=paste0(".\\plots\\",dat,"\\cases per day_smoothed_stacked area multinomial fit raw case data.png"), width=8, height=6)
 
 
-# EFFECTIVE REPRODUCTION NUMBER BY VARIANT THROUGH TIME ####
+  # EFFECTIVE REPRODUCTION NUMBER BY VARIANT THROUGH TIME ####
 
 # Function to calculate Re values from intrinsic growth rate
 # cf. https://github.com/epiforecasts/EpiNow2/blob/5015e75f7048c2580b2ebe83e46d63124d014861/R/utilities.R#L109
