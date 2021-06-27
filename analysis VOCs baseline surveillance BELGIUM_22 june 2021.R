@@ -7,7 +7,7 @@
 # https://covid-19.sciensano.be/nl/covid-19-epidemiologische-situatie (federal test platform) & "Genomic surveillance of SARS-CoV-2 in Belgium", 
 # reports, https://www.uzleuven.be/nl/laboratoriumgeneeskunde/genomic-surveillance-sars-cov-2-belgium
 
-# Tom Wenseleers, last update 22 JUNE 2021
+# Tom Wenseleers, last update 27 JUNE 2021
 
 library(lme4)
 library(splines)
@@ -104,6 +104,7 @@ colours_VARIANTS = c("#0085FF","#9A9D00","cyan3",muted("magenta"),"magenta","gre
 
 be_baseline_long$collection_date_num = as.numeric(be_baseline_long$collection_date)
 be_baseline_long$prop = be_baseline_long$count / be_baseline_long$total
+be_baseline_long$data = factor(be_baseline_long$data, levels=c("WGS","VOC_PCR"))
 
 # aggregated WGS + VOC PCR data by week
 be_baseline_long2 = be_baseline_long[,c("collection_date","variant","count")]
@@ -136,7 +137,7 @@ muller_be_raw = ggplot(data=data_agbyweek1,
                      labels=substring(months(as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
                      limits=as.Date(c("2020-12-01",NA)), expand=c(0,0)) +
   ylab("Share") +
-  xlab("") +
+  xlab("Date of diagnosis") +
   theme(plot.title = element_text(hjust = 0)) +
   theme(legend.position = "right") +
   ggtitle("Spread of SARS-CoV2 variants of concern in Belgium\n(baseline surveillance, whole genome sequencing+VOC PCR)")
@@ -266,10 +267,9 @@ muller_be_seq_mfit0 = ggplot(data=be_seq_mfit0_preds,
                      labels=substring(months(as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
                      limits=as.Date(c("2020-12-01","2021-07-31")), expand=c(0,0)) +
   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
-  theme_hc() + theme(legend.position="right", 
-                     axis.title.x=element_blank()) + 
+  theme_hc() + theme(legend.position="right") + # , axis.title.x=element_blank()
   # labs(title = "MAIN SARS-CoV2 VARIANT LINEAGES IN THE UK") +
-  ylab("Share") +
+  ylab("Share") + xlab("Date of diagnosis") +
   ggtitle("Spread of SARS-CoV2 variants of concern in Belgium\n(baseline surveillance, sequencing+VOC PCR)")
 muller_be_seq_mfit0
 
@@ -281,11 +281,10 @@ ggarrange(muller_be_raw+coord_cartesian(xlim=c(as.Date("2020-12-01"),as.Date(dat
                   legend.key = element_rect(fill = alpha("white", 0)),
                   legend.text=element_text(color = "white")) +
             guides(colour = guide_legend(override.aes = list(alpha = 0)),
-                   fill = guide_legend(override.aes = list(alpha = 0))), 
+                   fill = guide_legend(override.aes = list(alpha = 0))) + theme(axis.title.x=element_blank()), 
           muller_be_seq_mfit0+ggtitle("Multinomial fit"), ncol=1)
 
 ggsave(file=paste0(".\\plots\\",dat,"\\muller plot_belgium_raw data plus multinomial fit multipanel.png"), width=8, height=6)
-ggsave(file=paste0(".\\plots\\",dat,"\\muller plot_belgium_raw data plus multinomial fit multipanel.pdf"), width=8, height=6)
 
 
 # PLOT MODEL FIT WITH DATA & CONFIDENCE INTERVALS
@@ -326,7 +325,7 @@ plot_multinom_response = qplot(data=be_seq_mfit0_preds,
   # guides(fill=FALSE) +
   # guides(colour=FALSE) +
   theme(legend.position = "right") +
-  xlab("Collection date")
+  xlab("Date of diagnosis")
 plot_multinom_response
 
 ggsave(file=paste0(".\\plots\\",dat,"\\belgium_baseline_surveillance_multinomial fits_response scale.png"), width=8, height=6)
@@ -373,7 +372,7 @@ plot_multinom = qplot(data=be_seq_mfit0_preds2[be_seq_mfit0_preds2$variant!="all
   # guides(fill=FALSE) +
   # guides(colour=FALSE) +
   theme(legend.position = "right") +
-  xlab("Collection date") +
+  xlab("Date of diagnosis") +
   coord_cartesian(xlim=c(min(be_baseline_long2$collection_date), as.Date("2021-07-31")),
                   # xlim=c(as.Date("2020-07-01"),as.Date("2021-01-31")),
                   ylim=c(0.001, 0.9900001), expand=c(0,0))
@@ -412,6 +411,82 @@ be_seq_mfit0_preds[be_seq_mfit0_preds$variant=="B.1.617.2 (delta)","collection_d
 
 
 
+
+
+
+# PLOTS OF NEW CASES PER DAY BY VARIANT & EFFECTIVE REPRODUCTION NUMBER BY VARIANT THROUGH TIME ####
+
+# load case data
+library(covidregionaldata)
+library(dplyr)
+library(ggplot2)
+library(scales)  
+
+# cases_tot = as.data.frame(get_national_data(countries = "Belgium")) # doesn't include testing data unfortunately - raise issue in github
+# cases_tot = cases_tot[cases_tot$date>=as.Date("2020-08-01"),]
+# cases_tot$DATE_NUM = as.numeric(cases_tot$date)
+# cases_tot$BANKHOLIDAY = bankholiday(cases_tot$date)
+# cases_tot$WEEKDAY = weekdays(cases_tot$date)
+
+source("scripts/downloadData.R") # download latest data with new confirmed cases per day from Sciensano website, code adapted from https://github.com/JoFAM/covidBE_analysis by Joris Meys
+range(cases_tot$DATE) # "2020-03-01" "2021-06-23"
+cases_tot = cases_tot[cases_tot$DATE>=as.Date("2020-08-01"),]
+
+# smooth out weekday effects in case nrs using GAM & correct for unequal testing intensity
+fit_cases = gam(CASES ~ s(DATE_NUM, bs="cs", k=25, fx=F) + 
+                  WEEKDAY + BANKHOLIDAY +
+                  s(TESTS_ALL, bs="cs", k=8, fx=F),
+                family=poisson(log), data=cases_tot,
+) 
+BIC(fit_cases)
+
+
+# STACKED AREA CHART OF NEW CASES BY VARIANT (MULTINOMIAL FIT MAPPED ONTO CASE DATA) ####
+
+be_seq_mfit0_preds$totcases = cases_tot$CASES[match(round(be_seq_mfit0_preds$collection_date_num),cases_tot$DATE_NUM)]
+be_seq_mfit0_preds$cases = be_seq_mfit0_preds$totcases * be_seq_mfit0_preds$prob
+be_seq_mfit0_preds$cases[be_seq_mfit0_preds$cases<=0.001] = NA
+cases_emmeans = as.data.frame(emmeans(fit_cases, ~ DATE_NUM, at=list(DATE_NUM=seq(date.from, date.to, by=0.5), 
+                                                                     BANHOLIDAY="no"), type="response"))
+be_seq_mfit0_preds$smoothed_totcases = cases_emmeans$rate[match(be_seq_mfit0_preds$collection_date_num,cases_emmeans$DATE_NUM)]
+be_seq_mfit0_preds$smoothed_cases = be_seq_mfit0_preds$smoothed_totcases * be_seq_mfit0_preds$prob
+be_seq_mfit0_preds$smoothed_cases[be_seq_mfit0_preds$smoothed_cases<=0.001] = NA
+
+ggplot(data=be_seq_mfit0_preds, 
+       aes(x=collection_date, y=cases, group=variant)) + 
+  # facet_wrap(~ REGION, scale="free", ncol=3) +
+  geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), position="stack") +
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
+                     limits=c(as.Date("2020-09-01"),max(cases_tot$DATE)), expand=c(0,0)) +
+  # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
+  theme_hc() + theme(legend.position="right") + 
+  ylab("New confirmed cases per day") + xlab("Date of diagnosis") +
+  ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT\nIN BELGIUM\n(case data Sciensano & multinomial fit to\nbaseline surveillance data federal test platform)") +
+  scale_fill_manual("variant", values=colours_VARIANTS) +
+  scale_colour_manual("variant", values=colours_VARIANTS) +
+  coord_cartesian(xlim=c(as.Date("2020-12-01"),NA))
+
+ggsave(file=paste0(".\\plots\\",dat,"\\cases per day_stacked area multinomial fit raw case data.png"), width=8, height=6)
+
+ggplot(data=be_seq_mfit0_preds, 
+       aes(x=collection_date-7, y=smoothed_cases, group=variant)) + 
+  # facet_wrap(~ REGION, scale="free", ncol=3) +
+  geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), position="stack") +
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
+                     limits=c(as.Date("2020-09-01"),today), expand=c(0,0)) +
+  # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
+  theme_hc() + theme(legend.position="right") + 
+  ylab("New confirmed cases per day (smoothed)") + xlab("Date of infection") +
+  ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT\nIN BELGIUM\n(case data Sciensano & multinomial fit to\nbaseline surveillance data federal test platform)") +
+  scale_fill_manual("variant", values=colours_VARIANTS) +
+  scale_colour_manual("variant", values=colours_VARIANTS) +
+  coord_cartesian(xlim=c(as.Date("2020-12-01"),today))
+
+ggsave(file=paste0(".\\plots\\",dat,"\\cases per day_smoothed_stacked area multinomial fit raw case data.png"), width=8, height=6)
+
+
 # CALCULATION OF EFFECTIVE REPRODUCTION NUMBER BASED ON CASE DATA & Re OF VARIANTS THROUGH TIME ####
 
 # Function to calculate Re values from intrinsic growth rate
@@ -423,18 +498,6 @@ Re.from.r <- function(r, gamma_mean=4.7, gamma_sd=2.9) { # Nishiura et al. 2020,
   R <- (1 + k * r * gamma_mean)^(1 / k)
   return(R)
 }
-
-source("scripts/downloadData.R") # download latest data with new confirmed cases per day from Sciensano website, code adapted from https://github.com/JoFAM/covidBE_analysis by Joris Meys
-range(cases_tot$DATE) # "2020-03-01" "2021-06-23"
-cases_tot = cases_tot[cases_tot$DATE>=as.Date("2020-08-01"),]
-
-# smooth out weekday effects in case nrs using GAM & correct for unequal testing intensity
-fit_cases = gam(CASES ~ s(DATE_NUM, bs="cs", k=25, fx=F) + 
-                     WEEKDAY + BANKHOLIDAY +
-                     s(TESTS_ALL, bs="cs", k=8, fx=F),
-                   family=poisson(log), data=cases_tot,
-) 
-BIC(fit_cases)
 
 # calculate average instantaneous growth rates & 95% CLs using emtrends ####
 # based on the slope of the GAM fit on a log link scale
@@ -454,7 +517,7 @@ avg_r_cases$Re_UPPER = Re.from.r(avg_r_cases$r_UPPER)
 avg_r_cases = avg_r_cases[complete.cases(avg_r_cases),]
 qplot(data=avg_r_cases, x=DATE-7, y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribbon", alpha=I(0.5), fill=I("steelblue")) +
   # facet_wrap(~ REGION) +
-  geom_line() + theme_hc() + xlab("") +
+  geom_line() + theme_hc() + xlab("Date of infection") +
   scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
                      labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A","M","J","J")) +
   scale_y_continuous(limits=c(1/2, 2), trans="log2") +
@@ -469,18 +532,18 @@ qplot(data=avg_r_cases, x=DATE-7, y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribb
 # calculate above-average intrinsic growth rates per day of each variant over time based on multinomial fit using emtrends weighted effect contrasts ####
 # for best model fit3_sanger_multi
 above_avg_r_variants = do.call(rbind, lapply(seq(date.from,
-                                                  date.to), 
-                                              function (dat) { 
-                                                wt = as.data.frame(emmeans(be_seq_mfit0, ~ variant , at=list(collection_date_num=dat), type="response"))$prob   # important: these should sum to 1
-                                                # wt = rep(1/length(levels_VARIANTS), length(levels_VARIANTS)) # this would give equal weights, equivalent to emmeans:::eff.emmc(levs=levels_LINEAGE2)
-                                                cons = lapply(seq_along(wt), function (i) { con = -wt; con[i] = 1 + con[i]; con })
-                                                names(cons) = seq_along(cons)
-                                                EMT = emtrends(be_seq_mfit0,  ~ variant , by=c("collection_date_num"),
-                                                               var="collection_date_num", mode="latent",
-                                                               at=list(collection_date_num=dat))
-                                                out = as.data.frame(confint(contrast(EMT, cons), adjust="none", df=NA))
-                                                # sum(out$estimate*wt) # should sum to zero
-                                                return(out) } ))
+                                                 date.to), 
+                                             function (dat) { 
+                                               wt = as.data.frame(emmeans(be_seq_mfit0, ~ variant , at=list(collection_date_num=dat), type="response"))$prob   # important: these should sum to 1
+                                               # wt = rep(1/length(levels_VARIANTS), length(levels_VARIANTS)) # this would give equal weights, equivalent to emmeans:::eff.emmc(levs=levels_LINEAGE2)
+                                               cons = lapply(seq_along(wt), function (i) { con = -wt; con[i] = 1 + con[i]; con })
+                                               names(cons) = seq_along(cons)
+                                               EMT = emtrends(be_seq_mfit0,  ~ variant , by=c("collection_date_num"),
+                                                              var="collection_date_num", mode="latent",
+                                                              at=list(collection_date_num=dat))
+                                               out = as.data.frame(confint(contrast(EMT, cons), adjust="none", df=NA))
+                                               # sum(out$estimate*wt) # should sum to zero
+                                               return(out) } ))
 
 above_avg_r_variants$contrast = factor(above_avg_r_variants$contrast, 
                                        levels=1:length(levels_VARIANTS), 
@@ -518,9 +581,9 @@ df = data.frame(contrast=NA,
 above_avg_r_variants = rbind(above_avg_r_variants, df)
 above_avg_r_variants$variant = factor(above_avg_r_variants$variant, levels=c(levels_VARIANTS,"avg"))
 above_avg_r_variants$prob = be_seq_mfit0_preds$prob[match(interaction(above_avg_r_variants$collection_date_num,
-                                                                                      above_avg_r_variants$variant),
-                                                                          interaction(be_seq_mfit0_preds$collection_date_num,
-                                                                                      be_seq_mfit0_preds$variant))]
+                                                                      above_avg_r_variants$variant),
+                                                          interaction(be_seq_mfit0_preds$collection_date_num,
+                                                                      be_seq_mfit0_preds$variant))]
 above_avg_r_variants2 = above_avg_r_variants
 ymax = 1.5
 ymin = 1/2
@@ -534,7 +597,8 @@ above_avg_r_variants2$Re[above_avg_r_variants2$prob<0.01] = NA
 above_avg_r_variants2$Re_LOWER[above_avg_r_variants2$prob<0.01] = NA
 above_avg_r_variants2$Re_UPPER[above_avg_r_variants2$prob<0.01] = NA
 qplot(data=above_avg_r_variants2[!((above_avg_r_variants2$variant %in% c("other"))|above_avg_r_variants2$collection_date>max(cases_tot$DATE)),], 
-      x=collection_date-7, y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribbon", colour=variant, fill=variant, alpha=I(0.5),
+      x=collection_date-7, # -7 to show Re at date of infection
+      y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribbon", colour=variant, fill=variant, alpha=I(0.5),
       group=variant, linetype=I(0)) +
   # facet_wrap(~ REGION) +
   # geom_ribbon(aes(fill=variant, colour=variant), alpha=I(0.5))
@@ -551,14 +615,10 @@ qplot(data=above_avg_r_variants2[!((above_avg_r_variants2$variant %in% c("other"
   coord_cartesian(xlim=c(as.Date("2021-01-01"),max(cases_tot$DATE))) +
   scale_fill_manual("variant", values=c(head(colours_VARIANTS,-1),"black")) +
   scale_colour_manual("variant", values=c(head(colours_VARIANTS,-1),"black")) +
-  theme(legend.position="right",  
-        axis.title.x=element_blank()) 
+  theme(legend.position="right") + # ,axis.title.x=element_blank()
+  xlab("Date of infection")
 
 ggsave(file=paste0(".\\plots\\",dat,"\\belgium_Re values per variant_avgRe_from_cases_with clipping.png"), width=8, height=6)
-ggsave(file=paste0(".\\plots\\",dat,"\\belgium_Re values per variant_avgRe_from_cases_with clipping.pdf"), width=8, height=6)
-
-
-# STACKED AREA CHART OF NEW CASES BY VARIANT (MULTINOMIAL FIT MAPPED ONTO CASE DATA) ####
 
 
 
