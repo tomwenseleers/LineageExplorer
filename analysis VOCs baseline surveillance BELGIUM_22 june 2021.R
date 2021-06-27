@@ -522,8 +522,8 @@ above_avg_r_variants$prob = be_seq_mfit0_preds$prob[match(interaction(above_avg_
                                                                           interaction(be_seq_mfit0_preds$collection_date_num,
                                                                                       be_seq_mfit0_preds$variant))]
 above_avg_r_variants2 = above_avg_r_variants
-ymax = 2
-ymin = 1/ymax
+ymax = 1.5
+ymin = 1/2
 above_avg_r_variants2$Re[above_avg_r_variants2$Re>=ymax] = NA
 above_avg_r_variants2$Re[above_avg_r_variants2$Re<=ymin] = NA
 above_avg_r_variants2$Re_LOWER[above_avg_r_variants2$Re_LOWER>=ymax] = ymax
@@ -534,7 +534,7 @@ above_avg_r_variants2$Re[above_avg_r_variants2$prob<0.01] = NA
 above_avg_r_variants2$Re_LOWER[above_avg_r_variants2$prob<0.01] = NA
 above_avg_r_variants2$Re_UPPER[above_avg_r_variants2$prob<0.01] = NA
 qplot(data=above_avg_r_variants2[!((above_avg_r_variants2$variant %in% c("other"))|above_avg_r_variants2$collection_date>max(cases_tot$DATE)),], 
-      x=collection_date, y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribbon", colour=variant, fill=variant, alpha=I(0.5),
+      x=collection_date-7, y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribbon", colour=variant, fill=variant, alpha=I(0.5),
       group=variant, linetype=I(0)) +
   # facet_wrap(~ REGION) +
   # geom_ribbon(aes(fill=variant, colour=variant), alpha=I(0.5))
@@ -543,7 +543,7 @@ qplot(data=above_avg_r_variants2[!((above_avg_r_variants2$variant %in% c("other"
                      labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A","M","J","J")) +
   # scale_y_continuous(limits=c(1/ymax,ymax), trans="log2") +
   geom_hline(yintercept=1, colour=I("red")) +
-  ggtitle("Re VALUES OF SARS-CoV2 VARIANTS IN BELGIUM\n(based on case data Sciensano & multinomial fit to\nbaseline surveillance lineage frequencies federal test platform)") +
+  ggtitle("Re VALUES OF SARS-CoV2 VARIANTS IN BELGIUM\nAT MOMENT OF INFECTION\n(based on case data Sciensano & multinomial fit to\nbaseline surveillance lineage frequencies federal test platform)") +
   # labs(tag = tag) +
   # theme(plot.margin = margin(t = 20, r = 10, b = 20, l = 0)) +
   theme(plot.tag.position = "bottomright",
@@ -556,3 +556,9 @@ qplot(data=above_avg_r_variants2[!((above_avg_r_variants2$variant %in% c("other"
 
 ggsave(file=paste0(".\\plots\\",dat,"\\belgium_Re values per variant_avgRe_from_cases_with clipping.png"), width=8, height=6)
 ggsave(file=paste0(".\\plots\\",dat,"\\belgium_Re values per variant_avgRe_from_cases_with clipping.pdf"), width=8, height=6)
+
+
+# STACKED AREA CHART OF NEW CASES BY VARIANT (MULTINOMIAL FIT MAPPED ONTO CASE DATA) ####
+
+
+
