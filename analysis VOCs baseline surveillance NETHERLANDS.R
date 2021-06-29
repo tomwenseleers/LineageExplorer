@@ -561,10 +561,10 @@ df = data.frame(contrast=NA,
 # df = df[df$DATE_NUM<=max(above_avg_r_variants$DATE_NUM)&df$DATE_NUM>=(min(above_avg_r_variants$DATE_NUM)+7),]
 above_avg_r_variants = rbind(above_avg_r_variants, df)
 above_avg_r_variants$variant = factor(above_avg_r_variants$variant, levels=c(levels_VARIANTS,"avg"))
-above_avg_r_variants$prob = be_seq_mfit0_preds$prob[match(interaction(above_avg_r_variants$collection_date_num,
+above_avg_r_variants$prob = nl_seq_mfit0_preds$prob[match(interaction(above_avg_r_variants$collection_date_num,
                                                                       above_avg_r_variants$variant),
-                                                          interaction(be_seq_mfit0_preds$collection_date_num,
-                                                                      be_seq_mfit0_preds$variant))]
+                                                          interaction(nl_seq_mfit0_preds$collection_date_num,
+                                                                      nl_seq_mfit0_preds$variant))]
 above_avg_r_variants2 = above_avg_r_variants
 ymax = 1.5
 ymin = 1/2
