@@ -1,6 +1,6 @@
 # ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT VOCs IN THE UK BASED ON COG-UK SEQUENCING DATA ####
 
-# last update 19 JUNE 2021
+# last update 28 JUNE 2021
 
 library(nnet)
 # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
@@ -35,7 +35,7 @@ cogukp2 = coguk[coguk$date>=as.Date("2020-09-01")&coguk$is_pillar_2=="Y",]
 cogukp2 = cogukp2[-which(grepl("B.1.617", cogukp2$lineage, fixed=TRUE)&cogukp2$date<=as.Date("2021-04-14")),]  
 
 nrow(cogukp2) # 
-range(cogukp2$date) # "2020-09-01" "2021-05-30"
+range(cogukp2$date) # "2020-09-01" "2021-06-22"
 library(lubridate)
 cogukp2$WeekEndDate = floor_date(cogukp2$date,unit="week")+6 # lubridate::week(cogukp2$date)
 cogukp2$DATE_NUM = as.numeric(cogukp2$date) 
@@ -161,8 +161,8 @@ muller_cogukp2_raw1 = ggplot(data=data_agbyweek1, aes(x=collection_date, y=count
   # geom_col(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE1), width=1, position="fill") +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE2, group=LINEAGE2), position="fill") +
   scale_fill_manual("", values=lineage_cols1) +
-  scale_x_continuous(breaks=as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01")),
-                     labels=substring(months(as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01"))),1,1),
+  scale_x_continuous(breaks=as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01")),
+                     labels=substring(months(as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01"))),1,1),
                      limits=as.Date(c("2020-09-01",NA)), expand=c(0,0)) +
   # guides(color = guide_legend(reverse=F, nrow=2, byrow=T), fill = guide_legend(reverse=F, nrow=2, byrow=T)) +
   theme_hc() +
@@ -181,8 +181,8 @@ muller_cogukp2byregion_raw1 = ggplot(data=data_agbyweekregion1, aes(x=collection
   # geom_col(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE1), width=1, position="fill") +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE2, group=LINEAGE2), position="fill") +
   scale_fill_manual("", values=lineage_cols1) +
-  scale_x_continuous(breaks=as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01")),
-                     labels=substring(months(as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01"))),1,1),
+  scale_x_continuous(breaks=as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01")),
+                     labels=substring(months(as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01"))),1,1),
                      limits=as.Date(c("2020-09-01",NA)), expand=c(0,0)) +
   # guides(color = guide_legend(reverse=F, nrow=2, byrow=T), fill = guide_legend(reverse=F, nrow=2, byrow=T)) +
   theme_hc() +
@@ -197,7 +197,7 @@ muller_cogukp2byregion_raw1 = ggplot(data=data_agbyweekregion1, aes(x=collection
 muller_cogukp2byregion_raw1
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\cogukp2_muller plots by region_raw data.png"), width=8, height=6)
-ggsave(file=paste0(".\\plots\\",plotdir,"\\cogukp2_muller plots by region_raw data.pdf"), width=8, height=6)
+# ggsave(file=paste0(".\\plots\\",plotdir,"\\cogukp2_muller plots by region_raw data.pdf"), width=8, height=6)
 
 
 
@@ -224,13 +224,13 @@ delta_r_cogukp2 = data.frame(confint(emtrcogukp2,
                             p.value=as.data.frame(emtrcogukp2$contrasts)$p.value)
 delta_r_cogukp2
 #               contrast     estimate          SE df    asymp.LCL   asymp.UCL      p.value
-# 1      other - B.1.1.7  0.031940742 0.0006068275 NA  0.030751382  0.033130102 9.059420e-13
-# 2 (B.1.177+) - B.1.1.7 -0.041368883 0.0012839060 NA -0.043885292 -0.038852473 9.059420e-13
-# 3    B.1.525 - B.1.1.7 -0.016379003 0.0039642947 NA -0.024148878 -0.008609128 1.092326e-03
-# 4    B.1.351 - B.1.1.7  0.012243393 0.0023067364 NA  0.007722273  0.016764514 2.641193e-05
-# 5        P.1 - B.1.1.7  0.009996597 0.0067542034 NA -0.003241398  0.023234593 5.195633e-01
-# 6  B.1.617.1 - B.1.1.7 -0.197641943 0.0068245268 NA -0.211017770 -0.184266116 9.059420e-13
-# 7  B.1.617.2 - B.1.1.7  0.100082204 0.0015455350 NA  0.097053011  0.103111397 9.059420e-13
+# 1      other - B.1.1.7  0.03435282 0.0006043157 NA  0.033168382  0.03553726 9.059420e-13
+# 2 (B.1.177+) - B.1.1.7 -0.04105226 0.0013228876 NA -0.043645074 -0.03845945 9.059420e-13
+# 3    B.1.525 - B.1.1.7 -0.01869601 0.0041457303 NA -0.026821488 -0.01057052 3.402281e-04
+# 4    B.1.351 - B.1.1.7  0.01164159 0.0023631404 NA  0.007009923  0.01627326 9.071093e-05
+# 5        P.1 - B.1.1.7  0.01004159 0.0066691097 NA -0.003029624  0.02311281 5.036088e-01
+# 6  B.1.617.1 - B.1.1.7 -0.19224867 0.0064276762 NA -0.204846687 -0.17965066 9.059420e-13
+# 7  B.1.617.2 - B.1.1.7  0.10481597 0.0014573548 NA  0.101959610  0.10767234 9.059420e-13
 
 # If we take the exponent of the product of these growth rate advantages/disadvantages and the generation time (e.g. 4.7 days, Nishiura et al. 2020)
 # we get the transmission advantage/disadvantage (here expressed in percent) :
@@ -239,14 +239,14 @@ transmadv_cogukp2 =  sign(delta_r_cogukp2[,c(2,5,6)])*100*(exp(abs(delta_r_coguk
 transmadv_cogukp2 =  data.frame(contrast=delta_r_cogukp2$contrast, transmadv_cogukp2)
 transmadv_cogukp2
 #            contrast       estimate      asymp.LCL      asymp.UCL
-# 1      other - B.1.1.7   16.197540   15.549809   16.848902
-# 2 (B.1.177+) - B.1.1.7  -21.462301  -22.907380  -20.034213
-# 3    B.1.525 - B.1.1.7   -8.002190  -12.019158   -4.129268
-# 4    B.1.351 - B.1.1.7    5.923182    3.696138    8.198056
-# 5        P.1 - B.1.1.7    4.810525   -1.535121   11.538829
-# 6  B.1.617.1 - B.1.1.7 -153.176613 -169.603862 -137.750293
-# 7  B.1.617.2 - B.1.1.7   60.061248   57.798568   62.356373
-# so this would estimate that B.1.617.2 had a 60% transmission advantage over B.1.1.7 [58%-62%] 95% CLs
+# 1      other - B.1.1.7   17.522339   16.869927   18.178393
+# 2 (B.1.177+) - B.1.1.7  -21.281685  -22.768692  -19.812689
+# 3    B.1.525 - B.1.1.7   -9.184752  -13.435136   -5.093628
+# 4    B.1.351 - B.1.1.7    5.624006    3.349539    7.948528
+# 5        P.1 - B.1.1.7    4.832691   -1.434110   11.475002
+# 6  B.1.617.1 - B.1.1.7 -146.839654 -161.896560 -132.648397
+# 7  B.1.617.2 - B.1.1.7   63.662317   61.479848   65.874282
+# so this would estimate that B.1.617.2 had a 64% transmission advantage over B.1.1.7 [61%-66%] 95% CLs
 
 
 # growth rate & transmission advantages of different VOCs compared to UK type B.1.1.7 by REGION (difference in growth rate per day) 
@@ -259,34 +259,34 @@ delta_r_cogukp2_region = data.frame(confint(emtrcogukp2_region,
                            p.value=as.data.frame(emtrcogukp2_region$contrasts)$p.value)
 delta_r_cogukp2_region
 # contrast           REGION     estimate           SE df    asymp.LCL     asymp.UCL      p.value
-# 1       other - B.1.1.7          England  0.035701674 0.0006294629 NA  0.034467950  0.0369353989 1.356012e-10
-# 2  (B.1.177+) - B.1.1.7          England -0.039554582 0.0014736813 NA -0.042442944 -0.0366662200 1.356012e-10
-# 3     B.1.525 - B.1.1.7          England -0.015098729 0.0041862349 NA -0.023303599 -0.0068938594 3.396157e-03
-# 4     B.1.351 - B.1.1.7          England  0.010783332 0.0024685859 NA  0.005944993  0.0156216716 2.400369e-04
-# 5         P.1 - B.1.1.7          England  0.017275700 0.0064707392 NA  0.004593285  0.0299581160 5.196613e-02
-# 6   B.1.617.1 - B.1.1.7          England -0.114606254 0.0057083749 NA -0.125794463 -0.1034180446 1.356012e-10
-# 7   B.1.617.2 - B.1.1.7          England  0.104758127 0.0016580507 NA  0.101508408  0.1080078468 1.356012e-10
-# 8       other - B.1.1.7         Scotland  0.009298424 0.0037240633 NA  0.001999394  0.0165974543 7.949595e-02
-# 9  (B.1.177+) - B.1.1.7         Scotland -0.050008216 0.0054455265 NA -0.060681252 -0.0393351801 1.358152e-10
-# 10    B.1.525 - B.1.1.7         Scotland -0.034548389 0.0171916285 NA -0.068243361 -0.0008534161 2.249197e-01
-# 11    B.1.351 - B.1.1.7         Scotland  0.031164779 0.0069938165 NA  0.017457151  0.0448724075 1.732631e-04
-# 12        P.1 - B.1.1.7         Scotland -0.023606593 0.0148298135 NA -0.052672493  0.0054593074 4.447900e-01
-# 13  B.1.617.1 - B.1.1.7         Scotland -0.216980546 0.0256971422 NA -0.267346019 -0.1666150730 1.410992e-10
-# 14  B.1.617.2 - B.1.1.7         Scotland  0.057942643 0.0022723291 NA  0.053488960  0.0623963262 1.356012e-10
-# 15      other - B.1.1.7            Wales  0.014736014 0.0037609376 NA  0.007364712  0.0221073164 1.196866e-03
-# 16 (B.1.177+) - B.1.1.7            Wales -0.011657629 0.0039839956 NA -0.019466117 -0.0038491407 2.637231e-02
-# 17    B.1.525 - B.1.1.7            Wales -0.084497661 0.0295647086 NA -0.142443425 -0.0265518969 3.174798e-02
-# 18    B.1.351 - B.1.1.7            Wales  0.021652179 0.0189151393 NA -0.015420813  0.0587251703 7.253400e-01
-# 19        P.1 - B.1.1.7            Wales  0.006267008 0.0295142182 NA -0.051579797  0.0641138124 9.983100e-01
-# 20  B.1.617.1 - B.1.1.7            Wales -0.143468299 0.0337353750 NA -0.209588419 -0.0773481789 3.662905e-04
-# 21  B.1.617.2 - B.1.1.7            Wales  0.120541627 0.0067223368 NA  0.107366089  0.1337171648 1.356012e-10
-# 22      other - B.1.1.7 Northern Ireland  0.035800784 0.0116205653 NA  0.013024895  0.0585766735 1.705995e-02
-# 23 (B.1.177+) - B.1.1.7 Northern Ireland -0.048374856 0.0286926900 NA -0.104611495  0.0078617834 3.885274e-01
-# 24    B.1.525 - B.1.1.7 Northern Ireland  0.051775334 0.0634328097 NA -0.072550689  0.1761013560 8.885164e-01
-# 25    B.1.351 - B.1.1.7 Northern Ireland -0.113453975 0.0024686168 NA -0.118292376 -0.1086155754 1.356012e-10
-# 26        P.1 - B.1.1.7 Northern Ireland -0.401972717 0.0064704659 NA -0.414654597 -0.3892908365 1.356012e-10
-# 27  B.1.617.1 - B.1.1.7 Northern Ireland -0.790845103 0.0057083749 NA -0.802033312 -0.7796568937 1.356012e-10
-# 28  B.1.617.2 - B.1.1.7 Northern Ireland  0.034558836 0.0149964332 NA  0.005166367  0.0639513048 1.233872e-01
+# 1       other - B.1.1.7          England  0.03813519 6.287711e-04 NA  0.0369028166  0.039367554 1.356012e-10
+# 2  (B.1.177+) - B.1.1.7          England -0.03927327 1.518729e-03 NA -0.0422499232 -0.036296615 1.356012e-10
+# 3     B.1.525 - B.1.1.7          England -0.01667911 4.347255e-03 NA -0.0251995787 -0.008158651 1.581432e-03
+# 4     B.1.351 - B.1.1.7          England  0.01033793 2.527901e-03 NA  0.0053833303  0.015292522 6.577652e-04
+# 5         P.1 - B.1.1.7          England  0.01320248 6.876201e-03 NA -0.0002746297  0.026679581 2.648908e-01
+# 6   B.1.617.1 - B.1.1.7          England -0.17997813 6.611401e-03 NA -0.1929362418 -0.167020026 1.356012e-10
+# 7   B.1.617.2 - B.1.1.7          England  0.10911885 1.615413e-03 NA  0.1059526982  0.112285000 1.356012e-10
+# 8       other - B.1.1.7         Scotland  0.01317325 3.664225e-03 NA  0.0059914971  0.020354994 3.527182e-03
+# 9  (B.1.177+) - B.1.1.7         Scotland -0.04849332 5.594168e-03 NA -0.0594576896 -0.037528955 1.375642e-10
+# 10    B.1.525 - B.1.1.7         Scotland -0.08239208 1.511413e-02 NA -0.1120152293 -0.052768923 3.400525e-06
+# 11    B.1.351 - B.1.1.7         Scotland  0.03136175 7.131982e-03 NA  0.0173833207  0.045340177 2.155392e-04
+# 12        P.1 - B.1.1.7         Scotland -0.00843668 1.279227e-02 NA -0.0335090718  0.016635711 9.400671e-01
+# 13  B.1.617.1 - B.1.1.7         Scotland -0.32074580 3.091434e-02 NA -0.3813368001 -0.260154807 1.356307e-10
+# 14  B.1.617.2 - B.1.1.7         Scotland  0.07179171 1.946967e-03 NA  0.0679757293  0.075607700 1.356012e-10
+# 15      other - B.1.1.7            Wales  0.01687479 3.702587e-03 NA  0.0096178566  0.024131731 1.183090e-04
+# 16 (B.1.177+) - B.1.1.7            Wales -0.01055511 4.062351e-03 NA -0.0185171697 -0.002593046 6.216156e-02
+# 17    B.1.525 - B.1.1.7            Wales -0.03591757 4.019771e-02 NA -0.1147036363  0.042868502 8.563897e-01
+# 18    B.1.351 - B.1.1.7            Wales  0.01885862 1.912257e-02 NA -0.0186209201  0.056338158 8.124010e-01
+# 19        P.1 - B.1.1.7            Wales -0.09961806 4.732902e-02 NA -0.1923812260 -0.006854887 1.871814e-01
+# 20  B.1.617.1 - B.1.1.7            Wales -0.20743622 3.886770e-02 NA -0.2836155206 -0.131256919 5.447001e-06
+# 21  B.1.617.2 - B.1.1.7            Wales  0.14415160 5.889353e-03 NA  0.1326086813  0.155694522 1.356012e-10
+# 22      other - B.1.1.7 Northern Ireland  0.03279985 1.008032e-02 NA  0.0130427868  0.052556919 1.025344e-02
+# 23 (B.1.177+) - B.1.1.7 Northern Ireland -0.06624257 2.614394e-02 NA -0.1174837495 -0.015001382 7.276891e-02
+# 24    B.1.525 - B.1.1.7 Northern Ireland -0.07199290 7.760048e-02 NA -0.2240870394  0.080101249 8.408177e-01
+# 25    B.1.351 - B.1.1.7 Northern Ireland -1.10225700 5.567350e-09 NA -1.1022570126 -1.102256991 1.356012e-10
+# 26        P.1 - B.1.1.7 Northern Ireland -1.10225700 5.588460e-09 NA -1.1022570127 -1.102256991 1.356012e-10
+# 27  B.1.617.1 - B.1.1.7 Northern Ireland -1.10225700 5.593039e-09 NA -1.1022570128 -1.102256991 1.356012e-10
+# 28  B.1.617.2 - B.1.1.7 Northern Ireland  0.08329042 1.917530e-02 NA  0.0457075153  0.120873319 2.627964e-04
 
 
 
@@ -344,7 +344,7 @@ plot_cogukp2_mfit4_transmadv = qplot(data=transmadv_cogukp24,
 plot_cogukp2_mfit4_transmadv
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\cogukp2_multinom fit4_transm advantage.png"), width=8, height=6)
-ggsave(file=paste0(".\\plots\\",plotdir,"\\cogukp2_multinom fit4_transm advantage.pdf"), width=8, height=6)
+# ggsave(file=paste0(".\\plots\\",plotdir,"\\cogukp2_multinom fit4_transm advantage.pdf"), width=8, height=6)
 
 
 
@@ -358,7 +358,7 @@ date.to = as.numeric(as.Date("2021-07-31")) # max(cogukp2$DATE_NUM)+extrapolate
 fit_cogukp2_multi_predsbyregion = data.frame(emmeans(fit3_cogukp2_multi, 
                                                   ~ LINEAGE2,
                                                   by=c("DATE_NUM", "REGION"),
-                                                  at=list(DATE_NUM=seq(date.from, date.to, by=3)), 
+                                                  at=list(DATE_NUM=seq(date.from, date.to, by=1)), 
                                                   mode="prob", df=NA))
 fit_cogukp2_multi_predsbyregion$collection_date = as.Date(fit_cogukp2_multi_predsbyregion$DATE_NUM, origin="1970-01-01")
 fit_cogukp2_multi_predsbyregion$LINEAGE2 = factor(fit_cogukp2_multi_predsbyregion$LINEAGE2, levels=levels_LINEAGE2_plot) 
@@ -382,8 +382,8 @@ muller_cogukp2_mfit = ggplot(data=fit_cogukp2_multi_preds,
   scale_fill_manual("", values=lineage_cols1) +
   annotate("rect", xmin=max(cogukp2$DATE_NUM)+1, 
            xmax=as.Date(date.to, origin="1970-01-01"), ymin=0, ymax=1, alpha=0.3, fill="white") + # extrapolated part
-  scale_x_continuous(breaks=as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01")),
-                     labels=substring(months(as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01"))),1,1),
+  scale_x_continuous(breaks=as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01")),
+                     labels=substring(months(as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01"))),1,1),
                      limits=as.Date(c("2020-09-01",NA)), expand=c(0,0)) +
   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
   theme_hc() + theme(legend.position="right", 
@@ -391,6 +391,7 @@ muller_cogukp2_mfit = ggplot(data=fit_cogukp2_multi_preds,
   ylab("Share") +
   ggtitle("SPREAD OF SARS-CoV2 VARIANTS B.1.617.1 & B.1.617.2 IN THE UK\n(COG-UK data)")
 muller_cogukp2_mfit
+
 
 library(ggpubr)
 ggarrange(muller_cogukp2_raw1+coord_cartesian(xlim=c(as.Date("2020-09-01"),as.Date(date.to, origin="1970-01-01")))+
@@ -409,8 +410,8 @@ muller_cogukp2byregion_mfit = ggplot(data=fit_cogukp2_multi_predsbyregion,
   scale_fill_manual("", values=lineage_cols1) +
   annotate("rect", xmin=max(cogukp2$DATE_NUM)+1, 
            xmax=as.Date(c("2021-07-31")), ymin=0, ymax=1, alpha=0.3, fill="white") + # extrapolated part
-  scale_x_continuous(breaks=as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01")),
-                     labels=substring(months(as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01"))),1,1),
+  scale_x_continuous(breaks=as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01")),
+                     labels=substring(months(as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01"))),1,1),
                      limits=as.Date(c("2020-09-01",NA)), expand=c(0,0)) +
   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
   theme_hc() + theme(legend.position="right", 
@@ -420,7 +421,7 @@ muller_cogukp2byregion_mfit = ggplot(data=fit_cogukp2_multi_predsbyregion,
 muller_cogukp2byregion_mfit
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\cogukp2_muller plots by region_multinom fit.png"), width=8, height=6)
-ggsave(file=paste0(".\\plots\\",plotdir,"\\cogukp2_muller plots by region_multinom fit.pdf"), width=8, height=6)
+# ggsave(file=paste0(".\\plots\\",plotdir,"\\cogukp2_muller plots by region_multinom fit.pdf"), width=8, height=6)
 
 
 ggarrange(muller_cogukp2byregion_raw1+coord_cartesian(xlim=c(as.Date("2020-09-01"),as.Date(date.to, origin="1970-01-01")))+
@@ -432,7 +433,7 @@ ggarrange(muller_cogukp2byregion_raw1+coord_cartesian(xlim=c(as.Date("2020-09-01
           muller_cogukp2byregion_mfit+ggtitle("Multinomial fit"), ncol=1)
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\cogukp2_muller plots by region_multinom fit multipanel.png"), width=8, height=6)
-ggsave(file=paste0(".\\plots\\",plotdir,"\\cogukp2_muller plots by region_multinom fit multipanel.pdf"), width=8, height=6)
+# ggsave(file=paste0(".\\plots\\",plotdir,"\\cogukp2_muller plots by region_multinom fit multipanel.pdf"), width=8, height=6)
 
 
 
@@ -469,8 +470,8 @@ plot_cogukp2_mfit_logit = qplot(data=fit_cogukp2_multi_predsbyregion2,
   ylab("Share (%)") +
   theme_hc() + xlab("") +
   ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN THE UK\n(COG-UK data, multinomial fit)") +
-  scale_x_continuous(breaks=as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01")),
-                     labels=substring(months(as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01"))),1,1),
+  scale_x_continuous(breaks=as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01")),
+                     labels=substring(months(as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01"))),1,1),
                      limits=as.Date(c("2020-09-01",NA)), expand=c(0,0)) +
   scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
                       labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
@@ -491,7 +492,7 @@ plot_cogukp2_mfit_logit = qplot(data=fit_cogukp2_multi_predsbyregion2,
 plot_cogukp2_mfit_logit
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\cogukp2_multinom fit_logit scale.png"), width=8, height=6)
-ggsave(file=paste0(".\\plots\\",plotdir,"\\cogukp2_multinom fit_logit scale.pdf"), width=8, height=6)
+# ggsave(file=paste0(".\\plots\\",plotdir,"\\cogukp2_multinom fit_logit scale.pdf"), width=8, height=6)
 library(svglite)
 ggsave(file=paste0(".\\plots\\",plotdir,"\\cogukp2_multinom fit_logit scale.svg"), width=8, height=6)
 
@@ -508,8 +509,8 @@ plot_cogukp2_mfit = qplot(data=fit_cogukp2_multi_predsbyregion2,
   ylab("Share (%)") +
   theme_hc() + xlab("") +
   ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN THE UK\n(COG-UK data, multinomial fit)") +
-  scale_x_continuous(breaks=as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01")),
-                     labels=substring(months(as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01"))),1,1),
+  scale_x_continuous(breaks=as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01")),
+                     labels=substring(months(as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01"))),1,1),
                      limits=as.Date(c("2020-09-01",NA)), expand=c(0,0)) +
   # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
   #                     labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
@@ -531,7 +532,255 @@ plot_cogukp2_mfit = qplot(data=fit_cogukp2_multi_predsbyregion2,
 plot_cogukp2_mfit
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\cogukp2_multinom fit_response scale.png"), width=8, height=6)
-ggsave(file=paste0(".\\plots\\",plotdir,"\\cogukp2_multinom fit_response scale.pdf"), width=8, height=6)
+# ggsave(file=paste0(".\\plots\\",plotdir,"\\cogukp2_multinom fit_response scale.pdf"), width=8, height=6)
 
+
+
+
+# PLOTS OF NEW CASES PER DAY BY VARIANT & EFFECTIVE REPRODUCTION NUMBER BY VARIANT THROUGH TIME ####
+
+# load case data
+library(covidregionaldata )
+library(dplyr)
+library(ggplot2)
+library(scales)  
+
+cases_tot = as.data.frame(get_regional_data(country = "United Kingdom", regions=c("England","Scotland","Wales","Northern Ireland")))
+cases_tot = cases_tot[cases_tot$date>=as.Date("2020-08-01"),]
+cases_tot$DATE_NUM = as.numeric(cases_tot$date)
+cases_tot$WEEKDAY = weekdays(cases_tot$date)
+cases_tot$region = factor(cases_tot$region, levels=c("England","Scotland","Wales","Northern Ireland"))
+cases_tot = cases_tot[cases_tot$date<=(max(cases_tot$date)-3),] # cut off data from last 3 days (incomplete)
+
+# smooth out weekday effects in case nrs using GAM (if testing data is available one could correct for testing intensity as well)
+fit_cases = gam(cases_new ~ s(DATE_NUM, bs="cs", k=20, fx=F, by=region) + region +
+                  WEEKDAY # +
+                  # s(tested_new, bs="cs", k=8, fx=F, by=region)
+                ,
+                family=poisson(log), data=cases_tot,
+) 
+BIC(fit_cases)
+
+# STACKED AREA CHART OF NEW CASES BY VARIANT (MULTINOMIAL FIT MAPPED ONTO CASE DATA) ####
+
+fit_cogukp2_multi_predsbyregion$totcases = cases_tot$cases_new[match(interaction(fit_cogukp2_multi_predsbyregion$DATE_NUM,fit_cogukp2_multi_predsbyregion$REGION),
+                                                                     interaction(cases_tot$DATE_NUM,cases_tot$region))]
+fit_cogukp2_multi_predsbyregion$cases = fit_cogukp2_multi_predsbyregion$totcases * fit_cogukp2_multi_predsbyregion$prob
+fit_cogukp2_multi_predsbyregion$cases[fit_cogukp2_multi_predsbyregion$cases<=0.001] = NA
+cases_emmeans = as.data.frame(emmeans(fit_cases, ~ DATE_NUM|region, at=list(DATE_NUM=seq(date.from, date.to, by=0.5)
+                                                                     ), type="response"))
+fit_cogukp2_multi_predsbyregion$smoothed_totcases = cases_emmeans$rate[match(interaction(fit_cogukp2_multi_predsbyregion$DATE_NUM,fit_cogukp2_multi_predsbyregion$REGION),
+                                                                             interaction(cases_emmeans$DATE_NUM,cases_emmeans$region))]
+fit_cogukp2_multi_predsbyregion$smoothed_cases = fit_cogukp2_multi_predsbyregion$smoothed_totcases * fit_cogukp2_multi_predsbyregion$prob
+fit_cogukp2_multi_predsbyregion$smoothed_cases[fit_cogukp2_multi_predsbyregion$smoothed_cases<=0.001] = NA
+
+ggplot(data=fit_cogukp2_multi_predsbyregion, 
+       aes(x=collection_date, y=cases, group=LINEAGE2)) + 
+  facet_wrap(~ REGION, scale="free") +
+  geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE2, group=LINEAGE2), position="stack") +
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
+                     limits=c(as.Date("2021-01-01"),max(cases_tot$date)), expand=c(0,0)) +
+  # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
+  theme_hc() + theme(legend.position="right") + 
+  ylab("New confirmed cases per day") + xlab("Date of diagnosis") +
+  ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT\nIN THE UK\n(case data gov.uk & multinomial fit to COG-UK data)") +
+  scale_fill_manual("variant", values=lineage_cols1) +
+  scale_colour_manual("variant", values=lineage_cols1) +
+  coord_cartesian(xlim=c(as.Date("2021-01-01"),NA))
+
+ggsave(file=paste0(".\\plots\\",plotdir,"\\cases per day_stacked area multinomial fit raw case data.png"), width=8, height=6)
+
+ggplot(data=fit_cogukp2_multi_predsbyregion,
+       aes(x=collection_date-7, y=smoothed_cases, group=LINEAGE2)) +
+  facet_wrap(~ REGION, scale="free") +
+  geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE2, group=LINEAGE2), position="stack") +
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
+                     limits=c(as.Date("2021-01-01"),today), expand=c(0,0)) +
+  # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
+  theme_hc() + theme(legend.position="right") +
+  ylab("New confirmed cases per day (smoothed)") + xlab("Date of infection") +
+  ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT\nIN THE UK\n(case data gov.uk & multinomial fit to COG-UK data)") +
+  scale_fill_manual("variant", values=lineage_cols1) +
+  scale_colour_manual("variant", values=lineage_cols1) +
+  coord_cartesian(xlim=c(as.Date("2021-01-01"),today))
+
+ggsave(file=paste0(".\\plots\\",plotdir,"\\cases per day_smoothed_stacked area multinomial fit raw case data.png"), width=8, height=6)
+
+
+ggplot(data=fit_cogukp2_multi_predsbyregion, 
+       aes(x=collection_date, y=cases, group=LINEAGE2)) + 
+  facet_wrap(~ REGION, scale="free") +
+  geom_line(aes(lwd=I(1.2), colour=LINEAGE2, group=LINEAGE2)) +
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
+                     limits=c(as.Date("2021-01-01"),max(cases_tot$date)), expand=c(0,0)) +
+  # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
+  theme_hc() + theme(legend.position="right") + 
+  ylab("New confirmed cases per day") + xlab("Date of diagnosis") +
+  ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT\nIN THE UK\n(case data gov.uk & multinomial fit to COG-UK data)") +
+  scale_fill_manual("variant", values=lineage_cols1) +
+  scale_colour_manual("variant", values=lineage_cols1) +
+  coord_cartesian(xlim=c(as.Date("2021-01-01"),NA)) +
+  scale_y_log10()
+
+ggsave(file=paste0(".\\plots\\",plotdir,"\\cases per day_log10 y scale_multinomial fit raw case data.png"), width=8, height=6)
+
+ggplot(data=fit_cogukp2_multi_predsbyregion,
+       aes(x=collection_date-7, y=smoothed_cases, group=LINEAGE2)) +
+  facet_wrap(~ REGION, scale="free") +
+  geom_line(aes(lwd=I(1.2), colour=LINEAGE2, group=LINEAGE2)) +
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
+                     limits=c(as.Date("2021-01-01"),today), expand=c(0,0)) +
+  # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
+  theme_hc() + theme(legend.position="right") +
+  ylab("New confirmed cases per day (smoothed)") + xlab("Date of infection") +
+  ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT\nIN THE UK\n(case data gov.uk & multinomial fit to COG-UK data)") +
+  scale_fill_manual("variant", values=lineage_cols1) +
+  scale_colour_manual("variant", values=lineage_cols1) +
+  coord_cartesian(xlim=c(as.Date("2021-01-01"),today)) +
+  scale_y_log10()
+
+ggsave(file=paste0(".\\plots\\",plotdir,"\\cases per day_log10 y scale_multinomial fit raw case data.png"), width=8, height=6)
+
+
+# EFFECTIVE REPRODUCTION NUMBER BY VARIANT THROUGH TIME ####
+
+# Function to calculate Re values from intrinsic growth rate
+# cf. https://github.com/epiforecasts/EpiNow2/blob/5015e75f7048c2580b2ebe83e46d63124d014861/R/utilities.R#L109
+# https://royalsocietypublishing.org/doi/10.1098/rsif.2020.0144
+# (assuming gamma distributed gen time)
+Re.from.r <- function(r, gamma_mean=4.7, gamma_sd=2.9) { # Nishiura et al. 2020, or use values from Ferretti et al. 2020 (gamma_mean=5.5, gamma_sd=1.8)
+  k <- (gamma_sd / gamma_mean)^2
+  R <- (1 + k * r * gamma_mean)^(1 / k)
+  return(R)
+}
+
+
+# calculate average instantaneous growth rates & 95% CLs using emtrends ####
+# based on the slope of the GAM fit on a log link scale
+avg_r_cases = as.data.frame(emtrends(fit_cases, ~ DATE_NUM, by="region", var="DATE_NUM", 
+                                     at=list(DATE_NUM=seq(date.from,
+                                                          date.to, by=3)
+                                     ), # weekday="Wednesday",
+                                     type="link"))
+colnames(avg_r_cases)[3] = "r"
+colnames(avg_r_cases)[6] = "r_LOWER"
+colnames(avg_r_cases)[7] = "r_UPPER"
+avg_r_cases$DATE = as.Date(avg_r_cases$DATE_NUM, origin="1970-01-01") # -7 TO CALCULATE BACK TO INFECTION DATE
+avg_r_cases$Re = Re.from.r(avg_r_cases$r)
+avg_r_cases$Re_LOWER = Re.from.r(avg_r_cases$r_LOWER)
+avg_r_cases$Re_UPPER = Re.from.r(avg_r_cases$r_UPPER)
+avg_r_cases = avg_r_cases[complete.cases(avg_r_cases),]
+qplot(data=avg_r_cases, x=DATE-7, y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribbon", alpha=I(0.5), fill=I("steelblue")) +
+  facet_wrap(~ region) +
+  geom_line() + theme_hc() + xlab("Date of infection") +
+  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
+                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A","M","J","J")) +
+  # scale_y_continuous(limits=c(1/2, 2), trans="log2") +
+  geom_hline(yintercept=1, colour=I("red")) +
+  ggtitle("Re IN THE UK AT MOMENT OF INFECTION BASED ON NEW CASES\n(data gov.uk)") +
+  # labs(tag = tag) +
+  # theme(plot.margin = margin(t = 20, r = 10, b = 20, l = 0)) +
+  theme(plot.tag.position = "bottomright",
+        plot.tag = element_text(vjust = 1, hjust = 1, size=8)) # +
+# coord_cartesian(xlim=c(as.Date("2020-01-01"),NA))
+
+# calculate above-average intrinsic growth rates per day of each variant over time based on multinomial fit using emtrends weighted effect contrasts ####
+# for best model fit3_sanger_multi
+above_avg_r_variants3 = do.call(rbind, lapply(levels_REGION, function(region) do.call(rbind, lapply(seq(date.from,
+                                                 date.to, by=3), 
+                                             function (dat) { 
+                                               wt = as.data.frame(emmeans(fit3_cogukp2_multi, ~ LINEAGE2 , by="REGION", 
+                                                                          at=list(DATE_NUM=dat, REGION=region), type="response"))$prob   # important: these should sum to 1
+                                               # wt = rep(1/length(levels_VARIANTS), length(levels_VARIANTS)) 
+                                               # this would give equal weights, equivalent to emmeans:::eff.emmc(levs=levels_LINEAGE2)
+                                               cons = lapply(seq_along(wt), function (i) { con = -wt; con[i] = 1 + con[i]; con })
+                                               names(cons) = seq_along(cons)
+                                               EMT = emtrends(fit3_cogukp2_multi,  ~ LINEAGE2 , by=c("DATE_NUM", "REGION"),
+                                                              var="DATE_NUM", mode="latent",
+                                                              at=list(DATE_NUM=dat, REGION=region))
+                                               out = as.data.frame(confint(contrast(EMT, cons), adjust="none", df=NA))
+                                               # sum(out$estimate*wt) # should sum to zero
+                                               return(out) } ))))
+  above_avg_r_variants = above_avg_r_variants3
+  above_avg_r_variants$contrast = factor(above_avg_r_variants$contrast, 
+                                         levels=1:length(levels_LINEAGE2), 
+                                         labels=levels(data_agbyweekregion1$LINEAGE2))
+  above_avg_r_variants$LINEAGE2 = above_avg_r_variants$contrast # gsub(" effect|\\(|\\)","",above_avg_r_variants$contrast)
+  above_avg_r_variants$collection_date = as.Date(above_avg_r_variants$DATE_NUM, origin="1970-01-01")
+  range(above_avg_r_variants$collection_date) # "2020-09-01" "2021-07-31"
+  # average growth rate of all lineages calculated from case nrs
+  above_avg_r_variants$avg_r = avg_r_cases$r[match(interaction(above_avg_r_variants$collection_date,above_avg_r_variants$REGION),
+                                                   interaction(avg_r_cases$DATE,avg_r_cases$region))]  
+  above_avg_r_variants$r = above_avg_r_variants$avg_r+above_avg_r_variants$estimate
+  above_avg_r_variants$r_LOWER = above_avg_r_variants$avg_r+above_avg_r_variants$asymp.LCL
+  above_avg_r_variants$r_UPPER = above_avg_r_variants$avg_r+above_avg_r_variants$asymp.UCL
+  above_avg_r_variants$Re = Re.from.r(above_avg_r_variants$r)
+  above_avg_r_variants$Re_LOWER = Re.from.r(above_avg_r_variants$r_LOWER)
+  above_avg_r_variants$Re_UPPER = Re.from.r(above_avg_r_variants$r_UPPER)
+  df = data.frame(contrast=NA,
+                  DATE_NUM=avg_r_cases$DATE_NUM, # -7 to calculate back to time of infection
+                  REGION=avg_r_cases$region,
+                  estimate=NA,
+                  SE=NA,
+                  df=NA,
+                  asymp.LCL=NA,
+                  asymp.UCL=NA,
+                  # p.value=NA,
+                  collection_date=avg_r_cases$DATE,
+                  LINEAGE2="avg",
+                  avg_r=avg_r_cases$r,
+                  r=avg_r_cases$r,
+                  r_LOWER=avg_r_cases$r_LOWER,
+                  r_UPPER=avg_r_cases$r_UPPER,
+                  Re=avg_r_cases$Re,
+                  Re_LOWER=avg_r_cases$Re_LOWER,
+                  Re_UPPER=avg_r_cases$Re_UPPER)
+  # df = df[df$DATE_NUM<=max(above_avg_r_variants$DATE_NUM)&df$DATE_NUM>=(min(above_avg_r_variants$DATE_NUM)+7),]
+  above_avg_r_variants = rbind(above_avg_r_variants, df)
+  above_avg_r_variants$LINEAGE2 = factor(above_avg_r_variants$LINEAGE2, levels=c(levels_LINEAGE2_plot,"avg"))
+  above_avg_r_variants$prob = fit_cogukp2_multi_predsbyregion$prob[match(interaction(round(above_avg_r_variants$DATE_NUM),
+                                                                        as.character(above_avg_r_variants$LINEAGE2),
+                                                                        as.character(above_avg_r_variants$REGION)),
+                                                            interaction(round(fit_cogukp2_multi_predsbyregion$DATE_NUM),
+                                                                        as.character(fit_cogukp2_multi_predsbyregion$LINEAGE2),
+                                                                        as.character(fit_cogukp2_multi_predsbyregion$REGION)))]
+  above_avg_r_variants2 = above_avg_r_variants
+  ymax = 2
+  ymin = 1/2
+  above_avg_r_variants2$Re[above_avg_r_variants2$Re>=ymax] = NA
+  above_avg_r_variants2$Re[above_avg_r_variants2$Re<=ymin] = NA
+  above_avg_r_variants2$Re_LOWER[above_avg_r_variants2$Re_LOWER>=ymax] = ymax
+  above_avg_r_variants2$Re_LOWER[above_avg_r_variants2$Re_LOWER<=ymin] = ymin
+  above_avg_r_variants2$Re_UPPER[above_avg_r_variants2$Re_UPPER>=ymax] = ymax
+  above_avg_r_variants2$Re_UPPER[above_avg_r_variants2$Re_UPPER<=ymin] = ymin
+  above_avg_r_variants2$Re[above_avg_r_variants2$prob<0.01] = NA
+  above_avg_r_variants2$Re_LOWER[above_avg_r_variants2$prob<0.01] = NA
+  above_avg_r_variants2$Re_UPPER[above_avg_r_variants2$prob<0.01] = NA
+  qplot(data=above_avg_r_variants2[!((above_avg_r_variants2$LINEAGE2 %in% c("other"))),], # |above_avg_r_variants2$collection_date>max(cases_tot$DATE)
+        x=collection_date-7, # -7 to calculate back to date of infection
+        y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribbon", colour=LINEAGE2, fill=LINEAGE2, alpha=I(0.5),
+        group=LINEAGE2, linetype=I(0)) +
+    facet_wrap(~ REGION) +
+    # geom_ribbon(aes(fill=variant, colour=variant), alpha=I(0.5))
+    geom_line(aes(colour=LINEAGE2), lwd=I(0.72)) + theme_hc() + xlab("Date of infection") +
+    scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
+                       labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A","M","J","J")) +
+    # scale_y_continuous(limits=c(1/ymax,ymax), trans="log2") +
+    geom_hline(yintercept=1, colour=I("red")) +
+    ggtitle("Re VALUES OF SARS-CoV2 VARIANTS IN THE UK\nAT MOMENT OF INFECTION\n(based on gov.uk case data & multinomial fit to\nCOG-UK lineage frequencies)") +
+    # labs(tag = tag) +
+    # theme(plot.margin = margin(t = 20, r = 10, b = 20, l = 0)) +
+    theme(plot.tag.position = "bottomright",
+          plot.tag = element_text(vjust = 1, hjust = 1, size=8)) +
+    coord_cartesian(xlim=c(as.Date("2020-11-01"),max(cases_tot$date))) +
+    scale_fill_manual("variant", values=c(tail(lineage_cols1,-1),"black")) +
+    scale_colour_manual("variant", values=c(tail(lineage_cols1,-1),"black")) +
+    theme(legend.position="right") 
+  
+  ggsave(file=paste0(".\\plots\\",plotdir,"\\Re values per variant_avgRe_from_cases_with clipping.png"), width=8, height=6)
 
 
