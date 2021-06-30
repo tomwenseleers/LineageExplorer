@@ -392,12 +392,12 @@ fit2_usa_multi = nnet::multinom(LINEAGE2 ~ scale(DATE_NUM)*STATE, weights=count,
 fit3_usa_multi = nnet::multinom(LINEAGE2 ~ ns(DATE_NUM, df=2)+STATE, weights=count, data=data_agbyweekregion2, maxit=1000)
 fit4_usa_multi = nnet::multinom(LINEAGE2 ~ ns(DATE_NUM, df=2)*STATE, weights=count, data=data_agbyweekregion2, maxit=1000)
 fit5_usa_multi = nnet::multinom(LINEAGE2 ~ ns(DATE_NUM, df=3)+STATE, weights=count, data=data_agbyweekregion2, maxit=1000)
-fit6_usa_multi = nnet::multinom(LINEAGE2 ~ ns(DATE_NUM, df=3)*STATE, weights=count, data=data_agbyweekregion2, maxit=1000)
-BIC(fit1_usa_multi, fit2_usa_multi, fit3_usa_multi, fit4_usa_multi, fit5_usa_multi, fit5_usa_multi, fit6_usa_multi) 
-# fit5_usa_multi fits best (lowest BIC), but I will use the slightly simpler fit3_usa_multi
+# fit6_usa_multi = nnet::multinom(LINEAGE2 ~ ns(DATE_NUM, df=3)*STATE, weights=count, data=data_agbyweekregion2, maxit=1000)
+BIC(fit1_usa_multi, fit2_usa_multi, fit3_usa_multi, fit4_usa_multi, fit5_usa_multi) 
+# fit4_usa_multi fits best (lowest BIC), but I will use the somewhat simpler model fit2_usa_multi
 
 # growth rate advantage compared to UK type B.1.1.7 (difference in growth rate per day) 
-emtrusa = emtrends(fit3_usa_multi, trt.vs.ctrl ~ LINEAGE2,  
+emtrusa = emtrends(fit2_usa_multi, trt.vs.ctrl ~ LINEAGE2,  
                    var="DATE_NUM",  mode="latent",
                    at=list(DATE_NUM=max(GISAID_sel$DATE_NUM)))
 delta_r_usa = data.frame(confint(emtrusa, 
@@ -418,8 +418,7 @@ delta_r_usa
 
 
 # fitted prop of different LINEAGES in the USA today
-# 40% [38%-43%] now estimated to be B.1.617.2 across all regions
-multinom_preds_today_avg = data.frame(emmeans(fit3_usa_multi, ~ LINEAGE2|1,
+multinom_preds_today_avg = data.frame(emmeans(fit2_usa_multi, ~ LINEAGE2|1,
                                               at=list(DATE_NUM=today_num), 
                                               mode="prob", df=NA))
 multinom_preds_today_avg
@@ -441,6 +440,43 @@ colSums(multinom_preds_today_avg[-1, c("prob","asymp.LCL","asymp.UCL")])
 #      prob asymp.LCL asymp.UCL 
 # 0.5333025 0.4906444 0.5759607
 
+# fitted prop of delta by state
+lineages_bystate = data.frame(emmeans(fit2_usa_multi,
+                   ~ LINEAGE2,
+                   by=c("DATE_NUM","STATE"),
+                   at=list(DATE_NUM=today_num),  
+                   mode="prob", df=NA))
+lineages_bystate$DATE = as.Date(lineages_bystate$DATE_NUM, origin="1970-01-01")
+delta_bystate = lineages_bystate[lineages_bystate$LINEAGE2=="B.1.617.2",]
+delta_bystate = delta_bystate[order(delta_bystate$prob, decreasing=T),]
+delta_bystate
+#      LINEAGE2 DATE_NUM         STATE      prob         SE df  asymp.LCL asymp.UCL       DATE
+# 142 B.1.617.2    18807      Missouri 0.8857385 0.01043032 NA 0.86529551 0.9061816 2021-06-29
+# 230 B.1.617.2    18807          Utah 0.8702676 0.01317059 NA 0.84445377 0.8960815 2021-06-29
+# 21  B.1.617.2    18807      Arkansas 0.8688523 0.02207606 NA 0.82558398 0.9121205 2021-06-29
+# 197 B.1.617.2    18807      Oklahoma 0.7957504 0.05034487 NA 0.69707625 0.8944245 2021-06-29
+# 43  B.1.617.2    18807      Colorado 0.7543531 0.01397578 NA 0.72696111 0.7817452 2021-06-29
+# 98  B.1.617.2    18807        Kansas 0.7491246 0.01983549 NA 0.71024779 0.7880015 2021-06-29
+# 175 B.1.617.2    18807    New Jersey 0.7461654 0.01922377 NA 0.70848749 0.7838433 2021-06-29
+# 32  B.1.617.2    18807    California 0.6960821 0.01634267 NA 0.66405110 0.7281132 2021-06-29
+# 219 B.1.617.2    18807         Texas 0.6676192 0.01863706 NA 0.63109122 0.7041471 2021-06-29
+# 274 B.1.617.2    18807       Wyoming 0.6511231 0.03949099 NA 0.57372215 0.7285240 2021-06-29
+# 164 B.1.617.2    18807        Nevada 0.6092255 0.05997952 NA 0.49166779 0.7267832 2021-06-29
+# 87  B.1.617.2    18807       Indiana 0.6065028 0.02795882 NA 0.55170454 0.6613011 2021-06-29
+# 153 B.1.617.2    18807      Nebraska 0.6046744 0.04787606 NA 0.51083903 0.6985098 2021-06-29
+# 120 B.1.617.2    18807 Massachusetts 0.6007289 0.02425613 NA 0.55318772 0.6482700 2021-06-29
+# 186 B.1.617.2    18807      New York 0.5997669 0.02370105 NA 0.55331370 0.6462201 2021-06-29
+# 252 B.1.617.2    18807    Washington 0.5958933 0.01793625 NA 0.56073887 0.6310477 2021-06-29
+# 241 B.1.617.2    18807      Virginia 0.5825889 0.03509343 NA 0.51380700 0.6513707 2021-06-29
+# 54  B.1.617.2    18807   Connecticut 0.5740373 0.04086018 NA 0.49395279 0.6541217 2021-06-29
+# 10  B.1.617.2    18807       Arizona 0.5379536 0.03606576 NA 0.46726597 0.6086412 2021-06-29
+# 109 B.1.617.2    18807      Maryland 0.5286523 0.03725471 NA 0.45563443 0.6016702 2021-06-29
+# 263 B.1.617.2    18807     Wisconsin 0.4392605 0.04451296 NA 0.35201674 0.5265043 2021-06-29
+# 76  B.1.617.2    18807      Illinois 0.4370945 0.02922833 NA 0.37980803 0.4943810 2021-06-29
+# 65  B.1.617.2    18807       Florida 0.4297985 0.02550558 NA 0.37980849 0.4797885 2021-06-29
+# 131 B.1.617.2    18807     Minnesota 0.3044692 0.02808012 NA 0.24943314 0.3595052 2021-06-29
+# 208 B.1.617.2    18807        Oregon 0.1762510 0.04672963 NA 0.08466265 0.2678394 2021-06-29
+
 
 # PLOT MULTINOMIAL FIT
 
@@ -450,11 +486,15 @@ date.to = as.numeric(as.Date("2021-07-31")) # max(GISAID_sel$DATE_NUM)+extrapola
 
 # multinomial model predictions (fastest, but no confidence intervals)
 predgrid = expand.grid(list(DATE_NUM=seq(date.from, date.to), STATE=levels_states))
-fit_usa_multi_preds_bystate = data.frame(predgrid, as.data.frame(predict(fit3_usa_multi, newdata=predgrid, type="prob")))
+fit_usa_multi_preds_bystate = data.frame(predgrid, as.data.frame(predict(fit4_usa_multi, newdata=predgrid, type="prob")), check.names=F)
 library(tidyr)
 fit_usa_multi_preds_bystate = gather(fit_usa_multi_preds_bystate, LINEAGE2, prob, all_of(levels_LINEAGE2), factor_key=TRUE)
 fit_usa_multi_preds_bystate$collection_date = as.Date(fit_usa_multi_preds_bystate$DATE_NUM, origin="1970-01-01")
 fit_usa_multi_preds_bystate$LINEAGE2 = factor(fit_usa_multi_preds_bystate$LINEAGE2, levels=levels_LINEAGE2) 
+# order states from highest to lowest incidence of delta
+levels_states2 = levels_states[order(fit_usa_multi_preds_bystate[fit_usa_multi_preds_bystate$collection_date==today&fit_usa_multi_preds_bystate$LINEAGE2=="B.1.617.2","prob"],decreasing=T)]
+fit_usa_multi_preds_bystate$STATE = factor(fit_usa_multi_preds_bystate$STATE, levels=levels_states2)
+data_agbyweekregion2$division = factor(data_agbyweekregion2$division, levels=levels_states2)
 
 muller_usa_mfit_bystate = ggplot(data=fit_usa_multi_preds_bystate, 
                                    aes(x=collection_date, y=prob, group=LINEAGE2)) + 
@@ -474,7 +514,30 @@ muller_usa_mfit_bystate = ggplot(data=fit_usa_multi_preds_bystate,
 muller_usa_mfit_bystate
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\usa_muller plots_multinom fit by state.png"), width=10, height=6)
-ggsave(file=paste0(".\\plots\\",plotdir,"\\usa_muller plots_multinom fit by state.pdf"), width=10, height=6)
+# ggsave(file=paste0(".\\plots\\",plotdir,"\\usa_muller plots_multinom fit by state.pdf"), width=10, height=6)
+
+# redo plot of raw data using this order
+muller_usabystate_raw2 = ggplot(data=data_agbyweekregion2, aes(x=collection_date, y=count, group=LINEAGE2)) + 
+  facet_wrap(~ division) +
+  # geom_col(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE1), width=1, position="fill") +
+  geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE2, group=LINEAGE2), position="fill") +
+  scale_fill_manual("", values=lineage_cols2) +
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01"))),1,1),
+                     limits=as.Date(c("2020-11-01",NA)), expand=c(0,0)) +
+  # guides(color = guide_legend(reverse=F, nrow=2, byrow=T), fill = guide_legend(reverse=F, nrow=2, byrow=T)) +
+  theme_hc() +
+  # labs(title = "MAIN SARS-CoV2 VARIANT LINEAGES IN THE UK") +
+  ylab("Share") + 
+  theme(legend.position="right",  
+        axis.title.x=element_blank()) +
+  labs(title = "SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN THE USA\n(GISAID data)") 
+# +
+# coord_cartesian(xlim=c(1,max(GISAID_sel$Week)))
+muller_usabystate_raw2
+
+ggsave(file=paste0(".\\plots\\",plotdir,"\\usa_muller plots by state_raw data.png"), width=10, height=6)
+# ggsave(file=paste0(".\\plots\\",plotdir,"\\usa_muller plots by state_raw data.pdf"), width=10, height=6)
 
 
 library(ggpubr)
@@ -486,50 +549,24 @@ ggarrange(muller_usabystate_raw2 + coord_cartesian(xlim=c(as.Date("2020-11-01"),
                    fill = guide_legend(override.aes = list(alpha = 0))), 
           muller_usa_mfit_bystate+ggtitle("Multinomial fit"), ncol=1)
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\usa_muller plots multipanel_multinom fit by state.png"), width=10, height=10)
-ggsave(file=paste0(".\\plots\\",plotdir,"\\usa_muller plots multipanel_multinom fit by state.pdf"), width=10, height=10)
+ggsave(file=paste0(".\\plots\\",plotdir,"\\usa_muller plots multipanel_multinom fit by state.png"), width=10, height=15)
+# ggsave(file=paste0(".\\plots\\",plotdir,"\\usa_muller plots multipanel_multinom fit by state.pdf"), width=10, height=15)
 
 
 
 # PLOT MODEL FIT WITH DATA & CONFIDENCE INTERVALS
 
 # multinomial model predictions by state with confidence intervals (but slower)
-fit_usa_multi_preds_bystate_withCI = data.frame(emmeans(fit3_usa_multi,
+fit_usa_multi_preds_bystate_withCI2 = data.frame(emmeans(fit2_usa_multi,
                                                         ~ LINEAGE2,
                                                         by=c("DATE_NUM","STATE"),
                                                         at=list(DATE_NUM=seq(date.from, date.to, by=7)),  # by=7 to speed up things a bit
                                                         mode="prob", df=NA))
+fit_usa_multi_preds_bystate_withCI = fit_usa_multi_preds_bystate_withCI2
 fit_usa_multi_preds_bystate_withCI$collection_date = as.Date(fit_usa_multi_preds_bystate_withCI$DATE_NUM, origin="1970-01-01")
 fit_usa_multi_preds_bystate_withCI$LINEAGE2 = factor(fit_usa_multi_preds_bystate_withCI$LINEAGE2, levels=levels_LINEAGE2)
+fit_usa_multi_preds_bystate_withCI$STATE = factor(fit_usa_multi_preds_bystate_withCI$STATE, levels=levels_states2)
 fit_usa_multi_preds2 = fit_usa_multi_preds_bystate_withCI
-
-fit_usa_multi_preds_bystate_withCI[fit_usa_multi_preds_bystate_withCI$collection_date==as.Date("2021-06-21")&fit_usa_multi_preds_bystate_withCI$LINEAGE2=="B.1.617.2",]
-#        LINEAGE2 DATE_NUM         STATE       prob          SE df  asymp.LCL  asymp.UCL collection_date
-# 615   B.1.617.2    18799       Arizona 0.3415259 0.04045846 NA 0.26222877 0.4208230      2021-06-21
-# 1286  B.1.617.2    18799    California 0.5298582 0.02065233 NA 0.48938040 0.5703360      2021-06-21
-# 1957  B.1.617.2    18799      Colorado 0.5735638 0.02395763 NA 0.52660767 0.6205198      2021-06-21
-# 2628  B.1.617.2    18799       Florida 0.2797337 0.02345015 NA 0.23377227 0.3256952      2021-06-21
-# 3299  B.1.617.2    18799      Illinois 0.2938156 0.02675727 NA 0.24137234 0.3462589      2021-06-21
-# 3970  B.1.617.2    18799       Indiana 0.4238384 0.03151071 NA 0.36207853 0.4855982      2021-06-21
-# 4641  B.1.617.2    18799        Kansas 0.5822103 0.02959658 NA 0.52420206 0.6402185      2021-06-21
-# 5312  B.1.617.2    18799      Maryland 0.3372405 0.03817511 NA 0.26241864 0.4120623      2021-06-21
-# 5983  B.1.617.2    18799 Massachusetts 0.4400967 0.02592195 NA 0.38929066 0.4909028      2021-06-21
-# 6654  B.1.617.2    18799     Minnesota 0.1770255 0.02348268 NA 0.13100029 0.2230507      2021-06-21
-# 7325  B.1.617.2    18799      Missouri 0.7127919 0.02808481 NA 0.65774667 0.7678371      2021-06-21
-# 7996  B.1.617.2    18799      Nebraska 0.2327069 0.06940555 NA 0.09667449 0.3687392      2021-06-21
-# 8667  B.1.617.2    18799    New Jersey 0.5641522 0.03021256 NA 0.50493669 0.6233677      2021-06-21
-# 9338  B.1.617.2    18799      New York 0.4297980 0.02844750 NA 0.37404198 0.4855541      2021-06-21
-# 10009 B.1.617.2    18799        Oregon 0.1345187 0.03766101 NA 0.06070446 0.2083329      2021-06-21
-# 10680 B.1.617.2    18799         Texas 0.4653436 0.02431382 NA 0.41768935 0.5129978      2021-06-21
-# 11351 B.1.617.2    18799          Utah 0.7575435 0.02195991 NA 0.71450290 0.8005842      2021-06-21
-# 12022 B.1.617.2    18799      Virginia 0.4180612 0.04118245 NA 0.33734505 0.4987773      2021-06-21
-# 12693 B.1.617.2    18799    Washington 0.4248052 0.02174424 NA 0.38218725 0.4674231      2021-06-21
-# 13364 B.1.617.2    18799     Wisconsin 0.3118342 0.04667627 NA 0.22035044 0.4033180      2021-06-21
-
-# fit_usa_multi_preds2 = fit_usa_multi_preds_bystate # without CIs
-# fit_usa_multi_preds2$asymp.LCL = NA
-# fit_usa_multi_preds2$asymp.UCL = NA
-
 
 # on logit scale:
 
@@ -573,7 +610,7 @@ plot_usa_mfit_logit = qplot(data=fit_usa_multi_preds2, x=collection_date, y=prob
 plot_usa_mfit_logit
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\usa_multinom fit by state_logit scale.png"), width=10, height=6)
-ggsave(file=paste0(".\\plots\\",plotdir,"\\usa_multinom fit by state_logit scale.pdf"), width=10, height=6)
+# ggsave(file=paste0(".\\plots\\",plotdir,"\\usa_multinom fit by state_logit scale.pdf"), width=10, height=6)
 
 
 # on response scale:
@@ -611,13 +648,13 @@ plot_usa_mfit = qplot(data=fit_usa_multi_preds2, x=collection_date, y=100*prob, 
 plot_usa_mfit
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\usa_multinom fit by state_response scale.png"), width=10, height=6)
-ggsave(file=paste0(".\\plots\\",plotdir,"\\usa_multinom fit by state_response scale.pdf"), width=10, height=6)
+# ggsave(file=paste0(".\\plots\\",plotdir,"\\usa_multinom fit by state_response scale.pdf"), width=10, height=6)
 
 
 
 
 # overall multinomial model predictions with confidence intervals
-fit_usa_multi_preds_withCI = data.frame(emmeans(fit3_usa_multi,
+fit_usa_multi_preds_withCI = data.frame(emmeans(fit4_usa_multi,
                                                         ~ LINEAGE2,
                                                         by=c("DATE_NUM"),
                                                         at=list(DATE_NUM=seq(date.from, date.to, by=7)),  # by=7 to speed up things a bit
@@ -625,15 +662,6 @@ fit_usa_multi_preds_withCI = data.frame(emmeans(fit3_usa_multi,
 fit_usa_multi_preds_withCI$collection_date = as.Date(fit_usa_multi_preds_withCI$DATE_NUM, origin="1970-01-01")
 fit_usa_multi_preds_withCI$LINEAGE2 = factor(fit_usa_multi_preds_withCI$LINEAGE2, levels=levels_LINEAGE2)
 fit_usa_multi_preds3 = fit_usa_multi_preds_withCI
-
-fit_usa_multi_preds_withCI[fit_usa_multi_preds_withCI$collection_date==as.Date("2021-06-21")&fit_usa_multi_preds_withCI$LINEAGE2=="B.1.617.2",]
-#        LINEAGE2 DATE_NUM         STATE       prob          SE df  asymp.LCL  asymp.UCL collection_date
-# 615 B.1.617.2    18799 0.4215232 0.01522866 NA 0.3916756 0.4513708      2021-06-21
-
-# fit_usa_multi_preds2 = fit_usa_multi_preds # without CIs
-# fit_usa_multi_preds2$asymp.LCL = NA
-# fit_usa_multi_preds2$asymp.UCL = NA
-
 
 # on logit scale:
 
@@ -677,7 +705,7 @@ plot_usa_avg_mfit_logit = qplot(data=fit_usa_multi_preds3, x=collection_date, y=
 plot_usa_avg_mfit_logit
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\usa_multinom fit_logit scale.png"), width=10, height=6)
-ggsave(file=paste0(".\\plots\\",plotdir,"\\usa_multinom fit_logit scale.pdf"), width=10, height=6)
+# ggsave(file=paste0(".\\plots\\",plotdir,"\\usa_multinom fit_logit scale.pdf"), width=10, height=6)
 
 
 # on response scale:
@@ -715,7 +743,7 @@ plot_usa_avg_mfit = qplot(data=fit_usa_multi_preds3, x=collection_date, y=100*pr
 plot_usa_avg_mfit
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\usa_multinom fit_response scale.png"), width=10, height=6)
-ggsave(file=paste0(".\\plots\\",plotdir,"\\usa_multinom fit_response scale.pdf"), width=10, height=6)
+# ggsave(file=paste0(".\\plots\\",plotdir,"\\usa_multinom fit_response scale.pdf"), width=10, height=6)
 
 
 

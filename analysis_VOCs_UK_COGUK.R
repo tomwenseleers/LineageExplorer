@@ -1,6 +1,6 @@
 # ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT VOCs IN THE UK BASED ON COG-UK SEQUENCING DATA ####
 
-# last update 28 JUNE 2021
+# last update 30 JUNE 2021
 
 library(nnet)
 # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
@@ -12,10 +12,10 @@ library(ggplot2)
 library(ggthemes)
 
 today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-06-20")
+today = as.Date("2021-06-30")
 today_num = as.numeric(today)
-today # "2021-06-20"
-plotdir = "VOCs_COGUK"
+today # "2021-06-30"
+plotdir = "UK_COGUK"
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 
 
@@ -35,7 +35,7 @@ cogukp2 = coguk[coguk$date>=as.Date("2020-09-01")&coguk$is_pillar_2=="Y",]
 cogukp2 = cogukp2[-which(grepl("B.1.617", cogukp2$lineage, fixed=TRUE)&cogukp2$date<=as.Date("2021-04-14")),]  
 
 nrow(cogukp2) # 
-range(cogukp2$date) # "2020-09-01" "2021-06-22"
+range(cogukp2$date) # "2020-09-01" "2021-06-23"
 library(lubridate)
 cogukp2$WeekEndDate = floor_date(cogukp2$date,unit="week")+6 # lubridate::week(cogukp2$date)
 cogukp2$DATE_NUM = as.numeric(cogukp2$date) 
@@ -224,13 +224,13 @@ delta_r_cogukp2 = data.frame(confint(emtrcogukp2,
                             p.value=as.data.frame(emtrcogukp2$contrasts)$p.value)
 delta_r_cogukp2
 #               contrast     estimate          SE df    asymp.LCL   asymp.UCL      p.value
-# 1      other - B.1.1.7  0.03435282 0.0006043157 NA  0.033168382  0.03553726 9.059420e-13
-# 2 (B.1.177+) - B.1.1.7 -0.04105226 0.0013228876 NA -0.043645074 -0.03845945 9.059420e-13
-# 3    B.1.525 - B.1.1.7 -0.01869601 0.0041457303 NA -0.026821488 -0.01057052 3.402281e-04
-# 4    B.1.351 - B.1.1.7  0.01164159 0.0023631404 NA  0.007009923  0.01627326 9.071093e-05
-# 5        P.1 - B.1.1.7  0.01004159 0.0066691097 NA -0.003029624  0.02311281 5.036088e-01
-# 6  B.1.617.1 - B.1.1.7 -0.19224867 0.0064276762 NA -0.204846687 -0.17965066 9.059420e-13
-# 7  B.1.617.2 - B.1.1.7  0.10481597 0.0014573548 NA  0.101959610  0.10767234 9.059420e-13
+# 1      other - B.1.1.7  0.036223034 0.000609156 NA  0.035029110  0.03741696 9.059420e-13
+# 2 (B.1.177+) - B.1.1.7 -0.041927087 0.001387562 NA -0.044646659 -0.03920752 9.059420e-13
+# 3    B.1.525 - B.1.1.7 -0.018961150 0.004158476 NA -0.027111613 -0.01081069 2.908929e-04
+# 4    B.1.351 - B.1.1.7  0.011499314 0.002387837 NA  0.006819239  0.01617939 1.292159e-04
+# 5        P.1 - B.1.1.7  0.009434313 0.006648945 NA -0.003597380  0.02246601 5.579206e-01
+# 6  B.1.617.1 - B.1.1.7 -0.192532449 0.006468016 NA -0.205209527 -0.17985537 9.059420e-13
+# 7  B.1.617.2 - B.1.1.7  0.104659203 0.001416313 NA  0.101883281  0.10743513 9.059420e-13
 
 # If we take the exponent of the product of these growth rate advantages/disadvantages and the generation time (e.g. 4.7 days, Nishiura et al. 2020)
 # we get the transmission advantage/disadvantage (here expressed in percent) :
@@ -238,55 +238,55 @@ delta_r_cogukp2
 transmadv_cogukp2 =  sign(delta_r_cogukp2[,c(2,5,6)])*100*(exp(abs(delta_r_cogukp2[,c(2,5,6)])*4.7)-1)
 transmadv_cogukp2 =  data.frame(contrast=delta_r_cogukp2$contrast, transmadv_cogukp2)
 transmadv_cogukp2
-#            contrast       estimate      asymp.LCL      asymp.UCL
-# 1      other - B.1.1.7   17.522339   16.869927   18.178393
-# 2 (B.1.177+) - B.1.1.7  -21.281685  -22.768692  -19.812689
-# 3    B.1.525 - B.1.1.7   -9.184752  -13.435136   -5.093628
-# 4    B.1.351 - B.1.1.7    5.624006    3.349539    7.948528
-# 5        P.1 - B.1.1.7    4.832691   -1.434110   11.475002
-# 6  B.1.617.1 - B.1.1.7 -146.839654 -161.896560 -132.648397
-# 7  B.1.617.2 - B.1.1.7   63.662317   61.479848   65.874282
+#               contrast    estimate   asymp.LCL   asymp.UCL
+# 1      other - B.1.1.7   18.559915   17.896486   19.227077
+# 2 (B.1.177+) - B.1.1.7  -21.781383  -23.347982  -20.234681
+# 3    B.1.525 - B.1.1.7   -9.320900  -13.589920   -5.212322
+# 4    B.1.351 - B.1.1.7    5.553398    3.256957    7.900911
+# 5        P.1 - B.1.1.7    4.533904   -1.705143   11.136637
+# 6  B.1.617.1 - B.1.1.7 -147.169094 -162.343565 -132.872345
+# 7  B.1.617.2 - B.1.1.7   63.541771   61.421927   65.689453
 # so this would estimate that B.1.617.2 had a 64% transmission advantage over B.1.1.7 [61%-66%] 95% CLs
 
 
 # growth rate & transmission advantages of different VOCs compared to UK type B.1.1.7 by REGION (difference in growth rate per day) 
 # PS p values are not Tukey corrected, you can do that with argument adjust="tukey"
-emtrcogukp2_region = emtrends(fit4_cogukp2_multi, trt.vs.ctrl1 ~ LINEAGE2,  
+emtrcogukp2_region = emtrends(fit3_cogukp2_multi, trt.vs.ctrl1 ~ LINEAGE2,  
                      var="DATE_NUM",  by=c("REGION"), mode="latent",
                      at=list(DATE_NUM=max(cogukp2$DATE_NUM)))
 delta_r_cogukp2_region = data.frame(confint(emtrcogukp2_region, 
                                    adjust="none", df=NA)$contrasts, 
                            p.value=as.data.frame(emtrcogukp2_region$contrasts)$p.value)
 delta_r_cogukp2_region
-# contrast           REGION     estimate           SE df    asymp.LCL     asymp.UCL      p.value
-# 1       other - B.1.1.7          England  0.03813519 6.287711e-04 NA  0.0369028166  0.039367554 1.356012e-10
-# 2  (B.1.177+) - B.1.1.7          England -0.03927327 1.518729e-03 NA -0.0422499232 -0.036296615 1.356012e-10
-# 3     B.1.525 - B.1.1.7          England -0.01667911 4.347255e-03 NA -0.0251995787 -0.008158651 1.581432e-03
-# 4     B.1.351 - B.1.1.7          England  0.01033793 2.527901e-03 NA  0.0053833303  0.015292522 6.577652e-04
-# 5         P.1 - B.1.1.7          England  0.01320248 6.876201e-03 NA -0.0002746297  0.026679581 2.648908e-01
-# 6   B.1.617.1 - B.1.1.7          England -0.17997813 6.611401e-03 NA -0.1929362418 -0.167020026 1.356012e-10
-# 7   B.1.617.2 - B.1.1.7          England  0.10911885 1.615413e-03 NA  0.1059526982  0.112285000 1.356012e-10
-# 8       other - B.1.1.7         Scotland  0.01317325 3.664225e-03 NA  0.0059914971  0.020354994 3.527182e-03
-# 9  (B.1.177+) - B.1.1.7         Scotland -0.04849332 5.594168e-03 NA -0.0594576896 -0.037528955 1.375642e-10
-# 10    B.1.525 - B.1.1.7         Scotland -0.08239208 1.511413e-02 NA -0.1120152293 -0.052768923 3.400525e-06
-# 11    B.1.351 - B.1.1.7         Scotland  0.03136175 7.131982e-03 NA  0.0173833207  0.045340177 2.155392e-04
-# 12        P.1 - B.1.1.7         Scotland -0.00843668 1.279227e-02 NA -0.0335090718  0.016635711 9.400671e-01
-# 13  B.1.617.1 - B.1.1.7         Scotland -0.32074580 3.091434e-02 NA -0.3813368001 -0.260154807 1.356307e-10
-# 14  B.1.617.2 - B.1.1.7         Scotland  0.07179171 1.946967e-03 NA  0.0679757293  0.075607700 1.356012e-10
-# 15      other - B.1.1.7            Wales  0.01687479 3.702587e-03 NA  0.0096178566  0.024131731 1.183090e-04
-# 16 (B.1.177+) - B.1.1.7            Wales -0.01055511 4.062351e-03 NA -0.0185171697 -0.002593046 6.216156e-02
-# 17    B.1.525 - B.1.1.7            Wales -0.03591757 4.019771e-02 NA -0.1147036363  0.042868502 8.563897e-01
-# 18    B.1.351 - B.1.1.7            Wales  0.01885862 1.912257e-02 NA -0.0186209201  0.056338158 8.124010e-01
-# 19        P.1 - B.1.1.7            Wales -0.09961806 4.732902e-02 NA -0.1923812260 -0.006854887 1.871814e-01
-# 20  B.1.617.1 - B.1.1.7            Wales -0.20743622 3.886770e-02 NA -0.2836155206 -0.131256919 5.447001e-06
-# 21  B.1.617.2 - B.1.1.7            Wales  0.14415160 5.889353e-03 NA  0.1326086813  0.155694522 1.356012e-10
-# 22      other - B.1.1.7 Northern Ireland  0.03279985 1.008032e-02 NA  0.0130427868  0.052556919 1.025344e-02
-# 23 (B.1.177+) - B.1.1.7 Northern Ireland -0.06624257 2.614394e-02 NA -0.1174837495 -0.015001382 7.276891e-02
-# 24    B.1.525 - B.1.1.7 Northern Ireland -0.07199290 7.760048e-02 NA -0.2240870394  0.080101249 8.408177e-01
-# 25    B.1.351 - B.1.1.7 Northern Ireland -1.10225700 5.567350e-09 NA -1.1022570126 -1.102256991 1.356012e-10
-# 26        P.1 - B.1.1.7 Northern Ireland -1.10225700 5.588460e-09 NA -1.1022570127 -1.102256991 1.356012e-10
-# 27  B.1.617.1 - B.1.1.7 Northern Ireland -1.10225700 5.593039e-09 NA -1.1022570128 -1.102256991 1.356012e-10
-# 28  B.1.617.2 - B.1.1.7 Northern Ireland  0.08329042 1.917530e-02 NA  0.0457075153  0.120873319 2.627964e-04
+# contrast           REGION     estimate          SE df    asymp.LCL   asymp.UCL      p.value
+# 1       other - B.1.1.7          England  0.036223034 0.000609156 NA  0.035029110  0.03741696 9.059420e-13
+# 2  (B.1.177+) - B.1.1.7          England -0.041927087 0.001387562 NA -0.044646659 -0.03920752 9.059420e-13
+# 3     B.1.525 - B.1.1.7          England -0.018961150 0.004158476 NA -0.027111613 -0.01081069 2.908929e-04
+# 4     B.1.351 - B.1.1.7          England  0.011499314 0.002387837 NA  0.006819239  0.01617939 1.292159e-04
+# 5         P.1 - B.1.1.7          England  0.009434313 0.006648945 NA -0.003597380  0.02246601 5.579206e-01
+# 6   B.1.617.1 - B.1.1.7          England -0.192532449 0.006468016 NA -0.205209527 -0.17985537 9.059420e-13
+# 7   B.1.617.2 - B.1.1.7          England  0.104659203 0.001416313 NA  0.101883281  0.10743513 9.059420e-13
+# 8       other - B.1.1.7         Scotland  0.036223034 0.000609156 NA  0.035029110  0.03741696 9.059420e-13
+# 9  (B.1.177+) - B.1.1.7         Scotland -0.041927087 0.001387562 NA -0.044646659 -0.03920752 9.059420e-13
+# 10    B.1.525 - B.1.1.7         Scotland -0.018961150 0.004158476 NA -0.027111613 -0.01081069 2.908929e-04
+# 11    B.1.351 - B.1.1.7         Scotland  0.011499314 0.002387837 NA  0.006819239  0.01617939 1.292159e-04
+# 12        P.1 - B.1.1.7         Scotland  0.009434313 0.006648945 NA -0.003597380  0.02246601 5.579206e-01
+# 13  B.1.617.1 - B.1.1.7         Scotland -0.192532449 0.006468016 NA -0.205209527 -0.17985537 9.059420e-13
+# 14  B.1.617.2 - B.1.1.7         Scotland  0.104659203 0.001416313 NA  0.101883281  0.10743513 9.059420e-13
+# 15      other - B.1.1.7            Wales  0.036223034 0.000609156 NA  0.035029110  0.03741696 9.059420e-13
+# 16 (B.1.177+) - B.1.1.7            Wales -0.041927087 0.001387562 NA -0.044646659 -0.03920752 9.059420e-13
+# 17    B.1.525 - B.1.1.7            Wales -0.018961150 0.004158476 NA -0.027111613 -0.01081069 2.908929e-04
+# 18    B.1.351 - B.1.1.7            Wales  0.011499314 0.002387837 NA  0.006819239  0.01617939 1.292159e-04
+# 19        P.1 - B.1.1.7            Wales  0.009434313 0.006648945 NA -0.003597380  0.02246601 5.579206e-01
+# 20  B.1.617.1 - B.1.1.7            Wales -0.192532449 0.006468016 NA -0.205209527 -0.17985537 9.059420e-13
+# 21  B.1.617.2 - B.1.1.7            Wales  0.104659203 0.001416313 NA  0.101883281  0.10743513 9.059420e-13
+# 22      other - B.1.1.7 Northern Ireland  0.036223034 0.000609156 NA  0.035029110  0.03741696 9.059420e-13
+# 23 (B.1.177+) - B.1.1.7 Northern Ireland -0.041927087 0.001387562 NA -0.044646659 -0.03920752 9.059420e-13
+# 24    B.1.525 - B.1.1.7 Northern Ireland -0.018961150 0.004158476 NA -0.027111613 -0.01081069 2.908929e-04
+# 25    B.1.351 - B.1.1.7 Northern Ireland  0.011499314 0.002387837 NA  0.006819239  0.01617939 1.292159e-04
+# 26        P.1 - B.1.1.7 Northern Ireland  0.009434313 0.006648945 NA -0.003597380  0.02246601 5.579206e-01
+# 27  B.1.617.1 - B.1.1.7 Northern Ireland -0.192532449 0.006468016 NA -0.205209527 -0.17985537 9.059420e-13
+# 28  B.1.617.2 - B.1.1.7 Northern Ireland  0.104659203 0.001416313 NA  0.101883281  0.10743513 9.059420e-13
 
 
 
@@ -301,7 +301,7 @@ gentime = 4.7 # put the generation time here that you would like to use (e.g. th
 # growth rate advantages of B.1.617.2 compared to UK type B.1.1.7 through time (difference in growth rate per day) 
 # as we would like to get a region & time-varying estimate here we will use model 
 # fit4_cogukp2_multi = nnet::multinom(LINEAGE2 ~ REGION * ns(DATE_NUM, df=2), data=cogukp2, maxit=1000) here
-emtrcogukp24 = emtrends(fit4_cogukp2_multi, trt.vs.ctrl1 ~ LINEAGE2, by=c("DATE_NUM", "REGION"), 
+emtrcogukp24 = emtrends(fit3_cogukp2_multi, trt.vs.ctrl1 ~ LINEAGE2, by=c("DATE_NUM", "REGION"), 
                       var="DATE_NUM",  mode="latent",
                       at=list(DATE_NUM=seq(as.numeric(as.Date("2021-05-01")),as.numeric(as.Date("2021-06-14")))))
 delta_r_cogukp24 = data.frame(confint(emtrcogukp24, 
@@ -432,7 +432,7 @@ ggarrange(muller_cogukp2byregion_raw1+coord_cartesian(xlim=c(as.Date("2020-09-01
                    fill = guide_legend(override.aes = list(alpha = 0))), 
           muller_cogukp2byregion_mfit+ggtitle("Multinomial fit"), ncol=1)
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\cogukp2_muller plots by region_multinom fit multipanel.png"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",plotdir,"\\cogukp2_muller plots by region_multinom fit multipanel.png"), width=8, height=10)
 # ggsave(file=paste0(".\\plots\\",plotdir,"\\cogukp2_muller plots by region_multinom fit multipanel.pdf"), width=8, height=6)
 
 
@@ -494,7 +494,7 @@ plot_cogukp2_mfit_logit
 ggsave(file=paste0(".\\plots\\",plotdir,"\\cogukp2_multinom fit_logit scale.png"), width=8, height=6)
 # ggsave(file=paste0(".\\plots\\",plotdir,"\\cogukp2_multinom fit_logit scale.pdf"), width=8, height=6)
 library(svglite)
-ggsave(file=paste0(".\\plots\\",plotdir,"\\cogukp2_multinom fit_logit scale.svg"), width=8, height=6)
+# ggsave(file=paste0(".\\plots\\",plotdir,"\\cogukp2_multinom fit_logit scale.svg"), width=8, height=6)
 
 # on response scale:
 plot_cogukp2_mfit = qplot(data=fit_cogukp2_multi_predsbyregion2, 
@@ -540,7 +540,7 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\cogukp2_multinom fit_response scale.p
 # PLOTS OF NEW CASES PER DAY BY VARIANT & EFFECTIVE REPRODUCTION NUMBER BY VARIANT THROUGH TIME ####
 
 # load case data
-library(covidregionaldata )
+library(covidregionaldata)
 library(dplyr)
 library(ggplot2)
 library(scales)  
@@ -597,7 +597,7 @@ ggplot(data=fit_cogukp2_multi_predsbyregion,
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE2, group=LINEAGE2), position="stack") +
   scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
                      labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
-                     limits=c(as.Date("2021-01-01"),today), expand=c(0,0)) +
+                     limits=c(as.Date("2021-01-01"),max(cases_tot$date)), expand=c(0,0)) +
   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
   theme_hc() + theme(legend.position="right") +
   ylab("New confirmed cases per day (smoothed)") + xlab("Date of infection") +
@@ -643,7 +643,7 @@ ggplot(data=fit_cogukp2_multi_predsbyregion,
   coord_cartesian(xlim=c(as.Date("2021-01-01"),today)) +
   scale_y_log10()
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\cases per day_log10 y scale_multinomial fit raw case data.png"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",plotdir,"\\cases per day_log10 y scale_multinomial fit smoothed case data.png"), width=8, height=6)
 
 
 # EFFECTIVE REPRODUCTION NUMBER BY VARIANT THROUGH TIME ####
@@ -760,7 +760,7 @@ above_avg_r_variants3 = do.call(rbind, lapply(levels_REGION, function(region) do
   above_avg_r_variants2$Re[above_avg_r_variants2$prob<0.01] = NA
   above_avg_r_variants2$Re_LOWER[above_avg_r_variants2$prob<0.01] = NA
   above_avg_r_variants2$Re_UPPER[above_avg_r_variants2$prob<0.01] = NA
-  qplot(data=above_avg_r_variants2[!((above_avg_r_variants2$LINEAGE2 %in% c("other"))),], # |above_avg_r_variants2$collection_date>max(cases_tot$DATE)
+  qplot(data=above_avg_r_variants2[!((above_avg_r_variants2$LINEAGE2 %in% c("other"))|(above_avg_r_variants2$collection_date>=max(cases_tot$date))),], # |above_avg_r_variants2$collection_date>max(cases_tot$DATE)
         x=collection_date-7, # -7 to calculate back to date of infection
         y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribbon", colour=LINEAGE2, fill=LINEAGE2, alpha=I(0.5),
         group=LINEAGE2, linetype=I(0)) +

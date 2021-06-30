@@ -4,7 +4,7 @@
 # Data: baseline surveillance whole genome sequencing RIVM, https://data.rivm.nl/covid-19/COVID-19_varianten.csv & https://raw.githubusercontent.com/mzelst/covid-19/master/data-misc/variants-rivm/prevalence_variants.csv
 # downloaded on 26th of June
 
-# Tom Wenseleers, last update 26 JUNE 2021
+# Tom Wenseleers, last update 30 JUNE 2021
 
 library(lme4)
 library(splines)
@@ -43,12 +43,12 @@ library(mclogit)
 library(lubridate)
 
 
-dat="NL" # desired path in //data
-suppressWarnings(dir.create(paste0(".//plots//",dat)))
+plotdir="NL" # desired path in //data
+suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 # filedate = as.Date(gsub("_","-",dat)) # file date
 # filedate_num = as.numeric(filedate)
 # today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-06-26")
+today = as.Date("2021-06-30")
 today_num = as.numeric(today)
 
 selected_variants = c("B.1.1.7 (alpha)", "B.1.351 (beta)", "P.1 (gamma)", "B.1.617.1 (kappa)", "B.1.617.2 (delta)")
@@ -86,7 +86,7 @@ nl_baseline = gather(nl_baseline[,c("collection_date", # convert to long format
                                             "B.1.617.1 (kappa)",
                                             "B.1.617.2 (delta)",
                                             "other"), factor_key=TRUE)
-                                  
+
                                   
 # to work with official RIVM csv (lags a bit behind)
 # nl_baseline = read.csv("https://data.rivm.nl/covid-19/COVID-19_varianten.csv", sep=";")
@@ -132,7 +132,7 @@ muller_nl_raw = ggplot(data=nl_baseline,
   ggtitle("Spread of SARS-CoV2 variants of concern in the Netherlands\n(baseline surveillance, data RIVM)")
 muller_nl_raw
 
-ggsave(file=paste0(".\\plots\\",dat,"\\muller plot_netherlands_raw data.png"), width=7, height=5)
+ggsave(file=paste0(".\\plots\\",plotdir,"\\muller plot_netherlands_raw data.png"), width=7, height=5)
 
 
 # multinomial spline fit on share of each variant
@@ -261,7 +261,7 @@ muller_nl_seq_mfit0 = ggplot(data=nl_seq_mfit0_preds,
   ggtitle("Spread of SARS-CoV2 variants of concern in the Netherlands\n(baseline surveillance, data RIVM)")
 muller_nl_seq_mfit0
 
-ggsave(file=paste0(".\\plots\\",dat,"\\muller plot_netherlands_multinomial fit.png"), width=7, height=5)
+ggsave(file=paste0(".\\plots\\",plotdir,"\\muller plot_netherlands_multinomial fit.png"), width=7, height=5)
 
 library(ggpubr)
 ggarrange(muller_nl_raw+coord_cartesian(xlim=c(as.Date("2020-12-01"),as.Date(date.to, origin="1970-01-01")))+
@@ -274,7 +274,7 @@ ggarrange(muller_nl_raw+coord_cartesian(xlim=c(as.Date("2020-12-01"),as.Date(dat
                   axis.title.x=element_blank()), 
           muller_nl_seq_mfit0+ggtitle("Multinomial spline fit (3 df)"), ncol=1)
 
-ggsave(file=paste0(".\\plots\\",dat,"\\muller plot_netherlands_raw data plus multinomial fit multipanel.png"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",plotdir,"\\muller plot_netherlands_raw data plus multinomial fit multipanel.png"), width=8, height=8)
 
 
 # PLOT MODEL FIT WITH DATA & CONFIDENCE INTERVALS
@@ -317,7 +317,7 @@ plot_multinom_response = qplot(data=nl_seq_mfit0_preds,
   theme(legend.position = "right") 
 plot_multinom_response
 
-ggsave(file=paste0(".\\plots\\",dat,"\\netherlands_baseline_surveillance_multinomial fits_response scale.png"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",plotdir,"\\netherlands_baseline_surveillance_multinomial fits_response scale.png"), width=8, height=6)
 
 
 # on logit scale:
@@ -367,28 +367,28 @@ plot_multinom = qplot(data=nl_seq_mfit0_preds2[nl_seq_mfit0_preds2$variant!="all
 plot_multinom
 
 
-ggsave(file=paste0(".\\plots\\",dat,"\\netherlands_baseline_surveillance_multinomial fits_link scale.png"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",plotdir,"\\netherlands_baseline_surveillance_multinomial fits_link scale.png"), width=8, height=6)
 
 
 # estimated share of different variants of concern among lab diagnoses today
 nl_seq_mfit0_preds[as.character(nl_seq_mfit0_preds$collection_date)==as.character(today),]
 #               variant2 collection_date_num         prob           SE df     asymp.LCL    asymp.UCL collection_date           variant
-# 1231   B.1.1.7 (alpha)             18804.5 0.6221288486 6.115199e-02 NA  5.022732e-01 0.7419845423      2021-06-26   B.1.1.7 (alpha)
-# 1232    B.1.351 (beta)             18804.5 0.0001789236 9.653861e-05 NA -1.028859e-05 0.0003681358      2021-06-26    B.1.351 (beta)
-# 1233       P.1 (gamma)             18804.5 0.0127225928 3.297049e-03 NA  6.260495e-03 0.0191846907      2021-06-26       P.1 (gamma)
-# 1234 B.1.617.1 (kappa)             18804.5 0.0018647722 2.406142e-03 NA -2.851180e-03 0.0065807243      2021-06-26 B.1.617.1 (kappa)
-# 1235 B.1.617.2 (delta)             18804.5 0.3538085996 6.337928e-02 NA  2.295875e-01 0.4780297107      2021-06-26 B.1.617.2 (delta)
-# 1236             other             18804.5 0.0092962632 2.442671e-03 NA  4.508715e-03 0.0140838113      2021-06-26             other
+# 1255   B.1.1.7 (alpha)             18808.5 0.5148470493 7.627130e-02 NA  3.653581e-01 0.6643360446      2021-06-30   B.1.1.7 (alpha)
+# 1256    B.1.351 (beta)             18808.5 0.0001165683 6.820391e-05 NA -1.710894e-05 0.0002502455      2021-06-30    B.1.351 (beta)
+# 1257       P.1 (gamma)             18808.5 0.0105969585 3.184134e-03 NA  4.356172e-03 0.0168377455      2021-06-30       P.1 (gamma)
+# 1258 B.1.617.1 (kappa)             18808.5 0.0018821661 2.694554e-03 NA -3.399063e-03 0.0071633956      2021-06-30 B.1.617.1 (kappa)
+# 1259 B.1.617.2 (delta)             18808.5 0.4643059318 7.927014e-02 NA  3.089393e-01 0.6196725545      2021-06-30 B.1.617.2 (delta)
+# 1260             other             18808.5 0.0082513261 2.465853e-03 NA  3.418343e-03 0.0130843089      2021-06-30             other
   
 # estimated share of different variants of concern among new infections today (assuming 1 week between infection & diagnosis)
 nl_seq_mfit0_preds[as.character(nl_seq_mfit0_preds$collection_date)==as.character(today+7),]
 #               variant2 collection_date_num        prob           SE df     asymp.LCL    asymp.UCL collection_date           variant
-# 1273   B.1.1.7 (alpha)             18811.5 0.431703963 8.322213e-02 NA  2.685916e-01 0.5948163497      2021-07-03   B.1.1.7 (alpha)
-# 1274    B.1.351 (beta)             18811.5 0.000081691 5.091668e-05 NA -1.810385e-05 0.0001814859      2021-07-03    B.1.351 (beta)
-# 1275       P.1 (gamma)             18811.5 0.008928836 3.018819e-03 NA  3.012059e-03 0.0148456124      2021-07-03       P.1 (gamma)
-# 1276 B.1.617.1 (kappa)             18811.5 0.001831646 2.821173e-03 NA -3.697751e-03 0.0073610421      2021-07-03 B.1.617.1 (kappa)
-# 1277 B.1.617.2 (delta)             18811.5 0.550161898 8.665648e-02 NA  3.803183e-01 0.7200054813      2021-07-03 B.1.617.2 (delta)
-# 1278             other             18811.5 0.007291966 2.428223e-03 NA  2.532737e-03 0.0120511957      2021-07-03             other
+# 1297   B.1.1.7 (alpha)             18815.5 3.262487e-01 8.443434e-02 NA  1.607604e-01 0.4917369972      2021-07-07   B.1.1.7 (alpha)
+# 1298    B.1.351 (beta)             18815.5 4.860174e-05 3.302887e-05 NA -1.613366e-05 0.0001133371      2021-07-07    B.1.351 (beta)
+# 1299       P.1 (gamma)             18815.5 6.791494e-03 2.689061e-03 NA  1.521032e-03 0.0120619560      2021-07-07       P.1 (gamma)
+# 1300 B.1.617.1 (kappa)             18815.5 1.688257e-03 2.850196e-03 NA -3.898024e-03 0.0072745376      2021-07-07 B.1.617.1 (kappa)
+# 1301 B.1.617.2 (delta)             18815.5 6.593124e-01 8.813883e-02 NA  4.865635e-01 0.8320613499      2021-07-07 B.1.617.2 (delta)
+# 1302             other             18815.5 5.910509e-03 2.286871e-03 NA  1.428323e-03 0.0103926946      2021-07-07             other
 
   
 
@@ -401,6 +401,7 @@ nl_seq_mfit0_preds[nl_seq_mfit0_preds$variant=="B.1.617.2 (delta)","collection_d
 # PLOTS OF NEW CASES PER DAY BY VARIANT & EFFECTIVE REPRODUCTION NUMBER BY VARIANT THROUGH TIME ####
 
 # load case data
+
 library(covidregionaldata )
 library(dplyr)
 library(ggplot2)
@@ -409,14 +410,14 @@ library(scales)
 cases_tot = as.data.frame(get_national_data(countries = "Netherlands"))
 cases_tot = cases_tot[cases_tot$date>=as.Date("2020-08-01"),]
 cases_tot$DATE_NUM = as.numeric(cases_tot$date)
-cases_tot$BANKHOLIDAY = bankholiday(cases_tot$date)
+# cases_tot$BANKHOLIDAY = bankholiday(cases_tot$date)
 cases_tot$WEEKDAY = weekdays(cases_tot$date)
 cases_tot = cases_tot[cases_tot$date<=(max(cases_tot$date)-3),] # cut off data from last 3 days (incomplete)
 
 # smooth out weekday effects in case nrs using GAM (if testing data is available one could correct for testing intensity as well)
 fit_cases = gam(cases_new ~ s(DATE_NUM, bs="cs", k=30, fx=F) + 
-                  WEEKDAY + 
-                  BANKHOLIDAY,
+                  WEEKDAY, # + 
+                  # BANKHOLIDAY,
                 # s(TESTS_ALL, bs="cs", k=8, fx=F),
                 family=poisson(log), data=cases_tot,
 ) 
@@ -438,16 +439,17 @@ ggplot(data=nl_seq_mfit0_preds,
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), position="stack") +
   scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
                      labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
-                     limits=c(as.Date("2021-03-01"),max(cases_tot$date)), expand=c(0,0)) +
+                     # limits=c(as.Date("2021-03-01"),max(cases_tot$date)), 
+                     expand=c(0,0)) +
   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
   theme_hc() + theme(legend.position="right") + 
   ylab("New confirmed cases per day") + xlab("Date of diagnosis") +
   ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT\nIN THE NETHERLANDS\n(case data & multinomial fit to baseline surveillance data RIVM)") +
   scale_fill_manual("variant", values=colours_VARIANTS) +
   scale_colour_manual("variant", values=colours_VARIANTS) +
-  coord_cartesian(xlim=c(as.Date("2021-03-01"),NA))
+  coord_cartesian(xlim=c(as.Date("2020-12-01"),NA))
 
-ggsave(file=paste0(".\\plots\\",dat,"\\cases per day_stacked area multinomial fit raw case data.png"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",plotdir,"\\cases per day_stacked area multinomial fit raw case data.png"), width=8, height=6)
 
 ggplot(data=nl_seq_mfit0_preds, 
        aes(x=collection_date-7, y=smoothed_cases, group=variant)) + 
@@ -455,16 +457,17 @@ ggplot(data=nl_seq_mfit0_preds,
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), position="stack") +
   scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
                      labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
-                     limits=c(as.Date("2021-03-01"),today), expand=c(0,0)) +
+                     # limits=c(as.Date("2021-03-01"),today), 
+                     expand=c(0,0)) +
   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
   theme_hc() + theme(legend.position="right") + 
   ylab("New confirmed cases per day (smoothed)") + xlab("Date of infection") +
   ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT\nIN THE NETHERLANDS\n(case data & multinomial fit to baseline surveillance data RIVM)") +
   scale_fill_manual("variant", values=colours_VARIANTS) +
   scale_colour_manual("variant", values=colours_VARIANTS) +
-  coord_cartesian(xlim=c(as.Date("2021-03-01"),today))
+  coord_cartesian(xlim=c(as.Date("2020-12-01"),max(cases_tot$date)))
 
-ggsave(file=paste0(".\\plots\\",dat,"\\cases per day_smoothed_stacked area multinomial fit raw case data.png"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",plotdir,"\\cases per day_smoothed_stacked area multinomial fit raw case data.png"), width=8, height=6)
 
 
 # EFFECTIVE REPRODUCTION NUMBER BY VARIANT THROUGH TIME ####
@@ -484,8 +487,7 @@ Re.from.r <- function(r, gamma_mean=4.7, gamma_sd=2.9) { # Nishiura et al. 2020,
 # based on the slope of the GAM fit on a log link scale
 avg_r_cases = as.data.frame(emtrends(fit_cases, ~ DATE_NUM, var="DATE_NUM", 
                                      at=list(DATE_NUM=seq(date.from,
-                                                          date.to),
-                                             BANKHOLIDAY="no"
+                                                          date.to)
                                      ), # weekday="Wednesday",
                                      type="link"))
 colnames(avg_r_cases)[2] = "r"
@@ -512,7 +514,7 @@ qplot(data=avg_r_cases, x=DATE-7, y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribb
 
 # calculate above-average intrinsic growth rates per day of each variant over time based on multinomial fit using emtrends weighted effect contrasts ####
 # for best model fit3_sanger_multi
-above_avg_r_variants = do.call(rbind, lapply(seq(date.from,
+above_avg_r_variants0 = do.call(rbind, lapply(seq(date.from,
                                                  date.to), 
                                              function (dat) { 
                                                wt = as.data.frame(emmeans(nl_seq_mfit0, ~ variant2 , at=list(collection_date_num=dat), type="response"))$prob   # important: these should sum to 1
@@ -525,10 +527,10 @@ above_avg_r_variants = do.call(rbind, lapply(seq(date.from,
                                                out = as.data.frame(confint(contrast(EMT, cons), adjust="none", df=NA))
                                                # sum(out$estimate*wt) # should sum to zero
                                                return(out) } ))
-
+above_avg_r_variants = above_avg_r_variants0
 above_avg_r_variants$contrast = factor(above_avg_r_variants$contrast, 
                                        levels=1:length(levels_VARIANTS), 
-                                       labels=levels(data_agbyweek2$variant))
+                                       labels=levels_VARIANTS)
 above_avg_r_variants$variant = above_avg_r_variants$contrast # gsub(" effect|\\(|\\)","",above_avg_r_variants$contrast)
 above_avg_r_variants$collection_date = as.Date(above_avg_r_variants$collection_date_num, origin="1970-01-01")
 range(above_avg_r_variants$collection_date) # "2020-12-03" "2021-07-30"
@@ -598,7 +600,7 @@ qplot(data=above_avg_r_variants2[!((above_avg_r_variants2$variant %in% c("other"
   scale_colour_manual("variant", values=c(head(colours_VARIANTS,-1),"black")) +
   theme(legend.position="right") 
 
-ggsave(file=paste0(".\\plots\\",dat,"\\Re values per variant_avgRe_from_cases_with clipping.png"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",plotdir,"\\Re values per variant_avgRe_from_cases_with clipping.png"), width=8, height=6)
 
 
 
