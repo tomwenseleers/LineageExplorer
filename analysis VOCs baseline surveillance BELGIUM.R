@@ -2,7 +2,7 @@
 # Tom Wenseleers
 
 # Data: baseline surveillance whole genome sequencing results (weeks 49-53 2020, 1-25 2021) + 
-# VOC PCR baseline surveillance results (weeks 23-25 2021) (Emmanuel Andre, federal test platform & National Reference Lab) 
+# VOC PCR baseline surveillance results (weeks 23-26 2021) (Emmanuel Andre, federal test platform & National Reference Lab) 
 # cf weekly Sciensano reports, section 3.4.1,
 # https://covid-19.sciensano.be/nl/covid-19-epidemiologische-situatie (federal test platform) & "Genomic surveillance of SARS-CoV-2 in Belgium", 
 # reports, https://www.uzleuven.be/nl/laboratoriumgeneeskunde/genomic-surveillance-sars-cov-2-belgium
@@ -63,9 +63,9 @@ set_sum_contrasts() # we use effect coding for all models
 be_baseline = read.csv(paste0(".\\data\\",dat,"\\VOC_baseline_surveillance_belgium_30 june 2021.csv"))
 be_baseline$week_startdate = as.Date(be_baseline$week_startdate)
 be_baseline$collection_date = be_baseline$week_startdate+3.5 # we use the week midpoint
-# except for last VOC PCR datapoint which is from 14 & 15/6 only, so we take the midpoint of that
+# except for last VOC PCR datapoint which is for 2 days only, so we take the midpoint of those
 be_baseline$collection_date[be_baseline$week_startdate==max(be_baseline$week_startdate)&be_baseline$data=="VOC_PCR"] = be_baseline$week_startdate[be_baseline$week_startdate==max(be_baseline$week_startdate)&be_baseline$data=="VOC_PCR"]+0.5 
-be_baseline$total = be_baseline$alpha+be_baseline$beta+be_baseline$gamma#+be_baseline$kappa+
+be_baseline$total = be_baseline$alpha+be_baseline$beta+be_baseline$gamma+#+be_baseline$kappa+
                     be_baseline$delta+be_baseline$other
 be_baseline$prop_alpha = be_baseline$alpha / be_baseline$total
 be_baseline$prop_beta = be_baseline$beta / be_baseline$total
@@ -379,27 +379,25 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\belgium_baseline_surveillance_multino
 
 # estimated share of different variants of concern among lab diagnoses today
 be_seq_mfit0_preds[as.character(be_seq_mfit0_preds$collection_date)==as.character(today),]
-# variant collection_date_num         prob           SE df     asymp.LCL    asymp.UCL collection_date
-# 1255   B.1.1.7 (alpha)             18808.5 0.4381873096 0.0417396273 NA  0.3563791433 0.5199954759      2021-06-30
-# 1256    B.1.351 (beta)             18808.5 0.0012301196 0.0003266264 NA  0.0005899436 0.0018702956      2021-06-30
-# 1257       P.1 (gamma)             18808.5 0.0614468920 0.0080999114 NA  0.0455713574 0.0773224267      2021-06-30
-# 1258 B.1.617.1 (kappa)             18808.5 0.0001427525 0.0002903681 NA -0.0004263586 0.0007118636      2021-06-30
-# 1259 B.1.617.2 (delta)             18808.5 0.4826550418 0.0488371545 NA  0.3869359779 0.5783741057      2021-06-30
-# 1260             other             18808.5 0.0163378845 0.0024525305 NA  0.0115310131 0.0211447559      2021-06-30
+# variant collection_date_num        prob           SE df    asymp.LCL   asymp.UCL collection_date
+# 1046   B.1.1.7 (alpha)             18808.5 0.410423261 0.0270427958 NA 0.3574203556 0.463426167      2021-06-30
+# 1047    B.1.351 (beta)             18808.5 0.001269036 0.0003207143 NA 0.0006404472 0.001897624      2021-06-30
+# 1048       P.1 (gamma)             18808.5 0.059912825 0.0063236846 NA 0.0475186307 0.072307019      2021-06-30
+# 1049 B.1.617.2 (delta)             18808.5 0.510417184 0.0316896055 NA 0.4483066984 0.572527669      2021-06-30
+# 1050             other             18808.5 0.017977694 0.0022975490 NA 0.0134745810 0.022480808      2021-06-30
   
 # estimated share of different variants of concern among new infections today (assuming 1 week between infection & diagnosis)
 be_seq_mfit0_preds[as.character(be_seq_mfit0_preds$collection_date)==as.character(today+7),]
-# variant collection_date_num         prob           SE df     asymp.LCL    asymp.UCL collection_date
-# 1297   B.1.1.7 (alpha)             18815.5 0.3049876126 0.0470238687 NA  0.2128225235 0.3971527017      2021-07-07
-# 1298    B.1.351 (beta)             18815.5 0.0006849652 0.0002141232 NA  0.0002652913 0.0011046390      2021-07-07
-# 1299       P.1 (gamma)             18815.5 0.0445507714 0.0082560398 NA  0.0283692307 0.0607323121      2021-07-07
-# 1300 B.1.617.1 (kappa)             18815.5 0.0000914093 0.0002144870 NA -0.0003289776 0.0005117962      2021-07-07
-# 1301 B.1.617.2 (delta)             18815.5 0.6386147073 0.0554786585 NA  0.5298785347 0.7473508799      2021-07-07
-# 1302             other             18815.5 0.0110705343 0.0022145261 NA  0.0067301428 0.0154109257      2021-07-07
+# variant collection_date_num         prob           SE df    asymp.LCL   asymp.UCL collection_date
+# 1081   B.1.1.7 (alpha)             18815.5 0.2751152093 0.0301659945 NA 0.2159909464 0.334239472      2021-07-07
+# 1082    B.1.351 (beta)             18815.5 0.0006868374 0.0001996229 NA 0.0002955837 0.001078091      2021-07-07
+# 1083       P.1 (gamma)             18815.5 0.0420288466 0.0060655819 NA 0.0301405245 0.053917169      2021-07-07
+# 1084 B.1.617.2 (delta)             18815.5 0.6700419914 0.0358801772 NA 0.5997181364 0.740365846      2021-07-07
+# 1085             other             18815.5 0.0121271153 0.0019799641 NA 0.0082464570 0.016007774      2021-07-07
 
   
 
-# estimated date that B.1.617.2 would make out >50% of all lab diagnoses: "2021-07-01" ["2021-06-28"-"2021-07-06"] 95% CLs (7 days earlier for infections)
+# estimated date that B.1.617.2 would make out >50% of all lab diagnoses: "2021-06-30" ["2021-06-28"-"2021-07-03"] 95% CLs (7 days earlier for infections)
 be_seq_mfit0_preds[be_seq_mfit0_preds$variant=="B.1.617.2 (delta)","collection_date"][which(be_seq_mfit0_preds[be_seq_mfit0_preds$variant=="B.1.617.2 (delta)","prob"] >= 0.5)[1]]
 be_seq_mfit0_preds[be_seq_mfit0_preds$variant=="B.1.617.2 (delta)","collection_date"][which(be_seq_mfit0_preds[be_seq_mfit0_preds$variant=="B.1.617.2 (delta)","asymp.LCL"] >= 0.5)[1]]
 be_seq_mfit0_preds[be_seq_mfit0_preds$variant=="B.1.617.2 (delta)","collection_date"][which(be_seq_mfit0_preds[be_seq_mfit0_preds$variant=="B.1.617.2 (delta)","asymp.UCL"] >= 0.5)[1]]
