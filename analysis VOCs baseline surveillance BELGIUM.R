@@ -7,7 +7,7 @@
 # https://covid-19.sciensano.be/nl/covid-19-epidemiologische-situatie (federal test platform) & "Genomic surveillance of SARS-CoV-2 in Belgium", 
 # reports, https://www.uzleuven.be/nl/laboratoriumgeneeskunde/genomic-surveillance-sars-cov-2-belgium
 
-# Tom Wenseleers, last update 30 JUNE 2021
+# Tom Wenseleers, last update 30 JUNE 2021 for VOC data & 2 July for Re calculations
 
 library(lme4)
 library(splines)
@@ -177,7 +177,7 @@ delta_r
 # B.1.617.2 (delta) - B.1.1.7 (alpha)  0.0960158577  0.085213749  0.106817966
 # other - B.1.1.7 (alpha)              0.0009015878 -0.002606080  0.004409256
 
-# i.e. delta has a 9.6% [8.5-10.7%] growth rate advantage per day over alpha
+# i.e. delta has a 9% [8.5-10.7%] growth rate advantage per day over alpha
 
 # pairwise contrasts in growth rate today (no Tukey correction applied)
 emtrends(be_seq_mfit0, revpairwise ~ variant|1, 
@@ -194,7 +194,7 @@ emtrends(be_seq_mfit0, revpairwise ~ variant|1,
 # other - B.1.1.7 (alpha)              0.000902 0.00179 NA   0.504 0.6144 
 # other - B.1.351 (beta)               0.031461 0.00394 NA   7.984 <.0001 
 # other - P.1 (gamma)                 -0.005593 0.00262 NA  -2.137 0.0326 
-# other - B.1.617.2 (delta)           -0.095114 0.00577 NA -16.480 <.0001 
+# other - B.1.617.2 (delta)           -0.095114 0.00577 NA -16.480 <.0001
 
 # pairwise contrasts in growth rate today with confidence intervals:
 confint(emtrends(be_seq_mfit0, revpairwise ~ variant|1, 
@@ -218,7 +218,7 @@ confint(emtrends(be_seq_mfit0, revpairwise ~ variant|1,
 # assuming generation time of 4.7 days (Nishiura et al. 2020)
 # delta has a 57% [49-65%] increased infectiousness compared to alpha
 exp(delta_r*4.7) 
-#                                      estimate asymp.LCL asymp.UCL
+# estimate asymp.LCL asymp.UCL
 # B.1.351 (beta) - B.1.1.7 (alpha)    0.8662088 0.8371427 0.8962841
 # P.1 (gamma) - B.1.1.7 (alpha)       1.0309970 1.0120570 1.0502913
 # B.1.617.2 (delta) - B.1.1.7 (alpha) 1.5703123 1.4925777 1.6520954

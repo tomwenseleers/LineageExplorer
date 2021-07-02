@@ -1,6 +1,6 @@
-# ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT VOCs IN PORTUGAL (GISAID GENOMIC EPIDEMIOLOGY METADATA)
+# ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT VOCs IN RUSSIA (GISAID GENOMIC EPIDEMIOLOGY METADATA)
 # T. Wenseleers
-# last update 21 JUNE 2021
+# last update 1 July 2021
 
 library(nnet)
 # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
@@ -13,14 +13,13 @@ library(ggthemes)
 library(scales)
 
 today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-06-20")
+today = as.Date("2021-07-01")
 today_num = as.numeric(today)
-today # "2021-06-20"
-plotdir = "VOCs_GISAID"
+plotdir = "Russia_GISAID"
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 
-# import GISAID genomic epidemiology metadata (file version metadata_2021-06-18_05-50.tsv.gz)
-GISAID = read_tsv(gzfile(".//data//GISAID_genomic_epidemiology//metadata_2021-06-18_05-50.tsv.gz"), col_types = cols(.default = "c")) 
+# import GISAID genomic epidemiology metadata (file version metadata_2021-06-29_10-41.tsv.gz)
+GISAID = read_tsv(gzfile(".//data//GISAID_genomic_epidemiology//metadata_2021-06-29_10-41.tsv.gz"), col_types = cols(.default = "c")) 
 GISAID = as.data.frame(GISAID)
 
 GISAID$date = as.Date(GISAID$date)
@@ -36,7 +35,7 @@ unique(GISAID$host)
 GISAID[GISAID$host!="Human","strain"]
 GISAID = GISAID[GISAID$host=="Human",]
 GISAID = GISAID[GISAID$date>=as.Date("2020-01-01"),]
-range(GISAID$date) # "2020-01-01" "2021-06-11"
+range(GISAID$date) # "2020-01-01" "2021-06-27"
 
 firstdetB16172 = GISAID[GISAID$pango_lineage=="B.1.617.2",]
 firstdetB16172 = firstdetB16172[!is.na(firstdetB16172$date),]
@@ -82,7 +81,7 @@ tblB1617
 # 170502     Bangladesh B.1.617+    44
 # 170505        Belgium B.1.617+   247
 # 170513         Brazil B.1.617+    16
-# 170519         Spain B.1.617+   346
+# 170519         Canada B.1.617+   346
 # 170530 Czech Republic B.1.617+    17
 # 170532        Denmark B.1.617+   121
 # 170542        Finland B.1.617+    19
@@ -104,7 +103,7 @@ tblB1617
 # 170598    New Zealand B.1.617+    17
 # 170602         Norway B.1.617+    69
 # 170611         Poland B.1.617+    71
-# 170612       Portugal B.1.617+   126
+# 170612       Russia B.1.617+   126
 # 170613          Qatar B.1.617+    23
 # 170615        Romania B.1.617+    19
 # 170616         Russia B.1.617+   278
@@ -121,22 +120,22 @@ tblB1617
 
 sel_countries_target = unique(as.character(table_country_lineage[grepl(sel_target_VOC, table_country_lineage$Lineage)&table_country_lineage$Count>100,]$Country))
 sel_countries_target
-# [1] "Australia"      "Belgium"        "Spain"         "Denmark"        "France"         "Germany"        "India"          "Ireland"       
-# [9] "Italy"          "Japan"          "Portugal"       "Russia"         "Singapore"      "Spain"          "Switzerland"    "United Kingdom"
+# [1] "Australia"      "Belgium"        "Canada"         "Denmark"        "France"         "Germany"        "India"          "Ireland"       
+# [9] "Italy"          "Japan"          "Russia"       "Russia"         "Singapore"      "Spain"          "Switzerland"    "United Kingdom"
 # [17] "USA"    
 
 sel_ref_lineage = "B.1.1.7"
 
 sel_countries_ref = as.character(table_country_lineage[table_country_lineage$Lineage==sel_ref_lineage&table_country_lineage$Count>10&table_country_lineage$Country %in% sel_countries_target,]$Country)
 sel_countries_ref
-# [1] "Australia"      "Belgium"        "Spain"         "Denmark"        "France"         "Germany"        "India"          "Ireland"       
-# [9] "Italy"          "Japan"          "Portugal"       "Russia"         "Singapore"      "Spain"          "Switzerland"    "United Kingdom"
+# [1] "Australia"      "Belgium"        "Canada"         "Denmark"        "France"         "Germany"        "India"          "Ireland"       
+# [9] "Italy"          "Japan"          "Russia"       "Russia"         "Singapore"      "Spain"          "Switzerland"    "United Kingdom"
 # [17] "USA"
 
 sel_countries = intersect(sel_countries_target, sel_countries_ref)
 sel_countries
-# [1] "Australia"      "Belgium"        "Spain"         "Denmark"        "France"         "Germany"        "India"          "Ireland"       
-# [9] "Italy"          "Japan"          "Portugal"       "Russia"         "Singapore"      "Spain"          "Switzerland"    "United Kingdom"
+# [1] "Australia"      "Belgium"        "Canada"         "Denmark"        "France"         "Germany"        "India"          "Ireland"       
+# [9] "Italy"          "Japan"          "Russia"       "Russia"         "Singapore"      "Spain"          "Switzerland"    "United Kingdom"
 # [17] "USA" 
 
 # sel_countries = sel_countries[!(sel_countries %in% c("Japan","USA"))] # Japan is almost only import & for USA we do separate analysis by state
@@ -145,39 +144,41 @@ sel_countries
 
 
 
-# ANALYSIS OF VOCs IN PORTUGAL ####
+# ANALYSIS OF VOCs IN RUSSIA ####
 
-sel_countries = c("Malawi","Uganda","Kenya","Democratic Republic of the Congo","Angola","Senegal") # "Botswana"
+sel_countries = "Russia"
 
 tblB117 = table_country_lineage[table_country_lineage$Lineage==sel_ref_lineage&table_country_lineage$Count>10&table_country_lineage$Country %in% sel_countries,]
 tblB117
 
 GISAID_sel = GISAID[GISAID$country %in% sel_countries,]
-nrow(GISAID_sel) # 3245
-unique(GISAID_sel$country)
+
+# use data from Jan  1 onwards
+GISAID_sel = GISAID_sel[GISAID_sel$date>=as.Date("2021-01-01"),]
+nrow(GISAID_sel) # 2363
+range(GISAID_sel$date) # "2021-01-02" "2021-06-15"
 
 rowSums(table(GISAID_sel$LINEAGE1,GISAID_sel$country))
             
 # GISAID_sel = GISAID_sel[GISAID_sel$country_exposure=="India"&GISAID_sel$country!="India",]
 # nrow(GISAID_sel[is.na(GISAID_sel$LINEAGE1),]) # 0 unknown pango clade
 GISAID_sel = GISAID_sel[!is.na(GISAID_sel$LINEAGE1),]
-nrow(GISAID_sel) # 3245
+nrow(GISAID_sel) # 2363
 
-GISAID_sel = GISAID_sel[GISAID_sel$country==GISAID_sel$country_exposure,] # we remove travel-related cases
-nrow(GISAID_sel) # 3220
+GISAID_sel = GISAID_sel[GISAID_sel$country==GISAID_sel$country_exposure,] # we remove travel-related cases (none indicated here as such)
+nrow(GISAID_sel) # 2352
 
-sum(GISAID_sel$LINEAGE1=="B.1.617+") # 41
+sum(GISAID_sel$LINEAGE1=="B.1.617+") # 126
 unique(GISAID_sel$country[GISAID_sel$LINEAGE1=="B.1.1.7"])
-sum(GISAID_sel$LINEAGE1=="B.1.1.7") # 139
+sum(GISAID_sel$LINEAGE1=="B.1.1.7") # 4206
 sum(GISAID_sel$LINEAGE1=="B.1.1.519") # 0
-sum(GISAID_sel$LINEAGE1=="B.1.351") # 786
 
 table(GISAID_sel$LINEAGE1)
 table(GISAID_sel$LINEAGE2)
 
-main_lineages = names(table(GISAID_sel$LINEAGE1))[100*table(GISAID_sel$LINEAGE1)/sum(table(GISAID_sel$LINEAGE1)) > 3]
+main_lineages = names(table(GISAID_sel$LINEAGE1))[100*table(GISAID_sel$LINEAGE1)/sum(table(GISAID_sel$LINEAGE1)) > 5]
 main_lineages
-# "A.23.1"  "B.1"     "B.1.1"   "B.1.1.7" "B.1.351" "B.1.416" "C.16" 
+# "B.1.1"     "B.1.1.317" "B.1.1.523" "B.1.1.7"   "B.1.617+"   
 VOCs = c("B.1.617.1","B.1.617.2","B.1.617+","B.1.618","B.1.1.7","B.1.351","P.1","B.1.1.318","B.1.1.207","B.1.429",
          "B.1.525","B.1.526","B.1.1.519")
 main_lineages = union(main_lineages, VOCs)
@@ -190,19 +191,22 @@ remove2 = remove2[!(remove2 %in% c("B.1.351","B.1.1.7","P.1","B.1.617.2","B.1.61
 GISAID_sel$LINEAGE1[(GISAID_sel$LINEAGE1 %in% remove1)] = "other" # minority VOCs
 GISAID_sel$LINEAGE2[(GISAID_sel$LINEAGE2 %in% remove2)] = "other" # minority VOCs
 table(GISAID_sel$LINEAGE1)
+# B.1.1 B.1.1.317 B.1.1.523   B.1.1.7   B.1.351  B.1.617+     other 
+# 381       344       236       321        19       511       540 
 GISAID_sel$LINEAGE1 = factor(GISAID_sel$LINEAGE1)
 GISAID_sel$LINEAGE1 = relevel(GISAID_sel$LINEAGE1, ref="B.1.1.7") # we code UK strain as the reference level
 levels(GISAID_sel$LINEAGE1)
-levels_LINEAGE1 = c("B.1.1.7",levels(GISAID_sel$LINEAGE1)[!levels(GISAID_sel$LINEAGE1) %in% c("B.1.1.7","B.1.617+","B.1.617.1","B.1.617.2","other")],
-                    "B.1.617+","other")
+# "B.1.1.7"   "B.1.1"     "B.1.1.317" "B.1.1.523" "B.1.351"   "B.1.617+"  "other"   
+levels_LINEAGE1 = c("B.1.1.7","B.1.1","B.1.1.317","B.1.1.523",
+                    "B.1.351","B.1.617+","other")
 GISAID_sel$LINEAGE1 = factor(GISAID_sel$LINEAGE1, levels=levels_LINEAGE1)
 
 GISAID_sel$LINEAGE2 = factor(GISAID_sel$LINEAGE2)
 GISAID_sel$LINEAGE2 = relevel(GISAID_sel$LINEAGE2, ref="B.1.1.7") # we code UK strain as the reference level
 levels(GISAID_sel$LINEAGE2)
-# "B.1.1.7"   "B.1"       "B.1.1"     "B.1.160"   "B.1.177+"  "B.1.351"   "B.1.617.1" "B.1.617.2" "B.1.91"    "other"     "P.1"  
-levels_LINEAGE2 = c("B.1.1.7",levels(GISAID_sel$LINEAGE2)[!levels(GISAID_sel$LINEAGE2) %in% c("B.1.1.7","B.1.617+","B.1.617.1","B.1.617.2","other")],
-                    "B.1.617.1","B.1.617.2","other")
+# "B.1.1.7"   "B.1.1"     "B.1.1.317" "B.1.1.523" "B.1.351"   "B.1.617.2" "other" 
+levels_LINEAGE2 = c("B.1.1.7","B.1.1","B.1.1.317","B.1.1.523",
+                    "B.1.351","B.1.617.2","other")
 GISAID_sel$LINEAGE2 = factor(GISAID_sel$LINEAGE2, levels=levels_LINEAGE2)
 
 # GISAID_sel = GISAID_sel[GISAID_sel$division!="India",]
@@ -212,14 +216,42 @@ table(GISAID_sel$country)
 # B.1.617+ cases before Apr 14 are likely mostly imported cases, so we remove those
 # GISAID_sel = GISAID_sel[-which(grepl("B.1.617", GISAID_sel$pango_lineage, fixed=TRUE)&GISAID_sel$date<=as.Date("2021-04-14")),]
 
-table(GISAID_sel$LINEAGE2)
+table(GISAID_sel$LINEAGE1)
+# B.1.1.7  B.1.177+   B.1.351       P.1 B.1.617.1 B.1.617.2     other 
+# 4387       355        93       169         1       719       450 
 
-range(GISAID_sel$date) # "2020-01-24" "2021-06-02"
-
-GISAID_sel = GISAID_sel[GISAID_sel$date>="2020-11-01",]
+range(GISAID_sel$date) # "2020-03-01" "2021-06-02"
 
 # aggregated data to make Muller plots of raw data
+# aggregate by day to identify days on which INSA performed (days with a lot of sequences)
+# we subset the data to just those days to avoid sampling biases (delta infection clusters etc)
+data_agbyday2 = as.data.frame(table(GISAID_sel$date, GISAID_sel$LINEAGE2))
+colnames(data_agbyday2) = c("date", "LINEAGE2", "count")
+data_agbyday2_sum = aggregate(count ~ date, data=data_agbyday2, sum)
+data_agbyday2$total = data_agbyday2_sum$count[match(data_agbyday2$date, data_agbyday2_sum$date)]
+sum(data_agbyday2[data_agbyday2$LINEAGE2=="B.1.617.1","total"]) == nrow(GISAID_sel) # correct
+data_agbyday2$date = as.Date(as.character(data_agbyday2$date))
+data_agbyday2$LINEAGE2 = factor(data_agbyday2$LINEAGE2, levels=levels_LINEAGE2)
+data_agbyday2$date_num = as.numeric(data_agbyday2$date)
+data_agbyday2$prop = data_agbyday2$count/data_agbyday2$total
+data_agbyday2$floor_date = NULL
+# qplot(data=data_agbyday2, x=date, y=total, colour=total>20, fill=total>20, geom="col")
+GISAID_sel$total_sequenced_on_that_day = data_agbyday2$total[match(GISAID_sel$date, data_agbyday2$date)]
+# GISAID_sel = GISAID_sel[GISAID_sel$total_sequenced_on_that_day>20,] # dates on which was performed
+# nrow(GISAID_sel) # 5710
+
 # aggregated by week for selected variant lineages
+data_agbyweek1 = as.data.frame(table(GISAID_sel$floor_date, GISAID_sel$LINEAGE1))
+colnames(data_agbyweek1) = c("floor_date", "LINEAGE1", "count")
+data_agbyweek1_sum = aggregate(count ~ floor_date, data=data_agbyweek1, sum)
+data_agbyweek1$total = data_agbyweek1_sum$count[match(data_agbyweek1$floor_date, data_agbyweek1_sum$floor_date)]
+sum(data_agbyweek1[data_agbyweek1$LINEAGE1=="B.1.617+","total"]) == nrow(GISAID_sel) # correct
+data_agbyweek1$collection_date = as.Date(as.character(data_agbyweek1$floor_date))
+data_agbyweek1$LINEAGE1 = factor(data_agbyweek1$LINEAGE1, levels=levels_LINEAGE1)
+data_agbyweek1$collection_date_num = as.numeric(data_agbyweek1$collection_date)
+data_agbyweek1$prop = data_agbyweek1$count/data_agbyweek1$total
+data_agbyweek1$floor_date = NULL
+
 data_agbyweek2 = as.data.frame(table(GISAID_sel$floor_date, GISAID_sel$LINEAGE2))
 colnames(data_agbyweek2) = c("floor_date", "LINEAGE2", "count")
 data_agbyweek2_sum = aggregate(count ~ floor_date, data=data_agbyweek2, sum)
@@ -231,343 +263,177 @@ data_agbyweek2$collection_date_num = as.numeric(data_agbyweek2$collection_date)
 data_agbyweek2$prop = data_agbyweek2$count/data_agbyweek2$total
 data_agbyweek2$floor_date = NULL
 
-# aggregated by week & country for selected variant lineages
-data_agbyweek_bycountry2 = as.data.frame(table(GISAID_sel$floor_date, GISAID_sel$country, GISAID_sel$LINEAGE2))
-colnames(data_agbyweek_bycountry2) = c("floor_date", "country", "LINEAGE2", "count")
-data_agbyweek_bycountry2_sum = aggregate(count ~ floor_date+country, data=data_agbyweek_bycountry2, sum)
-data_agbyweek_bycountry2$total = data_agbyweek_bycountry2_sum$count[match(interaction(data_agbyweek_bycountry2$floor_date,data_agbyweek_bycountry2$country), 
-                                                                interaction(data_agbyweek_bycountry2_sum$floor_date,data_agbyweek_bycountry2_sum$country))]
-sum(data_agbyweek_bycountry2[data_agbyweek_bycountry2$LINEAGE2=="B.1.617.1","total"]) == nrow(GISAID_sel) # correct
-data_agbyweek_bycountry2$collection_date = as.Date(as.character(data_agbyweek_bycountry2$floor_date))
-data_agbyweek_bycountry2$LINEAGE2 = factor(data_agbyweek_bycountry2$LINEAGE2, levels=levels_LINEAGE2)
-data_agbyweek_bycountry2$collection_date_num = as.numeric(data_agbyweek_bycountry2$collection_date)
-data_agbyweek_bycountry2$prop = data_agbyweek_bycountry2$count/data_agbyweek_bycountry2$total
-data_agbyweek_bycountry2$floor_date = NULL
-
 
 # MULLER PLOT (RAW DATA)
 library(scales)
 n1 = length(levels(GISAID_sel$LINEAGE1))
 lineage_cols1 = hcl(h = seq(15, 320, length = n1), l = 65, c = 200)
+lineage_cols1[which(levels(GISAID_sel$LINEAGE1)=="B.1.1.7")] = "#0085FF"
+lineage_cols1[which(levels(GISAID_sel$LINEAGE1)=="B.1.351")] = "#9A9D00"
+lineage_cols1[which(levels(GISAID_sel$LINEAGE1)=="P.1")] = "cyan3"
 lineage_cols1[which(levels(GISAID_sel$LINEAGE1)=="B.1.617+")] = "magenta"
 lineage_cols1[which(levels(GISAID_sel$LINEAGE1)=="other")] = "grey75"
 
 n2 = length(levels(GISAID_sel$LINEAGE2))
 lineage_cols2 = hcl(h = seq(15, 320, length = n2), l = 65, c = 200)
+lineage_cols2[which(levels(GISAID_sel$LINEAGE2)=="B.1.1.7")] = "#0085FF"
+lineage_cols2[which(levels(GISAID_sel$LINEAGE2)=="B.1.351")] = "#9A9D00"
+lineage_cols2[which(levels(GISAID_sel$LINEAGE2)=="P.1")] = "cyan3"
 lineage_cols2[which(levels(GISAID_sel$LINEAGE2)=="B.1.617.1")] = muted("magenta")
 lineage_cols2[which(levels(GISAID_sel$LINEAGE2)=="B.1.617.2")] = "magenta"
 lineage_cols2[which(levels(GISAID_sel$LINEAGE2)=="other")] = "grey75"
 
-# muller plot, overall
-muller_africa_raw2 = ggplot(data=data_agbyweek2, aes(x=collection_date, y=count, group=LINEAGE2)) + 
+muller_russia_raw2 = ggplot(data=data_agbyweek2, aes(x=collection_date, y=count, group=LINEAGE2)) + 
   # facet_wrap(~ STATE, ncol=1) +
   # geom_col(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE1), width=1, position="fill") +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE2, group=LINEAGE2), position="fill") +
   scale_fill_manual("", values=lineage_cols2) +
   scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01")),
                      labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01"))),1,1),
-                     limits=as.Date(c("2020-11-01",NA)), expand=c(0,0)) +
+                     limits=as.Date(c("2021-01-01",NA)), 
+                     expand=c(0,0)) +
   # guides(color = guide_legend(reverse=F, nrow=2, byrow=T), fill = guide_legend(reverse=F, nrow=2, byrow=T)) +
   theme_hc() +
   # labs(title = "MAIN SARS-CoV2 VARIANT LINEAGES IN THE UK") +
   ylab("Share") + 
   theme(legend.position="right",  
         axis.title.x=element_blank()) +
-  labs(title = "SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN MALAWI\n(GISAID data, Angola+Democratic Republic of the Congo+\nKenya+Malawi+Senegal+Uganda)") 
+  labs(title = "SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN RUSSIA\n(GISAID data)") 
 # +
 # coord_cartesian(xlim=c(1,max(GISAID_sel$Week)))
-muller_africa_raw2
+muller_russia_raw2
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\africa_muller plots_raw data.png"), width=8, height=6)
-ggsave(file=paste0(".\\plots\\",plotdir,"\\africa_muller plots_raw data.pdf"), width=8, height=6)
-
-# muller plot, by country
-muller_africa_bycountry_raw2 = ggplot(data=data_agbyweek_bycountry2, aes(x=collection_date, y=count, group=LINEAGE2)) + 
-  facet_wrap(~ country) +
-  # geom_col(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE1), width=1, position="fill") +
-  geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE2, group=LINEAGE2), position="fill") +
-  scale_fill_manual("", values=lineage_cols2) +
-  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01")),
-                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01"))),1,1),
-                     limits=as.Date(c("2020-11-01",NA)), expand=c(0,0)) +
-  # guides(color = guide_legend(reverse=F, nrow=2, byrow=T), fill = guide_legend(reverse=F, nrow=2, byrow=T)) +
-  theme_hc() +
-  # labs(title = "MAIN SARS-CoV2 VARIANT LINEAGES IN THE UK") +
-  ylab("Share") + 
-  theme(legend.position="right",  
-        axis.title.x=element_blank()) +
-  labs(title = "SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN MALAWI\n(GISAID data, Angola+Democratic Republic of the Congo+\nKenya+Malawi+Senegal+Uganda)") 
-# +
-# coord_cartesian(xlim=c(1,max(GISAID_sel$Week)))
-muller_africa_bycountry_raw2
-
-ggsave(file=paste0(".\\plots\\",plotdir,"\\africa by country_muller plots_raw data.png"), width=8, height=6)
-ggsave(file=paste0(".\\plots\\",plotdir,"\\africa by country_muller plots_raw data.pdf"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",plotdir,"\\russia_muller plots_raw data.png"), width=8, height=6)
+# ggsave(file=paste0(".\\plots\\",plotdir,"\\russia_muller plots_raw data.pdf"), width=8, height=6)
 
 
 # multinomial fits
-data_agbyweek_bycountry2$LINEAGE2 = relevel(data_agbyweek_bycountry2$LINEAGE2, ref="B.1.1.7")
-data_agbyweek_bycountry2$DATE_NUM = as.numeric(data_agbyweek_bycountry2$collection_date)
+data_agbyweek2$LINEAGE2 = relevel(data_agbyweek2$LINEAGE2, ref="B.1.1.7")
+data_agbyweek2$DATE_NUM = as.numeric(data_agbyweek2$collection_date)
 
 library(nnet)
 library(splines)
 set.seed(1)
-fit1_africa_multi = nnet::multinom(LINEAGE2 ~ scale(DATE_NUM)+country, weights=count, data=data_agbyweek_bycountry2, maxit=1000)
-fit2_africa_multi = nnet::multinom(LINEAGE2 ~ ns(DATE_NUM, df=2)+country, weights=count, data=data_agbyweek_bycountry2, maxit=1000)
-BIC(fit1_africa_multi, fit2_africa_multi) 
-#             df      BIC
-# fit1_africa_multi 63 4047.575
-# fit2_africa_multi 72 3951.810
+fit1_russia_multi = nnet::multinom(LINEAGE2 ~ scale(DATE_NUM), weights=count, data=data_agbyweek2, maxit=1000)
+fit2_russia_multi = nnet::multinom(LINEAGE2 ~ ns(DATE_NUM, df=2), weights=count, data=data_agbyweek2, maxit=1000)
+BIC(fit1_russia_multi, fit2_russia_multi) 
+# df      BIC
+# fit1_russia_multi 12 6567.402
+# fit2_russia_multi 18 6535.781
 
 # growth rate advantage compared to UK type B.1.1.7 (difference in growth rate per day) 
-emtrafrica = emtrends(fit2_africa_multi, trt.vs.ctrl ~ LINEAGE2,  
+emtrrussia = emtrends(fit2_russia_multi, trt.vs.ctrl ~ LINEAGE2,  
                    var="DATE_NUM",  mode="latent",
                    at=list(DATE_NUM=max(GISAID_sel$DATE_NUM)))
-delta_r_africa = data.frame(confint(emtrafrica, 
+delta_r_russia = data.frame(confint(emtrrussia, 
                                  adjust="none", df=NA)$contrasts, 
-                         p.value=as.data.frame(emtrafrica$contrasts)$p.value)
-delta_r_africa
-# contrast     estimate           SE df    asymp.LCL     asymp.UCL      p.value
-# 1    A.23.1 - B.1.1.7 -0.12643386 0.017382435 NA -0.16050281 -0.09236492 3.015881e-09
-# 2       B.1 - B.1.1.7 -0.05421595 0.012561990 NA -0.07883700 -0.02959490 4.255933e-04
-# 3     B.1.1 - B.1.1.7 -0.07756868 0.030502121 NA -0.13735174 -0.01778562 8.822585e-02
-# 4   B.1.351 - B.1.1.7 -0.03322896 0.009734453 NA -0.05230814 -0.01414979 8.378126e-03
-# 5   B.1.416 - B.1.1.7 -0.10171410 0.161246206 NA -0.41775085  0.21432266 9.662962e-01
-# 6      C.16 - B.1.1.7 -0.09695336 0.015319599 NA -0.12697922 -0.06692749 1.660646e-07
-# 7 B.1.617.1 - B.1.1.7  0.03456672 0.095277121 NA -0.15217300  0.22130645 9.952898e-01
-# 8 B.1.617.2 - B.1.1.7  0.21517773 0.080265259 NA  0.05786071  0.37249475 6.336970e-02
-# 9     other - B.1.1.7 -0.00520682 0.010014671 NA -0.02483521  0.01442157 9.828101e-01
+                         p.value=as.data.frame(emtrrussia$contrasts)$p.value)
+delta_r_russia
+# contrast     estimate          SE df     asymp.LCL   asymp.UCL      p.value
+# 1     B.1.1 - B.1.1.7  0.015399847 0.007614636 NA  0.0004754350 0.030324260 0.2309371959
+# 2 B.1.1.317 - B.1.1.7 -0.008335137 0.008526169 NA -0.0250461224 0.008375847 0.7894669727
+# 3 B.1.1.523 - B.1.1.7  0.017109596 0.008846483 NA -0.0002291927 0.034448384 0.2658915817
+# 4   B.1.351 - B.1.1.7 -0.004519124 0.024709051 NA -0.0529479749 0.043909726 0.9981199862
+# 5 B.1.617.2 - B.1.1.7  0.083627226 0.016866058 NA  0.0505703597 0.116684091 0.0005506533
+# 6     other - B.1.1.7  0.021042977 0.007021103 NA  0.0072818679 0.034804086 0.0371418826
 
 
-# fitted prop of different LINEAGES in the africa today
-multinom_preds_today_avg = data.frame(emmeans(fit2_africa_multi, ~ LINEAGE2|1,
+# fitted prop of different LINEAGES in the russia today
+# 99% [97%-100%] now estimated to be B.1.617.2 across all regions
+multinom_preds_today_avg = data.frame(emmeans(fit2_russia_multi, ~ LINEAGE2|1,
                                               at=list(DATE_NUM=today_num), 
                                               mode="prob", df=NA))
 multinom_preds_today_avg
 # LINEAGE2         prob           SE df     asymp.LCL    asymp.UCL
-# 1    B.1.1.7 6.493743e-02 1.475154e-01 NA -2.241874e-01 3.540623e-01
-# 2     A.23.1 1.360749e-11 1.994977e-10 NA -3.774008e-10 4.046158e-10
-# 3        B.1 1.717595e-04 3.533778e-04 NA -5.208482e-04 8.643672e-04
-# 4      B.1.1 2.037385e-06 8.510274e-06 NA -1.464244e-05 1.871721e-05
-# 5    B.1.351 1.568305e-02 2.485829e-02 NA -3.303830e-02 6.440440e-02
-# 6    B.1.416 5.401932e-09 1.133090e-07 NA -2.166796e-07 2.274834e-07
-# 7       C.16 1.024477e-05 2.048814e-05 NA -2.991124e-05 5.040078e-05
-# 8  B.1.617.1 3.338344e-02 1.590947e-01 NA -2.784364e-01 3.452033e-01
-# 9  B.1.617.2 8.368054e-01 2.368487e-01 NA  3.725904e-01 1.301020e+00
-# 10     other 4.900669e-02 9.459106e-02 NA -1.363884e-01 2.344018e-01
+# 1   B.1.1.7 0.0026475193 0.0016239009 NA -0.0005352680 0.0058303065
+# 2     B.1.1 0.0032960121 0.0019981911 NA -0.0006203705 0.0072123948
+# 3 B.1.1.317 0.0006183216 0.0004235067 NA -0.0002117363 0.0014483796
+# 4 B.1.1.523 0.0089184431 0.0050545648 NA -0.0009883218 0.0188252080
+# 5   B.1.351 0.0001058388 0.0001674283 NA -0.0002223148 0.0004339923
+# 6 B.1.617.2 0.9770618634 0.0117095211 NA  0.9541116238 1.0000121031
+# 7     other 0.0073520017 0.0041368271 NA -0.0007560305 0.0154600339
 
 # % non-B.1.1.7
 colSums(multinom_preds_today_avg[-1, c("prob","asymp.LCL","asymp.UCL")])
 #      prob asymp.LCL asymp.UCL 
-# 0.93506257 -0.07583833  1.94596348 
+# 0.9973525 0.9513128 1.0433921
 
 
 # PLOT MULTINOMIAL FIT
 
 # extrapolate = 30
-date.from = as.numeric(as.Date("2020-06-01"))
+date.from = as.numeric(as.Date("2021-01-01"))
 date.to = as.numeric(as.Date("2021-07-31")) # max(GISAID_sel$DATE_NUM)+extrapolate
 
 # multinomial model predictions (fastest, but no confidence intervals)
-predgrid = expand.grid(list(DATE_NUM=seq(date.from, date.to), country=levels(data_agbyweek_bycountry2$country)))
-fit_africa_multi_preds = data.frame(predgrid, as.data.frame(predict(fit2_africa_multi, newdata=predgrid, type="prob")),check.names=F)
+predgrid = expand.grid(list(DATE_NUM=seq(date.from, date.to)))
+fit_russia_multi_preds = data.frame(predgrid, as.data.frame(predict(fit2_russia_multi, newdata=predgrid, type="prob")),check.names=F)
 library(tidyr)
 library(tidyselect)
-fit_africa_multi_preds = gather(fit_africa_multi_preds, LINEAGE2, prob, all_of(levels_LINEAGE2), factor_key=TRUE)
-fit_africa_multi_preds$collection_date = as.Date(fit_africa_multi_preds$DATE_NUM, origin="1970-01-01")
-fit_africa_multi_preds$LINEAGE2 = factor(fit_africa_multi_preds$LINEAGE2, levels=levels_LINEAGE2) 
+fit_russia_multi_preds = gather(fit_russia_multi_preds, LINEAGE2, prob, all_of(levels_LINEAGE2), factor_key=TRUE)
+fit_russia_multi_preds$collection_date = as.Date(fit_russia_multi_preds$DATE_NUM, origin="1970-01-01")
+fit_russia_multi_preds$LINEAGE2 = factor(fit_russia_multi_preds$LINEAGE2, levels=levels_LINEAGE2) 
 
-muller_africa_bycountry_mfit = ggplot(data=fit_africa_multi_preds, 
+muller_russia_mfit = ggplot(data=fit_russia_multi_preds, 
                                    aes(x=collection_date, y=prob, group=LINEAGE2)) + 
-  facet_wrap(~ country) +
+  # facet_wrap(~ STATE) +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE2, group=LINEAGE2), position="stack") +
   scale_fill_manual("", values=lineage_cols2) +
   annotate("rect", xmin=max(GISAID_sel$DATE_NUM)+1, 
            xmax=as.Date(date.to, origin="1970-01-01"), ymin=0, ymax=1, alpha=0.4, fill="white") + # extrapolated part
   scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
                      labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
-                     limits=as.Date(c("2020-11-01",NA)), expand=c(0,0)) +
+                     limits=as.Date(c("2021-01-01",NA)), expand=c(0,0)) +
   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
   theme_hc() + theme(legend.position="right", 
                      axis.title.x=element_blank()) + 
   ylab("Share") +
-  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN MALAWI\n(GISAID data, multinomial fit)")
-muller_africa_bycountry_mfit
+  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN RUSSIA\n(GISAID data, multinomial fit)")
+muller_russia_mfit
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\africa_by country_muller plots_multinom fit.png"), width=10, height=6)
-ggsave(file=paste0(".\\plots\\",plotdir,"\\africa_by country_muller plots_multinom fit.pdf"), width=10, height=6)
+ggsave(file=paste0(".\\plots\\",plotdir,"\\russia_muller plots_multinom fit.png"), width=10, height=6)
+# ggsave(file=paste0(".\\plots\\",plotdir,"\\russia_muller plots_multinom fit.pdf"), width=10, height=6)
 
 
 library(ggpubr)
-ggarrange(muller_africa_raw2 + coord_cartesian(xlim=c(as.Date("2020-11-01"),as.Date(date.to, origin="1970-01-01")))+
+ggarrange(muller_russia_raw2 + coord_cartesian(xlim=c(as.Date("2021-01-01"),as.Date(date.to, origin="1970-01-01")))+
             theme(legend.background = element_rect(fill = alpha("white", 0)),
                   legend.key = element_rect(fill = alpha("white", 0)),
                   legend.text=element_text(color = "white")) +
             guides(colour = guide_legend(override.aes = list(alpha = 0)),
                    fill = guide_legend(override.aes = list(alpha = 0))), 
-          muller_africa_mfit+ggtitle("Multinomial fit"), ncol=1)
+          muller_russia_mfit+ggtitle("Multinomial fit"), ncol=1)
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\africa_muller plots multipanel_multinom fit.png"), width=10, height=10)
-ggsave(file=paste0(".\\plots\\",plotdir,"\\africa_muller plots multipanel_multinom fit.pdf"), width=10, height=10)
-
-
+ggsave(file=paste0(".\\plots\\",plotdir,"\\russia_muller plots multipanel_multinom fit.png"), width=10, height=10)
+# ggsave(file=paste0(".\\plots\\",plotdir,"\\russia_muller plots multipanel_multinom fit.pdf"), width=10, height=10)
 
 
 
-  # PLOT MODEL FIT WITH DATA & CONFIDENCE INTERVALS
+
+
+# PLOT MODEL FIT WITH DATA & CONFIDENCE INTERVALS
 
 # multinomial model predictions by state with confidence intervals (but slower)
-fit_spain_multi_preds_bystate_withCI = data.frame(emmeans(fit3_spain_multi,
-                                                        ~ LINEAGE2,
-                                                        by=c("DATE_NUM","STATE"),
-                                                        at=list(DATE_NUM=seq(date.from, date.to, by=7)),  # by=7 to speed up things a bit
-                                                        mode="prob", df=NA))
-fit_spain_multi_preds_bystate_withCI$collection_date = as.Date(fit_spain_multi_preds_bystate_withCI$DATE_NUM, origin="1970-01-01")
-fit_spain_multi_preds_bystate_withCI$LINEAGE2 = factor(fit_spain_multi_preds_bystate_withCI$LINEAGE2, levels=levels_LINEAGE2)
-fit_spain_multi_preds2 = fit_spain_multi_preds_bystate_withCI
-
-fit_spain_multi_preds_bystate_withCI[fit_spain_multi_preds_bystate_withCI$collection_date==as.Date("2021-06-21")&fit_spain_multi_preds_bystate_withCI$LINEAGE2=="B.1.617.2",]
-#        LINEAGE2 DATE_NUM         STATE       prob          SE df  asymp.LCL  asymp.UCL collection_date
-# 615   B.1.617.2    18799       Arizona 0.3415259 0.04045846 NA 0.26222877 0.4208230      2021-06-21
-# 1286  B.1.617.2    18799    California 0.5298582 0.02065233 NA 0.48938040 0.5703360      2021-06-21
-# 1957  B.1.617.2    18799      Colorado 0.5735638 0.02395763 NA 0.52660767 0.6205198      2021-06-21
-# 2628  B.1.617.2    18799       Florida 0.2797337 0.02345015 NA 0.23377227 0.3256952      2021-06-21
-# 3299  B.1.617.2    18799      Illinois 0.2938156 0.02675727 NA 0.24137234 0.3462589      2021-06-21
-# 3970  B.1.617.2    18799       Indiana 0.4238384 0.03151071 NA 0.36207853 0.4855982      2021-06-21
-# 4641  B.1.617.2    18799        Kansas 0.5822103 0.02959658 NA 0.52420206 0.6402185      2021-06-21
-# 5312  B.1.617.2    18799      Maryland 0.3372405 0.03817511 NA 0.26241864 0.4120623      2021-06-21
-# 5983  B.1.617.2    18799 Massachusetts 0.4400967 0.02592195 NA 0.38929066 0.4909028      2021-06-21
-# 6654  B.1.617.2    18799     Minnesota 0.1770255 0.02348268 NA 0.13100029 0.2230507      2021-06-21
-# 7325  B.1.617.2    18799      Missouri 0.7127919 0.02808481 NA 0.65774667 0.7678371      2021-06-21
-# 7996  B.1.617.2    18799      Nebraska 0.2327069 0.06940555 NA 0.09667449 0.3687392      2021-06-21
-# 8667  B.1.617.2    18799    New Jersey 0.5641522 0.03021256 NA 0.50493669 0.6233677      2021-06-21
-# 9338  B.1.617.2    18799      New York 0.4297980 0.02844750 NA 0.37404198 0.4855541      2021-06-21
-# 10009 B.1.617.2    18799        Oregon 0.1345187 0.03766101 NA 0.06070446 0.2083329      2021-06-21
-# 10680 B.1.617.2    18799         Texas 0.4653436 0.02431382 NA 0.41768935 0.5129978      2021-06-21
-# 11351 B.1.617.2    18799          Utah 0.7575435 0.02195991 NA 0.71450290 0.8005842      2021-06-21
-# 12022 B.1.617.2    18799      Virginia 0.4180612 0.04118245 NA 0.33734505 0.4987773      2021-06-21
-# 12693 B.1.617.2    18799    Washington 0.4248052 0.02174424 NA 0.38218725 0.4674231      2021-06-21
-# 13364 B.1.617.2    18799     Wisconsin 0.3118342 0.04667627 NA 0.22035044 0.4033180      2021-06-21
-
-# fit_spain_multi_preds2 = fit_spain_multi_preds_bystate # without CIs
-# fit_spain_multi_preds2$asymp.LCL = NA
-# fit_spain_multi_preds2$asymp.UCL = NA
-
-
-# on logit scale:
-
-ymin = 0.001
-ymax = 0.999
-fit_spain_multi_preds2$asymp.LCL[fit_spain_multi_preds2$asymp.LCL<ymin] = ymin
-fit_spain_multi_preds2$asymp.UCL[fit_spain_multi_preds2$asymp.UCL<ymin] = ymin
-fit_spain_multi_preds2$asymp.UCL[fit_spain_multi_preds2$asymp.UCL>ymax] = ymax
-fit_spain_multi_preds2$prob[fit_spain_multi_preds2$prob<ymin] = ymin
-
-plot_spain_mfit_logit = qplot(data=fit_spain_multi_preds2, x=collection_date, y=prob, geom="blank") +
-  facet_wrap(~ STATE) +
-  geom_ribbon(aes(y=prob, ymin=asymp.LCL, ymax=asymp.UCL, colour=NULL,
-                  fill=LINEAGE2
-  ), alpha=I(0.3)) +
-  geom_line(aes(y=prob,
-                colour=LINEAGE2
-  ), alpha=I(1)) +
-  ylab("Share (%)") +
-  theme_hc() + xlab("") +
-  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN THE spain\n(GISAID data, multinomial fit)") +
-  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
-                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
-                     limits=as.Date(c("2020-11-01",NA)), expand=c(0,0)) +
-  scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
-                      labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
-  scale_fill_manual("variant", values=lineage_cols2) +
-  scale_colour_manual("variant", values=lineage_cols2) +
-  geom_point(data=data_agbyweekregion2,
-             aes(x=collection_date, y=prop, size=total,
-                 colour=LINEAGE2
-             ),
-             alpha=I(1)) +
-  scale_size_continuous("total number\nsequenced", trans="sqrt",
-                        range=c(0.5/2, 3/2), limits=c(1,max(data_agbyweekregion2$total)), breaks=c(100,1000,10000)) +
-  # guides(fill=FALSE) +
-  # guides(colour=FALSE) +
-  theme(legend.position = "right") +
-  xlab("Collection date")+
-  coord_cartesian(xlim=c(as.Date("2020-11-01"),as.Date(date.to, origin="1970-01-01")), ylim=c(0.001, 0.9901), expand=c(0,0))
-plot_spain_mfit_logit
-
-ggsave(file=paste0(".\\plots\\",plotdir,"\\spain_multinom fit by state_logit scale.png"), width=10, height=6)
-ggsave(file=paste0(".\\plots\\",plotdir,"\\spain_multinom fit by state_logit scale.pdf"), width=10, height=6)
-
-
-# on response scale:
-plot_spain_mfit = qplot(data=fit_spain_multi_preds2, x=collection_date, y=100*prob, geom="blank") +
-  facet_wrap(~ STATE) +
-  geom_ribbon(aes(y=100*prob, ymin=100*asymp.LCL, ymax=100*asymp.UCL, colour=NULL,
-                  fill=LINEAGE2
-  ), alpha=I(0.3)) +
-  geom_line(aes(y=100*prob,
-                colour=LINEAGE2
-  ), alpha=I(1)) +
-  ylab("Share (%)") +
-  theme_hc() + xlab("") +
-  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN THE spain\n(GISAID data, multinomial fit)") +
-  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01")),
-                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01"))),1,1),
-                     limits=as.Date(c("2020-11-01",NA)), expand=c(0,0)) +
-  # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
-  #                     labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
-  coord_cartesian(xlim=as.Date(c("2020-11-01",NA)),
-                  ylim=c(0,100), expand=c(0,0)) +
-  scale_fill_manual("variant", values=lineage_cols2) +
-  scale_colour_manual("variant", values=lineage_cols2) +
-  geom_point(data=data_agbyweekregion2,
-             aes(x=collection_date, y=100*prop, size=total,
-                 colour=LINEAGE2
-             ),
-             alpha=I(1)) +
-  scale_size_continuous("total number\nsequenced", trans="sqrt",
-                        range=c(0.5/2, 3/2), limits=c(1,max(data_agbyweekregion2$total)), breaks=c(100,1000,10000)) +
-  # guides(fill=FALSE) +
-  # guides(colour=FALSE) +
-  theme(legend.position = "right") +
-  xlab("Collection date")
-plot_spain_mfit
-
-ggsave(file=paste0(".\\plots\\",plotdir,"\\spain_multinom fit by state_response scale.png"), width=10, height=6)
-ggsave(file=paste0(".\\plots\\",plotdir,"\\spain_multinom fit by state_response scale.pdf"), width=10, height=6)
-
-
-
-
-# overall multinomial model predictions with confidence intervals
-fit_spain_multi_preds_withCI = data.frame(emmeans(fit3_spain_multi,
+fit_russia_multi_preds_withCI = data.frame(emmeans(fit2_russia_multi,
                                                         ~ LINEAGE2,
                                                         by=c("DATE_NUM"),
-                                                        at=list(DATE_NUM=seq(date.from, date.to, by=7)),  # by=7 to speed up things a bit
+                                                        at=list(DATE_NUM=seq(date.from, date.to, by=1)),  # by=XX to speed up things a bit
                                                         mode="prob", df=NA))
-fit_spain_multi_preds_withCI$collection_date = as.Date(fit_spain_multi_preds_withCI$DATE_NUM, origin="1970-01-01")
-fit_spain_multi_preds_withCI$LINEAGE2 = factor(fit_spain_multi_preds_withCI$LINEAGE2, levels=levels_LINEAGE2)
-fit_spain_multi_preds3 = fit_spain_multi_preds_withCI
-
-fit_spain_multi_preds_withCI[fit_spain_multi_preds_withCI$collection_date==as.Date("2021-06-21")&fit_spain_multi_preds_withCI$LINEAGE2=="B.1.617.2",]
-#        LINEAGE2 DATE_NUM         STATE       prob          SE df  asymp.LCL  asymp.UCL collection_date
-# 615 B.1.617.2    18799 0.4215232 0.01522866 NA 0.3916756 0.4513708      2021-06-21
-
-# fit_spain_multi_preds2 = fit_spain_multi_preds # without CIs
-# fit_spain_multi_preds2$asymp.LCL = NA
-# fit_spain_multi_preds2$asymp.UCL = NA
+fit_russia_multi_preds_withCI$collection_date = as.Date(fit_russia_multi_preds_withCI$DATE_NUM, origin="1970-01-01")
+fit_russia_multi_preds_withCI$LINEAGE2 = factor(fit_russia_multi_preds_withCI$LINEAGE2, levels=levels_LINEAGE2)
+fit_russia_multi_preds2 = fit_russia_multi_preds_withCI
 
 
 # on logit scale:
 
 ymin = 0.001
 ymax = 0.999
-fit_spain_multi_preds3$asymp.LCL[fit_spain_multi_preds3$asymp.LCL<ymin] = ymin
-fit_spain_multi_preds3$asymp.UCL[fit_spain_multi_preds3$asymp.UCL<ymin] = ymin
-fit_spain_multi_preds3$asymp.UCL[fit_spain_multi_preds3$asymp.UCL>ymax] = ymax
-fit_spain_multi_preds3$prob[fit_spain_multi_preds3$prob<ymin] = ymin
+fit_russia_multi_preds2$asymp.LCL[fit_russia_multi_preds2$asymp.LCL<ymin] = ymin
+fit_russia_multi_preds2$asymp.UCL[fit_russia_multi_preds2$asymp.UCL<ymin] = ymin
+fit_russia_multi_preds2$asymp.UCL[fit_russia_multi_preds2$asymp.UCL>ymax] = ymax
+fit_russia_multi_preds2$prob[fit_russia_multi_preds2$prob<ymin] = ymin
 
-plot_spain_avg_mfit_logit = qplot(data=fit_spain_multi_preds3, x=collection_date, y=prob, geom="blank") +
+plot_russia_mfit_logit = qplot(data=fit_russia_multi_preds2, x=collection_date, y=prob, geom="blank") +
   # facet_wrap(~ STATE) +
   geom_ribbon(aes(y=prob, ymin=asymp.LCL, ymax=asymp.UCL, colour=NULL,
                   fill=LINEAGE2
@@ -577,10 +443,10 @@ plot_spain_avg_mfit_logit = qplot(data=fit_spain_multi_preds3, x=collection_date
   ), alpha=I(1)) +
   ylab("Share (%)") +
   theme_hc() + xlab("") +
-  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN THE spain\n(GISAID data 20 states, multinomial fit)") +
+  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN RUSSIA\n(GISAID data, multinomial fit)") +
   scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
                      labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
-                     limits=as.Date(c("2020-11-01",NA)), expand=c(0,0)) +
+                     limits=as.Date(c("2021-01-01",NA)), expand=c(0,0)) +
   scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
                       labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
   scale_fill_manual("variant", values=lineage_cols2) +
@@ -591,20 +457,20 @@ plot_spain_avg_mfit_logit = qplot(data=fit_spain_multi_preds3, x=collection_date
              ),
              alpha=I(1)) +
   scale_size_continuous("total number\nsequenced", trans="sqrt",
-                        range=c(0.5, 3), limits=c(1,max(data_agbyweek2$total)), breaks=c(100,1000,10000)) +
+                        range=c(0.5, 4), limits=c(1,max(data_agbyweek2$total)), breaks=c(10,100,1000,10000)) +
   # guides(fill=FALSE) +
   # guides(colour=FALSE) +
   theme(legend.position = "right") +
   xlab("Collection date")+
-  coord_cartesian(xlim=c(as.Date("2020-11-01"),as.Date(date.to, origin="1970-01-01")), ylim=c(0.001, 0.9901), expand=c(0,0))
-plot_spain_avg_mfit_logit
+  coord_cartesian(xlim=c(as.Date("2021-01-01"),as.Date(date.to, origin="1970-01-01")), ylim=c(0.001, 0.9901), expand=c(0,0))
+plot_russia_mfit_logit
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\spain_multinom fit_logit scale.png"), width=10, height=6)
-ggsave(file=paste0(".\\plots\\",plotdir,"\\spain_multinom fit_logit scale.pdf"), width=10, height=6)
+ggsave(file=paste0(".\\plots\\",plotdir,"\\russia_multinom fit_logit scale.png"), width=10, height=6)
+# ggsave(file=paste0(".\\plots\\",plotdir,"\\russia_multinom fit_logit scale.pdf"), width=10, height=6)
 
 
 # on response scale:
-plot_spain_avg_mfit = qplot(data=fit_spain_multi_preds3, x=collection_date, y=100*prob, geom="blank") +
+plot_russia_mfit = qplot(data=fit_russia_multi_preds2, x=collection_date, y=100*prob, geom="blank") +
   # facet_wrap(~ STATE) +
   geom_ribbon(aes(y=100*prob, ymin=100*asymp.LCL, ymax=100*asymp.UCL, colour=NULL,
                   fill=LINEAGE2
@@ -614,13 +480,13 @@ plot_spain_avg_mfit = qplot(data=fit_spain_multi_preds3, x=collection_date, y=10
   ), alpha=I(1)) +
   ylab("Share (%)") +
   theme_hc() + xlab("") +
-  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN THE spain\n(GISAID data 20 states, multinomial fit)") +
-  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01")),
-                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01"))),1,1),
-                     limits=as.Date(c("2020-11-01",NA)), expand=c(0,0)) +
+  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN RUSSIA\n(GISAID data, multinomial fit)") +
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
+                     limits=as.Date(c("2021-01-01",NA)), expand=c(0,0)) +
   # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
   #                     labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
-  coord_cartesian(xlim=as.Date(c("2020-11-01",NA)),
+  coord_cartesian(xlim=as.Date(c("2021-01-01",NA)),
                   ylim=c(0,100), expand=c(0,0)) +
   scale_fill_manual("variant", values=lineage_cols2) +
   scale_colour_manual("variant", values=lineage_cols2) +
@@ -630,154 +496,222 @@ plot_spain_avg_mfit = qplot(data=fit_spain_multi_preds3, x=collection_date, y=10
              ),
              alpha=I(1)) +
   scale_size_continuous("total number\nsequenced", trans="sqrt",
-                        range=c(0.5, 3), limits=c(1,max(data_agbyweek2$total)), breaks=c(100,1000,10000)) +
+                        range=c(0.5, 5), limits=c(1,max(data_agbyweek2$total)), breaks=c(100,1000,10000)) +
   # guides(fill=FALSE) +
   # guides(colour=FALSE) +
   theme(legend.position = "right") +
   xlab("Collection date")
-plot_spain_avg_mfit
+plot_russia_mfit
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\spain_multinom fit_response scale.png"), width=10, height=6)
-ggsave(file=paste0(".\\plots\\",plotdir,"\\spain_multinom fit_response scale.pdf"), width=10, height=6)
-
-
+ggsave(file=paste0(".\\plots\\",plotdir,"\\russia_multinom fit_response scale.png"), width=10, height=6)
+# ggsave(file=paste0(".\\plots\\",plotdir,"\\russia_multinom fit_response scale.pdf"), width=10, height=6)
 
 
 
-# plot new cases by variant & state ####
-# TO DO: still need to finish this part
 
-us_cases_by_state = read.csv("https://github.com/nytimes/covid-19-data/raw/master/us-states.csv")
-us_data_by_state$date = as.Date(us_data_by_state$date)
-us_data_by_state$state = factor(us_data_by_state$state, 
-                                levels=c("Washington","Illinois","California",
-                                         "Arizona","Massachusetts","Wisconsin",
-                                         "Texas","Nebraska","Utah","Oregon",
-                                         "Florida","New York","Rhode Island",
-                                         "Georgia","New Hampshire","North Carolina",
-                                         "New Jersey","Colorado","Maryland","Nevada",
-                                         "Tennessee","Hawaii","Indiana","Kentucky","Minnesota",
-                                         "Oklahoma","Pennsylvania","South Carolina","District of Columbia",
-                                         "Kansas","Missouri","Vermont","Virginia","Connecticut",
-                                         "Iowa","Louisiana","Ohio","Michigan","South Dakota",
-                                         "Arkansas","Delaware","Mississippi","New Mexico","North Dakota",
-                                         "Wyoming","Alaska","Maine","Alabama","Idaho","Montana",
-                                         "Puerto Rico","Virgin Islands","Guam","West Virginia","Northern Mariana Islands"))
-data_florida = us_data_by_state[us_data_by_state$state=="Florida",]
-data_florida$newcases = c(0,diff(data_florida$cases))
-data_florida$newcases[data_florida$newcases<0] = 0
+# PLOTS OF NEW CASES PER DAY BY VARIANT & EFFECTIVE REPRODUCTION NUMBER BY VARIANT THROUGH TIME ####
 
-cases_india_bystate$Date = as.Date(cases_india_bystate$Date)
-cases_india_bystate = cases_india_bystate[cases_india_bystate$Date >= as.Date("2020-06-01"),]
-head(cases_india_bystate)
-levels_STATES
-# [1] "Maharashtra"    "Chhattisgarh"   "Gujarat"        "Delhi"          "Andhra Pradesh" "Telangana"      "Karnataka"      "West Bengal"    "Odisha"        
-# [10] "Jharkhand"
+# load case data
+library(covidregionaldata)
+library(dplyr)
+library(ggplot2)
+library(scales)  
 
+cases_tot = as.data.frame(get_national_data(countries = "Russia"))
+cases_tot = cases_tot[cases_tot$date>=as.Date("2020-08-01"),]
+cases_tot$DATE_NUM = as.numeric(cases_tot$date)
+# cases_tot$BANKHOLIDAY = bankholiday(cases_tot$date)
+cases_tot$WEEKDAY = weekdays(cases_tot$date)
+cases_tot = cases_tot[cases_tot$date<=(max(cases_tot$date)-3),] # cut off data from last 3 days (incomplete)
 
-cases_india_bystate = do.call(rbind,lapply(unique(cases_india_bystate$State), function (state) { df =  cases_india_bystate[cases_india_bystate$State==state,]
-df$newcases = c(NA, diff(df$Confirmed))
-return(df)
-} ))
-cases_india_bystate = cases_india_bystate[cases_india_bystate$State!="State Unassigned",]
+# smooth out weekday effects in case nrs using GAM (if testing data is available one could correct for testing intensity as well)
+fit_cases = gam(cases_new ~ s(DATE_NUM, bs="cs", k=20, fx=F) + 
+                  WEEKDAY, # + 
+                # BANKHOLIDAY,
+                # s(TESTS_ALL, bs="cs", k=8, fx=F),
+                family=poisson(log), data=cases_tot,
+) 
+BIC(fit_cases)
 
-# plot new cases per day by state
-ggplot(data=cases_india_bystate,
-       aes(x=Date, y=newcases, 
-           group=State)) +
-  facet_wrap(~ State, scale="free", ncol=5) +
-  geom_smooth(aes(lwd=I(1), colour=State), method="loess", span=0.3, se=FALSE) +
-  # geom_line(aes(lwd=I(1), colour=State)) +
-  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01")),
-                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01"))),1,1),
-                     limits=as.Date(c("2020-06-14",NA)), expand=c(0,0)) +
-  # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
-  theme_hc() + theme(legend.position="right",
-                     axis.title.x=element_blank()) +
-  ylab("New confirmed cases per day") +
-  ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY STATE IN INDIA") +
-  scale_y_log10() +
-  theme(legend.position = "none") # +
-#  coord_cartesian(ylim=c(1,NA)) # +
-# coord_cartesian(xlim=c(as.Date("2021-01-01"),max(fit_india_multi_predsbystate2$collection_date)-20))
+# STACKED AREA CHART OF NEW CASES BY VARIANT (MULTINOMIAL FIT MAPPED ONTO CASE DATA) ####
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\india_cases per day by state.png"), width=12, height=12)
-ggsave(file=paste0(".\\plots\\",plotdir,"\\india_cases per day by state.pdf"), width=12, height=12)
+fit_russia_multi_preds_withCI$totcases = cases_tot$cases_new[match(round(fit_russia_multi_preds_withCI$DATE_NUM),cases_tot$DATE_NUM)]
+fit_russia_multi_preds_withCI$cases = fit_russia_multi_preds_withCI$totcases * fit_russia_multi_preds_withCI$prob
+fit_russia_multi_preds_withCI$cases[fit_russia_multi_preds_withCI$cases<=0.001] = NA
+cases_emmeans = as.data.frame(emmeans(fit_cases, ~ DATE_NUM, at=list(DATE_NUM=seq(date.from, date.to, by=0.5), BANHOLIDAY="no"), type="response"))
+fit_russia_multi_preds_withCI$smoothed_totcases = cases_emmeans$rate[match(fit_russia_multi_preds_withCI$DATE_NUM,cases_emmeans$DATE_NUM)]
+fit_russia_multi_preds_withCI$smoothed_cases = fit_russia_multi_preds_withCI$smoothed_totcases * fit_russia_multi_preds_withCI$prob
+fit_russia_multi_preds_withCI$smoothed_cases[fit_russia_multi_preds_withCI$smoothed_cases<=0.001] = NA
 
-
-cases_india_bystate2 = cases_india_bystate[cases_india_bystate$State %in% levels_STATES,]
-colnames(cases_india_bystate2)[2]="STATE"
-
-newdat = expand.grid(DATE_NUM=seq(as.numeric(min(cases_india_bystate2$Date)),as.numeric(max(cases_india_bystate2$Date))),
-                     division=unique(as.character(cases_india_bystate2$STATE)))
-fit_india_multi_predsbystate = data.frame(newdat,
-                                          predict(fit5_india_multi, 
-                                                  newdata = newdat,
-                                                  type = "prob"), check.names=F)  
-fit_india_multi_predsbystate = gather(fit_india_multi_predsbystate, LINEAGE2, prob, all_of(levels_LINEAGE2))
-fit_india_multi_predsbystate$collection_date = as.Date(fit_india_multi_predsbystate$DATE_NUM, origin="1970-01-01")
-fit_india_multi_predsbystate$LINEAGE2 = factor(fit_india_multi_predsbystate$LINEAGE2, levels=levels_LINEAGE2)
-colnames(fit_india_multi_predsbystate)[2] = "STATE"
-fit_india_multi_predsbystate$STATE = factor(fit_india_multi_predsbystate$STATE, levels=c("Maharashtra","Chhattisgarh","Gujarat","Delhi",
-                                                                                         "Karnataka", "West Bengal", "Odisha", "Andhra Pradesh", "Telangana", "Jharkhand"))
-fit_india_multi_predsbystate$totnewcases = cases_india_bystate2$newcases[match(interaction(fit_india_multi_predsbystate$STATE,fit_india_multi_predsbystate$collection_date),
-                                                                               interaction(cases_india_bystate2$STATE,cases_india_bystate2$Date))]
-fit_india_multi_predsbystate$cases = fit_india_multi_predsbystate$totnewcases*fit_india_multi_predsbystate$prob
-fit_india_multi_predsbystate$cases[fit_india_multi_predsbystate$cases==0] = NA
-fit_india_multi_predsbystate$STATE = factor(fit_india_multi_predsbystate$STATE,
-                                            levels=c("Maharashtra","Chhattisgarh","Gujarat","Delhi",
-                                                     "Karnataka", "West Bengal", "Odisha", "Andhra Pradesh", "Telangana", "Jharkhand"))
-
-fit_india_multi_predsbystate2 = fit_india_multi_predsbystate
-fit_india_multi_predsbystate2$cases[fit_india_multi_predsbystate2$cases==0] = NA
-fit_india_multi_predsbystate2$cases[fit_india_multi_predsbystate2$cases<=1] = NA
-fit_india_multi_predsbystate2$STATE = factor(fit_india_multi_predsbystate2$STATE,
-                                             levels=c("Maharashtra","Chhattisgarh","Gujarat","Delhi",
-                                                      "Karnataka", "West Bengal", "Odisha", "Andhra Pradesh", "Telangana", "Jharkhand"))
-cases_india_bystate2$STATE = factor(cases_india_bystate2$STATE,
-                                    levels=c("Maharashtra","Chhattisgarh","Gujarat","Delhi",
-                                             "Karnataka", "West Bengal", "Odisha", "Andhra Pradesh", "Telangana", "Jharkhand"))
-# sorted by date of introduction of B.1.617.2
-ggplot(data=fit_india_multi_predsbystate2, 
-       aes(x=collection_date, y=cases)) + 
-  facet_wrap(~ STATE, scale="free", ncol=2) +
-  geom_smooth(aes(lwd=I(1), colour=LINEAGE2, group=LINEAGE2), method="loess", span=0.3, se=FALSE) +
-  geom_smooth(data=cases_india_bystate2, aes(x=Date, y=newcases, lwd=I(1.5)), method="loess", span=0.3, se=FALSE, colour=alpha("black",0.6)) +
-  # geom_line(aes(lwd=I(1), colour=LINEAGE2, group=LINEAGE2)) +
-  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01")),
-                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01"))),1,1),
-                     limits=as.Date(c("2020-05-31",NA)), expand=c(0,0)) +
-  # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
-  theme_hc() + theme(legend.position="right", 
-                     axis.title.x=element_blank()) + 
-  ylab("New confirmed cases per day") +
-  ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT IN INDIA\n(multinomial fit)") +
-  scale_colour_manual("lineage", values=lineage_cols2) +
-  scale_y_log10() +
-  coord_cartesian(ylim=c(1,NA)) # +
-# coord_cartesian(xlim=c(as.Date("2021-01-01"),max(fit_india_multi_predsbystate2$collection_date)-20))
-
-ggsave(file=paste0(".\\plots\\",plotdir,"\\india_confirmed cases multinomial fit.png"), width=8, height=10)
-ggsave(file=paste0(".\\plots\\",plotdir,"\\india_confirmed cases multinomial fit.pdf"), width=8, height=10)
-
-# TO DO: group together some strains in category other
-
-ggplot(data=fit_india_multi_predsbystate2, 
+ggplot(data=fit_russia_multi_preds_withCI[fit_russia_multi_preds_withCI$collection_date>=as.Date("2021-02-18"),], 
        aes(x=collection_date, y=cases, group=LINEAGE2)) + 
-  facet_wrap(~ STATE, scale="free", ncol=2) +
+  # facet_wrap(~ REGION, scale="free", ncol=3) +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE2, group=LINEAGE2), position="stack") +
-  scale_fill_manual("", values=lineage_cols2) +
-  annotate("rect", xmin=max(GISAID_india$DATE_NUM)+1, 
-           xmax=as.Date("2021-05-31"), ymin=0, ymax=1, alpha=0.3, fill="white") + # extrapolated part
-  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01")),
-                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01"))),1,1),
-                     limits=as.Date(c("2020-06-01",NA)), expand=c(0,0)) +
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
+                     # limits=c(as.Date("2021-03-01"),max(cases_tot$date)), 
+                     expand=c(0,0)) +
   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
-  theme_hc() + theme(legend.position="right", 
-                     axis.title.x=element_blank()) + 
-  ylab("New confirmed cases per day") +
-  ggtitle("NEW CONFIRMED SARS-CoV2 CASES BY VARIANT IN INDIA\n(multinomial fit)")
+  theme_hc() + theme(legend.position="right") + 
+  ylab("New confirmed cases per day") + xlab("Date of diagnosis") +
+  ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT\nIN RUSSIA\n(case data & multinomial fit to GISAID data)") +
+  scale_fill_manual("variant", values=lineage_cols2) +
+  scale_colour_manual("variant", values=lineage_cols2) +
+  coord_cartesian(xlim=c(as.Date("2021-02-18"),NA))
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\india_confirmed cases stacked area multinomial fit.png"), width=8, height=10)
-ggsave(file=paste0(".\\plots\\",plotdir,"\\india_confirmed cases stacked area multinomial fit.pdf"), width=8, height=10)
+ggsave(file=paste0(".\\plots\\",plotdir,"\\cases per day_stacked area multinomial fit raw case data.png"), width=8, height=6)
+
+ggplot(data=fit_russia_multi_preds_withCI[fit_russia_multi_preds_withCI$collection_date>=as.Date("2021-02-18")&
+                                              fit_russia_multi_preds_withCI$collection_date<=max(cases_tot$date),], 
+       aes(x=collection_date-7, y=smoothed_cases, group=LINEAGE2)) + 
+  # facet_wrap(~ REGION, scale="free", ncol=3) +
+  geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE2, group=LINEAGE2), position="stack") +
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
+                     # limits=c(as.Date("2021-03-01"),today), 
+                     expand=c(0,0)) +
+  # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
+  theme_hc() + theme(legend.position="right") + 
+  ylab("New confirmed cases per day (smoothed)") + xlab("Date of infection") +
+  ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT\nIN RUSSIA\n(case data & multinomial fit to GISAID data)") +
+  scale_fill_manual("variant", values=lineage_cols2) +
+  scale_colour_manual("variant", values=lineage_cols2) +
+  coord_cartesian(xlim=c(as.Date("2021-02-18"),max(cases_tot$date)))
+
+ggsave(file=paste0(".\\plots\\",plotdir,"\\cases per day_smoothed_stacked area multinomial fit case data.png"), width=8, height=6)
+
+
+
+# EFFECTIVE REPRODUCTION NUMBER BY VARIANT THROUGH TIME ####
+
+# Function to calculate Re values from intrinsic growth rate
+# cf. https://github.com/epiforecasts/EpiNow2/blob/5015e75f7048c2580b2ebe83e46d63124d014861/R/utilities.R#L109
+# https://royalsocietypublishing.org/doi/10.1098/rsif.2020.0144
+# (assuming gamma distributed gen time)
+Re.from.r <- function(r, gamma_mean=4.7, gamma_sd=2.9) { # Nishiura et al. 2020, or use values from Ferretti et al. 2020 (gamma_mean=5.5, gamma_sd=1.8)
+  k <- (gamma_sd / gamma_mean)^2
+  R <- (1 + k * r * gamma_mean)^(1 / k)
+  return(R)
+}
+
+
+# calculate average instantaneous growth rates & 95% CLs using emtrends ####
+# based on the slope of the GAM fit on a log link scale
+avg_r_cases = as.data.frame(emtrends(fit_cases, ~ DATE_NUM, var="DATE_NUM", 
+                                     at=list(DATE_NUM=seq(date.from,
+                                                          date.to)#,
+                                             # BANKHOLIDAY="no"
+                                     ), # weekday="Wednesday",
+                                     type="link"))
+colnames(avg_r_cases)[2] = "r"
+colnames(avg_r_cases)[5] = "r_LOWER"
+colnames(avg_r_cases)[6] = "r_UPPER"
+avg_r_cases$DATE = as.Date(avg_r_cases$DATE_NUM, origin="1970-01-01") # -7 TO CALCULATE BACK TO INFECTION DATE
+avg_r_cases$Re = Re.from.r(avg_r_cases$r)
+avg_r_cases$Re_LOWER = Re.from.r(avg_r_cases$r_LOWER)
+avg_r_cases$Re_UPPER = Re.from.r(avg_r_cases$r_UPPER)
+avg_r_cases = avg_r_cases[complete.cases(avg_r_cases),]
+qplot(data=avg_r_cases, x=DATE-7, y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribbon", alpha=I(0.5), fill=I("steelblue")) +
+  # facet_wrap(~ REGION) +
+  geom_line() + theme_hc() + xlab("Date of infection") +
+  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
+                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A","M","J","J")) +
+  # scale_y_continuous(limits=c(1/2, 2), trans="log2") +
+  geom_hline(yintercept=1, colour=I("red")) +
+  ggtitle("Re IN RUSSIA AT MOMENT OF INFECTION BASED ON NEW CASES") +
+  # labs(tag = tag) +
+  # theme(plot.margin = margin(t = 20, r = 10, b = 20, l = 0)) +
+  theme(plot.tag.position = "bottomright",
+        plot.tag = element_text(vjust = 1, hjust = 1, size=8)) # +
+# coord_cartesian(xlim=c(as.Date("2020-01-01"),NA))
+
+# calculate above-average intrinsic growth rates per day of each variant over time based on multinomial fit using emtrends weighted effect contrasts ####
+# for best model fit3_sanger_multi
+above_avg_r_variants0 = do.call(rbind, lapply(seq(date.from,
+                                                  date.to), 
+                                              function (d) { 
+                                                wt = as.data.frame(emmeans(fit2_russia_multi, ~ LINEAGE2 , at=list(DATE_NUM=d), type="response"))$prob   # important: these should sum to 1
+                                                # wt = rep(1/length(levels_VARIANTS), length(levels_VARIANTS)) # this would give equal weights, equivalent to emmeans:::eff.emmc(levs=levels_LINEAGE2)
+                                                cons = lapply(seq_along(wt), function (i) { con = -wt; con[i] = 1 + con[i]; con })
+                                                names(cons) = seq_along(cons)
+                                                EMT = emtrends(fit2_russia_multi,  ~ LINEAGE2 , by=c("DATE_NUM"),
+                                                               var="DATE_NUM", mode="latent",
+                                                               at=list(DATE_NUM=d))
+                                                out = as.data.frame(confint(contrast(EMT, cons), adjust="none", df=NA))
+                                                # sum(out$estimate*wt) # should sum to zero
+                                                return(out) } ))
+above_avg_r_variants = above_avg_r_variants0
+above_avg_r_variants$contrast = factor(above_avg_r_variants$contrast, 
+                                       levels=1:length(levels_LINEAGE2), 
+                                       labels=levels_LINEAGE2)
+above_avg_r_variants$variant = above_avg_r_variants$contrast # gsub(" effect|\\(|\\)","",above_avg_r_variants$contrast)
+above_avg_r_variants$collection_date = as.Date(above_avg_r_variants$DATE_NUM, origin="1970-01-01")
+range(above_avg_r_variants$collection_date) # "2021-01-04" "2021-07-30"
+above_avg_r_variants$avg_r = avg_r_cases$r[match(above_avg_r_variants$collection_date,
+                                                 avg_r_cases$DATE)]  # average growth rate of all lineages calculated from case nrs
+above_avg_r_variants$r = above_avg_r_variants$avg_r+above_avg_r_variants$estimate
+above_avg_r_variants$r_LOWER = above_avg_r_variants$avg_r+above_avg_r_variants$asymp.LCL
+above_avg_r_variants$r_UPPER = above_avg_r_variants$avg_r+above_avg_r_variants$asymp.UCL
+above_avg_r_variants$Re = Re.from.r(above_avg_r_variants$r)
+above_avg_r_variants$Re_LOWER = Re.from.r(above_avg_r_variants$r_LOWER)
+above_avg_r_variants$Re_UPPER = Re.from.r(above_avg_r_variants$r_UPPER)
+df = data.frame(contrast=NA,
+                DATE_NUM=avg_r_cases$DATE_NUM, # -7 to calculate back to time of infection
+                # REGION=avg_r_cases$REGION,
+                estimate=NA,
+                SE=NA,
+                df=NA,
+                asymp.LCL=NA,
+                asymp.UCL=NA,
+                # p.value=NA,
+                collection_date=avg_r_cases$DATE,
+                variant="avg",
+                avg_r=avg_r_cases$r,
+                r=avg_r_cases$r,
+                r_LOWER=avg_r_cases$r_LOWER,
+                r_UPPER=avg_r_cases$r_UPPER,
+                Re=avg_r_cases$Re,
+                Re_LOWER=avg_r_cases$Re_LOWER,
+                Re_UPPER=avg_r_cases$Re_UPPER)
+# df = df[df$DATE_NUM<=max(above_avg_r_variants$DATE_NUM)&df$DATE_NUM>=(min(above_avg_r_variants$DATE_NUM)+7),]
+above_avg_r_variants = rbind(above_avg_r_variants, df)
+above_avg_r_variants$variant = factor(above_avg_r_variants$variant, levels=c(levels_LINEAGE2,"avg"))
+above_avg_r_variants$prob = fit_russia_multi_preds_withCI$prob[match(interaction(above_avg_r_variants$DATE_NUM,
+                                                                      above_avg_r_variants$variant),
+                                                          interaction(fit_russia_multi_preds_withCI$DATE_NUM,
+                                                                      fit_russia_multi_preds_withCI$LINEAGE2))]
+above_avg_r_variants2 = above_avg_r_variants
+ymax = 2
+ymin = 1/2
+above_avg_r_variants2$Re[above_avg_r_variants2$Re>=ymax] = NA
+above_avg_r_variants2$Re[above_avg_r_variants2$Re<=ymin] = NA
+above_avg_r_variants2$Re_LOWER[above_avg_r_variants2$Re_LOWER>=ymax] = ymax
+above_avg_r_variants2$Re_LOWER[above_avg_r_variants2$Re_LOWER<=ymin] = ymin
+above_avg_r_variants2$Re_UPPER[above_avg_r_variants2$Re_UPPER>=ymax] = ymax
+above_avg_r_variants2$Re_UPPER[above_avg_r_variants2$Re_UPPER<=ymin] = ymin
+above_avg_r_variants2$Re[above_avg_r_variants2$prob<0.01] = NA
+above_avg_r_variants2$Re_LOWER[above_avg_r_variants2$prob<0.01] = NA
+above_avg_r_variants2$Re_UPPER[above_avg_r_variants2$prob<0.01] = NA
+qplot(data=above_avg_r_variants2[!((above_avg_r_variants2$variant %in% c("other"))|above_avg_r_variants2$collection_date>max(cases_tot$DATE)),], 
+      x=collection_date-7, # -7 to calculate back to date of infection
+      y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribbon", colour=variant, fill=variant, alpha=I(0.5),
+      group=variant, linetype=I(0)) +
+  # facet_wrap(~ REGION) +
+  # geom_ribbon(aes(fill=variant, colour=variant), alpha=I(0.5))
+  geom_line(aes(colour=variant), lwd=I(0.72)) + theme_hc() + xlab("Date of infection") +
+  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
+                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A","M","J","J")) +
+  # scale_y_continuous(limits=c(1/ymax,ymax), trans="log2") +
+  geom_hline(yintercept=1, colour=I("red")) +
+  ggtitle("Re VALUES OF SARS-CoV2 VARIANTS IN RUSSIA\nAT MOMENT OF INFECTION\n(based on case data & multinomial fit to\nGISAID data)") +
+  # labs(tag = tag) +
+  # theme(plot.margin = margin(t = 20, r = 10, b = 20, l = 0)) +
+  theme(plot.tag.position = "bottomright",
+        plot.tag = element_text(vjust = 1, hjust = 1, size=8)) +
+  coord_cartesian(xlim=c(as.Date("2021-01-01"),max(cases_tot$date))) +
+  scale_fill_manual("variant", values=c(head(lineage_cols2,-1),"black")) +
+  scale_colour_manual("variant", values=c(head(lineage_cols2,-1),"black")) +
+  theme(legend.position="right") 
+
+ggsave(file=paste0(".\\plots\\",plotdir,"\\Re values per variant_avgRe_from_cases_with clipping.png"), width=8, height=6)
 

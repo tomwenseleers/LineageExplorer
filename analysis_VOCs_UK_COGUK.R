@@ -12,7 +12,7 @@ library(ggplot2)
 library(ggthemes)
 
 today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-06-30")
+today = as.Date("2021-07-02")
 today_num = as.numeric(today)
 today # "2021-06-30"
 plotdir = "UK_COGUK"
@@ -131,7 +131,8 @@ data_agbyweekregion1[data_agbyweekregion1$collection_date==max(data_agbyweekregi
 
 # MULLER PLOT (RAW DATA)
 unique(cogukp2$LINEAGE2)
-levels_LINEAGE2_plot = rev(c("B.1.1.7","B.1.617.2","B.1.617.1","P.1","B.1.351","B.1.525","B.1.177+","other")) # "B.1.617.1","B.1.617.2","B.1.617.3"
+# levels_LINEAGE2_plot = rev(c("B.1.1.7","B.1.617.2","B.1.617.1","P.1","B.1.351","B.1.525","B.1.177+","other")) # "B.1.617.1","B.1.617.2","B.1.617.3"
+levels_LINEAGE2_plot = c("other","B.1.177+","B.1.525","B.1.351","P.1","B.1.1.7","B.1.617.1","B.1.617.2")
 
 library(scales)
 n1 = length(levels_LINEAGE2_plot)
@@ -391,6 +392,7 @@ muller_cogukp2_mfit = ggplot(data=fit_cogukp2_multi_preds,
   ylab("Share") +
   ggtitle("SPREAD OF SARS-CoV2 VARIANTS B.1.617.1 & B.1.617.2 IN THE UK\n(COG-UK data)")
 muller_cogukp2_mfit
+
 
 
 library(ggpubr)

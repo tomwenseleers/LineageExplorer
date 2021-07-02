@@ -9,7 +9,7 @@
 # https://github.com/KITmetricslab/covid19-forecast-hub-de/blob/master/data-truth/RKI/variants/variants_of_concern_sample.csv
 # and https://github.com/KITmetricslab/covid19-forecast-hub-de/blob/master/data-truth/RKI/variants/variants_of_interest_sample.csv
 
-# Tom Wenseleers, last update 30 JUNE 2021
+# Tom Wenseleers, last update 2 JULY 2021
 
 library(lme4)
 library(splines)
@@ -50,7 +50,7 @@ library(mclogit)
 plotdir="DE" # (path in //data)
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 # today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-06-30")
+today = as.Date("2021-07-02")
 today_num = as.numeric(today)
 
 set_sum_contrasts() # we use effect coding for all models
@@ -71,7 +71,7 @@ propVOCandVOIs = rowSums(de_baseline[,grepl("Anteil",colnames(de_baseline))])/10
 nVOCandVOIs = rowSums(de_baseline[,grepl("Anzahl",colnames(de_baseline))]) # total number of all VOC and VOI samples
 de_baseline = de_baseline[,-which(grepl("Anteil",colnames(de_baseline)))]
 colnames(de_baseline) = gsub("_Anzahl","",colnames(de_baseline) )
-colnames(de_baseline) = c("week","alpha","beta","delta","gamma","A.23.1","A.27","B.1.1.318","B.1.324.1","B.1.427","B.1.429",
+colnames(de_baseline) = c("week","alpha","delta","beta","gamma","A.23.1","A.27","B.1.1.318","B.1.324.1","B.1.427","B.1.429",
                           "B.1.525","B.1.526","kappa","B.1.620","C.36.3","C.37","P.2","P.3")
 de_baseline$total = round(nVOCandVOIs/propVOCandVOIs,0) # total number of baseline surveillance samples sequenced
 de_baseline$other = de_baseline$total-(de_baseline$alpha+de_baseline$beta+de_baseline$gamma+de_baseline$delta+de_baseline$kappa)
@@ -88,7 +88,7 @@ de_baseline$n_allVOCs = as.numeric(de_baseline$alpha+de_baseline$beta+de_baselin
 de_baseline$prop_allVOCs = de_baseline$n_allVOCs / de_baseline$total
 
 head(de_baseline)
-range(de_baseline$collection_date) # "2021-01-04" "2021-06-07"
+range(de_baseline$collection_date) # "2021-01-04" "2021-06-14"
 
 
 # BASELINE SURVEILLANCE DATA ####
@@ -124,7 +124,7 @@ de_baseline_long2 = de_baseline_long2[de_baseline_long2$variant!="all VOCs",]
 de_baseline_long2$variant = droplevels(de_baseline_long2$variant)
 de_baseline_long2 = de_baseline_long2[rep(seq_len(nrow(de_baseline_long2)), de_baseline_long2$count),] # convert to long format
 de_baseline_long2$count = NULL
-nrow(de_baseline_long2) # n=74039
+nrow(de_baseline_long2) # n=76123
 
 data_agbyweek1 = as.data.frame(table(de_baseline_long2[,c("collection_date", "variant")]))
 colnames(data_agbyweek1) = c("collection_date", "variant", "count")
@@ -176,12 +176,12 @@ delta_r = data.frame(confint(emtrends(de_seq_mfit0, trt.vs.ctrl ~ variant|1,
 rownames(delta_r) = delta_r[,"contrast"]
 delta_r = delta_r[,-1]
 delta_r
-#                                        estimate    asymp.LCL    asymp.UCL
-# B.1.351 (beta) - B.1.1.7 (alpha)    -0.03832583 -0.056168678 -0.020482974
-# P.1 (gamma) - B.1.1.7 (alpha)       -0.02692698 -0.051958992 -0.001894972
-# B.1.617.1 (kappa) - B.1.1.7 (alpha) -0.07877264 -0.124909270 -0.032636016
-# B.1.617.2 (delta) - B.1.1.7 (alpha)  0.07563355  0.063110535  0.088156566
-# other - B.1.1.7 (alpha)              0.01277389  0.006642653  0.018905120
+#                                          estimate    asymp.LCL   asymp.UCL
+# B.1.351 (beta) - B.1.1.7 (alpha)    -0.0413391071 -0.060440427 -0.02223779
+# P.1 (gamma) - B.1.1.7 (alpha)        0.0006096697 -0.019108975  0.02032831
+# B.1.617.1 (kappa) - B.1.1.7 (alpha) -0.1604391655 -0.240695996 -0.08018234
+# B.1.617.2 (delta) - B.1.1.7 (alpha)  0.1154514048  0.105942547  0.12496026
+# other - B.1.1.7 (alpha)              0.0126695988  0.006368653  0.01897054
 
 # pairwise contrasts in growth rate today (no Tukey correction applied)
 emtrends(de_seq_mfit0, revpairwise ~ variant|1, 
@@ -189,21 +189,21 @@ emtrends(de_seq_mfit0, revpairwise ~ variant|1,
          at=list(collection_date_num=today_num), 
          df=NA, adjust="none")$contrasts
 # contrast                              estimate      SE df z.ratio p.value
-# B.1.351 (beta) - B.1.1.7 (alpha)       -0.0383 0.00910 NA -4.210  <.0001 
-# P.1 (gamma) - B.1.1.7 (alpha)          -0.0269 0.01277 NA -2.108  0.0350 
-# P.1 (gamma) - B.1.351 (beta)            0.0114 0.01563 NA  0.729  0.4659 
-# B.1.617.1 (kappa) - B.1.1.7 (alpha)    -0.0788 0.02354 NA -3.346  0.0008 
-# B.1.617.1 (kappa) - B.1.351 (beta)     -0.0404 0.02521 NA -1.605  0.1086 
-# B.1.617.1 (kappa) - P.1 (gamma)        -0.0518 0.02674 NA -1.939  0.0526 
-# B.1.617.2 (delta) - B.1.1.7 (alpha)     0.0756 0.00639 NA 11.837  <.0001 
-# B.1.617.2 (delta) - B.1.351 (beta)      0.1140 0.01108 NA 10.282  <.0001 
-# B.1.617.2 (delta) - P.1 (gamma)         0.1026 0.01422 NA  7.214  <.0001 
-# B.1.617.2 (delta) - B.1.617.1 (kappa)   0.1544 0.02437 NA  6.336  <.0001 
-# other - B.1.1.7 (alpha)                 0.0128 0.00313 NA  4.083  <.0001 
-# other - B.1.351 (beta)                  0.0511 0.00952 NA  5.368  <.0001 
-# other - P.1 (gamma)                     0.0397 0.01309 NA  3.033  0.0024 
-# other - B.1.617.1 (kappa)               0.0915 0.02372 NA  3.860  0.0001 
-# other - B.1.617.2 (delta)              -0.0629 0.00700 NA -8.975  <.0001 
+# B.1.351 (beta) - B.1.1.7 (alpha)      -0.04134 0.00975 NA  -4.242 <.0001 
+# P.1 (gamma) - B.1.1.7 (alpha)          0.00061 0.01006 NA   0.061 0.9517 
+# P.1 (gamma) - B.1.351 (beta)           0.04195 0.01396 NA   3.006 0.0026 
+# B.1.617.1 (kappa) - B.1.1.7 (alpha)   -0.16044 0.04095 NA  -3.918 0.0001 
+# B.1.617.1 (kappa) - B.1.351 (beta)    -0.11910 0.04207 NA  -2.831 0.0046 
+# B.1.617.1 (kappa) - P.1 (gamma)       -0.16105 0.04215 NA  -3.821 0.0001 
+# B.1.617.2 (delta) - B.1.1.7 (alpha)    0.11545 0.00485 NA  23.797 <.0001 
+# B.1.617.2 (delta) - B.1.351 (beta)     0.15679 0.01086 NA  14.441 <.0001 
+# B.1.617.2 (delta) - P.1 (gamma)        0.11484 0.01106 NA  10.379 <.0001 
+# B.1.617.2 (delta) - B.1.617.1 (kappa)  0.27589 0.04124 NA   6.690 <.0001 
+# other - B.1.1.7 (alpha)                0.01267 0.00321 NA   3.941 0.0001 
+# other - B.1.351 (beta)                 0.05401 0.01016 NA   5.314 <.0001 
+# other - P.1 (gamma)                    0.01206 0.01049 NA   1.150 0.2502 
+# other - B.1.617.1 (kappa)              0.17311 0.04106 NA   4.216 <.0001 
+# other - B.1.617.2 (delta)             -0.10278 0.00568 NA -18.089 <.0001 
 # 
 # Degrees-of-freedom method: user-specified 
 
@@ -213,21 +213,21 @@ confint(emtrends(de_seq_mfit0, revpairwise ~ variant|1,
          at=list(collection_date_num=today_num), 
          df=NA, adjust="none"))$contrasts
 # contrast                              estimate      SE df asymp.LCL asymp.UCL
-# B.1.351 (beta) - B.1.1.7 (alpha)       -0.0383 0.00910 NA  -0.05617 -0.020483
-# P.1 (gamma) - B.1.1.7 (alpha)          -0.0269 0.01277 NA  -0.05196 -0.001895
-# P.1 (gamma) - B.1.351 (beta)            0.0114 0.01563 NA  -0.01924  0.042039
-# B.1.617.1 (kappa) - B.1.1.7 (alpha)    -0.0788 0.02354 NA  -0.12491 -0.032636
-# B.1.617.1 (kappa) - B.1.351 (beta)     -0.0404 0.02521 NA  -0.08985  0.008954
-# B.1.617.1 (kappa) - P.1 (gamma)        -0.0518 0.02674 NA  -0.10426  0.000573
-# B.1.617.2 (delta) - B.1.1.7 (alpha)     0.0756 0.00639 NA   0.06311  0.088157
-# B.1.617.2 (delta) - B.1.351 (beta)      0.1140 0.01108 NA   0.09224  0.135683
-# B.1.617.2 (delta) - P.1 (gamma)         0.1026 0.01422 NA   0.07470  0.130423
-# B.1.617.2 (delta) - B.1.617.1 (kappa)   0.1544 0.02437 NA   0.10664  0.202167
-# other - B.1.1.7 (alpha)                 0.0128 0.00313 NA   0.00664  0.018905
-# other - B.1.351 (beta)                  0.0511 0.00952 NA   0.03244  0.069758
-# other - P.1 (gamma)                     0.0397 0.01309 NA   0.01405  0.065356
-# other - B.1.617.1 (kappa)               0.0915 0.02372 NA   0.04506  0.138034
-# other - B.1.617.2 (delta)              -0.0629 0.00700 NA  -0.07659 -0.049132
+# B.1.351 (beta) - B.1.1.7 (alpha)      -0.04134 0.00975 NA  -0.06044   -0.0222
+# P.1 (gamma) - B.1.1.7 (alpha)          0.00061 0.01006 NA  -0.01911    0.0203
+# P.1 (gamma) - B.1.351 (beta)           0.04195 0.01396 NA   0.01459    0.0693
+# B.1.617.1 (kappa) - B.1.1.7 (alpha)   -0.16044 0.04095 NA  -0.24070   -0.0802
+# B.1.617.1 (kappa) - B.1.351 (beta)    -0.11910 0.04207 NA  -0.20155   -0.0367
+# B.1.617.1 (kappa) - P.1 (gamma)       -0.16105 0.04215 NA  -0.24366   -0.0784
+# B.1.617.2 (delta) - B.1.1.7 (alpha)    0.11545 0.00485 NA   0.10594    0.1250
+# B.1.617.2 (delta) - B.1.351 (beta)     0.15679 0.01086 NA   0.13551    0.1781
+# B.1.617.2 (delta) - P.1 (gamma)        0.11484 0.01106 NA   0.09316    0.1365
+# B.1.617.2 (delta) - B.1.617.1 (kappa)  0.27589 0.04124 NA   0.19506    0.3567
+# other - B.1.1.7 (alpha)                0.01267 0.00321 NA   0.00637    0.0190
+# other - B.1.351 (beta)                 0.05401 0.01016 NA   0.03409    0.0739
+# other - P.1 (gamma)                    0.01206 0.01049 NA  -0.00850    0.0326
+# other - B.1.617.1 (kappa)              0.17311 0.04106 NA   0.09264    0.2536
+# other - B.1.617.2 (delta)             -0.10278 0.00568 NA  -0.11392   -0.0916
 # 
 # Degrees-of-freedom method: user-specified 
 # Confidence level used: 0.95 
@@ -237,11 +237,11 @@ confint(emtrends(de_seq_mfit0, revpairwise ~ variant|1,
 # assuming generation time of 4.7 days (Nishiura et al. 2020)
 exp(delta_r*4.7) 
 #                                      estimate asymp.LCL asymp.UCL
-# B.1.351 (beta) - B.1.1.7 (alpha)    0.8351605 0.7679791 0.9082188
-# P.1 (gamma) - B.1.1.7 (alpha)       0.8811241 0.7833253 0.9911332
-# B.1.617.1 (kappa) - B.1.1.7 (alpha) 0.6905745 0.5559519 0.8577957
-# B.1.617.2 (delta) - B.1.1.7 (alpha) 1.4268621 1.3453033 1.5133653
-# other - B.1.1.7 (alpha)             1.0618761 1.0317129 1.0929211
+# B.1.351 (beta) - B.1.1.7 (alpha)    0.8234159 0.7527139 0.9007589
+# P.1 (gamma) - B.1.1.7 (alpha)       1.0028696 0.9141029 1.1002562
+# B.1.617.1 (kappa) - B.1.1.7 (alpha) 0.4704507 0.3226229 0.6860142
+# B.1.617.2 (delta) - B.1.1.7 (alpha) 1.7205115 1.6453119 1.7991480
+# other - B.1.1.7 (alpha)             1.0613558 1.0303852 1.0932573
 
 
 # # PS: mblogit fit would also be possible & would take into account overdispersion
@@ -400,27 +400,27 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\germany_baseline_surveillance_multino
 
 # estimated share of different variants of concern among lab diagnoses today
 de_seq_mfit0_preds[as.character(de_seq_mfit0_preds$collection_date)==as.character(today),]
-#                variant collection_date_num         prob           SE df     asymp.LCL    asymp.UCL collection_date
-# 1063   B.1.1.7 (alpha)             18808.5 4.826834e-01 4.975115e-02 NA  0.3851729883 0.5801939093      2021-06-30
-# 1064    B.1.351 (beta)             18808.5 1.039776e-03 4.604162e-04 NA  0.0001373767 0.0019421752      2021-06-30
-# 1065       P.1 (gamma)             18808.5 1.352188e-03 7.647909e-04 NA -0.0001467746 0.0028511507      2021-06-30
-# 1066 B.1.617.1 (kappa)             18808.5 6.408939e-05 6.816334e-05 NA -0.0000695083 0.0001976871      2021-06-30
-# 1067 B.1.617.2 (delta)             18808.5 4.576819e-01 5.541236e-02 NA  0.3490757055 0.5662881684      2021-06-30
-# 1068             other             18808.5 5.717856e-02 9.459525e-03 NA  0.0386382323 0.0757188893      2021-06-30
+# variant collection_date_num         prob           SE df     asymp.LCL    asymp.UCL collection_date
+# 1075   B.1.1.7 (alpha)             18810.5 1.816926e-01 2.150136e-02 NA  1.395507e-01 2.238345e-01      2021-07-02
+# 1076    B.1.351 (beta)             18810.5 3.233016e-04 1.490280e-04 NA  3.121208e-05 6.153912e-04      2021-07-02
+# 1077       P.1 (gamma)             18810.5 2.209775e-03 9.213994e-04 NA  4.038657e-04 4.015685e-03      2021-07-02
+# 1078 B.1.617.1 (kappa)             18810.5 3.547881e-07 6.708422e-07 NA -9.600384e-07 1.669615e-06      2021-07-02
+# 1079 B.1.617.2 (delta)             18810.5 7.965841e-01 2.394871e-02 NA  7.496455e-01 8.435227e-01      2021-07-02
+# 1080             other             18810.5 1.918987e-02 3.360814e-03 NA  1.260280e-02 2.577695e-02      2021-07-02
   
 # estimated share of different variants of concern among new infections today (assuming 1 week between infection & diagnosis)
 de_seq_mfit0_preds[as.character(de_seq_mfit0_preds$collection_date)==as.character(today+7),]
-#                variant collection_date_num         prob           SE df     asymp.LCL    asymp.UCL collection_date
-# 1105   B.1.1.7 (alpha)             18815.5 3.644837e-01 5.741792e-02 NA  2.519467e-01 4.770208e-01      2021-07-07
-# 1106    B.1.351 (beta)             18815.5 6.004027e-04 3.108836e-04 NA -8.918032e-06 1.209723e-03      2021-07-07
-# 1107       P.1 (gamma)             18815.5 8.456549e-04 5.604707e-04 NA -2.528475e-04 1.944157e-03      2021-07-07
-# 1108 B.1.617.1 (kappa)             18815.5 2.788227e-05 3.434161e-05 NA -3.942604e-05 9.519059e-05      2021-07-07
-# 1109 B.1.617.2 (delta)             18815.5 5.868271e-01 6.477759e-02 NA  4.598653e-01 7.137888e-01      2021-07-07
-# 1110             other             18815.5 4.721526e-02 1.022890e-02 NA  2.716697e-02 6.726354e-02      2021-07-07
+# variant collection_date_num         prob           SE df     asymp.LCL    asymp.UCL collection_date
+# 1117   B.1.1.7 (alpha)             18817.5 9.118921e-02 1.484074e-02 NA  6.210189e-02 1.202765e-01      2021-07-09
+# 1118    B.1.351 (beta)             18817.5 1.214900e-04 6.533462e-05 NA -6.563476e-06 2.495435e-04      2021-07-09
+# 1119       P.1 (gamma)             18817.5 1.113801e-03 5.518622e-04 NA  3.217145e-05 2.195431e-03      2021-07-09
+# 1120 B.1.617.1 (kappa)             18817.5 5.792023e-08 1.261593e-07 NA -1.893474e-07 3.051879e-07      2021-07-09
+# 1121 B.1.617.2 (delta)             18817.5 8.970511e-01 1.669797e-02 NA  8.643237e-01 9.297785e-01      2021-07-09
+# 1122             other             18817.5 1.052434e-02 2.325349e-03 NA  5.966735e-03 1.508193e-02      2021-07-09
 
   
 
-# estimated date that B.1.617.2 would make   out >50% of all lab diagnoses: "2021-07-03" ["2021-06-28"-"2021-07-10"] 95% CLs (7 days earlier for infections)
+# estimated date that B.1.617.2 would make out >50% of all lab diagnoses: "2021-06-21" ["2021-06-19"-"2021-06-21"] 95% CLs (7 days earlier for infections)
 de_seq_mfit0_preds[de_seq_mfit0_preds$variant=="B.1.617.2 (delta)","collection_date"][which(de_seq_mfit0_preds[de_seq_mfit0_preds$variant=="B.1.617.2 (delta)","prob"] >= 0.5)[1]]
 de_seq_mfit0_preds[de_seq_mfit0_preds$variant=="B.1.617.2 (delta)","collection_date"][which(de_seq_mfit0_preds[de_seq_mfit0_preds$variant=="B.1.617.2 (delta)","asymp.LCL"] >= 0.5)[1]]
 de_seq_mfit0_preds[de_seq_mfit0_preds$variant=="B.1.617.2 (delta)","collection_date"][which(de_seq_mfit0_preds[de_seq_mfit0_preds$variant=="B.1.617.2 (delta)","asymp.UCL"] >= 0.5)[1]]
@@ -441,7 +441,7 @@ cases_tot = cases_tot[cases_tot$date>=as.Date("2020-08-01"),]
 cases_tot$DATE_NUM = as.numeric(cases_tot$date)
 # cases_tot$BANKHOLIDAY = bankholiday(cases_tot$date)
 cases_tot$WEEKDAY = weekdays(cases_tot$date)
-cases_tot = cases_tot[cases_tot$date<=(max(cases_tot$date)-3),] # cut off data from last 3 days (incomplete)
+# cases_tot = cases_tot[cases_tot$date<=(max(cases_tot$date)-3),] # cut off data from last 3 days (incomplete)
 
 # smooth out weekday effects in case nrs using GAM (if testing data is available one could correct for testing intensity as well)
 fit_cases = gam(cases_new ~ s(DATE_NUM, bs="cs", k=30, fx=F) + 
@@ -491,7 +491,7 @@ ggplot(data=de_seq_mfit0_preds,
   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
   theme_hc() + theme(legend.position="right") + 
   ylab("New confirmed cases per day (smoothed)") + xlab("Date of infection") +
-  ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT\nIN GERMANY\n(case data & multinomial fit to baseline surveillance data RIVM)") +
+  ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT\nIN GERMANY\n(case data & multinomial fit to baseline surveillance data RKI)") +
   scale_fill_manual("variant", values=colours_VARIANTS) +
   scale_colour_manual("variant", values=colours_VARIANTS) +
   coord_cartesian(xlim=c(as.Date("2021-01-01"),today))

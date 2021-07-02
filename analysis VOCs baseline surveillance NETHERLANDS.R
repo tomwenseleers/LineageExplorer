@@ -4,7 +4,7 @@
 # Data: baseline surveillance whole genome sequencing RIVM, https://data.rivm.nl/covid-19/COVID-19_varianten.csv & https://raw.githubusercontent.com/mzelst/covid-19/master/data-misc/variants-rivm/prevalence_variants.csv
 # downloaded on 26th of June
 
-# Tom Wenseleers, last update 30 JUNE 2021
+# Tom Wenseleers, last update 2 July 2021
 
 library(lme4)
 library(splines)
@@ -48,7 +48,7 @@ suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 # filedate = as.Date(gsub("_","-",dat)) # file date
 # filedate_num = as.numeric(filedate)
 # today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-06-30")
+today = as.Date("2021-07-02")
 today_num = as.numeric(today)
 
 selected_variants = c("B.1.1.7 (alpha)", "B.1.351 (beta)", "P.1 (gamma)", "B.1.617.1 (kappa)", "B.1.617.2 (delta)")
@@ -214,7 +214,7 @@ exp(delta_r*4.7)
 # B.1.351 (beta) - B.1.1.7 (alpha)    0.754979 0.6946494 0.8205483
 # P.1 (gamma) - B.1.1.7 (alpha)       1.007625 0.9554440 1.0626565
 # B.1.617.1 (kappa) - B.1.1.7 (alpha) 1.262773 0.9004248 1.7709368
-# B.1.617.2 (delta) - B.1.1.7 (alpha) 1.719 015 1.5550920 1.9002166
+# B.1.617.2 (delta) - B.1.1.7 (alpha) 1.719015 1.5550920 1.9002166
 # other - B.1.1.7 (alpha)             1.085777 1.0442771 1.1289254
 
 
@@ -372,23 +372,23 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\netherlands_baseline_surveillance_mul
 
 # estimated share of different variants of concern among lab diagnoses today
 nl_seq_mfit0_preds[as.character(nl_seq_mfit0_preds$collection_date)==as.character(today),]
-#               variant2 collection_date_num         prob           SE df     asymp.LCL    asymp.UCL collection_date           variant
-# 1255   B.1.1.7 (alpha)             18808.5 0.5148470493 7.627130e-02 NA  3.653581e-01 0.6643360446      2021-06-30   B.1.1.7 (alpha)
-# 1256    B.1.351 (beta)             18808.5 0.0001165683 6.820391e-05 NA -1.710894e-05 0.0002502455      2021-06-30    B.1.351 (beta)
-# 1257       P.1 (gamma)             18808.5 0.0105969585 3.184134e-03 NA  4.356172e-03 0.0168377455      2021-06-30       P.1 (gamma)
-# 1258 B.1.617.1 (kappa)             18808.5 0.0018821661 2.694554e-03 NA -3.399063e-03 0.0071633956      2021-06-30 B.1.617.1 (kappa)
-# 1259 B.1.617.2 (delta)             18808.5 0.4643059318 7.927014e-02 NA  3.089393e-01 0.6196725545      2021-06-30 B.1.617.2 (delta)
-# 1260             other             18808.5 0.0082513261 2.465853e-03 NA  3.418343e-03 0.0130843089      2021-06-30             other
+# variant2 collection_date_num         prob           SE df     asymp.LCL    asymp.UCL collection_date           variant
+# 1267   B.1.1.7 (alpha)             18810.5 4.593189e-01 8.144326e-02 NA  2.996930e-01 0.6189447145      2021-07-02   B.1.1.7 (alpha)
+# 1268    B.1.351 (beta)             18810.5 9.227281e-05 5.630057e-05 NA -1.807428e-05 0.0002026199      2021-07-02    B.1.351 (beta)
+# 1269       P.1 (gamma)             18810.5 9.484646e-03 3.081956e-03 NA  3.444124e-03 0.0155251687      2021-07-02       P.1 (gamma)
+# 1270 B.1.617.1 (kappa)             18810.5 1.854433e-03 2.788679e-03 NA -3.611277e-03 0.0073201429      2021-07-02 B.1.617.1 (kappa)
+# 1271 B.1.617.2 (delta)             18810.5 5.216260e-01 8.475182e-02 NA  3.555155e-01 0.6877365461      2021-07-02 B.1.617.2 (delta)
+# 1272             other             18810.5 7.623748e-03 2.446830e-03 NA  2.828048e-03 0.0124194474      2021-07-02             other
   
 # estimated share of different variants of concern among new infections today (assuming 1 week between infection & diagnosis)
 nl_seq_mfit0_preds[as.character(nl_seq_mfit0_preds$collection_date)==as.character(today+7),]
-#               variant2 collection_date_num        prob           SE df     asymp.LCL    asymp.UCL collection_date           variant
-# 1297   B.1.1.7 (alpha)             18815.5 3.262487e-01 8.443434e-02 NA  1.607604e-01 0.4917369972      2021-07-07   B.1.1.7 (alpha)
-# 1298    B.1.351 (beta)             18815.5 4.860174e-05 3.302887e-05 NA -1.613366e-05 0.0001133371      2021-07-07    B.1.351 (beta)
-# 1299       P.1 (gamma)             18815.5 6.791494e-03 2.689061e-03 NA  1.521032e-03 0.0120619560      2021-07-07       P.1 (gamma)
-# 1300 B.1.617.1 (kappa)             18815.5 1.688257e-03 2.850196e-03 NA -3.898024e-03 0.0072745376      2021-07-07 B.1.617.1 (kappa)
-# 1301 B.1.617.2 (delta)             18815.5 6.593124e-01 8.813883e-02 NA  4.865635e-01 0.8320613499      2021-07-07 B.1.617.2 (delta)
-# 1302             other             18815.5 5.910509e-03 2.286871e-03 NA  1.428323e-03 0.0103926946      2021-07-07             other
+# variant2 collection_date_num         prob           SE df     asymp.LCL    asymp.UCL collection_date           variant
+# 1309   B.1.1.7 (alpha)             18817.5 2.785252e-01 8.167626e-02 NA  1.184427e-01 4.386077e-01      2021-07-09   B.1.1.7 (alpha)
+# 1310    B.1.351 (beta)             18817.5 3.681501e-05 2.612559e-05 NA -1.439021e-05 8.802023e-05      2021-07-09    B.1.351 (beta)
+# 1311       P.1 (gamma)             18817.5 5.816810e-03 2.484913e-03 NA  9.464712e-04 1.068715e-02      2021-07-09       P.1 (gamma)
+# 1312 B.1.617.1 (kappa)             18817.5 1.591737e-03 2.806837e-03 NA -3.909562e-03 7.093036e-03      2021-07-09 B.1.617.1 (kappa)
+# 1313 B.1.617.2 (delta)             18817.5 7.088037e-01 8.537132e-02 NA  5.414789e-01 8.761284e-01      2021-07-09 B.1.617.2 (delta)
+# 1314             other             18817.5 5.225758e-03 2.176300e-03 NA  9.602883e-04 9.491228e-03      2021-07-09             other
 
   
 
@@ -412,7 +412,7 @@ cases_tot = cases_tot[cases_tot$date>=as.Date("2020-08-01"),]
 cases_tot$DATE_NUM = as.numeric(cases_tot$date)
 # cases_tot$BANKHOLIDAY = bankholiday(cases_tot$date)
 cases_tot$WEEKDAY = weekdays(cases_tot$date)
-cases_tot = cases_tot[cases_tot$date<=(max(cases_tot$date)-3),] # cut off data from last 3 days (incomplete)
+# cases_tot = cases_tot[cases_tot$date<=(max(cases_tot$date)-3),] # cut off data from last 3 days (incomplete)
 
 # smooth out weekday effects in case nrs using GAM (if testing data is available one could correct for testing intensity as well)
 fit_cases = gam(cases_new ~ s(DATE_NUM, bs="cs", k=30, fx=F) + 
