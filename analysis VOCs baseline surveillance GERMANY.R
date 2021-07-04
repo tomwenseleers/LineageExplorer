@@ -9,7 +9,7 @@
 # https://github.com/KITmetricslab/covid19-forecast-hub-de/blob/master/data-truth/RKI/variants/variants_of_concern_sample.csv
 # and https://github.com/KITmetricslab/covid19-forecast-hub-de/blob/master/data-truth/RKI/variants/variants_of_interest_sample.csv
 
-# Tom Wenseleers, last update 2 JULY 2021
+# Tom Wenseleers, last update 3 JULY 2021
 
 library(lme4)
 library(splines)

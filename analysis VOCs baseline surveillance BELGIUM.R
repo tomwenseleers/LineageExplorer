@@ -7,7 +7,7 @@
 # https://covid-19.sciensano.be/nl/covid-19-epidemiologische-situatie (federal test platform) & "Genomic surveillance of SARS-CoV-2 in Belgium", 
 # reports, https://www.uzleuven.be/nl/laboratoriumgeneeskunde/genomic-surveillance-sars-cov-2-belgium
 
-# Tom Wenseleers, last update 30 JUNE 2021 for VOC data & 2 July for Re calculations
+# Tom Wenseleers, last update 30 JUNE 2021 for VOC data & 3 July for Re calculations
 
 library(lme4)
 library(splines)
