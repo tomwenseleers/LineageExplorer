@@ -1,10 +1,9 @@
 # ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT SARS-CoV2 VARIANTS OF CONCERN IN THE NETHERLANDS ####
 # Tom Wenseleers
 
-# Data: baseline surveillance whole genome sequencing RIVM, https://data.rivm.nl/covid-19/COVID-19_varianten.csv & https://raw.githubusercontent.com/mzelst/covid-19/master/data-misc/variants-rivm/prevalence_variants.csv
-# downloaded on 26th of June
+# Data: baseline surveillance whole genome sequencing RIVM, https://data.rivm.nl/covid-19/COVID-19_varianten.csv / https://raw.githubusercontent.com/mzelst/covid-19/master/data-misc/variants-rivm/prevalence_variants.csv
 
-# Tom Wenseleers, last update 3 July 2021
+# Tom Wenseleers, last update 4 July 2021
 
 library(lme4)
 library(splines)
@@ -48,12 +47,14 @@ suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 # filedate = as.Date(gsub("_","-",dat)) # file date
 # filedate_num = as.numeric(filedate)
 # today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-07-02")
+today = as.Date("2021-07-04")
 today_num = as.numeric(today)
 
-selected_variants = c("B.1.1.7 (alpha)", "B.1.351 (beta)", "P.1 (gamma)", "B.1.617.1 (kappa)", "B.1.617.2 (delta)")
+selected_variants = c("B.1.1.7 (alpha)", "B.1.351 (beta)", "P.1 (gamma)", # B.1.617.1 (kappa)", 
+                      "B.1.617.2 (delta)")
 levels_VARIANTS = c(selected_variants,"other")
-colours_VARIANTS = c("#0085FF","#9A9D00","cyan3",muted("magenta"),"magenta","grey70")
+colours_VARIANTS = c("#0085FF","#9A9D00","cyan3", # muted("magenta"),
+                     "magenta","grey70")
 
 set_sum_contrasts() # we use effect coding for all models
 
@@ -62,56 +63,57 @@ set_sum_contrasts() # we use effect coding for all models
 # IN THE NETHERLANDS BASED ON BASELINE SURVEILLANCE SEQUENCING & VOC PCR DATA ####
 # (baseline surveillance, i.e. randomly sampled, excluding travellers & surge testing)
 
-# using Marino van Zelst's copy of RIVM variant data (slightly more up to date than RIVM's own csv)
-nl_baseline = read.csv("https://raw.githubusercontent.com/mzelst/covid-19/master/data-misc/variants-rivm/prevalence_variants.csv")
-nl_baseline = nl_baseline[,c("Week","Jaar","Aantal_monsters","Britse_variant","ZuidAfrikaanse_variant","Braziliaanse_variant_P1","Indiase_Variant_B1.167.1","Indiase_Variant_B1.167.2")]
-# for collection date we use the week midpoint:
-collection_date = c(lubridate::ymd( paste0(nl_baseline$Jaar[nl_baseline$Jaar==2020],"-01-01") ) + lubridate::weeks( nl_baseline$Week[nl_baseline$Jaar==2020] - 1 ) - 2, 
-                    lubridate::ymd( paste0(nl_baseline$Jaar[nl_baseline$Jaar==2021],"-01-01") ) + lubridate::weeks( nl_baseline$Week[nl_baseline$Jaar==2021] - 1 )+3) + 3.5
-nl_baseline = data.frame(collection_date=collection_date,
-                         nl_baseline[,-c(1:2)])
-colnames(nl_baseline) = c("collection_date", "total", "B.1.1.7 (alpha)", "B.1.351 (beta)", "P.1 (gamma)", "B.1.617.1 (kappa)", "B.1.617.2 (delta)")
-nl_baseline$other = nl_baseline$total-rowSums(nl_baseline[,-c(1:2)])
-nl_baseline = gather(nl_baseline[,c("collection_date", # convert to long format
-                                         "B.1.1.7 (alpha)",
-                                         "B.1.351 (beta)",
-                                         "P.1 (gamma)",
-                                         "B.1.617.1 (kappa)",
-                                         "B.1.617.2 (delta)",
-                                         "other",
-                                         "total")], 
-                          variant, count, c("B.1.1.7 (alpha)",
-                                            "B.1.351 (beta)",
-                                            "P.1 (gamma)",
-                                            "B.1.617.1 (kappa)",
-                                            "B.1.617.2 (delta)",
-                                            "other"), factor_key=TRUE)
 
-                                  
-# to work with official RIVM csv (lags a bit behind)
-# nl_baseline = read.csv("https://data.rivm.nl/covid-19/COVID-19_varianten.csv", sep=";")
-# nl_baseline$collection_date = as.Date(nl_baseline$Date_of_statistics_week_start)+3.5 # we use week midpoint
-# nl_baseline$variant = paste0(nl_baseline$Variant_code, " (", tolower(nl_baseline$Variant_name),")")
-# nl_baseline = nl_baseline[nl_baseline$variant %in% selected_variants,]
-# nl_baseline = nl_baseline[,c("collection_date","variant","Variant_cases","Sample_size")]
-# colnames(nl_baseline)[3] = "count"
-# colnames(nl_baseline)[4] = "total"
-# ag = data.frame(aggregate(nl_baseline$count, by=list(collection_date=nl_baseline$collection_date), FUN=sum)) # nr of selected variants
-# colnames(ag)[2] = "nVOCandVOIs"
-# ag$total = data.frame(aggregate(nl_baseline$total, by=list(collection_date=nl_baseline$collection_date), FUN=mean))$x # total sequenced
-# ag$other = ag$total-ag$nVOCandVOIs
-# nl_baseline = rbind(nl_baseline, data.frame(collection_date=ag$collection_date,
-#                                             variant="other",
-#                                             count=ag$other,
-#                                             total=ag$total
-#                                             ))
-# 
+# official RIVM csv
+nl_baseline = read.csv("https://data.rivm.nl/covid-19/COVID-19_varianten.csv", sep=";")
+nl_baseline$collection_date = as.Date(nl_baseline$Date_of_statistics_week_start)+3.5 # we use week midpoint
+nl_baseline$variant = paste0(nl_baseline$Variant_code, " (", tolower(nl_baseline$Variant_name),")")
+nl_baseline = nl_baseline[nl_baseline$variant %in% selected_variants,]
+nl_baseline = nl_baseline[,c("collection_date","variant","Variant_cases","Sample_size")]
+colnames(nl_baseline)[3] = "count"
+colnames(nl_baseline)[4] = "total"
+ag = data.frame(aggregate(nl_baseline$count, by=list(collection_date=nl_baseline$collection_date), FUN=sum)) # nr of selected variants
+colnames(ag)[2] = "nVOCandVOIs"
+ag$total = data.frame(aggregate(nl_baseline$total, by=list(collection_date=nl_baseline$collection_date), FUN=mean))$x # total sequenced
+ag$other = ag$total-ag$nVOCandVOIs
+nl_baseline = rbind(nl_baseline, data.frame(collection_date=ag$collection_date,
+                                            variant="other",
+                                            count=ag$other,
+                                            total=ag$total
+                                            ))
+
+
+# using Marino van Zelst's copy of RIVM variant data
+# nl_baseline = read.csv("https://raw.githubusercontent.com/mzelst/covid-19/master/data-misc/variants-rivm/prevalence_variants.csv")
+# nl_baseline = nl_baseline[,c("Week","Jaar","Aantal_monsters","Britse_variant","ZuidAfrikaanse_variant","Braziliaanse_variant_P1","Indiase_Variant_B1.167.1","Indiase_Variant_B1.167.2")]
+# # for collection date we use the week midpoint:
+# collection_date = c(lubridate::ymd( paste0(nl_baseline$Jaar[nl_baseline$Jaar==2020],"-01-01") ) + lubridate::weeks( nl_baseline$Week[nl_baseline$Jaar==2020] - 1 ) - 2, 
+#                     lubridate::ymd( paste0(nl_baseline$Jaar[nl_baseline$Jaar==2021],"-01-01") ) + lubridate::weeks( nl_baseline$Week[nl_baseline$Jaar==2021] - 1 )+3) + 3.5
+# nl_baseline = data.frame(collection_date=collection_date,
+#                          nl_baseline[,-c(1:2)])
+# colnames(nl_baseline) = c("collection_date", "total", "B.1.1.7 (alpha)", "B.1.351 (beta)", "P.1 (gamma)", "B.1.617.1 (kappa)", "B.1.617.2 (delta)")
+# nl_baseline$other = nl_baseline$total-rowSums(nl_baseline[,-c(1:2)])
+# nl_baseline = gather(nl_baseline[,c("collection_date", # convert to long format
+#                                          "B.1.1.7 (alpha)",
+#                                          "B.1.351 (beta)",
+#                                          "P.1 (gamma)",
+#                                          "B.1.617.1 (kappa)",
+#                                          "B.1.617.2 (delta)",
+#                                          "other",
+#                                          "total")], 
+#                           variant, count, c("B.1.1.7 (alpha)",
+#                                             "B.1.351 (beta)",
+#                                             "P.1 (gamma)",
+#                                             "B.1.617.1 (kappa)",
+#                                             "B.1.617.2 (delta)",
+#                                             "other"), factor_key=TRUE)
+
 
 nl_baseline$variant = factor(nl_baseline$variant, levels=levels_VARIANTS)
 nl_baseline$prop = nl_baseline$count/nl_baseline$total
 nl_baseline$collection_date_num = as.numeric(nl_baseline$collection_date)
 
-range(nl_baseline$collection_date) # "2020-12-03" "2021-06-10"
+range(nl_baseline$collection_date) # "2020-12-03" "2021-06-17"
 
 
 # Muller plot raw data
@@ -152,34 +154,30 @@ delta_r = data.frame(confint(emtrends(nl_seq_mfit0, trt.vs.ctrl ~ variant2|1,
 rownames(delta_r) = delta_r[,"contrast"]
 delta_r = delta_r[,-1]
 delta_r
-#                                          estimate     asymp.LCL     asymp.UCL
-# B.1.351 (beta) - B.1.1.7 (alpha)    -0.059801130 -0.077520865 -0.04208140
-# P.1 (gamma) - B.1.1.7 (alpha)        0.001616252 -0.009697689  0.01293019
-# B.1.617.1 (kappa) - B.1.1.7 (alpha)  0.049640432 -0.022316723  0.12159759
-# B.1.617.2 (delta) - B.1.1.7 (alpha)  0.115266235  0.093943558  0.13658891
-# other - B.1.1.7 (alpha)              0.017509693  0.009218058  0.02580133
+# estimate    asymp.LCL   asymp.UCL
+# B.1.351 (beta) - B.1.1.7 (alpha)    -0.061864159 -0.081939474 -0.04178884
+# P.1 (gamma) - B.1.1.7 (alpha)        0.002699051 -0.008761275  0.01415938
+# B.1.617.2 (delta) - B.1.1.7 (alpha)  0.116320458  0.099636445  0.13300447
+# other - B.1.1.7 (alpha)              0.040707562  0.033323591  0.04809153
 
 # pairwise contrasts in growth rate today (no Tukey correction applied)
 emtrends(nl_seq_mfit0, revpairwise ~ variant2|1, 
          var="collection_date_num",  mode="latent",
          at=list(collection_date_num=today_num), 
          df=NA, adjust="none")$contrasts
-# contrast                              estimate      SE df z.ratio p.value
-# B.1.351 (beta) - B.1.1.7 (alpha)      -0.05980 0.00904 NA -6.615  <.0001 
-# P.1 (gamma) - B.1.1.7 (alpha)          0.00162 0.00577 NA  0.280  0.7795 
-# P.1 (gamma) - B.1.351 (beta)           0.06142 0.01072 NA  5.731  <.0001 
-# B.1.617.1 (kappa) - B.1.1.7 (alpha)    0.04964 0.03671 NA  1.352  0.1763 
-# B.1.617.1 (kappa) - B.1.351 (beta)     0.10944 0.03781 NA  2.895  0.0038 
-# B.1.617.1 (kappa) - P.1 (gamma)        0.04802 0.03715 NA  1.293  0.1961 
-# B.1.617.2 (delta) - B.1.1.7 (alpha)    0.11527 0.01088 NA 10.595  <.0001 
-# B.1.617.2 (delta) - B.1.351 (beta)     0.17507 0.01415 NA 12.372  <.0001 
-# B.1.617.2 (delta) - P.1 (gamma)        0.11365 0.01226 NA  9.267  <.0001 
-# B.1.617.2 (delta) - B.1.617.1 (kappa)  0.06563 0.03826 NA  1.715  0.0863 
-# other - B.1.1.7 (alpha)                0.01751 0.00423 NA  4.139  <.0001 
-# other - B.1.351 (beta)                 0.07731 0.00985 NA  7.846  <.0001 
-# other - P.1 (gamma)                    0.01589 0.00714 NA  2.225  0.0261 
-# other - B.1.617.1 (kappa)             -0.03213 0.03695 NA -0.870  0.3846 
-# other - B.1.617.2 (delta)             -0.09776 0.01165 NA -8.389  <.0001 
+# contrast                            estimate      SE df z.ratio p.value
+# B.1.351 (beta) - B.1.1.7 (alpha)     -0.0619 0.01024 NA -6.040  <.0001 
+# P.1 (gamma) - B.1.1.7 (alpha)         0.0027 0.00585 NA  0.462  0.6444 
+# P.1 (gamma) - B.1.351 (beta)          0.0646 0.01179 NA  5.477  <.0001 
+# B.1.617.2 (delta) - B.1.1.7 (alpha)   0.1163 0.00851 NA 13.665  <.0001 
+# B.1.617.2 (delta) - B.1.351 (beta)    0.1782 0.01332 NA 13.373  <.0001 
+# B.1.617.2 (delta) - P.1 (gamma)       0.1136 0.01026 NA 11.073  <.0001 
+# other - B.1.1.7 (alpha)               0.0407 0.00377 NA 10.805  <.0001 
+# other - B.1.351 (beta)                0.1026 0.01079 NA  9.508  <.0001 
+# other - P.1 (gamma)                   0.0380 0.00693 NA  5.484  <.0001 
+# other - B.1.617.2 (delta)            -0.0756 0.00926 NA -8.166  <.0001 
+# 
+# Degrees-of-freedom method: user-specified 
 
 
 # pairwise contrasts in growth rate today with confidence intervals:
@@ -187,35 +185,32 @@ confint(emtrends(nl_seq_mfit0, revpairwise ~ variant2|1,
          var="collection_date_num",  mode="latent",
          at=list(collection_date_num=today_num), 
          df=NA, adjust="none"))$contrasts
-# contrast                              estimate      SE df asymp.LCL asymp.UCL
-# B.1.351 (beta) - B.1.1.7 (alpha)      -0.05980 0.00904 NA  -0.07752   -0.0421
-# P.1 (gamma) - B.1.1.7 (alpha)          0.00162 0.00577 NA  -0.00970    0.0129
-# P.1 (gamma) - B.1.351 (beta)           0.06142 0.01072 NA   0.04041    0.0824
-# B.1.617.1 (kappa) - B.1.1.7 (alpha)    0.04964 0.03671 NA  -0.02232    0.1216
-# B.1.617.1 (kappa) - B.1.351 (beta)     0.10944 0.03781 NA   0.03534    0.1835
-# B.1.617.1 (kappa) - P.1 (gamma)        0.04802 0.03715 NA  -0.02479    0.1208
-# B.1.617.2 (delta) - B.1.1.7 (alpha)    0.11527 0.01088 NA   0.09394    0.1366
-# B.1.617.2 (delta) - B.1.351 (beta)     0.17507 0.01415 NA   0.14733    0.2028
-# B.1.617.2 (delta) - P.1 (gamma)        0.11365 0.01226 NA   0.08961    0.1377
-# B.1.617.2 (delta) - B.1.617.1 (kappa)  0.06563 0.03826 NA  -0.00935    0.1406
-# other - B.1.1.7 (alpha)                0.01751 0.00423 NA   0.00922    0.0258
-# other - B.1.351 (beta)                 0.07731 0.00985 NA   0.05800    0.0966
-# other - P.1 (gamma)                    0.01589 0.00714 NA   0.00189    0.0299
-# other - B.1.617.1 (kappa)             -0.03213 0.03695 NA  -0.10456    0.0403
-# other - B.1.617.2 (delta)             -0.09776 0.01165 NA  -0.12060   -0.0749
+# contrast                            estimate      SE df asymp.LCL asymp.UCL
+# B.1.351 (beta) - B.1.1.7 (alpha)     -0.0619 0.01024 NA  -0.08194   -0.0418
+# P.1 (gamma) - B.1.1.7 (alpha)         0.0027 0.00585 NA  -0.00876    0.0142
+# P.1 (gamma) - B.1.351 (beta)          0.0646 0.01179 NA   0.04146    0.0877
+# B.1.617.2 (delta) - B.1.1.7 (alpha)   0.1163 0.00851 NA   0.09964    0.1330
+# B.1.617.2 (delta) - B.1.351 (beta)    0.1782 0.01332 NA   0.15207    0.2043
+# B.1.617.2 (delta) - P.1 (gamma)       0.1136 0.01026 NA   0.09351    0.1337
+# other - B.1.1.7 (alpha)               0.0407 0.00377 NA   0.03332    0.0481
+# other - B.1.351 (beta)                0.1026 0.01079 NA   0.08143    0.1237
+# other - P.1 (gamma)                   0.0380 0.00693 NA   0.02442    0.0516
+# other - B.1.617.2 (delta)            -0.0756 0.00926 NA  -0.09376   -0.0575
+# 
+# Degrees-of-freedom method: user-specified 
+# Confidence level used: 0.95 
 
 
 
 # implied increase in infectiousness (due to combination of increased transmissibility and/or immune escape)
 # assuming generation time of 4.7 days (Nishiura et al. 2020)
-# delta has a 54% [45-64%] increased infectiousness compared to alpha
+# delta has a 73% [60-87%] increased infectiousness compared to alpha
 exp(delta_r*4.7) 
 # estimate asymp.LCL asymp.UCL
-# B.1.351 (beta) - B.1.1.7 (alpha)    0.754979 0.6946494 0.8205483
-# P.1 (gamma) - B.1.1.7 (alpha)       1.007625 0.9554440 1.0626565
-# B.1.617.1 (kappa) - B.1.1.7 (alpha) 1.262773 0.9004248 1.7709368
-# B.1.617.2 (delta) - B.1.1.7 (alpha) 1.719015 1.5550920 1.9002166
-# other - B.1.1.7 (alpha)             1.085777 1.0442771 1.1289254
+# B.1.351 (beta) - B.1.1.7 (alpha)    0.7476939 0.6803720 0.8216773
+# P.1 (gamma) - B.1.1.7 (alpha)       1.0127663 0.9596583 1.0688134
+# B.1.617.2 (delta) - B.1.1.7 (alpha) 1.7275533 1.5972626 1.8684721
+# other - B.1.1.7 (alpha)             1.2108536 1.1695521 1.2536135
 
 
 # # PS: mblogit fit would also be possible & would take into account overdispersion
@@ -373,26 +368,24 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\netherlands_baseline_surveillance_mul
 # estimated share of different variants of concern among lab diagnoses today
 nl_seq_mfit0_preds[as.character(nl_seq_mfit0_preds$collection_date)==as.character(today),]
 # variant2 collection_date_num         prob           SE df     asymp.LCL    asymp.UCL collection_date           variant
-# 1267   B.1.1.7 (alpha)             18810.5 4.593189e-01 8.144326e-02 NA  2.996930e-01 0.6189447145      2021-07-02   B.1.1.7 (alpha)
-# 1268    B.1.351 (beta)             18810.5 9.227281e-05 5.630057e-05 NA -1.807428e-05 0.0002026199      2021-07-02    B.1.351 (beta)
-# 1269       P.1 (gamma)             18810.5 9.484646e-03 3.081956e-03 NA  3.444124e-03 0.0155251687      2021-07-02       P.1 (gamma)
-# 1270 B.1.617.1 (kappa)             18810.5 1.854433e-03 2.788679e-03 NA -3.611277e-03 0.0073201429      2021-07-02 B.1.617.1 (kappa)
-# 1271 B.1.617.2 (delta)             18810.5 5.216260e-01 8.475182e-02 NA  3.555155e-01 0.6877365461      2021-07-02 B.1.617.2 (delta)
-# 1272             other             18810.5 7.623748e-03 2.446830e-03 NA  2.828048e-03 0.0124194474      2021-07-02             other
+# 1066   B.1.1.7 (alpha)             18812.5 3.815839e-01 5.341259e-02 NA  2.768971e-01 0.4862706569      2021-07-04   B.1.1.7 (alpha)
+# 1067    B.1.351 (beta)             18812.5 6.399995e-05 4.185407e-05 NA -1.803251e-05 0.0001460324      2021-07-04    B.1.351 (beta)
+# 1068       P.1 (gamma)             18812.5 8.337048e-03 2.465250e-03 NA  3.505247e-03 0.0131688486      2021-07-04       P.1 (gamma)
+# 1069 B.1.617.2 (delta)             18812.5 5.890499e-01 5.740063e-02 NA  4.765468e-01 0.7015530862      2021-07-04 B.1.617.2 (delta)
+# 1070             other             18812.5 2.096514e-02 5.213824e-03 NA  1.074623e-02 0.0311840441      2021-07-04             other
   
 # estimated share of different variants of concern among new infections today (assuming 1 week between infection & diagnosis)
 nl_seq_mfit0_preds[as.character(nl_seq_mfit0_preds$collection_date)==as.character(today+7),]
 # variant2 collection_date_num         prob           SE df     asymp.LCL    asymp.UCL collection_date           variant
-# 1309   B.1.1.7 (alpha)             18817.5 2.785252e-01 8.167626e-02 NA  1.184427e-01 4.386077e-01      2021-07-09   B.1.1.7 (alpha)
-# 1310    B.1.351 (beta)             18817.5 3.681501e-05 2.612559e-05 NA -1.439021e-05 8.802023e-05      2021-07-09    B.1.351 (beta)
-# 1311       P.1 (gamma)             18817.5 5.816810e-03 2.484913e-03 NA  9.464712e-04 1.068715e-02      2021-07-09       P.1 (gamma)
-# 1312 B.1.617.1 (kappa)             18817.5 1.591737e-03 2.806837e-03 NA -3.909562e-03 7.093036e-03      2021-07-09 B.1.617.1 (kappa)
-# 1313 B.1.617.2 (delta)             18817.5 7.088037e-01 8.537132e-02 NA  5.414789e-01 8.761284e-01      2021-07-09 B.1.617.2 (delta)
-# 1314             other             18817.5 5.225758e-03 2.176300e-03 NA  9.602883e-04 9.491228e-03      2021-07-09             other
+# 1101   B.1.1.7 (alpha)             18819.5 2.183275e-01 4.897837e-02 NA  1.223316e-01 0.3143233331      2021-07-11   B.1.1.7 (alpha)
+# 1102    B.1.351 (beta)             18819.5 2.374801e-05 1.767195e-05 NA -1.088838e-05 0.0000583844      2021-07-11    B.1.351 (beta)
+# 1103       P.1 (gamma)             18819.5 4.861115e-03 1.817578e-03 NA  1.298729e-03 0.0084235024      2021-07-11       P.1 (gamma)
+# 1104 B.1.617.2 (delta)             18819.5 7.608373e-01 5.361561e-02 NA  6.557527e-01 0.8659219881      2021-07-11 B.1.617.2 (delta)
+# 1105             other             18819.5 1.595033e-02 5.118081e-03 NA  5.919072e-03 0.0259815804      2021-07-11             other
 
   
 
-# estimated date that B.1.617.2 would make out >50% of all lab diagnoses: "2021-07-02" [2021-06-27-2021-07-08] 95% CLs (7 days earlier for infections)
+# estimated date that B.1.617.2 would make out >50% of all lab diagnoses: "2021-07-01" [2021-06-28-2021-07-05] 95% CLs (7 days earlier for infections)
 nl_seq_mfit0_preds[nl_seq_mfit0_preds$variant=="B.1.617.2 (delta)","collection_date"][which(nl_seq_mfit0_preds[nl_seq_mfit0_preds$variant=="B.1.617.2 (delta)","prob"] >= 0.5)[1]]
 nl_seq_mfit0_preds[nl_seq_mfit0_preds$variant=="B.1.617.2 (delta)","collection_date"][which(nl_seq_mfit0_preds[nl_seq_mfit0_preds$variant=="B.1.617.2 (delta)","asymp.LCL"] >= 0.5)[1]]
 nl_seq_mfit0_preds[nl_seq_mfit0_preds$variant=="B.1.617.2 (delta)","collection_date"][which(nl_seq_mfit0_preds[nl_seq_mfit0_preds$variant=="B.1.617.2 (delta)","asymp.UCL"] >= 0.5)[1]]
@@ -402,7 +395,7 @@ nl_seq_mfit0_preds[nl_seq_mfit0_preds$variant=="B.1.617.2 (delta)","collection_d
 
 # load case data
 
-library(covidregionaldata )
+library(covidregionaldata)
 library(dplyr)
 library(ggplot2)
 library(scales)  
