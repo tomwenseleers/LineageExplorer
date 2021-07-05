@@ -10,13 +10,13 @@ library(emmeans)
 library(readr)
 
 today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-05-04")
+today = as.Date("2021-06-23")
 today_num = as.numeric(today)
-today # "2021-05-04"
+today # "2021-06-23"
 plotdir = "VOCs_GISAID"
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 
-# import GISAID metadata (file version metadata_tsv_2021_05_04.tar.xz)
+# import GISAID metadata (file version metadata_tsv_2021_06_23.tar.xz)
 GISAID = read_tsv(".//data//GISAID//metadata.tsv", col_types = cols(.default = "c"))
 GISAID = as.data.frame(GISAID)
 GISAID = GISAID[grepl("2021-", GISAID[,"Collection date"]),]
@@ -28,21 +28,14 @@ nrow(GISAID) # 818009
 GISAID$Week = lubridate::week(GISAID[,"Collection date"])
 GISAID$DATE_NUM = as.numeric(GISAID[,"Collection date"])
 colnames(GISAID)
-
-# parse location info
-loc = do.call(cbind, data.table::tstrsplit(unlist(GISAID[,"Location"]), "/", TRUE)) # parse location info
-loc = trimws(loc, whitespace = " ")
-unique(loc[,1]) # continent
-unique(loc[,2]) # countries
-unique(loc[,3]) # province
-
-GISAID$Continent = loc[,1]
-GISAID$Country = loc[,2]
+GISAID$Continent = sapply(unlist(GISAID[,"Location"]), function(loc) trimws(strsplit(loc,"/", fixed = TRUE)[[1]][1]))
+unique(GISAID$Continent)
+# "Oceania"       "Europe"        "North America" "Asia"          "South America" "Africa"  
+GISAID$Country = sapply(unlist(GISAID[,"Location"]), function(loc) trimws(strsplit(loc,"/", fixed = TRUE)[[1]][2]))
 unique(GISAID$Country)
-table(GISAID[GISAID$Lineage=="B.1.617.2",]$Country)
-GISAID$Region = loc[,3]
+GISAID$Region = sapply(unlist(GISAID[,"Location"]), function(loc) trimws(strsplit(loc,"/", fixed = TRUE)[[1]][3]))
 unique(GISAID$Region)
-table(GISAID$Region)
+
 
 sel_target_VOC = "B.1.617"
 GISAID[grepl(sel_target_VOC, GISAID[,"Pango lineage"], fixed=TRUE),"Pango lineage"] = sel_target_VOC

@@ -45,8 +45,14 @@ GISAID = GISAID[date_isvalid,]
 GISAID$date = as.Date(GISAID[,"Collection date"]) 
 GISAID = GISAID[!is.na(GISAID$date),]
 
-GISAID$Continent = as.vector(sapply(unlist(GISAID[,"Location"]), function(loc) trimws(strsplit(loc,"/", fixed = TRUE)[[1]][1])))
-GISAID$Country = sapply(unlist(GISAID[,"Location"]), function(loc) trimws(strsplit(loc,"/", fixed = TRUE)[[1]][2]))
+loc = do.call(cbind, data.table::tstrsplit(unlist(GISAID[,"Location"]), "/", TRUE)) # parse location info
+loc = trimws(loc, whitespace = " ")
+unique(loc[,1]) # continent
+unique(loc[,2]) # countries
+unique(loc[,3]) # province
+
+GISAID$Continent = loc[,1]
+GISAID$Country = loc[,2]
 unique(GISAID$Country)
 # [1] "South Africa"                     "Botswana"                         "Egypt"                            "Mayotte"                         
 # [5] "Zimbabwe"                         "Nigeria"                          "Malawi"                           "Togo"                            
@@ -66,7 +72,7 @@ table(GISAID[GISAID$Lineage=="B.1.617.2",]$Country)
 # 37                               14                                2                              448 
 # Uganda                           Zambia 
 # 38                               82 
-GISAID$Region = sapply(unlist(GISAID[,"Location"]), function(loc) trimws(strsplit(loc,"/", fixed = TRUE)[[1]][3]))
+GISAID$Region = loc[,3]
 unique(GISAID$Region)
 table(GISAID$Region)
 

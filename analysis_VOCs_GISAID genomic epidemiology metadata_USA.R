@@ -158,6 +158,9 @@ data.frame(Country=tblB1617$Country, Lineage="B.1.617", Perc=100*tblB1617$Count 
 # ANALYSIS OF VOCs ACROSS DIFFERENT STATES OF THE USA ####
 
 GISAID_sel = GISAID[GISAID$country %in% sel_countries,]
+GISAID_sel = GISAID_sel[GISAID_sel$date>=as.Date("2021-01-01"),]
+range(GISAID_sel$date) # "2021-01-01" "2021-06-18"
+
 nrow(GISAID_sel) # 548865
 unique(GISAID_sel$country)
 
@@ -190,7 +193,7 @@ GISAID_sel$LINEAGE2[!(GISAID_sel$LINEAGE2 %in% main_lineages)] = "other" # minor
 remove1 = names(table(GISAID_sel$LINEAGE1))[table(GISAID_sel$LINEAGE1)/sum(table(GISAID_sel$LINEAGE1)) < 0.01]
 remove1 = remove1[!(remove1 %in% c("B.1.351","B.1.1.7","P.1","B.1.617+","B.1.1.519"))]
 remove2 = names(table(GISAID_sel$LINEAGE2))[table(GISAID_sel$LINEAGE2)/sum(table(GISAID_sel$LINEAGE2)) < 0.01]
-remove2 = remove2[!(remove2 %in% c("B.1.351","B.1.1.7","P.1","B.1.617.2","B.1.617.1","B.1.1.519"))]
+remove2 = remove2[!(remove2 %in% c("B.1.351","B.1.1.7","P.1","B.1.617.2","B.1.1.519"))]
 GISAID_sel$LINEAGE1[(GISAID_sel$LINEAGE1 %in% remove1)] = "other" # minority VOCs
 GISAID_sel$LINEAGE2[(GISAID_sel$LINEAGE2 %in% remove2)] = "other" # minority VOCs
 table(GISAID_sel$LINEAGE1)
@@ -200,7 +203,7 @@ GISAID_sel$LINEAGE1 = factor(GISAID_sel$LINEAGE1)
 GISAID_sel$LINEAGE1 = relevel(GISAID_sel$LINEAGE1, ref="B.1.1.7") # we code UK strain as the reference level
 levels(GISAID_sel$LINEAGE1)
 # "B.1.1.7"   "B.1"       "B.1.1.519" "B.1.2"     "B.1.351"   "B.1.429"   "B.1.526"   "B.1.617+"  "other"     "P.1"  
-levels_LINEAGE1 = c("B.1.1.7","B.1","B.1.2","B.1.1.519",
+levels_LINEAGE1 = c("B.1.1.7","B.1.2","B.1.1.519",
                     "B.1.351","B.1.427/429","B.1.526",
                     "P.1","B.1.617+","other")
 GISAID_sel$LINEAGE1 = factor(GISAID_sel$LINEAGE1, levels=levels_LINEAGE1)
@@ -209,9 +212,9 @@ GISAID_sel$LINEAGE2 = factor(GISAID_sel$LINEAGE2)
 GISAID_sel$LINEAGE2 = relevel(GISAID_sel$LINEAGE2, ref="B.1.1.7") # we code UK strain as the reference level
 levels(GISAID_sel$LINEAGE2)
 # "B.1.1.7"   "B.1"       "B.1.1.519" "B.1.2"     "B.1.351"   "B.1.429"   "B.1.526"   "B.1.617.1" "B.1.617.2" "other"     "P.1"  
-levels_LINEAGE2 = c("B.1.1.7","B.1","B.1.2","B.1.1.519",
+levels_LINEAGE2 = c("B.1.1.7","B.1.2","B.1.1.519",
                     "B.1.351","B.1.427/429","B.1.526",
-                    "P.1","B.1.617.1","B.1.617.2","other")
+                    "P.1","B.1.617.2","other")
 GISAID_sel$LINEAGE2 = factor(GISAID_sel$LINEAGE2, levels=levels_LINEAGE2)
 
 # GISAID_sel = GISAID_sel[GISAID_sel$division!="India",]
@@ -222,9 +225,9 @@ GISAID_sel = GISAID_sel[!grepl("Princess",GISAID_sel$state),] # remove cruise bo
 GISAID_sel = GISAID_sel[!grepl("Islands|Guam",GISAID_sel$state),] # remove Northern Mariana Islands & Virgin Islands & Guam
 GISAID_sel = GISAID_sel[!grepl("USA",GISAID_sel$state),] # remove data with unspecified state
 GISAID_sel$state[grepl("Washington",GISAID_sel$state)] = "Washington" # Washtington DC -> Washington
-sel_states = c("Arkansas", "Arizona", "California", "Colorado", "Connecticut", "Florida", "Illinois", "Indiana", "Kansas", 
-               "Maryland", "Massachusetts", "Minnesota", "Missouri", "Nebraska", "Nevada", "New Jersey", "New York", "Oklahoma",
-               "Oregon", "Texas", "Utah", "Virginia", "Washington", "Wisconsin", "Wyoming") # 25 states with most data for B.1.617.2 or increasing cases
+sel_states = c("Arkansas", "Arizona", "California", "Colorado", "Connecticut", "Florida", "Indiana", "Kansas", 
+               "Massachusetts", "Missouri", "Nebraska", "Nevada", "New Jersey", "New York", "Oklahoma",
+               "Texas", "Utah", "Virginia", "Washington", "Wyoming") # 20 states with most data for B.1.617.2 or increasing cases
 GISAID_sel = GISAID_sel[GISAID_sel$state %in% sel_states,]
 
 # B.1.617+ cases before Apr 14 are likely mostly imported cases, so we remove those
@@ -320,7 +323,7 @@ muller_sel_raw1 = ggplot(data=data_agbyweek1, aes(x=collection_date, y=count, gr
   scale_fill_manual("", values=lineage_cols1) +
   scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01")),
                      labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01"))),1,1),
-                     limits=as.Date(c("2020-06-01",NA)), expand=c(0,0)) +
+                     limits=as.Date(c("2021-01-01",NA)), expand=c(0,0)) +
   # guides(color = guide_legend(reverse=F, nrow=2, byrow=T), fill = guide_legend(reverse=F, nrow=2, byrow=T)) +
   theme_hc() +
   # labs(title = "MAIN SARS-CoV2 VARIANT LINEAGES IN THE UK") +
@@ -339,7 +342,7 @@ muller_sel_raw2 = ggplot(data=data_agbyweek2, aes(x=collection_date, y=count, gr
   scale_fill_manual("", values=lineage_cols2) +
   scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01")),
                      labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01"))),1,1),
-                     limits=as.Date(c("2020-06-01",NA)), expand=c(0,0)) +
+                     limits=as.Date(c("2021-01-01",NA)), expand=c(0,0)) +
   # guides(color = guide_legend(reverse=F, nrow=2, byrow=T), fill = guide_legend(reverse=F, nrow=2, byrow=T)) +
   theme_hc() +
   # labs(title = "MAIN SARS-CoV2 VARIANT LINEAGES IN THE UK") +
@@ -362,7 +365,7 @@ muller_usabystate_raw2 = ggplot(data=data_agbyweekregion2, aes(x=collection_date
   scale_fill_manual("", values=lineage_cols2) +
   scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01")),
                      labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01"))),1,1),
-                     limits=as.Date(c("2020-11-01",NA)), expand=c(0,0)) +
+                     limits=as.Date(c("2021-01-01",NA)), expand=c(0,0)) +
   # guides(color = guide_legend(reverse=F, nrow=2, byrow=T), fill = guide_legend(reverse=F, nrow=2, byrow=T)) +
   theme_hc() +
   # labs(title = "MAIN SARS-CoV2 VARIANT LINEAGES IN THE UK") +
@@ -394,10 +397,10 @@ fit4_usa_multi = nnet::multinom(LINEAGE2 ~ ns(DATE_NUM, df=2)*STATE, weights=cou
 fit5_usa_multi = nnet::multinom(LINEAGE2 ~ ns(DATE_NUM, df=3)+STATE, weights=count, data=data_agbyweekregion2, maxit=1000)
 # fit6_usa_multi = nnet::multinom(LINEAGE2 ~ ns(DATE_NUM, df=3)*STATE, weights=count, data=data_agbyweekregion2, maxit=1000)
 BIC(fit1_usa_multi, fit2_usa_multi, fit3_usa_multi, fit4_usa_multi, fit5_usa_multi) 
-# fit4_usa_multi fits best (lowest BIC), but I will use the somewhat simpler model fit2_usa_multi
+# fit4_usa_multi fits best (lowest BIC)
 
 # growth rate advantage compared to UK type B.1.1.7 (difference in growth rate per day) 
-emtrusa = emtrends(fit2_usa_multi, trt.vs.ctrl ~ LINEAGE2,  
+emtrusa = emtrends(fit4_usa_multi, trt.vs.ctrl ~ LINEAGE2,  
                    var="DATE_NUM",  mode="latent",
                    at=list(DATE_NUM=max(GISAID_sel$DATE_NUM)))
 delta_r_usa = data.frame(confint(emtrusa, 
@@ -418,7 +421,7 @@ delta_r_usa
 
 
 # fitted prop of different LINEAGES in the USA today
-multinom_preds_today_avg = data.frame(emmeans(fit2_usa_multi, ~ LINEAGE2|1,
+multinom_preds_today_avg = data.frame(emmeans(fit4_usa_multi, ~ LINEAGE2|1,
                                               at=list(DATE_NUM=today_num), 
                                               mode="prob", df=NA))
 multinom_preds_today_avg
@@ -441,7 +444,7 @@ colSums(multinom_preds_today_avg[-1, c("prob","asymp.LCL","asymp.UCL")])
 # 0.5333025 0.4906444 0.5759607
 
 # fitted prop of delta by state
-lineages_bystate = data.frame(emmeans(fit2_usa_multi,
+lineages_bystate = data.frame(emmeans(fit4_usa_multi,
                    ~ LINEAGE2,
                    by=c("DATE_NUM","STATE"),
                    at=list(DATE_NUM=today_num),  
@@ -486,7 +489,7 @@ date.to = as.numeric(as.Date("2021-07-31")) # max(GISAID_sel$DATE_NUM)+extrapola
 
 # multinomial model predictions (fastest, but no confidence intervals)
 predgrid = expand.grid(list(DATE_NUM=seq(date.from, date.to), STATE=levels_states))
-fit_usa_multi_preds_bystate = data.frame(predgrid, as.data.frame(predict(fit4_usa_multi, newdata=predgrid, type="prob")), check.names=F)
+fit_usa_multi_preds_bystate = data.frame(predgrid, as.data.frame(predict(fit5_usa_multi, newdata=predgrid, type="prob")), check.names=F)
 library(tidyr)
 fit_usa_multi_preds_bystate = gather(fit_usa_multi_preds_bystate, LINEAGE2, prob, all_of(levels_LINEAGE2), factor_key=TRUE)
 fit_usa_multi_preds_bystate$collection_date = as.Date(fit_usa_multi_preds_bystate$DATE_NUM, origin="1970-01-01")
@@ -557,12 +560,12 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\usa_muller plots multipanel_multinom 
 # PLOT MODEL FIT WITH DATA & CONFIDENCE INTERVALS
 
 # multinomial model predictions by state with confidence intervals (but slower)
-fit_usa_multi_preds_bystate_withCI2 = data.frame(emmeans(fit2_usa_multi,
+fit_usa_multi_preds_bystate_withCI5 = data.frame(emmeans(fit5_usa_multi,
                                                         ~ LINEAGE2,
                                                         by=c("DATE_NUM","STATE"),
                                                         at=list(DATE_NUM=seq(date.from, date.to, by=7)),  # by=7 to speed up things a bit
                                                         mode="prob", df=NA))
-fit_usa_multi_preds_bystate_withCI = fit_usa_multi_preds_bystate_withCI2
+fit_usa_multi_preds_bystate_withCI = fit_usa_multi_preds_bystate_withCI5
 fit_usa_multi_preds_bystate_withCI$collection_date = as.Date(fit_usa_multi_preds_bystate_withCI$DATE_NUM, origin="1970-01-01")
 fit_usa_multi_preds_bystate_withCI$LINEAGE2 = factor(fit_usa_multi_preds_bystate_withCI$LINEAGE2, levels=levels_LINEAGE2)
 fit_usa_multi_preds_bystate_withCI$STATE = factor(fit_usa_multi_preds_bystate_withCI$STATE, levels=levels_states2)
