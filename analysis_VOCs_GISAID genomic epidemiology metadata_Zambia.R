@@ -1,4 +1,4 @@
-# ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT VOCs IN IRELAND (GISAID GENOMIC EPIDEMIOLOGY METADATA)
+# ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT VOCs IN ZAMBIA (GISAID GENOMIC EPIDEMIOLOGY METADATA)
 # T. Wenseleers
 # last update 4 July 2021
 
@@ -15,7 +15,7 @@ library(scales)
 today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
 today = as.Date("2021-07-04")
 today_num = as.numeric(today)
-plotdir = "Ireland_GISAID"
+plotdir = "Zambia_GISAID"
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 
 # import GISAID genomic epidemiology metadata (file version metadata_2021-07-02_11-46.tsv.gz)
@@ -90,7 +90,7 @@ tblB1617
 # 170562          India B.1.617+  7435
 # 170563      Indonesia B.1.617+    75
 # 170564           Iran B.1.617+    11
-# 170566        Ireland B.1.617+   299
+# 170566        Zambia B.1.617+   299
 # 170567         Israel B.1.617+    63
 # 170568          Italy B.1.617+   184
 # 170570          Japan B.1.617+   170
@@ -103,12 +103,12 @@ tblB1617
 # 170598    New Zealand B.1.617+    17
 # 170602         Norway B.1.617+    69
 # 170611         Poland B.1.617+    71
-# 170612       Ireland B.1.617+   126
+# 170612       Zambia B.1.617+   126
 # 170613          Qatar B.1.617+    23
 # 170615        Romania B.1.617+    19
-# 170616         Ireland B.1.617+   278
+# 170616         Zambia B.1.617+   278
 # 170627      Singapore B.1.617+   762
-# 170632   Ireland B.1.617+    21
+# 170632   Zambia B.1.617+    21
 # 170633    South Korea B.1.617+    32
 # 170635          Spain B.1.617+   264
 # 170638         Sweden B.1.617+    42
@@ -120,22 +120,22 @@ tblB1617
 
 sel_countries_target = unique(as.character(table_country_lineage[grepl(sel_target_VOC, table_country_lineage$Lineage)&table_country_lineage$Count>100,]$Country))
 sel_countries_target
-# [1] "Australia"      "Belgium"        "Canada"         "Denmark"        "France"         "Germany"        "India"          "Ireland"       
-# [9] "Italy"          "Japan"          "Ireland"       "Ireland"         "Singapore"      "Spain"          "Switzerland"    "United Kingdom"
+# [1] "Australia"      "Belgium"        "Canada"         "Denmark"        "France"         "Germany"        "India"          "Zambia"       
+# [9] "Italy"          "Japan"          "Zambia"       "Zambia"         "Singapore"      "Spain"          "Switzerland"    "United Kingdom"
 # [17] "USA"    
 
 sel_ref_lineage = "B.1.1.7"
 
 sel_countries_ref = as.character(table_country_lineage[table_country_lineage$Lineage==sel_ref_lineage&table_country_lineage$Count>10&table_country_lineage$Country %in% sel_countries_target,]$Country)
 sel_countries_ref
-# [1] "Australia"      "Belgium"        "Canada"         "Denmark"        "France"         "Germany"        "India"          "Ireland"       
-# [9] "Italy"          "Japan"          "Ireland"       "Ireland"         "Singapore"      "Spain"          "Switzerland"    "United Kingdom"
+# [1] "Australia"      "Belgium"        "Canada"         "Denmark"        "France"         "Germany"        "India"          "Zambia"       
+# [9] "Italy"          "Japan"          "Zambia"       "Zambia"         "Singapore"      "Spain"          "Switzerland"    "United Kingdom"
 # [17] "USA"
 
 sel_countries = intersect(sel_countries_target, sel_countries_ref)
 sel_countries
-# [1] "Australia"      "Belgium"        "Canada"         "Denmark"        "France"         "Germany"        "India"          "Ireland"       
-# [9] "Italy"          "Japan"          "Ireland"       "Ireland"         "Singapore"      "Spain"          "Switzerland"    "United Kingdom"
+# [1] "Australia"      "Belgium"        "Canada"         "Denmark"        "France"         "Germany"        "India"          "Zambia"       
+# [9] "Italy"          "Japan"          "Zambia"       "Zambia"         "Singapore"      "Spain"          "Switzerland"    "United Kingdom"
 # [17] "USA" 
 
 # sel_countries = sel_countries[!(sel_countries %in% c("Japan","USA"))] # Japan is almost only import & for USA we do separate analysis by state
@@ -144,9 +144,9 @@ sel_countries
 
 
 
-# ANALYSIS OF VOCs IN IRELAND ####
+# ANALYSIS OF VOCs IN ZAMBIA ####
 
-sel_countries = "Ireland"
+sel_countries = "Zambia"
 
 tblB117 = table_country_lineage[table_country_lineage$Lineage==sel_ref_lineage&table_country_lineage$Count>10&table_country_lineage$Country %in% sel_countries,]
 tblB117
@@ -156,7 +156,7 @@ GISAID_sel = GISAID[GISAID$country %in% sel_countries,]
 # use data from Jan  1 onwards
 GISAID_sel = GISAID_sel[GISAID_sel$date>=as.Date("2021-01-01"),]
 nrow(GISAID_sel) # 4584
-range(GISAID_sel$date) # "2021-01-01" "2021-06-23"
+range(GISAID_sel$date) # "2021-01-04" "2021-02-03"
 
 rowSums(table(GISAID_sel$LINEAGE1,GISAID_sel$country))
             
@@ -284,7 +284,7 @@ lineage_cols2[which(levels(GISAID_sel$LINEAGE2)=="B.1.617.1")] = muted("magenta"
 lineage_cols2[which(levels(GISAID_sel$LINEAGE2)=="B.1.617.2")] = "magenta"
 lineage_cols2[which(levels(GISAID_sel$LINEAGE2)=="other")] = "grey75"
 
-muller_ireland_raw2 = ggplot(data=data_agbyweek2, aes(x=collection_date, y=count, group=LINEAGE2)) +
+muller_zambia_raw2 = ggplot(data=data_agbyweek2, aes(x=collection_date, y=count, group=LINEAGE2)) +
   # facet_wrap(~ STATE, ncol=1) +
   # geom_col(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE1), width=1, position="fill") +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE2, group=LINEAGE2), position="fill") +
@@ -299,13 +299,13 @@ muller_ireland_raw2 = ggplot(data=data_agbyweek2, aes(x=collection_date, y=count
   ylab("Share") + 
   theme(legend.position="right",  
         axis.title.x=element_blank()) +
-  labs(title = "SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN IRELAND\n(GISAID data)") 
+  labs(title = "SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN ZAMBIA\n(GISAID data)") 
 # +
 # coord_cartesian(xlim=c(1,max(GISAID_sel$Week)))
-muller_ireland_raw2
+muller_zambia_raw2
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\ireland_muller plots_raw data.png"), width=8, height=6)
-# ggsave(file=paste0(".\\plots\\",plotdir,"\\ireland_muller plots_raw data.pdf"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",plotdir,"\\zambia_muller plots_raw data.png"), width=8, height=6)
+# ggsave(file=paste0(".\\plots\\",plotdir,"\\zambia_muller plots_raw data.pdf"), width=8, height=6)
 
 
 # multinomial fits
@@ -317,29 +317,29 @@ data_agbyweek2 = data_agbyweek2[!data_agbyweek2$collection_date==as.Date("2021-0
 library(nnet)
 library(splines)
 set.seed(1)
-fit1_ireland_multi = nnet::multinom(LINEAGE2 ~ scale(DATE_NUM), weights=count, data=data_agbyweek2, maxit=1000)
-fit2_ireland_multi = nnet::multinom(LINEAGE2 ~ ns(DATE_NUM, df=2), weights=count, data=data_agbyweek2, maxit=1000)
-fit3_ireland_multi = nnet::multinom(LINEAGE2 ~ ns(DATE_NUM, df=3), weights=count, data=data_agbyweek2, maxit=1000)
-fit4_ireland_multi = nnet::multinom(LINEAGE2 ~ ns(DATE_NUM, df=4), weights=count, data=data_agbyweek2, maxit=1000)
-fit5_ireland_multi = nnet::multinom(LINEAGE2 ~ ns(DATE_NUM, df=5), weights=count, data=data_agbyweek2, maxit=1000)
-fit6_ireland_multi = nnet::multinom(LINEAGE2 ~ ns(DATE_NUM, df=6), weights=count, data=data_agbyweek2, maxit=1000)
-BIC(fit1_ireland_multi, fit2_ireland_multi, fit3_ireland_multi, fit4_ireland_multi, fit5_ireland_multi, fit6_ireland_multi) 
+fit1_zambia_multi = nnet::multinom(LINEAGE2 ~ scale(DATE_NUM), weights=count, data=data_agbyweek2, maxit=1000)
+fit2_zambia_multi = nnet::multinom(LINEAGE2 ~ ns(DATE_NUM, df=2), weights=count, data=data_agbyweek2, maxit=1000)
+fit3_zambia_multi = nnet::multinom(LINEAGE2 ~ ns(DATE_NUM, df=3), weights=count, data=data_agbyweek2, maxit=1000)
+fit4_zambia_multi = nnet::multinom(LINEAGE2 ~ ns(DATE_NUM, df=4), weights=count, data=data_agbyweek2, maxit=1000)
+fit5_zambia_multi = nnet::multinom(LINEAGE2 ~ ns(DATE_NUM, df=5), weights=count, data=data_agbyweek2, maxit=1000)
+fit6_zambia_multi = nnet::multinom(LINEAGE2 ~ ns(DATE_NUM, df=6), weights=count, data=data_agbyweek2, maxit=1000)
+BIC(fit1_zambia_multi, fit2_zambia_multi, fit3_zambia_multi, fit4_zambia_multi, fit5_zambia_multi, fit6_zambia_multi) 
 # df      BIC
-# fit1_ireland_multi 12 12439.77
-# fit2_ireland_multi 18 12060.37
-# fit3_ireland_multi 24 12087.52
-# fit4_ireland_multi 30 12024.34
-# fit5_ireland_multi 36 12023.04
-# fit6_ireland_multi 42 12076.46
+# fit1_zambia_multi 12 12439.77
+# fit2_zambia_multi 18 12060.37
+# fit3_zambia_multi 24 12087.52
+# fit4_zambia_multi 30 12024.34
+# fit5_zambia_multi 36 12023.04
+# fit6_zambia_multi 42 12076.46
 
 # growth rate advantage compared to UK type B.1.1.7 (difference in growth rate per day) 
-emtrireland = emtrends(fit4_ireland_multi, trt.vs.ctrl ~ LINEAGE2,  
+emtrzambia = emtrends(fit4_zambia_multi, trt.vs.ctrl ~ LINEAGE2,  
                    var="DATE_NUM",  mode="latent",
                    at=list(DATE_NUM=max(GISAID_sel$DATE_NUM)))
-delta_r_ireland = data.frame(confint(emtrireland, 
+delta_r_zambia = data.frame(confint(emtrzambia, 
                                  adjust="none", df=NA)$contrasts, 
-                         p.value=as.data.frame(emtrireland$contrasts)$p.value)
-delta_r_ireland
+                         p.value=as.data.frame(emtrzambia$contrasts)$p.value)
+delta_r_zambia
 # contrast     estimate         SE df   asymp.LCL   asymp.UCL      p.value
 # 1 B.1.1.318 - B.1.1.7 -0.002337134 0.01608583 NA -0.03386477  0.02919051 9.990670e-01
 # 2   B.1.351 - B.1.1.7 -0.253926759 0.43712263 NA -1.11067137  0.60281786 9.464236e-01
@@ -349,9 +349,9 @@ delta_r_ireland
 # 6     other - B.1.1.7 -0.086467105 0.01550644 NA -0.11685917 -0.05607504 2.639449e-05
 
 
-# fitted prop of different LINEAGES in the ireland today
+# fitted prop of different LINEAGES in the zambia today
 # 99% [97%-100%] now estimated to be B.1.617.2 across all regions
-multinom_preds_today_avg = data.frame(emmeans(fit4_ireland_multi, ~ LINEAGE2|1,
+multinom_preds_today_avg = data.frame(emmeans(fit4_zambia_multi, ~ LINEAGE2|1,
                                               at=list(DATE_NUM=today_num), 
                                               mode="prob", df=NA))
 multinom_preds_today_avg
@@ -378,14 +378,14 @@ date.to = as.numeric(as.Date("2021-07-31")) # max(GISAID_sel$DATE_NUM)+extrapola
 
 # multinomial model predictions (fastest, but no confidence intervals)
 predgrid = expand.grid(list(DATE_NUM=seq(date.from, date.to)))
-fit_ireland_multi_preds = data.frame(predgrid, as.data.frame(predict(fit4_ireland_multi, newdata=predgrid, type="prob")),check.names=F)
+fit_zambia_multi_preds = data.frame(predgrid, as.data.frame(predict(fit4_zambia_multi, newdata=predgrid, type="prob")),check.names=F)
 library(tidyr)
 library(tidyselect)
-fit_ireland_multi_preds = gather(fit_ireland_multi_preds, LINEAGE2, prob, all_of(levels_LINEAGE2), factor_key=TRUE)
-fit_ireland_multi_preds$collection_date = as.Date(fit_ireland_multi_preds$DATE_NUM, origin="1970-01-01")
-fit_ireland_multi_preds$LINEAGE2 = factor(fit_ireland_multi_preds$LINEAGE2, levels=levels_LINEAGE2) 
+fit_zambia_multi_preds = gather(fit_zambia_multi_preds, LINEAGE2, prob, all_of(levels_LINEAGE2), factor_key=TRUE)
+fit_zambia_multi_preds$collection_date = as.Date(fit_zambia_multi_preds$DATE_NUM, origin="1970-01-01")
+fit_zambia_multi_preds$LINEAGE2 = factor(fit_zambia_multi_preds$LINEAGE2, levels=levels_LINEAGE2) 
 
-muller_ireland_mfit = ggplot(data=fit_ireland_multi_preds, 
+muller_zambia_mfit = ggplot(data=fit_zambia_multi_preds, 
                                    aes(x=collection_date, y=prob, group=LINEAGE2)) + 
   # facet_wrap(~ STATE) +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE2, group=LINEAGE2), position="stack") +
@@ -399,24 +399,24 @@ muller_ireland_mfit = ggplot(data=fit_ireland_multi_preds,
   theme_hc() + theme(legend.position="right", 
                      axis.title.x=element_blank()) + 
   ylab("Share") +
-  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN IRELAND\n(GISAID data, multinomial fit)")
-muller_ireland_mfit
+  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN ZAMBIA\n(GISAID data, multinomial fit)")
+muller_zambia_mfit
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\ireland_muller plots_multinom fit.png"), width=10, height=6)
-# ggsave(file=paste0(".\\plots\\",plotdir,"\\ireland_muller plots_multinom fit.pdf"), width=10, height=6)
+ggsave(file=paste0(".\\plots\\",plotdir,"\\zambia_muller plots_multinom fit.png"), width=10, height=6)
+# ggsave(file=paste0(".\\plots\\",plotdir,"\\zambia_muller plots_multinom fit.pdf"), width=10, height=6)
 
 
 library(ggpubr)
-ggarrange(muller_ireland_raw2 + coord_cartesian(xlim=c(as.Date("2021-01-01"),as.Date(date.to, origin="1970-01-01")))+
+ggarrange(muller_zambia_raw2 + coord_cartesian(xlim=c(as.Date("2021-01-01"),as.Date(date.to, origin="1970-01-01")))+
             theme(legend.background = element_rect(fill = alpha("white", 0)),
                   legend.key = element_rect(fill = alpha("white", 0)),
                   legend.text=element_text(color = "white")) +
             guides(colour = guide_legend(override.aes = list(alpha = 0)),
                    fill = guide_legend(override.aes = list(alpha = 0))), 
-          muller_ireland_mfit+ggtitle("Multinomial fit"), ncol=1)
+          muller_zambia_mfit+ggtitle("Multinomial fit"), ncol=1)
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\ireland_muller plots multipanel_multinom fit.png"), width=10, height=10)
-# ggsave(file=paste0(".\\plots\\",plotdir,"\\ireland_muller plots multipanel_multinom fit.pdf"), width=10, height=10)
+ggsave(file=paste0(".\\plots\\",plotdir,"\\zambia_muller plots multipanel_multinom fit.png"), width=10, height=10)
+# ggsave(file=paste0(".\\plots\\",plotdir,"\\zambia_muller plots multipanel_multinom fit.pdf"), width=10, height=10)
 
 
 
@@ -425,26 +425,26 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\ireland_muller plots multipanel_multi
 # PLOT MODEL FIT WITH DATA & CONFIDENCE INTERVALS
 
 # multinomial model predictions by state with confidence intervals (but slower)
-fit_ireland_multi_preds_withCI = data.frame(emmeans(fit4_ireland_multi,
+fit_zambia_multi_preds_withCI = data.frame(emmeans(fit4_zambia_multi,
                                                         ~ LINEAGE2,
                                                         by=c("DATE_NUM"),
                                                         at=list(DATE_NUM=seq(date.from, date.to, by=1)),  # by=XX to speed up things a bit
                                                         mode="prob", df=NA))
-fit_ireland_multi_preds_withCI$collection_date = as.Date(fit_ireland_multi_preds_withCI$DATE_NUM, origin="1970-01-01")
-fit_ireland_multi_preds_withCI$LINEAGE2 = factor(fit_ireland_multi_preds_withCI$LINEAGE2, levels=levels_LINEAGE2)
-fit_ireland_multi_preds2 = fit_ireland_multi_preds_withCI
+fit_zambia_multi_preds_withCI$collection_date = as.Date(fit_zambia_multi_preds_withCI$DATE_NUM, origin="1970-01-01")
+fit_zambia_multi_preds_withCI$LINEAGE2 = factor(fit_zambia_multi_preds_withCI$LINEAGE2, levels=levels_LINEAGE2)
+fit_zambia_multi_preds2 = fit_zambia_multi_preds_withCI
 
 
 # on logit scale:
 
 ymin = 0.001
 ymax = 0.999
-fit_ireland_multi_preds2$asymp.LCL[fit_ireland_multi_preds2$asymp.LCL<ymin] = ymin
-fit_ireland_multi_preds2$asymp.UCL[fit_ireland_multi_preds2$asymp.UCL<ymin] = ymin
-fit_ireland_multi_preds2$asymp.UCL[fit_ireland_multi_preds2$asymp.UCL>ymax] = ymax
-fit_ireland_multi_preds2$prob[fit_ireland_multi_preds2$prob<ymin] = ymin
+fit_zambia_multi_preds2$asymp.LCL[fit_zambia_multi_preds2$asymp.LCL<ymin] = ymin
+fit_zambia_multi_preds2$asymp.UCL[fit_zambia_multi_preds2$asymp.UCL<ymin] = ymin
+fit_zambia_multi_preds2$asymp.UCL[fit_zambia_multi_preds2$asymp.UCL>ymax] = ymax
+fit_zambia_multi_preds2$prob[fit_zambia_multi_preds2$prob<ymin] = ymin
 
-plot_ireland_mfit_logit = qplot(data=fit_ireland_multi_preds2, x=collection_date, y=prob, geom="blank") +
+plot_zambia_mfit_logit = qplot(data=fit_zambia_multi_preds2, x=collection_date, y=prob, geom="blank") +
   # facet_wrap(~ STATE) +
   geom_ribbon(aes(y=prob, ymin=asymp.LCL, ymax=asymp.UCL, colour=NULL,
                   fill=LINEAGE2
@@ -454,7 +454,7 @@ plot_ireland_mfit_logit = qplot(data=fit_ireland_multi_preds2, x=collection_date
   ), alpha=I(1)) +
   ylab("Share (%)") +
   theme_hc() + xlab("") +
-  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN IRELAND\n(GISAID data, multinomial fit)") +
+  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN ZAMBIA\n(GISAID data, multinomial fit)") +
   scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
                      labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
                      limits=as.Date(c("2021-01-01",NA)), expand=c(0,0)) +
@@ -474,14 +474,14 @@ plot_ireland_mfit_logit = qplot(data=fit_ireland_multi_preds2, x=collection_date
   theme(legend.position = "right") +
   xlab("Collection date")+
   coord_cartesian(xlim=c(as.Date("2021-01-01"),as.Date(date.to, origin="1970-01-01")), ylim=c(0.001, 0.9901), expand=c(0,0))
-plot_ireland_mfit_logit
+plot_zambia_mfit_logit
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\ireland_multinom fit_logit scale.png"), width=10, height=6)
-# ggsave(file=paste0(".\\plots\\",plotdir,"\\ireland_multinom fit_logit scale.pdf"), width=10, height=6)
+ggsave(file=paste0(".\\plots\\",plotdir,"\\zambia_multinom fit_logit scale.png"), width=10, height=6)
+# ggsave(file=paste0(".\\plots\\",plotdir,"\\zambia_multinom fit_logit scale.pdf"), width=10, height=6)
 
 
 # on response scale:
-plot_ireland_mfit = qplot(data=fit_ireland_multi_preds2, x=collection_date, y=100*prob, geom="blank") +
+plot_zambia_mfit = qplot(data=fit_zambia_multi_preds2, x=collection_date, y=100*prob, geom="blank") +
   # facet_wrap(~ STATE) +
   geom_ribbon(aes(y=100*prob, ymin=100*asymp.LCL, ymax=100*asymp.UCL, colour=NULL,
                   fill=LINEAGE2
@@ -491,7 +491,7 @@ plot_ireland_mfit = qplot(data=fit_ireland_multi_preds2, x=collection_date, y=10
   ), alpha=I(1)) +
   ylab("Share (%)") +
   theme_hc() + xlab("") +
-  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN IRELAND\n(GISAID data, multinomial fit)") +
+  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN ZAMBIA\n(GISAID data, multinomial fit)") +
   scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
                      labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
                      limits=as.Date(c("2021-01-01",NA)), expand=c(0,0)) +
@@ -512,10 +512,10 @@ plot_ireland_mfit = qplot(data=fit_ireland_multi_preds2, x=collection_date, y=10
   # guides(colour=FALSE) +
   theme(legend.position = "right") +
   xlab("Collection date")
-plot_ireland_mfit
+plot_zambia_mfit
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\ireland_multinom fit_response scale.png"), width=10, height=6)
-# ggsave(file=paste0(".\\plots\\",plotdir,"\\ireland_multinom fit_response scale.pdf"), width=10, height=6)
+ggsave(file=paste0(".\\plots\\",plotdir,"\\zambia_multinom fit_response scale.png"), width=10, height=6)
+# ggsave(file=paste0(".\\plots\\",plotdir,"\\zambia_multinom fit_response scale.pdf"), width=10, height=6)
 
 
 
@@ -528,7 +528,7 @@ library(dplyr)
 library(ggplot2)
 library(scales)  
 
-cases_tot = as.data.frame(get_national_data(countries = "Ireland"))
+cases_tot = as.data.frame(get_national_data(countries = "Zambia"))
 cases_tot = cases_tot[cases_tot$date>=as.Date("2020-08-01"),]
 cases_tot$DATE_NUM = as.numeric(cases_tot$date)
 # cases_tot$BANKHOLIDAY = bankholiday(cases_tot$date)
@@ -546,15 +546,15 @@ BIC(fit_cases)
 
 # STACKED AREA CHART OF NEW CASES BY VARIANT (MULTINOMIAL FIT MAPPED ONTO CASE DATA) ####
 
-fit_ireland_multi_preds_withCI$totcases = cases_tot$cases_new[match(round(fit_ireland_multi_preds_withCI$DATE_NUM),cases_tot$DATE_NUM)]
-fit_ireland_multi_preds_withCI$cases = fit_ireland_multi_preds_withCI$totcases * fit_ireland_multi_preds_withCI$prob
-fit_ireland_multi_preds_withCI$cases[fit_ireland_multi_preds_withCI$cases<=0.001] = NA
+fit_zambia_multi_preds_withCI$totcases = cases_tot$cases_new[match(round(fit_zambia_multi_preds_withCI$DATE_NUM),cases_tot$DATE_NUM)]
+fit_zambia_multi_preds_withCI$cases = fit_zambia_multi_preds_withCI$totcases * fit_zambia_multi_preds_withCI$prob
+fit_zambia_multi_preds_withCI$cases[fit_zambia_multi_preds_withCI$cases<=0.001] = NA
 cases_emmeans = as.data.frame(emmeans(fit_cases, ~ DATE_NUM, at=list(DATE_NUM=seq(date.from, date.to, by=0.5), BANHOLIDAY="no"), type="response"))
-fit_ireland_multi_preds_withCI$smoothed_totcases = cases_emmeans$rate[match(fit_ireland_multi_preds_withCI$DATE_NUM,cases_emmeans$DATE_NUM)]
-fit_ireland_multi_preds_withCI$smoothed_cases = fit_ireland_multi_preds_withCI$smoothed_totcases * fit_ireland_multi_preds_withCI$prob
-fit_ireland_multi_preds_withCI$smoothed_cases[fit_ireland_multi_preds_withCI$smoothed_cases<=0.001] = NA
+fit_zambia_multi_preds_withCI$smoothed_totcases = cases_emmeans$rate[match(fit_zambia_multi_preds_withCI$DATE_NUM,cases_emmeans$DATE_NUM)]
+fit_zambia_multi_preds_withCI$smoothed_cases = fit_zambia_multi_preds_withCI$smoothed_totcases * fit_zambia_multi_preds_withCI$prob
+fit_zambia_multi_preds_withCI$smoothed_cases[fit_zambia_multi_preds_withCI$smoothed_cases<=0.001] = NA
 
-ggplot(data=fit_ireland_multi_preds_withCI[fit_ireland_multi_preds_withCI$collection_date>=as.Date("2021-01-01"),], 
+ggplot(data=fit_zambia_multi_preds_withCI[fit_zambia_multi_preds_withCI$collection_date>=as.Date("2021-01-01"),], 
        aes(x=collection_date, y=cases, group=LINEAGE2)) + 
   # facet_wrap(~ REGION, scale="free", ncol=3) +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE2, group=LINEAGE2), position="stack") +
@@ -565,15 +565,15 @@ ggplot(data=fit_ireland_multi_preds_withCI[fit_ireland_multi_preds_withCI$collec
   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
   theme_hc() + theme(legend.position="right") + 
   ylab("New confirmed cases per day") + xlab("Date of diagnosis") +
-  ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT\nIN IRELAND\n(case data & multinomial fit to GISAID data)") +
+  ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT\nIN ZAMBIA\n(case data & multinomial fit to GISAID data)") +
   scale_fill_manual("variant", values=lineage_cols2) +
   scale_colour_manual("variant", values=lineage_cols2) +
   coord_cartesian(xlim=c(as.Date("2021-01-01"),NA))
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\cases per day_stacked area multinomial fit raw case data.png"), width=8, height=6)
 
-ggplot(data=fit_ireland_multi_preds_withCI[fit_ireland_multi_preds_withCI$collection_date>=as.Date("2021-01-01")&
-                                              fit_ireland_multi_preds_withCI$collection_date<=max(cases_tot$date),], 
+ggplot(data=fit_zambia_multi_preds_withCI[fit_zambia_multi_preds_withCI$collection_date>=as.Date("2021-01-01")&
+                                              fit_zambia_multi_preds_withCI$collection_date<=max(cases_tot$date),], 
        aes(x=collection_date-7, y=smoothed_cases, group=LINEAGE2)) + 
   # facet_wrap(~ REGION, scale="free", ncol=3) +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE2, group=LINEAGE2), position="stack") +
@@ -584,7 +584,7 @@ ggplot(data=fit_ireland_multi_preds_withCI[fit_ireland_multi_preds_withCI$collec
   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
   theme_hc() + theme(legend.position="right") + 
   ylab("New confirmed cases per day (smoothed)") + xlab("Date of infection") +
-  ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT\nIN IRELAND\n(case data & multinomial fit to GISAID data)") +
+  ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT\nIN ZAMBIA\n(case data & multinomial fit to GISAID data)") +
   scale_fill_manual("variant", values=lineage_cols2) +
   scale_colour_manual("variant", values=lineage_cols2) +
   coord_cartesian(xlim=c(as.Date("2021-01-01"),max(cases_tot$date)))
@@ -629,7 +629,7 @@ qplot(data=avg_r_cases, x=DATE-7, y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribb
                      labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A","M","J","J")) +
   # scale_y_continuous(limits=c(1/2, 2), trans="log2") +
   geom_hline(yintercept=1, colour=I("red")) +
-  ggtitle("Re IN IRELAND AT MOMENT OF INFECTION BASED ON NEW CASES") +
+  ggtitle("Re IN ZAMBIA AT MOMENT OF INFECTION BASED ON NEW CASES") +
   # labs(tag = tag) +
   # theme(plot.margin = margin(t = 20, r = 10, b = 20, l = 0)) +
   theme(plot.tag.position = "bottomright",
@@ -641,11 +641,11 @@ qplot(data=avg_r_cases, x=DATE-7, y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribb
 above_avg_r_variants0 = do.call(rbind, lapply(seq(date.from,
                                                   date.to), 
                                               function (d) { 
-                                                wt = as.data.frame(emmeans(fit4_ireland_multi, ~ LINEAGE2 , at=list(DATE_NUM=d), type="response"))$prob   # important: these should sum to 1
+                                                wt = as.data.frame(emmeans(fit4_zambia_multi, ~ LINEAGE2 , at=list(DATE_NUM=d), type="response"))$prob   # important: these should sum to 1
                                                 # wt = rep(1/length(levels_VARIANTS), length(levels_VARIANTS)) # this would give equal weights, equivalent to emmeans:::eff.emmc(levs=levels_LINEAGE2)
                                                 cons = lapply(seq_along(wt), function (i) { con = -wt; con[i] = 1 + con[i]; con })
                                                 names(cons) = seq_along(cons)
-                                                EMT = emtrends(fit4_ireland_multi,  ~ LINEAGE2 , by=c("DATE_NUM"),
+                                                EMT = emtrends(fit4_zambia_multi,  ~ LINEAGE2 , by=c("DATE_NUM"),
                                                                var="DATE_NUM", mode="latent",
                                                                at=list(DATE_NUM=d))
                                                 out = as.data.frame(confint(contrast(EMT, cons), adjust="none", df=NA))
@@ -687,10 +687,10 @@ df = data.frame(contrast=NA,
 # df = df[df$DATE_NUM<=max(above_avg_r_variants$DATE_NUM)&df$DATE_NUM>=(min(above_avg_r_variants$DATE_NUM)+7),]
 above_avg_r_variants = rbind(above_avg_r_variants, df)
 above_avg_r_variants$variant = factor(above_avg_r_variants$variant, levels=c(levels_LINEAGE2,"avg"))
-above_avg_r_variants$prob = fit_ireland_multi_preds_withCI$prob[match(interaction(above_avg_r_variants$DATE_NUM,
+above_avg_r_variants$prob = fit_zambia_multi_preds_withCI$prob[match(interaction(above_avg_r_variants$DATE_NUM,
                                                                       above_avg_r_variants$variant),
-                                                          interaction(fit_ireland_multi_preds_withCI$DATE_NUM,
-                                                                      fit_ireland_multi_preds_withCI$LINEAGE2))]
+                                                          interaction(fit_zambia_multi_preds_withCI$DATE_NUM,
+                                                                      fit_zambia_multi_preds_withCI$LINEAGE2))]
 above_avg_r_variants2 = above_avg_r_variants
 ymax = 2
 ymin = 1/2
@@ -714,7 +714,7 @@ qplot(data=above_avg_r_variants2[!((above_avg_r_variants2$variant %in% c("other"
                      labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A","M","J","J")) +
   # scale_y_continuous(limits=c(1/ymax,ymax), trans="log2") +
   geom_hline(yintercept=1, colour=I("red")) +
-  ggtitle("Re VALUES OF SARS-CoV2 VARIANTS IN IRELAND\nAT MOMENT OF INFECTION\n(based on case data & multinomial fit to\nGISAID data)") +
+  ggtitle("Re VALUES OF SARS-CoV2 VARIANTS IN ZAMBIA\nAT MOMENT OF INFECTION\n(based on case data & multinomial fit to\nGISAID data)") +
   # labs(tag = tag) +
   # theme(plot.margin = margin(t = 20, r = 10, b = 20, l = 0)) +
   theme(plot.tag.position = "bottomright",
