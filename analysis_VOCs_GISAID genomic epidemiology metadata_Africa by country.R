@@ -1,6 +1,6 @@
 # ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT VOCs IN SELECTED AFRICAN COUNTRIES (GISAID records)
 # T. Wenseleers
-# last update 4 JULY 2021
+# last update 5 JULY 2021
 
 library(nnet)
 # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
@@ -13,7 +13,7 @@ library(ggthemes)
 library(scales)
 
 today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-07-04")
+today = as.Date("2021-07-05")
 today_num = as.numeric(today)
 plotdir = "Africa_GISAID_records"
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
@@ -110,9 +110,9 @@ nrow(GISAID_sel) # 6392
 
 rowSums(table(GISAID_sel$LINEAGE1,GISAID_sel$Country))
 
-main_lineages = names(table(GISAID_sel$LINEAGE1))[100*table(GISAID_sel$LINEAGE1)/sum(table(GISAID_sel$LINEAGE1)) > 2]
+main_lineages = names(table(GISAID_sel$LINEAGE1))[100*table(GISAID_sel$LINEAGE1)/sum(table(GISAID_sel$LINEAGE1)) > 1]
 main_lineages
-# "B.1"      "B.1.1.7"  "B.1.351"  "B.1.617+"
+# "A.23.1"   "B.1"      "B.1.1.7"  "B.1.351"  "B.1.525"  "B.1.617+"
 VOCs = c("B.1.617.1","B.1.617.2","B.1.617+","B.1.618","B.1.1.7","B.1.351","P.1","B.1.1.318","B.1.1.207","B.1.429",
          "B.1.525","B.1.526","B.1.1.519")
 main_lineages = union(main_lineages, VOCs)
@@ -213,7 +213,7 @@ muller_africa_raw2 = ggplot(data=data_agbyweek2, aes(x=collection_date, y=count,
   ylab("Share") + 
   theme(legend.position="right",  
         axis.title.x=element_blank()) +
-  labs(title = "SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN AFRICA\n(GISAID data DRC+Uganda+Kenya+Malawi)") 
+  labs(title = "SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN AFRICA\n(GISAID data South Africa+Zambia+Uganda+Botswana+Kenya+Malawi+DRC)") 
 # +
 # coord_cartesian(xlim=c(1,max(GISAID_sel$Week)))
 muller_africa_raw2
@@ -254,8 +254,8 @@ fit1_africa_multi = nnet::multinom(LINEAGE2 ~ scale(DATE_NUM)+country, weights=c
 fit2_africa_multi = nnet::multinom(LINEAGE2 ~ ns(DATE_NUM, df=2)+country, weights=count, data=data_agbyweek_bycountry2, maxit=1000)
 BIC(fit1_africa_multi, fit2_africa_multi) 
 # df      BIC
-# fit1_africa_multi 48 8398.625
-# fit2_africa_multi 54 8338.649
+# fit1_africa_multi 56 8628.533
+# fit2_africa_multi 63 8580.524
 
 # growth rate advantage compared to UK type B.1.1.7 (difference in growth rate per day) 
 emtrafrica = emtrends(fit1_africa_multi, trt.vs.ctrl ~ LINEAGE2,  
@@ -266,12 +266,13 @@ delta_r_africa = data.frame(confint(emtrafrica,
                          p.value=as.data.frame(emtrafrica$contrasts)$p.value)
 delta_r_africa
 # contrast     estimate          SE df    asymp.LCL    asymp.UCL      p.value
-# 1       B.1 - B.1.1.7 -0.022887137 0.002285126 NA -0.027365900 -0.018408373 2.405853e-13
-# 2   B.1.351 - B.1.1.7 -0.028240031 0.001807628 NA -0.031782916 -0.024697146 0.000000e+00
-# 3   B.1.525 - B.1.1.7 -0.004277424 0.004029495 NA -0.012175090  0.003620242 7.412186e-01
-# 4 B.1.617.1 - B.1.1.7  0.036923291 0.014001860 NA  0.009480151  0.064366432 5.506474e-02
-# 5 B.1.617.2 - B.1.1.7  0.071212756 0.004548427 NA  0.062298004  0.080127508 0.000000e+00
-# 6     other - B.1.1.7 -0.031605417 0.002135395 NA -0.035790714 -0.027420120 0.000000e+00
+# 1    A.23.1 - B.1.1.7 -0.047277613 0.004600140 NA -0.056293721 -0.038261504 6.407097e-12
+# 2       B.1 - B.1.1.7 -0.022261646 0.002283368 NA -0.026736965 -0.017786326 7.089218e-12
+# 3   B.1.351 - B.1.1.7 -0.027455090 0.001807204 NA -0.030997145 -0.023913035 6.261547e-12
+# 4   B.1.525 - B.1.1.7 -0.006549591 0.004125655 NA -0.014635725  0.001536544 4.504963e-01
+# 5 B.1.617.1 - B.1.1.7  0.037153647 0.013940063 NA  0.009831625  0.064475669 5.634464e-02
+# 6 B.1.617.2 - B.1.1.7  0.071605941 0.004551271 NA  0.062685614  0.080526268 6.261436e-12
+# 7     other - B.1.1.7 -0.029174392 0.002204799 NA -0.033495718 -0.024853066 6.263101e-12
 
 
 # fitted prop of different LINEAGES in the africa today
@@ -280,18 +281,19 @@ multinom_preds_today_avg = data.frame(emmeans(fit1_africa_multi, ~ LINEAGE2|1,
                                               mode="prob", df=NA))
 multinom_preds_today_avg
 # LINEAGE2        prob          SE df     asymp.LCL   asymp.UCL
-# 1   B.1.1.7 0.018137588 0.004624153 NA  0.0090744147 0.027200760
-# 2       B.1 0.004076623 0.001252059 NA  0.0016226326 0.006530613
-# 3   B.1.351 0.037862791 0.007636248 NA  0.0228960199 0.052829563
-# 4   B.1.525 0.003085489 0.001284387 NA  0.0005681375 0.005602841
-# 5 B.1.617.1 0.007436145 0.006251546 NA -0.0048166599 0.019688949
-# 6 B.1.617.2 0.925685641 0.014551780 NA  0.8971646754 0.954206607
-# 7     other 0.003715723 0.001058946 NA  0.0016402278 0.005791218
+# 1   B.1.1.7 1.681464e-02 0.0043787438 NA  0.0082324574 2.539682e-02
+# 2    A.23.1 4.192231e-05 0.0000275602 NA -0.0000120947 9.593932e-05
+# 3       B.1 3.767276e-03 0.0011768511 NA  0.0014606906 6.073862e-03
+# 4   B.1.351 3.513941e-02 0.0072946066 NA  0.0208422479 4.943658e-02
+# 5   B.1.525 2.533136e-03 0.0010832557 NA  0.0004099941 4.656278e-03
+# 6 B.1.617.1 7.205822e-03 0.0061309945 NA -0.0048107059 1.922235e-02
+# 7 B.1.617.2 9.307046e-01 0.0140480803 NA  0.9031708699 9.582383e-01
+# 8     other 3.793189e-03 0.0011250247 NA  0.0015881814 5.998197e-03
 
 # % non-B.1.1.7
 colSums(multinom_preds_today_avg[-1, c("prob","asymp.LCL","asymp.UCL")])
 #      prob asymp.LCL asymp.UCL 
-# 0.9818624 0.9190750 1.0446498 
+# 0.9831854 0.9226492 1.0437215 
 
 
 # PLOT MULTINOMIAL FIT
@@ -323,7 +325,7 @@ muller_africa_bycountry_mfit = ggplot(data=fit_africa_multi_preds,
   theme_hc() + theme(legend.position="right", 
                      axis.title.x=element_blank()) + 
   ylab("Share") +
-  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN AFRICA\n(GISAID data DRC+Uganda+Kenya+Malawi, multinomial fit)")
+  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN AFRICA\n(GISAID data, multinomial fit)")
 muller_africa_bycountry_mfit
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\africa_by country_muller plots_multinom fit.png"), width=10, height=6)
@@ -364,7 +366,7 @@ muller_africa_mfit = ggplot(data=fit_africa_multi_preds_withCI,
   theme_hc() + theme(legend.position="right", 
                      axis.title.x=element_blank()) + 
   ylab("Share") +
-  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN AFRICA\n(GISAID data DRC+Uganda+Kenya+Malawi, multinomial fit)")
+  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN AFRICA\n(GISAID data South Africa+Zambia+Uganda+Botswana+Kenya+Malawi+DRC,\nmultinomial fit)")
 muller_africa_mfit
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\africa_muller plot_multinom fit avg.png"), width=10, height=6)
@@ -407,7 +409,7 @@ plot_africa_mfit_logit = qplot(data=fit_africa_multi_preds2, x=collection_date, 
   ), alpha=I(1)) +
   ylab("Share (%)") +
   theme_hc() + xlab("") +
-  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN AFRICA\n(GISAID data DRC+Uganda+Kenya+Malawi, multinomial fit)") +
+  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN AFRICA\n(GISAID data South Africa+Zambia+Uganda+Botswana+Kenya+Malawi+DRC,\nmultinomial fit)") +
   scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
                      labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
                      limits=as.Date(c("2021-01-01",NA)), expand=c(0,0)) +
@@ -443,7 +445,7 @@ plot_africa_mfit = qplot(data=fit_africa_multi_preds2, x=collection_date, y=100*
   ), alpha=I(1)) +
   ylab("Share (%)") +
   theme_hc() + xlab("") +
-  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN AFRICA\n(GISAID data DRC+Uganda+Kenya+Malawi, multinomial fit)") +
+  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN AFRICA\n(GISAID data South Africa+Zambia+Uganda+Botswana+Kenya+Malawi+DRC, multinomial fit)") +
   scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01")),
                      labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01"))),1,1),
                      limits=as.Date(c("2021-01-01",NA)), expand=c(0,0)) +
@@ -501,7 +503,7 @@ plot_africa_bycountry_mfit_logit = qplot(data=fit_africa_multi_preds3, x=collect
   ), alpha=I(1)) +
   ylab("Share (%)") +
   theme_hc() + xlab("") +
-  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN AFRICA\n(GISAID data DRC+Uganda+Kenya+Malawi, multinomial fit)") +
+  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN AFRICA\n(GISAID data, multinomial fit)") +
   scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
                      labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
                      limits=as.Date(c("2021-01-01",NA)), expand=c(0,0)) +
@@ -537,7 +539,7 @@ plot_africa_bycountry_mfit = qplot(data=fit_africa_multi_preds3, x=collection_da
   ), alpha=I(1)) +
   ylab("Share (%)") +
   theme_hc() + xlab("") +
-  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN AFRICA\n(GISAID data DRC+Uganda+Kenya+Malawi, multinomial fit)") +
+  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN AFRICA\n(GISAID data, multinomial fit)") +
   scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01")),
                      labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01"))),1,1),
                      limits=as.Date(c("2020-11-01",NA)), expand=c(0,0)) +

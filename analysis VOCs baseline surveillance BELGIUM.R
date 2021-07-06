@@ -7,7 +7,7 @@
 # https://covid-19.sciensano.be/nl/covid-19-epidemiologische-situatie (federal test platform) & "Genomic surveillance of SARS-CoV-2 in Belgium", 
 # reports, https://www.uzleuven.be/nl/laboratoriumgeneeskunde/genomic-surveillance-sars-cov-2-belgium
 
-# Tom Wenseleers, last update 30 JUNE 2021 for VOC data & 3 July for Re calculations
+# Tom Wenseleers, last update 30 JUNE 2021 for VOC data & 6 July for Re calculations
 
 library(lme4)
 library(splines)
@@ -51,7 +51,7 @@ suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 filedate = as.Date(gsub("_","-",dat)) # file date
 filedate_num = as.numeric(filedate)
 # today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-06-30")
+today = as.Date("2021-07-06")
 today_num = as.numeric(today)
 
 set_sum_contrasts() # we use effect coding for all models
@@ -578,7 +578,7 @@ above_avg_r_variants$prob = be_seq_mfit0_preds$prob[match(interaction(above_avg_
                                                           interaction(be_seq_mfit0_preds$collection_date_num,
                                                                       be_seq_mfit0_preds$variant))]
 above_avg_r_variants2 = above_avg_r_variants
-ymax = 1.5
+ymax = 2
 ymin = 1/2
 above_avg_r_variants2$Re[above_avg_r_variants2$Re>=ymax] = NA
 above_avg_r_variants2$Re[above_avg_r_variants2$Re<=ymin] = NA

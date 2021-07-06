@@ -50,7 +50,7 @@ library(mclogit)
 plotdir="DE" # (path in //data)
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 # today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-07-02")
+today = as.Date("2021-07-06")
 today_num = as.numeric(today)
 
 set_sum_contrasts() # we use effect coding for all models
