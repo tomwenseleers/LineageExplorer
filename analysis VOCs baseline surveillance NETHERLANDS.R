@@ -3,7 +3,7 @@
 
 # Data: baseline surveillance whole genome sequencing RIVM, https://data.rivm.nl/covid-19/COVID-19_varianten.csv / https://raw.githubusercontent.com/mzelst/covid-19/master/data-misc/variants-rivm/prevalence_variants.csv
 
-# Tom Wenseleers, last update 4 July 2021
+# Tom Wenseleers, last update 4 July 2021, Re values updated 6 July 2021
 
 library(lme4)
 library(splines)
@@ -47,7 +47,7 @@ suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 # filedate = as.Date(gsub("_","-",dat)) # file date
 # filedate_num = as.numeric(filedate)
 # today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-07-04")
+today = as.Date("2021-07-06")
 today_num = as.numeric(today)
 
 selected_variants = c("B.1.1.7 (alpha)", "B.1.351 (beta)", "P.1 (gamma)", # B.1.617.1 (kappa)", 
@@ -561,7 +561,7 @@ above_avg_r_variants$prob = nl_seq_mfit0_preds$prob[match(interaction(above_avg_
                                                           interaction(nl_seq_mfit0_preds$collection_date_num,
                                                                       nl_seq_mfit0_preds$variant))]
 above_avg_r_variants2 = above_avg_r_variants
-ymax = 1.5
+ymax = 2
 ymin = 1/2
 above_avg_r_variants2$Re[above_avg_r_variants2$Re>=ymax] = NA
 above_avg_r_variants2$Re[above_avg_r_variants2$Re<=ymin] = NA

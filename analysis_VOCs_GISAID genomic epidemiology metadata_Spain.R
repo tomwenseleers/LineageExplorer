@@ -1,6 +1,6 @@
 # ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT VOCs IN SPAIN (GISAID GENOMIC EPIDEMIOLOGY METADATA)
 # T. Wenseleers
-# last update 1 July 2021
+# last update 6 July 2021
 
 library(nnet)
 # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
@@ -13,7 +13,7 @@ library(ggthemes)
 library(scales)
 
 today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-07-01")
+today = as.Date("2021-07-06")
 today_num = as.numeric(today)
 plotdir = "Spain_GISAID"
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
