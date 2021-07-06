@@ -526,10 +526,11 @@ cases_tot$DATE_NUM = as.numeric(cases_tot$date)
 # cases_tot$BANKHOLIDAY = bankholiday(cases_tot$date)
 cases_tot$WEEKDAY = weekdays(cases_tot$date)
 cases_tot = cases_tot[cases_tot$date<=(max(cases_tot$date)-3),] # cut off data from last 3 days (incomplete)
+range(cases_tot$date)
 
 # smooth out weekday effects in case nrs using GAM (if testing data is available one could correct for testing intensity as well)
 library(mgcv)
-fit_cases = gam(cases_new ~ s(DATE_NUM, bs="cs", k=20, fx=F) + 
+fit_cases = gam(cases_new ~ s(DATE_NUM, bs="cs", k=24, fx=F) + 
                   WEEKDAY, # + 
                 # BANKHOLIDAY,
                 # s(TESTS_ALL, bs="cs", k=8, fx=F),
@@ -718,4 +719,4 @@ qplot(data=above_avg_r_variants2[!((above_avg_r_variants2$variant %in% c("other"
   theme(legend.position="right") 
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\Re values per variant_avgRe_from_cases_with clipping.png"), width=8, height=6)
-    
+      
