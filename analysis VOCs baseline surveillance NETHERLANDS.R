@@ -445,7 +445,7 @@ ggplot(data=nl_seq_mfit0_preds,
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\cases per day_stacked area multinomial fit raw case data.png"), width=8, height=6)
 
-ggplot(data=nl_seq_mfit0_preds, 
+ggplot(data=nl_seq_mfit0_preds[nl_seq_mfit0_preds$collection_date<=max(cases_tot$date),], 
        aes(x=collection_date-7, y=smoothed_cases, group=variant)) + 
   # facet_wrap(~ REGION, scale="free", ncol=3) +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), position="stack") +
@@ -596,7 +596,7 @@ qplot(data=above_avg_r_variants2[!((above_avg_r_variants2$variant %in% c("other"
   theme(legend.position="right") 
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\Re values per variant_avgRe_from_cases_with clipping.png"), width=8, height=6)
-
+  
 
 
 
