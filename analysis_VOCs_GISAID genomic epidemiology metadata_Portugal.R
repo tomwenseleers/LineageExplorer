@@ -1,6 +1,6 @@
 # ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT VOCs IN PORTUGAL (GISAID GENOMIC EPIDEMIOLOGY METADATA)
 # T. Wenseleers
-# last update 1 July 2021
+# last update 7 July 2021
 
 library(nnet)
 # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
@@ -13,13 +13,13 @@ library(ggthemes)
 library(scales)
 
 today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-07-01")
+today = as.Date("2021-07-07")
 today_num = as.numeric(today)
 plotdir = "Portugal_GISAID"
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 
-# import GISAID genomic epidemiology metadata (file version metadata_2021-06-29_10-41.tsv.gz)
-GISAID = read_tsv(gzfile(".//data//GISAID_genomic_epidemiology//metadata_2021-06-29_10-41.tsv.gz"), col_types = cols(.default = "c")) 
+# import GISAID genomic epidemiology metadata (file version metadata_2021-07-05_12-45.tsv.gz)
+GISAID = read_tsv(gzfile(".//data//GISAID_genomic_epidemiology//metadata_2021-07-05_12-45.tsv.gz"), col_types = cols(.default = "c")) 
 GISAID = as.data.frame(GISAID)
 
 GISAID$date = as.Date(GISAID$date)
@@ -35,7 +35,7 @@ unique(GISAID$host)
 GISAID[GISAID$host!="Human","strain"]
 GISAID = GISAID[GISAID$host=="Human",]
 GISAID = GISAID[GISAID$date>=as.Date("2020-01-01"),]
-range(GISAID$date) # "2020-01-01" "2021-06-27"
+range(GISAID$date) # "2020-01-01" "2021-07-01"
 
 firstdetB16172 = GISAID[GISAID$pango_lineage=="B.1.617.2",]
 firstdetB16172 = firstdetB16172[!is.na(firstdetB16172$date),]
@@ -156,7 +156,7 @@ GISAID_sel = GISAID[GISAID$country %in% sel_countries,]
 # use data from Feb  1 onwards
 GISAID_sel = GISAID_sel[GISAID_sel$date>=as.Date("2021-02-01"),]
 nrow(GISAID_sel) # 6182
-range(GISAID_sel$date) # "2021-02-01" "2021-06-16"
+range(GISAID_sel$date) # "2021-02-01" "2021-06-23"
 
 nrow(GISAID_sel) # 6182
 unique(GISAID_sel$country)
