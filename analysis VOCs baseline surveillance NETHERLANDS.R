@@ -3,7 +3,7 @@
 
 # Data: baseline surveillance whole genome sequencing RIVM, https://data.rivm.nl/covid-19/COVID-19_varianten.csv / https://raw.githubusercontent.com/mzelst/covid-19/master/data-misc/variants-rivm/prevalence_variants.csv
 
-# Tom Wenseleers, last update 4 July 2021, Re values updated 6 July 2021
+# Tom Wenseleers, last update 4 July 2021, Re values updated 7 July 2021
 
 library(lme4)
 library(splines)
@@ -47,7 +47,7 @@ suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 # filedate = as.Date(gsub("_","-",dat)) # file date
 # filedate_num = as.numeric(filedate)
 # today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-07-06")
+today = as.Date("2021-07-07")
 today_num = as.numeric(today)
 
 selected_variants = c("B.1.1.7 (alpha)", "B.1.351 (beta)", "P.1 (gamma)", # B.1.617.1 (kappa)", 
@@ -406,6 +406,7 @@ cases_tot$DATE_NUM = as.numeric(cases_tot$date)
 # cases_tot$BANKHOLIDAY = bankholiday(cases_tot$date)
 cases_tot$WEEKDAY = weekdays(cases_tot$date)
 # cases_tot = cases_tot[cases_tot$date<=(max(cases_tot$date)-3),] # cut off data from last 3 days (incomplete)
+range(cases_tot$date) # "2020-08-01" "2021-07-07"
 
 # smooth out weekday effects in case nrs using GAM (if testing data is available one could correct for testing intensity as well)
 fit_cases = gam(cases_new ~ s(DATE_NUM, bs="cs", k=30, fx=F) + 
@@ -491,6 +492,7 @@ avg_r_cases$Re = Re.from.r(avg_r_cases$r)
 avg_r_cases$Re_LOWER = Re.from.r(avg_r_cases$r_LOWER)
 avg_r_cases$Re_UPPER = Re.from.r(avg_r_cases$r_UPPER)
 avg_r_cases = avg_r_cases[complete.cases(avg_r_cases),]
+avg_r_cases[avg_r_cases$DATE==max(avg_r_cases$DATE),] # Re now at 1.863273
 qplot(data=avg_r_cases, x=DATE-7, y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribbon", alpha=I(0.5), fill=I("steelblue")) +
   # facet_wrap(~ REGION) +
   geom_line() + theme_hc() + xlab("Date of infection") +
