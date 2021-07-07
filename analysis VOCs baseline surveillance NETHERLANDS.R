@@ -563,7 +563,7 @@ above_avg_r_variants$prob = nl_seq_mfit0_preds$prob[match(interaction(above_avg_
                                                           interaction(nl_seq_mfit0_preds$collection_date_num,
                                                                       nl_seq_mfit0_preds$variant))]
 above_avg_r_variants2 = above_avg_r_variants
-ymax = 2
+ymax = 3
 ymin = 1/2
 above_avg_r_variants2$Re[above_avg_r_variants2$Re>=ymax] = NA
 above_avg_r_variants2$Re[above_avg_r_variants2$Re<=ymin] = NA
