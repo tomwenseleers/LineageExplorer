@@ -1076,9 +1076,10 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\hospital admissions England by NHS re
 # daily hospital admission by age for England
 # https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
 # https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/06/Covid-Publication-10-06-2021-Supplementary-Data.xlsx
+# https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/07/Covid-Publication-08-07-2021-Supplementary-Data.xlsx
 # PS Next publication: Thursday 8 July 2021
 library(rio)
-dat = rio::import(file = "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/06/Covid-Publication-10-06-2021-Supplementary-Data.xlsx",
+dat = rio::import(file = "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/07/Covid-Publication-08-07-2021-Supplementary-Data.xlsx",
             which = 1)
 dat[,1] = NULL
 dates = as.Date(as.vector(unlist(dat[11,-1])), origin="1899-12-30")
