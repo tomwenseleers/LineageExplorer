@@ -368,20 +368,20 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\netherlands_baseline_surveillance_mul
 # estimated share of different variants of concern among lab diagnoses today
 nl_seq_mfit0_preds[as.character(nl_seq_mfit0_preds$collection_date)==as.character(today),]
 # variant2 collection_date_num         prob           SE df     asymp.LCL    asymp.UCL collection_date           variant
-# 1066   B.1.1.7 (alpha)             18812.5 3.815839e-01 5.341259e-02 NA  2.768971e-01 0.4862706569      2021-07-04   B.1.1.7 (alpha)
-# 1067    B.1.351 (beta)             18812.5 6.399995e-05 4.185407e-05 NA -1.803251e-05 0.0001460324      2021-07-04    B.1.351 (beta)
-# 1068       P.1 (gamma)             18812.5 8.337048e-03 2.465250e-03 NA  3.505247e-03 0.0131688486      2021-07-04       P.1 (gamma)
-# 1069 B.1.617.2 (delta)             18812.5 5.890499e-01 5.740063e-02 NA  4.765468e-01 0.7015530862      2021-07-04 B.1.617.2 (delta)
-# 1070             other             18812.5 2.096514e-02 5.213824e-03 NA  1.074623e-02 0.0311840441      2021-07-04             other
+# 1081   B.1.1.7 (alpha)             18815.5 3.055692e-01 5.353719e-02 NA  2.006383e-01 0.4105001913      2021-07-07   B.1.1.7 (alpha)
+# 1082    B.1.351 (beta)             18815.5 4.256939e-05 2.944302e-05 NA -1.513787e-05 0.0001002767      2021-07-07    B.1.351 (beta)
+# 1083       P.1 (gamma)             18815.5 6.730517e-03 2.205889e-03 NA  2.407054e-03 0.0110539800      2021-07-07       P.1 (gamma)
+# 1084 B.1.617.2 (delta)             18815.5 6.686882e-01 5.796757e-02 NA  5.550739e-01 0.7823025822      2021-07-07 B.1.617.2 (delta)
+# 1085             other             18815.5 1.896944e-02 5.271079e-03 NA  8.638315e-03 0.0293005644      2021-07-07             other
   
 # estimated share of different variants of concern among new infections today (assuming 1 week between infection & diagnosis)
 nl_seq_mfit0_preds[as.character(nl_seq_mfit0_preds$collection_date)==as.character(today+7),]
 # variant2 collection_date_num         prob           SE df     asymp.LCL    asymp.UCL collection_date           variant
-# 1101   B.1.1.7 (alpha)             18819.5 2.183275e-01 4.897837e-02 NA  1.223316e-01 0.3143233331      2021-07-11   B.1.1.7 (alpha)
-# 1102    B.1.351 (beta)             18819.5 2.374801e-05 1.767195e-05 NA -1.088838e-05 0.0000583844      2021-07-11    B.1.351 (beta)
-# 1103       P.1 (gamma)             18819.5 4.861115e-03 1.817578e-03 NA  1.298729e-03 0.0084235024      2021-07-11       P.1 (gamma)
-# 1104 B.1.617.2 (delta)             18819.5 7.608373e-01 5.361561e-02 NA  6.557527e-01 0.8659219881      2021-07-11 B.1.617.2 (delta)
-# 1105             other             18819.5 1.595033e-02 5.118081e-03 NA  5.919072e-03 0.0259815804      2021-07-11             other
+# 1116   B.1.1.7 (alpha)             18822.5 1.654211e-01 0.043212100 NA  8.072691e-02 2.501152e-01      2021-07-14   B.1.1.7 (alpha)
+# 1117    B.1.351 (beta)             18822.5 1.494541e-05 0.000011727 NA -8.039098e-06 3.792991e-05      2021-07-14    B.1.351 (beta)
+# 1118       P.1 (gamma)             18822.5 3.713085e-03 0.001521792 NA  7.304283e-04 6.695742e-03      2021-07-14       P.1 (gamma)
+# 1119 B.1.617.2 (delta)             18822.5 8.171960e-01 0.047739513 NA  7.236283e-01 9.107637e-01      2021-07-14 B.1.617.2 (delta)
+# 1120             other             18822.5 1.365492e-02 0.004842951 NA  4.162912e-03 2.314693e-02      2021-07-14             other
 
   
 
