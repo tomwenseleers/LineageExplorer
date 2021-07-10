@@ -1150,6 +1150,25 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\confirmed cases hospitalisations by a
 # ggsave(file=paste0(".\\plots\\",plotdir,"\\confirmed cases hospitalisations by age England.pdf"), width=8, height=6)
 # write.csv(cases_hosps_ENG_age, file=paste0(".\\plots\\",plotdir,"\\confirmed cases hospitalisations by age England.csv"), row.names=F)
 
+cases_hosps_ENG_age2 = cases_hosps_ENG_age
+lag = 7 # lag = 7 from cases to hosps gives best BIC in Poisson GLM
+cases_hosps_ENG_age2$date[cases_hosps_ENG_age2$type=="cases"] = cases_hosps_ENG_age2$date[cases_hosps_ENG_age2$type=="cases"]-lag
+cases_hosps_ENG_age_wide = spread(cases_hosps_ENG_age2, type, count)
+cases_hosps_ENG_age_wide$DATE_NUM = as.numeric(cases_hosps_ENG_age_wide$date)
+cases_hosps_ENG_age_wide = cases_hosps_ENG_age_wide[complete.cases(cases_hosps_ENG_age_wide),]
+cases_hosps_ENG_age_wide$CHR = cases_hosps_ENG_age_wide$hospitalisations / cases_hosps_ENG_age_wide$cases
+fit = glm(hospitalisations~cases*age*DATE_NUM, data=cases_hosps_ENG_age_wide, family=poisson)
+BIC(fit)
+qplot(data=cases_hosps_ENG_age_wide, x=date, y=CHR*100, group=age, colour=age, fill=age, geom=c("blank")) + 
+  geom_smooth(method="gam", se=TRUE, formula = y ~ s(x, k = 10)) + 
+  # facet_wrap(~age) +
+  # scale_x_log10() + 
+  scale_y_log10() +
+  ylab("Case (-7 days) to hospitalisation ratio (%)") +
+  ggtitle("CASE TO HOSPITALISATION RATIO IN ENGLAND\n(data gov.uk & NHS)")
+ggsave(file=paste0(".\\plots\\",plotdir,"\\case to hospitalisation ratio England.png"), width=8, height=6)
+cases_hosps_ENG_age_wide[cases_hosps_ENG_age_wide$date==max(cases_hosps_ENG_age_wide$date),]
+
 
 # MAP MULTINOMIAL FIT ONTO CASE NUMBERS ####
 
