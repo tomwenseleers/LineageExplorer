@@ -410,7 +410,7 @@ ggarrange(muller_africa_bycountry_raw2 + coord_cartesian(xlim=c(as.Date("2021-01
 ggsave(file=paste0(".\\plots\\",plotdir,"\\africa_by country_muller plots multipanel_multinom fit.png"), width=10, height=10)
 
 
-# multinomial model predictions on avg across countries
+  # multinomial model predictions on avg across countries
 fit_africa_multi_preds_withCI = data.frame(emmeans(fit1_africa_multi,
                                                            ~ LINEAGE2,
                                                            by=c("DATE_NUM"),

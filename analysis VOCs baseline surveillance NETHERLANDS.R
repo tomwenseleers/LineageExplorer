@@ -46,8 +46,8 @@ plotdir="NL" # desired path in //data
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 # filedate = as.Date(gsub("_","-",dat)) # file date
 # filedate_num = as.numeric(filedate)
-# today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-07-07")
+today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
+# today = as.Date("2021-07-07")
 today_num = as.numeric(today)
 
 selected_variants = c("B.1.1.7 (alpha)", "B.1.351 (beta)", "P.1 (gamma)", # B.1.617.1 (kappa)", 
@@ -113,7 +113,7 @@ nl_baseline$variant = factor(nl_baseline$variant, levels=levels_VARIANTS)
 nl_baseline$prop = nl_baseline$count/nl_baseline$total
 nl_baseline$collection_date_num = as.numeric(nl_baseline$collection_date)
 
-range(nl_baseline$collection_date) # "2020-12-03" "2021-06-17"
+range(nl_baseline$collection_date) # "2020-12-03" "2021-06-24"
 
 
 # Muller plot raw data
@@ -154,28 +154,28 @@ delta_r = data.frame(confint(emtrends(nl_seq_mfit0, trt.vs.ctrl ~ variant2|1,
 rownames(delta_r) = delta_r[,"contrast"]
 delta_r = delta_r[,-1]
 delta_r
-# estimate    asymp.LCL   asymp.UCL
-# B.1.351 (beta) - B.1.1.7 (alpha)    -0.061864159 -0.081939474 -0.04178884
-# P.1 (gamma) - B.1.1.7 (alpha)        0.002699051 -0.008761275  0.01415938
-# B.1.617.2 (delta) - B.1.1.7 (alpha)  0.116320458  0.099636445  0.13300447
-# other - B.1.1.7 (alpha)              0.040707562  0.033323591  0.04809153
+# estimate   asymp.LCL   asymp.UCL
+# B.1.351 (beta) - B.1.1.7 (alpha)    -0.0676397617 -0.09020842 -0.04507111
+# P.1 (gamma) - B.1.1.7 (alpha)       -0.0003520951 -0.01191877  0.01121458
+# B.1.617.2 (delta) - B.1.1.7 (alpha)  0.1298751838  0.11714991  0.14260045
+# other - B.1.1.7 (alpha)              0.0529368577  0.04588200  0.05999171
 
 # pairwise contrasts in growth rate today (no Tukey correction applied)
 emtrends(nl_seq_mfit0, revpairwise ~ variant2|1, 
          var="collection_date_num",  mode="latent",
          at=list(collection_date_num=today_num), 
          df=NA, adjust="none")$contrasts
-# contrast                            estimate      SE df z.ratio p.value
-# B.1.351 (beta) - B.1.1.7 (alpha)     -0.0619 0.01024 NA -6.040  <.0001 
-# P.1 (gamma) - B.1.1.7 (alpha)         0.0027 0.00585 NA  0.462  0.6444 
-# P.1 (gamma) - B.1.351 (beta)          0.0646 0.01179 NA  5.477  <.0001 
-# B.1.617.2 (delta) - B.1.1.7 (alpha)   0.1163 0.00851 NA 13.665  <.0001 
-# B.1.617.2 (delta) - B.1.351 (beta)    0.1782 0.01332 NA 13.373  <.0001 
-# B.1.617.2 (delta) - P.1 (gamma)       0.1136 0.01026 NA 11.073  <.0001 
-# other - B.1.1.7 (alpha)               0.0407 0.00377 NA 10.805  <.0001 
-# other - B.1.351 (beta)                0.1026 0.01079 NA  9.508  <.0001 
-# other - P.1 (gamma)                   0.0380 0.00693 NA  5.484  <.0001 
-# other - B.1.617.2 (delta)            -0.0756 0.00926 NA -8.166  <.0001 
+# contrast                             estimate      SE df z.ratio p.value
+# B.1.351 (beta) - B.1.1.7 (alpha)    -0.067640 0.01151 NA  -5.874 <.0001 
+# P.1 (gamma) - B.1.1.7 (alpha)       -0.000352 0.00590 NA  -0.060 0.9524 
+# P.1 (gamma) - B.1.351 (beta)         0.067288 0.01294 NA   5.202 <.0001 
+# B.1.617.2 (delta) - B.1.1.7 (alpha)  0.129875 0.00649 NA  20.004 <.0001 
+# B.1.617.2 (delta) - B.1.351 (beta)   0.197515 0.01323 NA  14.935 <.0001 
+# B.1.617.2 (delta) - P.1 (gamma)      0.130227 0.00870 NA  14.966 <.0001 
+# other - B.1.1.7 (alpha)              0.052937 0.00360 NA  14.707 <.0001 
+# other - B.1.351 (beta)               0.120577 0.01194 NA  10.095 <.0001 
+# other - P.1 (gamma)                  0.053289 0.00688 NA   7.743 <.0001 
+# other - B.1.617.2 (delta)           -0.076938 0.00733 NA -10.501 <.0001 
 # 
 # Degrees-of-freedom method: user-specified 
 
@@ -185,17 +185,17 @@ confint(emtrends(nl_seq_mfit0, revpairwise ~ variant2|1,
          var="collection_date_num",  mode="latent",
          at=list(collection_date_num=today_num), 
          df=NA, adjust="none"))$contrasts
-# contrast                            estimate      SE df asymp.LCL asymp.UCL
-# B.1.351 (beta) - B.1.1.7 (alpha)     -0.0619 0.01024 NA  -0.08194   -0.0418
-# P.1 (gamma) - B.1.1.7 (alpha)         0.0027 0.00585 NA  -0.00876    0.0142
-# P.1 (gamma) - B.1.351 (beta)          0.0646 0.01179 NA   0.04146    0.0877
-# B.1.617.2 (delta) - B.1.1.7 (alpha)   0.1163 0.00851 NA   0.09964    0.1330
-# B.1.617.2 (delta) - B.1.351 (beta)    0.1782 0.01332 NA   0.15207    0.2043
-# B.1.617.2 (delta) - P.1 (gamma)       0.1136 0.01026 NA   0.09351    0.1337
-# other - B.1.1.7 (alpha)               0.0407 0.00377 NA   0.03332    0.0481
-# other - B.1.351 (beta)                0.1026 0.01079 NA   0.08143    0.1237
-# other - P.1 (gamma)                   0.0380 0.00693 NA   0.02442    0.0516
-# other - B.1.617.2 (delta)            -0.0756 0.00926 NA  -0.09376   -0.0575
+# contrast                             estimate      SE df asymp.LCL asymp.UCL
+# B.1.351 (beta) - B.1.1.7 (alpha)    -0.067640 0.01151 NA   -0.0902   -0.0451
+# P.1 (gamma) - B.1.1.7 (alpha)       -0.000352 0.00590 NA   -0.0119    0.0112
+# P.1 (gamma) - B.1.351 (beta)         0.067288 0.01294 NA    0.0419    0.0926
+# B.1.617.2 (delta) - B.1.1.7 (alpha)  0.129875 0.00649 NA    0.1171    0.1426
+# B.1.617.2 (delta) - B.1.351 (beta)   0.197515 0.01323 NA    0.1716    0.2234
+# B.1.617.2 (delta) - P.1 (gamma)      0.130227 0.00870 NA    0.1132    0.1473
+# other - B.1.1.7 (alpha)              0.052937 0.00360 NA    0.0459    0.0600
+# other - B.1.351 (beta)               0.120577 0.01194 NA    0.0972    0.1440
+# other - P.1 (gamma)                  0.053289 0.00688 NA    0.0398    0.0668
+# other - B.1.617.2 (delta)           -0.076938 0.00733 NA   -0.0913   -0.0626
 # 
 # Degrees-of-freedom method: user-specified 
 # Confidence level used: 0.95 
@@ -207,10 +207,10 @@ confint(emtrends(nl_seq_mfit0, revpairwise ~ variant2|1,
 # delta has a 73% [60-87%] increased infectiousness compared to alpha
 exp(delta_r*4.7) 
 # estimate asymp.LCL asymp.UCL
-# B.1.351 (beta) - B.1.1.7 (alpha)    0.7476939 0.6803720 0.8216773
-# P.1 (gamma) - B.1.1.7 (alpha)       1.0127663 0.9596583 1.0688134
-# B.1.617.2 (delta) - B.1.1.7 (alpha) 1.7275533 1.5972626 1.8684721
-# other - B.1.1.7 (alpha)             1.2108536 1.1695521 1.2536135
+# B.1.351 (beta) - B.1.1.7 (alpha)    0.7276705 0.6544373 0.8090988
+# P.1 (gamma) - B.1.1.7 (alpha)       0.9983465 0.9455219 1.0541224
+# B.1.617.2 (delta) - B.1.1.7 (alpha) 1.8411923 1.7343013 1.9546715
+# other - B.1.1.7 (alpha)             1.2824897 1.2406624 1.3257271
 
 
 # # PS: mblogit fit would also be possible & would take into account overdispersion
@@ -368,20 +368,20 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\netherlands_baseline_surveillance_mul
 # estimated share of different variants of concern among lab diagnoses today
 nl_seq_mfit0_preds[as.character(nl_seq_mfit0_preds$collection_date)==as.character(today),]
 # variant2 collection_date_num         prob           SE df     asymp.LCL    asymp.UCL collection_date           variant
-# 1081   B.1.1.7 (alpha)             18815.5 3.055692e-01 5.353719e-02 NA  2.006383e-01 0.4105001913      2021-07-07   B.1.1.7 (alpha)
-# 1082    B.1.351 (beta)             18815.5 4.256939e-05 2.944302e-05 NA -1.513787e-05 0.0001002767      2021-07-07    B.1.351 (beta)
-# 1083       P.1 (gamma)             18815.5 6.730517e-03 2.205889e-03 NA  2.407054e-03 0.0110539800      2021-07-07       P.1 (gamma)
-# 1084 B.1.617.2 (delta)             18815.5 6.686882e-01 5.796757e-02 NA  5.550739e-01 0.7823025822      2021-07-07 B.1.617.2 (delta)
-# 1085             other             18815.5 1.896944e-02 5.271079e-03 NA  8.638315e-03 0.0293005644      2021-07-07             other
+# 1096   B.1.1.7 (alpha)             18818.5 1.607495e-01 2.393607e-02 NA  1.138357e-01 2.076633e-01      2021-07-10   B.1.1.7 (alpha)
+# 1097    B.1.351 (beta)             18818.5 1.391401e-05 1.064897e-05 NA -6.957589e-06 3.478561e-05      2021-07-10    B.1.351 (beta)
+# 1098       P.1 (gamma)             18818.5 3.031685e-03 9.586187e-04 NA  1.152827e-03 4.910543e-03      2021-07-10       P.1 (gamma)
+# 1099 B.1.617.2 (delta)             18818.5 8.182161e-01 2.702111e-02 NA  7.652557e-01 8.711765e-01      2021-07-10 B.1.617.2 (delta)
+# 1100             other             18818.5 1.798881e-02 4.321779e-03 NA  9.518281e-03 2.645934e-02      2021-07-10             other
   
 # estimated share of different variants of concern among new infections today (assuming 1 week between infection & diagnosis)
 nl_seq_mfit0_preds[as.character(nl_seq_mfit0_preds$collection_date)==as.character(today+7),]
 # variant2 collection_date_num         prob           SE df     asymp.LCL    asymp.UCL collection_date           variant
-# 1116   B.1.1.7 (alpha)             18822.5 1.654211e-01 0.043212100 NA  8.072691e-02 2.501152e-01      2021-07-14   B.1.1.7 (alpha)
-# 1117    B.1.351 (beta)             18822.5 1.494541e-05 0.000011727 NA -8.039098e-06 3.792991e-05      2021-07-14    B.1.351 (beta)
-# 1118       P.1 (gamma)             18822.5 3.713085e-03 0.001521792 NA  7.304283e-04 6.695742e-03      2021-07-14       P.1 (gamma)
-# 1119 B.1.617.2 (delta)             18822.5 8.171960e-01 0.047739513 NA  7.236283e-01 9.107637e-01      2021-07-14 B.1.617.2 (delta)
-# 1120             other             18822.5 1.365492e-02 0.004842951 NA  4.162912e-03 2.314693e-02      2021-07-14             other
+# 1131   B.1.1.7 (alpha)             18825.5 7.238433e-02 1.493143e-02 NA  4.311926e-02 0.1016494037      2021-07-17   B.1.1.7 (alpha)
+# 1132    B.1.351 (beta)             18825.5 3.902279e-06 3.338952e-06 NA -2.641946e-06 0.0000104465      2021-07-17    B.1.351 (beta)
+# 1133       P.1 (gamma)             18825.5 1.361785e-03 5.163266e-04 NA  3.498038e-04 0.0023737668      2021-07-17       P.1 (gamma)
+# 1134 B.1.617.2 (delta)             18825.5 9.145164e-01 1.766361e-02 NA  8.798964e-01 0.9491364786      2021-07-17 B.1.617.2 (delta)
+# 1135             other             18825.5 1.173353e-02 3.460923e-03 NA  4.950248e-03 0.0185168150      2021-07-17             other
 
   
 
@@ -406,14 +406,20 @@ cases_tot$DATE_NUM = as.numeric(cases_tot$date)
 # cases_tot$BANKHOLIDAY = bankholiday(cases_tot$date)
 cases_tot$WEEKDAY = weekdays(cases_tot$date)
 # cases_tot = cases_tot[cases_tot$date<=(max(cases_tot$date)-3),] # cut off data from last 3 days (incomplete)
-range(cases_tot$date) # "2020-08-01" "2021-07-07"
+range(cases_tot$date) # "2020-08-01" "2021-07-09"
 
 # smooth out weekday effects in case nrs using GAM (if testing data is available one could correct for testing intensity as well)
-fit_cases = gam(cases_new ~ s(DATE_NUM, bs="cs", k=30, fx=F) + 
+k=20
+fit_cases = gam(cases_new ~ s(DATE_NUM, bs="cs", k=k, m=c(2), fx=F) + 
                   WEEKDAY, # + 
                   # BANKHOLIDAY,
                 # s(TESTS_ALL, bs="cs", k=8, fx=F),
                 family=poisson(log), data=cases_tot,
+                method = "REML",
+                knots = list(DATE_NUM = c(min(cases_tot$DATE_NUM)-14,
+                                          seq(min(cases_tot$DATE_NUM)+0.5*diff(range(cases_tot$DATE_NUM))/(k-2), 
+                                              max(cases_tot$DATE_NUM)-0.5*diff(range(cases_tot$DATE_NUM))/(k-2), length.out=k-2),
+                                          max(cases_tot$DATE_NUM)+14))
 ) 
 BIC(fit_cases)
 
@@ -445,7 +451,7 @@ ggplot(data=nl_seq_mfit0_preds,
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\cases per day_stacked area multinomial fit raw case data.png"), width=8, height=6)
 
-ggplot(data=nl_seq_mfit0_preds[nl_seq_mfit0_preds$collection_date<=max(cases_tot$date),], 
+ggplot(data=nl_seq_mfit0_preds[nl_seq_mfit0_preds$collection_date<=(today+3),], # max(cases_tot$date)
        aes(x=collection_date-7, y=smoothed_cases, group=variant)) + 
   # facet_wrap(~ REGION, scale="free", ncol=3) +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), position="stack") +
@@ -459,7 +465,7 @@ ggplot(data=nl_seq_mfit0_preds[nl_seq_mfit0_preds$collection_date<=max(cases_tot
   ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT\nIN THE NETHERLANDS\n(case data & multinomial fit to baseline surveillance data RIVM)") +
   scale_fill_manual("variant", values=colours_VARIANTS) +
   scale_colour_manual("variant", values=colours_VARIANTS) +
-  coord_cartesian(xlim=c(as.Date("2020-12-01"),max(cases_tot$date)))
+  coord_cartesian(xlim=c(as.Date("2020-12-01"),today+3)) # max(cases_tot$date)
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\cases per day_smoothed_stacked area multinomial fit raw case data.png"), width=8, height=6)
 
@@ -482,6 +488,7 @@ Re.from.r <- function(r, gamma_mean=4.7, gamma_sd=2.9) { # Nishiura et al. 2020,
 avg_r_cases = as.data.frame(emtrends(fit_cases, ~ DATE_NUM, var="DATE_NUM", 
                                      at=list(DATE_NUM=seq(date.from,
                                                           date.to)
+                                             
                                      ), # weekday="Wednesday",
                                      type="link"))
 colnames(avg_r_cases)[2] = "r"
@@ -563,7 +570,7 @@ above_avg_r_variants$prob = nl_seq_mfit0_preds$prob[match(interaction(above_avg_
                                                           interaction(nl_seq_mfit0_preds$collection_date_num,
                                                                       nl_seq_mfit0_preds$variant))]
 above_avg_r_variants2 = above_avg_r_variants
-ymax = 3
+ymax = 5
 ymin = 1/2
 above_avg_r_variants2$Re[above_avg_r_variants2$Re>=ymax] = NA
 above_avg_r_variants2$Re[above_avg_r_variants2$Re<=ymin] = NA
@@ -574,7 +581,7 @@ above_avg_r_variants2$Re_UPPER[above_avg_r_variants2$Re_UPPER<=ymin] = ymin
 above_avg_r_variants2$Re[above_avg_r_variants2$prob<0.01] = NA
 above_avg_r_variants2$Re_LOWER[above_avg_r_variants2$prob<0.01] = NA
 above_avg_r_variants2$Re_UPPER[above_avg_r_variants2$prob<0.01] = NA
-qplot(data=above_avg_r_variants2[!((above_avg_r_variants2$variant %in% c("other"))|above_avg_r_variants2$collection_date>max(cases_tot$DATE)),], 
+qplot(data=above_avg_r_variants2[!((above_avg_r_variants2$variant %in% c("other"))|above_avg_r_variants2$collection_date>=(today+7)),], 
       x=collection_date-7, # -7 to calculate back to date of infection
       y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribbon", colour=variant, fill=variant, alpha=I(0.5),
       group=variant, linetype=I(0)) +
