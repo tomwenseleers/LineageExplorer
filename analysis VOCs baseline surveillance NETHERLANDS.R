@@ -367,7 +367,7 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\netherlands_baseline_surveillance_mul
 
 # estimated share of different variants of concern among lab diagnoses today
 nl_seq_mfit0_preds[as.character(nl_seq_mfit0_preds$collection_date)==as.character(today),]
-# variant2 collection_date_num         prob           SE df     asymp.LCL    asymp.UCL collection_date           variant
+#               variant2 collection_date_num         prob           SE df     asymp.LCL    asymp.UCL collection_date           variant
 # 1096   B.1.1.7 (alpha)             18818.5 1.607495e-01 2.393607e-02 NA  1.138357e-01 2.076633e-01      2021-07-10   B.1.1.7 (alpha)
 # 1097    B.1.351 (beta)             18818.5 1.391401e-05 1.064897e-05 NA -6.957589e-06 3.478561e-05      2021-07-10    B.1.351 (beta)
 # 1098       P.1 (gamma)             18818.5 3.031685e-03 9.586187e-04 NA  1.152827e-03 4.910543e-03      2021-07-10       P.1 (gamma)
@@ -451,8 +451,8 @@ ggplot(data=nl_seq_mfit0_preds,
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\cases per day_stacked area multinomial fit raw case data.png"), width=8, height=6)
 
-ggplot(data=nl_seq_mfit0_preds[nl_seq_mfit0_preds$collection_date<=(today+3),], # max(cases_tot$date)
-       aes(x=collection_date-7, y=smoothed_cases, group=variant)) + 
+ggplot(data=nl_seq_mfit0_preds[nl_seq_mfit0_preds$collection_date<=today,], # max(cases_tot$date)
+       aes(x=collection_date, y=smoothed_cases, group=variant)) + 
   # facet_wrap(~ REGION, scale="free", ncol=3) +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), position="stack") +
   scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
@@ -461,11 +461,11 @@ ggplot(data=nl_seq_mfit0_preds[nl_seq_mfit0_preds$collection_date<=(today+3),], 
                      expand=c(0,0)) +
   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
   theme_hc() + theme(legend.position="right") + 
-  ylab("New confirmed cases per day (smoothed)") + xlab("Date of infection") +
+  ylab("New confirmed cases per day (smoothed)") + xlab("Date of diagnosis") +
   ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT\nIN THE NETHERLANDS\n(case data & multinomial fit to baseline surveillance data RIVM)") +
   scale_fill_manual("variant", values=colours_VARIANTS) +
   scale_colour_manual("variant", values=colours_VARIANTS) +
-  coord_cartesian(xlim=c(as.Date("2020-12-01"),today+3)) # max(cases_tot$date)
+  coord_cartesian(xlim=c(as.Date("2020-12-01"),today)) # max(cases_tot$date)
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\cases per day_smoothed_stacked area multinomial fit raw case data.png"), width=8, height=6)
 

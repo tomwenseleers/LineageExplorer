@@ -194,7 +194,7 @@ emtrends(be_seq_mfit0, revpairwise ~ variant|1,
 # other - B.1.1.7 (alpha)              0.00577 0.00366 NA   1.577 0.1149 
 # other - B.1.351 (beta)              -0.01260 0.00725 NA  -1.737 0.0823 
 # other - P.1 (gamma)                  0.00108 0.00483 NA   0.224 0.8229 
-# other - B.1.617.2 (delta)           -0.12776 0.00624 NA -20.484 <.0001 
+# other - B.1.617.2 (delta)           -0.1277 6 0.00624 NA -20.484 <.0001 
 # 
 # Degrees-of-freedom method: user-specified 
 
