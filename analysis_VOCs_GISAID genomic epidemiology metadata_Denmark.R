@@ -1,6 +1,6 @@
 # ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT VOCs IN DENMARK (GISAID GENOMIC EPIDEMIOLOGY METADATA)
 # T. Wenseleers
-# last update 7 July 2021
+# last update 12 July 2021
 
 library(nnet)
 # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
@@ -13,13 +13,13 @@ library(ggthemes)
 library(scales)
 
 today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-07-07")
+today = as.Date("2021-07-12")
 today_num = as.numeric(today)
 plotdir = "Denmark_GISAID"
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 
-# import GISAID genomic epidemiology metadata (file version metadata_2021-07-05_12-45.tsv.gz)
-GISAID = read_tsv(gzfile(".//data//GISAID_genomic_epidemiology//metadata_2021-07-05_12-45.tsv.gz"), col_types = cols(.default = "c")) 
+# import GISAID genomic epidemiology metadata (file version metadata_2021-07-09_15-10.tsv.gz)
+GISAID = read_tsv(gzfile(".//data//GISAID_genomic_epidemiology//metadata_2021-07-09_15-10.tsv.gz"), col_types = cols(.default = "c")) 
 GISAID = as.data.frame(GISAID)
 
 GISAID$date = as.Date(GISAID$date)
@@ -35,7 +35,7 @@ unique(GISAID$host)
 GISAID[GISAID$host!="Human","strain"]
 GISAID = GISAID[GISAID$host=="Human",]
 GISAID = GISAID[GISAID$date>=as.Date("2020-01-01"),]
-range(GISAID$date) # "2020-01-01" "2021-06-27"
+range(GISAID$date) # "2020-01-01" "2021-07-05"
 
 firstdetB16172 = GISAID[GISAID$pango_lineage=="B.1.617.2",]
 firstdetB16172 = firstdetB16172[!is.na(firstdetB16172$date),]
@@ -219,7 +219,7 @@ table(GISAID_sel$country)
 
 table(GISAID_sel$LINEAGE1)
 
-range(GISAID_sel$date) # "2020-01-04" "2021-06-14"
+range(GISAID_sel$date) # "2020-01-04" "2021-07-01"
 
 # aggregated data to make Muller plots of raw data
 # aggregate by day to identify days on which INSA performed (days with a lot of sequences)
@@ -287,8 +287,8 @@ muller_denmark_raw2 = ggplot(data=data_agbyweek2, aes(x=collection_date, y=count
   # geom_col(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE1), width=1, position="fill") +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE2, group=LINEAGE2), position="fill") +
   scale_fill_manual("", values=lineage_cols2) +
-  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01")),
-                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01"))),1,1),
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
                      limits=as.Date(c("2021-01-01",NA)), 
                      expand=c(0,0)) +
   # guides(color = guide_legend(reverse=F, nrow=2, byrow=T), fill = guide_legend(reverse=F, nrow=2, byrow=T)) +
@@ -318,9 +318,9 @@ fit2_denmark_multi = nnet::multinom(LINEAGE2 ~ ns(DATE_NUM, df=2), weights=count
 fit3_denmark_multi = nnet::multinom(LINEAGE2 ~ ns(DATE_NUM, df=3), weights=count, data=data_agbyweek2, maxit=1000)
 BIC(fit1_denmark_multi, fit2_denmark_multi, fit3_denmark_multi) 
 # df      BIC
-# fit1_denmark_multi 14 69282.71
-# fit2_denmark_multi 21 68329.01
-# fit4_denmark_multi 35 67653.98
+# fit1_denmark_multi 14 71433.46
+# fit2_denmark_multi 21 70447.54
+# fit3_denmark_multi 28 69976.69
 
 # growth rate advantage compared to UK type B.1.1.7 (difference in growth rate per day) 
 emtrdenmark = emtrends(fit3_denmark_multi, trt.vs.ctrl ~ LINEAGE2,  
@@ -331,35 +331,35 @@ delta_r_denmark = data.frame(confint(emtrdenmark,
                          p.value=as.data.frame(emtrdenmark$contrasts)$p.value)
 delta_r_denmark
 # contrast    estimate          SE df   asymp.LCL   asymp.UCL      p.value
-# 1  B.1.1.519 - B.1.1.7 -0.30314072 0.031774584 NA -0.36541777 -0.24086368 1.847991e-09
-# 2 (B.1.177+) - B.1.1.7 -0.04061315 0.005380030 NA -0.05115781 -0.03006848 2.170695e-07
-# 3    B.1.351 - B.1.1.7 -0.07694234 0.021500988 NA -0.11908350 -0.03480118 7.801453e-03
-# 4        P.1 - B.1.1.7  0.06332307 0.015519284 NA  0.03290583  0.09374030 2.133088e-03
-# 5  B.1.617.1 - B.1.1.7 -0.06755506 0.115097500 NA -0.29314202  0.15803189 9.572118e-01
-# 6  B.1.617.2 - B.1.1.7  0.12104858 0.007772641 NA  0.10581448  0.13628268 3.996803e-15
-# 7      other - B.1.1.7 -0.12152401 0.011895819 NA -0.14483939 -0.09820863 4.123657e-10
+# 1  B.1.1.519 - B.1.1.7 -0.51684515 0.053077520 NA -0.62087517 -0.41281512 1.185426e-09
+# 2 (B.1.177+) - B.1.1.7 -0.06239653 0.007844668 NA -0.07777180 -0.04702127 7.899654e-08
+# 3    B.1.351 - B.1.1.7  0.04013818 0.013892026 NA  0.01291031  0.06736605 4.124731e-02
+# 4        P.1 - B.1.1.7  0.07871240 0.013602852 NA  0.05205130  0.10537350 2.171890e-05
+# 5  B.1.617.1 - B.1.1.7 -0.12670275 0.169025592 NA -0.45798683  0.20458132 9.120316e-01
+# 6  B.1.617.2 - B.1.1.7  0.21060837 0.005316432 NA  0.20018836  0.22102839 0.000000e+00
+# 7      other - B.1.1.7 -0.12084121 0.014769368 NA -0.14978864 -0.09189378 4.514648e-08
 
 
 # fitted prop of different LINEAGES in the denmark today
-# 47% [36%-59%] now estimated to be B.1.617.2 across all regions
+# 96.5% [95.7%-97.3%] now estimated to be B.1.617.2 across all regions
 multinom_preds_today_avg = data.frame(emmeans(fit3_denmark_multi, ~ LINEAGE2|1,
                                               at=list(DATE_NUM=today_num), 
                                               mode="prob", df=NA))
 multinom_preds_today_avg
 # LINEAGE2         prob           SE df     asymp.LCL    asymp.UCL
-# 1   B.1.1.7 5.192636e-01 5.842025e-02 NA  4.047620e-01 6.337652e-01
-# 2 B.1.1.519 2.571288e-09 3.941869e-09 NA -5.154633e-09 1.029721e-08
-# 3  B.1.177+ 4.370007e-04 1.449638e-04 NA  1.528768e-04 7.211246e-04
-# 4   B.1.351 8.220376e-06 1.004052e-05 NA -1.145867e-05 2.789943e-05
-# 5       P.1 7.526038e-03 4.706527e-03 NA -1.698586e-03 1.675066e-02
-# 6 B.1.617.1 5.523982e-06 2.536396e-05 NA -4.418848e-05 5.523644e-05
-# 7 B.1.617.2 4.727583e-01 5.926113e-02 NA  3.566086e-01 5.889079e-01
-# 8     other 1.367201e-06 1.055899e-06 NA -7.023227e-07 3.436725e-06
+# 1   B.1.1.7 3.368355e-02 3.899300e-03 NA  2.604106e-02 4.132604e-02
+# 2 B.1.1.519 4.528459e-15 1.178929e-14 NA -1.857813e-14 2.763504e-14
+# 3  B.1.177+ 7.906416e-06 3.636448e-06 NA  7.791099e-07 1.503372e-05
+# 4   B.1.351 2.221271e-04 1.423233e-04 NA -5.682137e-05 5.010755e-04
+# 5       P.1 1.185503e-03 6.062293e-04 NA -2.684210e-06 2.373691e-03
+# 6 B.1.617.1 3.516920e-08 2.418128e-07 NA -4.387751e-07 5.091135e-07
+# 7 B.1.617.2 9.649008e-01 4.070808e-03 NA  9.569221e-01 9.728794e-01
+# 8     other 9.360646e-08 8.476283e-08 NA -7.252564e-08 2.597386e-07
 
 # % non-B.1.1.7
 colSums(multinom_preds_today_avg[-1, c("prob","asymp.LCL","asymp.UCL")])
 #      prob asymp.LCL asymp.UCL 
-# 0.4807364 0.3550065 0.6064663 
+# 0.9663164 0.9568629 0.9757700 
 
 
 # PLOT MULTINOMIAL FIT
@@ -530,11 +530,17 @@ range(cases_tot$date)
 
 # smooth out weekday effects in case nrs using GAM (if testing data is available one could correct for testing intensity as well)
 library(mgcv)
-fit_cases = gam(cases_new ~ s(DATE_NUM, bs="cs", k=24, fx=F) + 
+k=20
+fit_cases = gam(cases_new ~ s(DATE_NUM, bs="cs", k=k, m=c(2), fx=F) + 
                   WEEKDAY, # + 
                 # BANKHOLIDAY,
                 # s(TESTS_ALL, bs="cs", k=8, fx=F),
                 family=poisson(log), data=cases_tot,
+                method = "REML",
+                knots = list(DATE_NUM = c(min(cases_tot$DATE_NUM)-14,
+                                          seq(min(cases_tot$DATE_NUM)+0.7*diff(range(cases_tot$DATE_NUM))/(k-2), 
+                                              max(cases_tot$DATE_NUM)-0.7*diff(range(cases_tot$DATE_NUM))/(k-2), length.out=k-2),
+                                          max(cases_tot$DATE_NUM)+14))
 ) 
 BIC(fit_cases)
 
@@ -686,7 +692,7 @@ above_avg_r_variants$prob = fit_denmark_multi_preds_withCI$prob[match(interactio
                                                           interaction(fit_denmark_multi_preds_withCI$DATE_NUM,
                                                                       fit_denmark_multi_preds_withCI$LINEAGE2))]
 above_avg_r_variants2 = above_avg_r_variants
-ymax = 2
+ymax = 4
 ymin = 1/2
 above_avg_r_variants2$Re[above_avg_r_variants2$Re>=ymax] = NA
 above_avg_r_variants2$Re[above_avg_r_variants2$Re<=ymin] = NA

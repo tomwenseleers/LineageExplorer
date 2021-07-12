@@ -3,7 +3,7 @@
 
 # Data: baseline surveillance whole genome sequencing RIVM, https://data.rivm.nl/covid-19/COVID-19_varianten.csv / https://raw.githubusercontent.com/mzelst/covid-19/master/data-misc/variants-rivm/prevalence_variants.csv
 
-# Tom Wenseleers, last update 4 July 2021, Re values updated 7 July 2021
+# Tom Wenseleers, last update 7 July 2021, Re values updated 12 July 2021
 
 library(lme4)
 library(splines)
