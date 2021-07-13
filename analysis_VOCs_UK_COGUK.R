@@ -1,6 +1,6 @@
 # ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT VOCs IN THE UK BASED ON COG-UK SEQUENCING DATA ####
 
-# last update 5 JULY 2021
+# last update 12 JULY 2021
 
 library(nnet)
 # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
@@ -12,7 +12,7 @@ library(ggplot2)
 library(ggthemes)
 
 today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-07-05")
+today = as.Date("2021-07-12")
 today_num = as.numeric(today)
 plotdir = "UK_COGUK"
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))

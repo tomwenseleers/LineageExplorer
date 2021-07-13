@@ -7,7 +7,7 @@
 # https://covid-19.sciensano.be/nl/covid-19-epidemiologische-situatie (federal test platform) & "Genomic surveillance of SARS-CoV-2 in Belgium", 
 # reports, https://www.uzleuven.be/nl/laboratoriumgeneeskunde/genomic-surveillance-sars-cov-2-belgium
 
-# Tom Wenseleers, last update 7 JULY 2021 for VOC data & 10 July for Re calculations
+# Tom Wenseleers, last update 13 JULY 2021 for VOC data & 13 July for Re calculations
 
 library(lme4)
 library(splines)
@@ -45,13 +45,13 @@ library(nnet)
 library(mclogit)
 
 
-dat="2021_07_07" # desired file version for Belgian data (date/path in //data)
+dat="2021_07_13" # desired file version for Belgian data (date/path in //data)
 plotdir="BE"
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 filedate = as.Date(gsub("_","-",dat)) # file date
 filedate_num = as.numeric(filedate)
 # today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-07-10")
+today = as.Date("2021-07-13")
 today_num = as.numeric(today)
 
 set_sum_contrasts() # we use effect coding for all models
@@ -60,7 +60,7 @@ set_sum_contrasts() # we use effect coding for all models
 # IN BELGIUM BASED ON BASELINE SURVEILLANCE SEQUENCING & VOC PCR DATA ####
 # (baseline surveillance, i.e. randomly sampled, excluding travellers & surge testing)
 
-be_baseline = read.csv(paste0(".\\data\\",dat,"\\VOC_baseline_surveillance_belgium_7 july 2021.csv"))
+be_baseline = read.csv(paste0(".\\data\\",dat,"\\VOC_baseline_surveillance_belgium_13 july 2021.csv"))
 be_baseline$week_startdate = as.Date(be_baseline$week_startdate)
 be_baseline$collection_date = be_baseline$week_startdate+3.5 # we use the week midpoint
 # except for last VOC PCR datapoint which is for 2 days only, so we take the midpoint of those
@@ -77,7 +77,7 @@ be_baseline$n_allVOCs = be_baseline$alpha+be_baseline$beta+be_baseline$gamma+ #b
 be_baseline$prop_allVOCs = be_baseline$n_allVOCs / be_baseline$total
 
 head(be_baseline)
-range(be_baseline$collection_date) # "2020-12-03" "2021-07-05" 
+range(be_baseline$collection_date) # "2020-12-03" "2021-07-08" 
 
 
 # BASELINE SURVEILLANCE DATA ####
@@ -119,7 +119,7 @@ be_baseline_long2 = be_baseline_long2[be_baseline_long2$variant!="all VOCs",]
 be_baseline_long2$variant = droplevels(be_baseline_long2$variant)
 be_baseline_long2 = be_baseline_long2[rep(seq_len(nrow(be_baseline_long2)), be_baseline_long2$count),] # convert to long format
 be_baseline_long2$count = NULL
-nrow(be_baseline_long2) # n=27645
+nrow(be_baseline_long2) # n=28159
 
 data_agbyweek1 = as.data.frame(table(be_baseline_long2[,c("collection_date", "variant")]))
 colnames(data_agbyweek1) = c("collection_date", "variant", "count")
@@ -172,12 +172,12 @@ rownames(delta_r) = delta_r[,"contrast"]
 delta_r = delta_r[,-1]
 delta_r
 # estimate    asymp.LCL  asymp.UCL
-# B.1.351 (beta) - B.1.1.7 (alpha)    0.018367877  0.005654764 0.03108099
-# P.1 (gamma) - B.1.1.7 (alpha)       0.004683886 -0.001936635 0.01130441
-# B.1.617.2 (delta) - B.1.1.7 (alpha) 0.133524712  0.123372194 0.14367723
-# other - B.1.1.7 (alpha)             0.005766251 -0.001401666 0.01293417
+# B.1.351 (beta) - B.1.1.7 (alpha)    0.019881219  0.007194615 0.03256782
+# P.1 (gamma) - B.1.1.7 (alpha)       0.007557509  0.001156108 0.01395891
+# B.1.617.2 (delta) - B.1.1.7 (alpha) 0.121777860  0.112829636 0.13072608 
+# other - B.1.1.7 (alpha)             0.005883692 -0.001336308 0.01310369
 
-# i.e. delta has a 13% [12.3-14.4%] growth rate advantage per day over alpha
+# i.e. delta has a 12.2% [11.2-13.1%] growth rate advantage per day over alpha
 
 # pairwise contrasts in growth rate today (no Tukey correction applied)
 emtrends(be_seq_mfit0, revpairwise ~ variant|1, 
@@ -185,18 +185,18 @@ emtrends(be_seq_mfit0, revpairwise ~ variant|1,
          at=list(collection_date_num=today_num), 
          df=NA, adjust="none")$contrasts
 # contrast                            estimate      SE df z.ratio p.value
-# B.1.351 (beta) - B.1.1.7 (alpha)     0.01837 0.00649 NA   2.832 0.0046 
-# P.1 (gamma) - B.1.1.7 (alpha)        0.00468 0.00338 NA   1.387 0.1656 
-# P.1 (gamma) - B.1.351 (beta)        -0.01368 0.00720 NA  -1.900 0.0575 
-# B.1.617.2 (delta) - B.1.1.7 (alpha)  0.13352 0.00518 NA  25.777 <.0001 
-# B.1.617.2 (delta) - B.1.351 (beta)   0.11516 0.00819 NA  14.058 <.0001 
-# B.1.617.2 (delta) - P.1 (gamma)      0.12884 0.00597 NA  21.587 <.0001 
-# other - B.1.1.7 (alpha)              0.00577 0.00366 NA   1.577 0.1149 
-# other - B.1.351 (beta)              -0.01260 0.00725 NA  -1.737 0.0823 
-# other - P.1 (gamma)                  0.00108 0.00483 NA   0.224 0.8229 
-# other - B.1.617.2 (delta)           -0.1277 6 0.00624 NA -20.484 <.0001 
+# B.1.351 (beta) - B.1.1.7 (alpha)     0.01988 0.00647 NA   3.071 0.0021 
+# P.1 (gamma) - B.1.1.7 (alpha)        0.00756 0.00327 NA   2.314 0.0207 
+# P.1 (gamma) - B.1.351 (beta)        -0.01232 0.00714 NA  -1.726 0.0843 
+# B.1.617.2 (delta) - B.1.1.7 (alpha)  0.12178 0.00457 NA  26.673 <.0001 
+# B.1.617.2 (delta) - B.1.351 (beta)   0.10190 0.00780 NA  13.058 <.0001 
+# B.1.617.2 (delta) - P.1 (gamma)      0.11422 0.00537 NA  21.281 <.0001 
+# other - B.1.1.7 (alpha)              0.00588 0.00368 NA   1.597 0.1102 
+# other - B.1.351 (beta)              -0.01400 0.00726 NA  -1.929 0.0537 
+# other - P.1 (gamma)                 -0.00167 0.00478 NA  -0.350 0.7261 
+# other - B.1.617.2 (delta)           -0.11589 0.00575 NA -20.149 <.0001 
 # 
-# Degrees-of-freedom method: user-specified 
+# Degrees-of-freedom method: user-specified
 
 # pairwise contrasts in growth rate today with confidence intervals:
 confint(emtrends(be_seq_mfit0, revpairwise ~ variant|1, 
@@ -204,27 +204,30 @@ confint(emtrends(be_seq_mfit0, revpairwise ~ variant|1,
          at=list(collection_date_num=today_num), 
          df=NA, adjust="none"))$contrasts
 # contrast                            estimate      SE df asymp.LCL asymp.UCL
-# B.1.351 (beta) - B.1.1.7 (alpha)     0.01837 0.00649 NA   0.00565  0.031081
-# P.1 (gamma) - B.1.1.7 (alpha)        0.00468 0.00338 NA  -0.00194  0.011304
-# P.1 (gamma) - B.1.351 (beta)        -0.01368 0.00720 NA  -0.02780  0.000433
-# B.1.617.2 (delta) - B.1.1.7 (alpha)  0.13352 0.00518 NA   0.12337  0.143677
-# B.1.617.2 (delta) - B.1.351 (beta)   0.11516 0.00819 NA   0.09910  0.131212
-# B.1.617.2 (delta) - P.1 (gamma)      0.12884 0.00597 NA   0.11714  0.140539
-# other - B.1.1.7 (alpha)              0.00577 0.00366 NA  -0.00140  0.012934
-# other - B.1.351 (beta)              -0.01260 0.00725 NA  -0.02682  0.001614
-# other - P.1 (gamma)                  0.00108 0.00483 NA  -0.00839  0.010558
-# other - B.1.617.2 (delta)           -0.12776 0.00624 NA  -0.13998 -0.115534
+# B.1.351 (beta) - B.1.1.7 (alpha)     0.01988 0.00647 NA   0.00719  0.032568
+# P.1 (gamma) - B.1.1.7 (alpha)        0.00756 0.00327 NA   0.00116  0.013959
+# P.1 (gamma) - B.1.351 (beta)        -0.01232 0.00714 NA  -0.02632  0.001670
+# B.1.617.2 (delta) - B.1.1.7 (alpha)  0.12178 0.00457 NA   0.11283  0.130726
+# B.1.617.2 (delta) - B.1.351 (beta)   0.10190 0.00780 NA   0.08660  0.117191
+# B.1.617.2 (delta) - P.1 (gamma)      0.11422 0.00537 NA   0.10370  0.124740
+# other - B.1.1.7 (alpha)              0.00588 0.00368 NA  -0.00134  0.013104
+# other - B.1.351 (beta)              -0.01400 0.00726 NA  -0.02822  0.000224
+# other - P.1 (gamma)                 -0.00167 0.00478 NA  -0.01104  0.007692
+# other - B.1.617.2 (delta)           -0.11589 0.00575 NA  -0.12717 -0.104621
+# 
+# Degrees-of-freedom method: user-specified 
+# Confidence level used: 0.95 
 
 
 # implied increase in infectiousness (due to combination of increased transmissibility and/or immune escape)
 # assuming generation time of 4.7 days (Nishiura et al. 2020)
-# delta has a 87% [79-96%] increased infectiousness compared to alpha
+# delta has a 77% [70-85%] increased infectiousness compared to alpha
 exp(delta_r*4.7) 
 # estimate asymp.LCL asymp.UCL
-# B.1.351 (beta) - B.1.1.7 (alpha)    1.090165 1.0269337  1.157290
-# P.1 (gamma) - B.1.1.7 (alpha)       1.022258 0.9909391  1.054567
-# B.1.617.2 (delta) - B.1.1.7 (alpha) 1.873046 1.7857693  1.964589
-# other - B.1.1.7 (alpha)             1.027472 0.9934338  1.062676
+# B.1.351 (beta) - B.1.1.7 (alpha)    1.097947  1.034393  1.165405
+# P.1 (gamma) - B.1.1.7 (alpha)       1.036159  1.005448  1.067807
+# B.1.617.2 (delta) - B.1.1.7 (alpha) 1.772438  1.699441  1.848570
+# other - B.1.1.7 (alpha)             1.028039  0.993739  1.063523
 
 
 # # PS: mblogit fit would also be possible & would take into account overdispersion
@@ -382,20 +385,20 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\belgium_baseline_surveillance_multino
 # estimated share of different variants of concern among lab diagnoses today
 be_seq_mfit0_preds[as.character(be_seq_mfit0_preds$collection_date)==as.character(today),]
 # variant collection_date_num        prob           SE df    asymp.LCL   asymp.UCL collection_date
-# 1096   B.1.1.7 (alpha)             18818.5 0.085395555 0.0100071898 NA 0.0657818236 0.105009287      2021-07-10
-# 1097    B.1.351 (beta)             18818.5 0.002034518 0.0006962555 NA 0.0006698818 0.003399153      2021-07-10
-# 1098       P.1 (gamma)             18818.5 0.011785248 0.0020563336 NA 0.0077549077 0.015815587      2021-07-10
-# 1099 B.1.617.2 (delta)             18818.5 0.896358099 0.0119801709 NA 0.8728773958 0.919838803      2021-07-10
-# 1100             other             18818.5 0.004426580 0.0009474737 NA 0.0025695660 0.006283595      2021-07-10
+# 1111   B.1.1.7 (alpha)             18821.5 0.081571970 0.0086460122 NA 0.0646260971 0.098517842      2021-07-13
+# 1112    B.1.351 (beta)             18821.5 0.002031684 0.0006953822 NA 0.0006687603 0.003394608      2021-07-13
+# 1113       P.1 (gamma)             18821.5 0.012988419 0.0021249615 NA 0.0088235709 0.017153267      2021-07-13
+# 1114 B.1.617.2 (delta)             18821.5 0.899166831 0.0104865793 NA 0.8786135137 0.919720149      2021-07-13
+# 1115             other             18821.5 0.004241096 0.0008963326 NA 0.0024843163 0.005997875      2021-07-13
   
 # estimated share of different variants of concern among new infections today (assuming 1 week between infection & diagnosis)
 be_seq_mfit0_preds[as.character(be_seq_mfit0_preds$collection_date)==as.character(today+7),]
-# variant collection_date_num         prob           SE df    asymp.LCL   asymp.UCL collection_date
-# 1131   B.1.1.7 (alpha)             18825.5 0.0357757874 0.0056361124 NA 0.0247292101 0.046822365      2021-07-17
-# 1132    B.1.351 (beta)             18825.5 0.0009692925 0.0003847067 NA 0.0002152813 0.001723304      2021-07-17
-# 1133       P.1 (gamma)             18825.5 0.0051019000 0.0011072372 NA 0.0029317551 0.007272045      2021-07-17
-# 1134 B.1.617.2 (delta)             18825.5 0.9562221544 0.0068285925 NA 0.9428383591 0.969605950      2021-07-17
-# 1135             other             18825.5 0.0019308656 0.0004955692 NA 0.0009595679 0.002902163      2021-07-17
+# variant collection_date_num        prob           SE df    asymp.LCL   asymp.UCL collection_date
+# 1146   B.1.1.7 (alpha)             18828.5 0.036895313 0.0051977707 NA 0.0267078701 0.047082757      2021-07-20
+# 1147    B.1.351 (beta)             18828.5 0.001056152 0.0004161991 NA 0.0002404173 0.001871888      2021-07-20
+# 1148       P.1 (gamma)             18828.5 0.006193866 0.0012459938 NA 0.0037517633 0.008635969      2021-07-20
+# 1149 B.1.617.2 (delta)             18828.5 0.953855749 0.0064104105 NA 0.9412915754 0.966419923      2021-07-20
+# 1150             other             18828.5 0.001998919 0.0004997099 NA 0.0010195052 0.002978332      2021-07-20
 
   
 
@@ -424,11 +427,11 @@ library(scales)
 # cases_tot$WEEKDAY = weekdays(cases_tot$date)
 
 source("scripts/downloadData.R") # download latest data with new confirmed cases per day from Sciensano website, code adapted from https://github.com/JoFAM/covidBE_analysis by Joris Meys
-range(cases_tot$DATE) # "2020-03-01" "2021-07-07"
+range(cases_tot$DATE) # "2020-03-01" "2021-07-10"
 cases_tot = cases_tot[cases_tot$DATE>=as.Date("2020-08-01"),]
 
 # smooth out weekday effects in case nrs using GAM & correct for unequal testing intensity
-k=26
+k=25
 fit_cases = gam(CASES ~ s(DATE_NUM, bs="cs", k=k, m=c(2), fx=F) + 
                   WEEKDAY + BANKHOLIDAY +
                   s(TESTS_ALL, bs="cs", k=8, fx=F),
@@ -528,7 +531,7 @@ qplot(data=avg_r_cases, x=DATE-7, y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribb
   # theme(plot.margin = margin(t = 20, r = 10, b = 20, l = 0)) +
   theme(plot.tag.position = "bottomright",
         plot.tag = element_text(vjust = 1, hjust = 1, size=8)) # +
-# coord_cartesian(xlim=c(as.Date("2020-01-01"),NA))
+  # coord_cartesian(xlim=c(as.Date("2020-01-01"),NA))
 
 # calculate above-average intrinsic growth rates per day of each variant over time based on multinomial fit using emtrends weighted effect contrasts ####
 # for best model fit3_sanger_multi

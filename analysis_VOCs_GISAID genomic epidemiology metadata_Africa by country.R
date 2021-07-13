@@ -1,6 +1,6 @@
 # ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT VOCs IN SELECTED AFRICAN COUNTRIES (GISAID records)
 # T. Wenseleers
-# last update 8 JULY 2021
+# last update 13 JULY 2021
 
 library(nnet)
 # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
@@ -13,7 +13,7 @@ library(ggthemes)
 library(scales)
 
 today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-07-08")
+today = as.Date("2021-07-13")
 today_num = as.numeric(today)
 plotdir = "Africa_GISAID_records"
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
@@ -21,7 +21,7 @@ suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 # import GISAID metadata 
 d1 = read_tsv(".//data//GISAID//Africa//gisaid_hcov-19_2021_06_28_08_africa_subm_jan_apr_2021.tsv", col_types = cols(.default = "c")) 
 d2 = read_tsv(".//data//GISAID//Africa//gisaid_hcov-19_2021_07_04_15_africa_subm_may_2021.tsv", col_types = cols(.default = "c")) 
-d3 = read_tsv(".//data//GISAID//Africa//gisaid_hcov-19_2021_07_08_21_africa_subm_june_july_8_2021.tsv", col_types = cols(.default = "c")) 
+d3 = read_tsv(".//data//GISAID//Africa//gisaid_hcov-19_2021_07_13_09_africa_subm_june_july_13_2021.tsv", col_types = cols(.default = "c")) 
 
 GISAID = as.data.frame(rbind(d1,d2,d3))
 colnames(GISAID)
@@ -68,13 +68,13 @@ unique(GISAID$Country)
 # [45] "Central African Republic"
 table(GISAID[GISAID$Lineage=="B.1.617.2",]$Country)
 # Angola                         Botswana Democratic Republic of the Congo                           Gambia 
-# 4                              143                                6                                2 
+# 4                              211                                6                                2 
 # Ghana                            Kenya                           Malawi                          Nigeria 
-# 9                               37                               14                                1 
-# Reunion                           Rwanda                     South Africa                           Uganda 
-# 2                               41                              612                               38 
-# Zambia 
-# 82 
+# 9                               37                               14                                2 
+# Republic of the Congo                          Reunion                           Rwanda                          Senegal 
+# 1                                2                               47                               12 
+# South Africa                          Tunisia                           Uganda                           Zambia 
+# 956                                1                               38                               82 
 GISAID$Region = loc[,3]
 unique(GISAID$Region)
 table(GISAID$Region)
@@ -88,7 +88,7 @@ sel_countries = c("South Africa", "Botswana", "Zambia", "Namibia", "Malawi", "Ke
 levels_countries = sel_countries
 
 GISAID = GISAID[GISAID$date>=as.Date("2021-01-01"),]
-range(GISAID$date) # "2021-01-01" "2021-06-27"
+range(GISAID$date) # "2021-01-01" "2021-07-05"
 
 GISAID$Week = lubridate::week(GISAID$date)
 GISAID$Year = lubridate::year(GISAID$date)
@@ -109,7 +109,7 @@ GISAID[grepl(sel_target_VOC, GISAID$LINEAGE1, fixed=TRUE),"LINEAGE1"] = paste0(s
 
 # subset to selected countries
 GISAID_sel = GISAID[GISAID$Country %in% sel_countries,]
-nrow(GISAID_sel) # 7691
+nrow(GISAID_sel) # 8280
 
 rowSums(table(GISAID_sel$LINEAGE1,GISAID_sel$Country))
 
@@ -216,7 +216,7 @@ GISAID_sel = rbind(GISAID_sel,
 
 table(GISAID_sel$LINEAGE2)
 
-range(GISAID_sel$date) # "2021-01-01" "2021-06-27"
+range(GISAID_sel$date) # "2021-01-01" "2021-07-05"
 
 
 
@@ -281,7 +281,7 @@ muller_africa_raw2 = ggplot(data=data_agbyweek2, aes(x=collection_date, y=count,
   ylab("Share") + 
   theme(legend.position="right",  
         axis.title.x=element_blank()) +
-  labs(title = "SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN AFRICA\n(GISAID data South Africa+Botswana+Zambia+Uganda+Kenya+Malawi+\nGhana+Nigeria+Rwanda+DRC)") 
+  labs(title = "SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN AFRICA\n(GISAID data South Africa+Botswana+Zambia+Uganda+Kenya+Malawi+\nGhana+Namibia+Rwanda+DRC)") 
 # +
 # coord_cartesian(xlim=c(1,max(GISAID_sel$Week)))
 muller_africa_raw2
@@ -410,7 +410,7 @@ ggarrange(muller_africa_bycountry_raw2 + coord_cartesian(xlim=c(as.Date("2021-01
 ggsave(file=paste0(".\\plots\\",plotdir,"\\africa_by country_muller plots multipanel_multinom fit.png"), width=10, height=10)
 
 
-  # multinomial model predictions on avg across countries
+# multinomial model predictions on avg across countries
 fit_africa_multi_preds_withCI = data.frame(emmeans(fit1_africa_multi,
                                                            ~ LINEAGE2,
                                                            by=c("DATE_NUM"),
@@ -609,10 +609,10 @@ plot_africa_bycountry_mfit = qplot(data=fit_africa_multi_preds3, x=collection_da
   ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN AFRICA\n(GISAID data, multinomial fit)") +
   scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
                      labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
-                     limits=as.Date(c("2020-11-01",NA)), expand=c(0,0)) +
+                     limits=as.Date(c("2021-01-01",NA)), expand=c(0,0)) +
   # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
   #                     labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
-  coord_cartesian(xlim=as.Date(c("2020-11-01",NA)),
+  coord_cartesian(xlim=as.Date(c("2021-01-01",NA)),
                   ylim=c(0,100), expand=c(0,0)) +
   scale_fill_manual("variant", values=lineage_cols2) +
   scale_colour_manual("variant", values=lineage_cols2) +
