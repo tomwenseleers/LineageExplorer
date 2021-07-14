@@ -327,18 +327,20 @@ emtrafrica = emtrends(fit1_africa_multi, trt.vs.ctrl ~ LINEAGE2,
                    var="DATE_NUM",  mode="latent",
                    at=list(DATE_NUM=max(GISAID_sel$DATE_NUM)))
 delta_r_africa = data.frame(confint(emtrafrica, 
-                                 adjust="none", df=NA)$contrasts, 
-                         p.value=as.data.frame(emtrafrica$contrasts)$p.value)
+                             adjust="none", df=NA)$contrasts)[,-c(3,4)]
+rownames(delta_r_africa) = delta_r_africa[,"contrast"]
+delta_r_africa = delta_r_africa[,-1]
 delta_r_africa
-# contrast     estimate          SE df     asymp.LCL   asymp.UCL      p.value
-# 1    A.23.1 - B.1.1.7 -0.029682606 0.002806205 NA -0.0351826668 -0.02418254 3.116813e-10
-# 2       B.1 - B.1.1.7 -0.017290403 0.001954987 NA -0.0211221062 -0.01345870 3.123779e-10
-# 3 B.1.1.318 - B.1.1.7  0.043569881 0.004069417 NA  0.0355939708  0.05154579 3.116787e-10
-# 4   B.1.351 - B.1.1.7 -0.022961511 0.001500486 NA -0.0259024092 -0.02002061 3.116536e-10
-# 5   B.1.525 - B.1.1.7  0.004588359 0.002788310 NA -0.0008766279  0.01005335 4.413733e-01
-# 6 B.1.617.1 - B.1.1.7  0.036089815 0.009688977 NA  0.0170997697  0.05507986 2.549492e-03
-# 7 B.1.617.2 - B.1.1.7  0.082207480 0.004087268 NA  0.0741965826  0.09021838 3.116536e-10
-# 8     other - B.1.1.7 -0.024712586 0.001830991 NA -0.0283012624 -0.02112391 3.116540e-10
+# estimate    asymp.LCL   asymp.UCL
+# A.23.1 - B.1.1.7    -0.029638837 -0.035066197 -0.02421148
+# B.1 - B.1.1.7       -0.016685751 -0.020377196 -0.01299431
+# B.1.1.318 - B.1.1.7  0.043331110  0.035276597  0.05138562
+# B.1.1.519 - B.1.1.7  0.028507027 -0.019251909  0.07626596
+# B.1.351 - B.1.1.7   -0.022882159 -0.025730078 -0.02003424
+# B.1.525 - B.1.1.7    0.003709354 -0.001565193  0.00898390
+# B.1.617.1 - B.1.1.7  0.034483609  0.015719777  0.05324744
+# B.1.617.2 - B.1.1.7  0.084674836  0.077429584  0.09192009
+# other - B.1.1.7     -0.023200498 -0.026624431 -0.01977656
 
 
 # fitted prop of different LINEAGES in the africa today
@@ -361,6 +363,80 @@ multinom_preds_today_avg
 colSums(multinom_preds_today_avg[-1, c("prob","asymp.LCL","asymp.UCL")])
 #      prob asymp.LCL asymp.UCL 
 # 0.9915787 0.9319277 1.0512297 
+
+
+# pairwise contrasts in growth rate today with confidence intervals:
+confint(emtrends(fit1_africa_multi, revpairwise ~ LINEAGE2|1, 
+                 var="DATE_NUM",  mode="latent",
+                 at=list(DATE_NUM=today_num), 
+                 df=NA, adjust="none"))$contrasts
+# contrast               estimate      SE df asymp.LCL asymp.UCL
+# A.23.1 - B.1.1.7      -0.029639 0.00277 NA  -0.03507  -0.02421
+# B.1 - B.1.1.7         -0.016686 0.00188 NA  -0.02038  -0.01299
+# B.1 - A.23.1           0.012953 0.00287 NA   0.00733   0.01858
+# B.1.1.318 - B.1.1.7    0.043331 0.00411 NA   0.03528   0.05139
+# B.1.1.318 - A.23.1     0.072970 0.00488 NA   0.06341   0.08253
+# B.1.1.318 - B.1        0.060017 0.00445 NA   0.05129   0.06874
+# B.1.1.519 - B.1.1.7    0.028507 0.02437 NA  -0.01925   0.07627
+# B.1.1.519 - A.23.1     0.058146 0.02451 NA   0.01011   0.10619
+# B.1.1.519 - B.1        0.045193 0.02443 NA  -0.00269   0.09307
+# B.1.1.519 - B.1.1.318 -0.014824 0.02451 NA  -0.06285   0.03320
+# B.1.351 - B.1.1.7     -0.022882 0.00145 NA  -0.02573  -0.02003
+# B.1.351 - A.23.1       0.006757 0.00258 NA   0.00171   0.01181
+# B.1.351 - B.1         -0.006196 0.00141 NA  -0.00895  -0.00344
+# B.1.351 - B.1.1.318   -0.066213 0.00429 NA  -0.07462  -0.05781
+# B.1.351 - B.1.1.519   -0.051389 0.02440 NA  -0.09921  -0.00357
+# B.1.525 - B.1.1.7      0.003709 0.00269 NA  -0.00157   0.00898
+# B.1.525 - A.23.1       0.033348 0.00351 NA   0.02646   0.04023
+# B.1.525 - B.1          0.020395 0.00305 NA   0.01441   0.02638
+# B.1.525 - B.1.1.318   -0.039622 0.00463 NA  -0.04869  -0.03056
+# B.1.525 - B.1.1.519   -0.024798 0.02447 NA  -0.07275   0.02315
+# B.1.525 - B.1.351      0.026592 0.00280 NA   0.02110   0.03208
+# B.1.617.1 - B.1.1.7    0.034484 0.00957 NA   0.01572   0.05325
+# B.1.617.1 - A.23.1     0.064122 0.00989 NA   0.04475   0.08350
+# B.1.617.1 - B.1        0.051169 0.00966 NA   0.03223   0.07011
+# B.1.617.1 - B.1.1.318 -0.008847 0.01016 NA  -0.02876   0.01106
+# B.1.617.1 - B.1.1.519  0.005977 0.02611 NA  -0.04519   0.05714
+# B.1.617.1 - B.1.351    0.057366 0.00958 NA   0.03858   0.07615
+# B.1.617.1 - B.1.525    0.030774 0.00985 NA   0.01146   0.05008
+# B.1.617.2 - B.1.1.7    0.084675 0.00370 NA   0.07743   0.09192
+# B.1.617.2 - A.23.1     0.114314 0.00435 NA   0.10578   0.12285
+# B.1.617.2 - B.1        0.101361 0.00379 NA   0.09393   0.10879
+# B.1.617.2 - B.1.1.318  0.041344 0.00531 NA   0.03094   0.05175
+# B.1.617.2 - B.1.1.519  0.056168 0.02462 NA   0.00791   0.10442
+# B.1.617.2 - B.1.351    0.107557 0.00357 NA   0.10056   0.11456
+# B.1.617.2 - B.1.525    0.080965 0.00435 NA   0.07243   0.08950
+# B.1.617.2 - B.1.617.1  0.050191 0.01006 NA   0.03048   0.06991
+# other - B.1.1.7       -0.023200 0.00175 NA  -0.02662  -0.01978
+# other - A.23.1         0.006438 0.00269 NA   0.00117   0.01171
+# other - B.1           -0.006515 0.00177 NA  -0.00999  -0.00304
+# other - B.1.1.318     -0.066532 0.00439 NA  -0.07514  -0.05792
+# other - B.1.1.519     -0.051708 0.02442 NA  -0.09957  -0.00385
+# other - B.1.351       -0.000318 0.00119 NA  -0.00264   0.00201
+# other - B.1.525       -0.026910 0.00295 NA  -0.03269  -0.02113
+# other - B.1.617.1     -0.057684 0.00964 NA  -0.07658  -0.03879
+# other - B.1.617.2     -0.107875 0.00373 NA  -0.11519  -0.10056
+# 
+# Results are averaged over the levels of: country 
+# Degrees-of-freedom method: user-specified 
+# Confidence level used: 0.95 
+
+
+# implied increase in infectiousness (due to combination of increased transmissibility and/or immune escape)
+# assuming generation time of 4.7 days (Nishiura et al. 2020)
+# delta has a 77% [70-85%] increased infectiousness compared to alpha
+exp(delta_r_africa*4.7) 
+# estimate asymp.LCL asymp.UCL
+# A.23.1 - B.1.1.7    0.8699648 0.8480539 0.8924418
+# B.1 - B.1.1.7       0.9245732 0.9086704 0.9407543
+# B.1.1.318 - B.1.1.7 1.2258766 1.1803370 1.2731733
+# B.1.1.519 - B.1.1.7 1.1433734 0.9134890 1.4311095
+# B.1.351 - B.1.1.7   0.8980351 0.8860948 0.9101363
+# B.1.525 - B.1.1.7   1.0175868 0.9926706 1.0431285
+# B.1.617.1 - B.1.1.7 1.1759460 1.0766808 1.2843631
+# B.1.617.2 - B.1.1.7 1.4888019 1.4389577 1.5403727
+# other - B.1.1.7     0.8966925 0.8823779 0.9112392
+
 
 
 # PLOT MULTINOMIAL FIT
@@ -498,7 +574,7 @@ plot_africa_mfit_logit = qplot(data=fit_africa_multi_preds2, x=collection_date, 
   coord_cartesian(xlim=c(as.Date("2021-01-01"),as.Date(date.to, origin="1970-01-01")), ylim=c(0.001, 0.9901), expand=c(0,0))
 plot_africa_mfit_logit
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\africa_multinom fit avg_logit scale.png"), width=10, height=6)
+# ggsave(file=paste0(".\\plots\\",plotdir,"\\africa_multinom fit avg_logit scale.png"), width=10, height=6)
 
 
 # on response scale:
@@ -535,7 +611,7 @@ plot_africa_mfit = qplot(data=fit_africa_multi_preds2, x=collection_date, y=100*
   xlab("Collection date")
 plot_africa_mfit
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\africa_multinom fit avg_response scale.png"), width=10, height=6)
+# ggsave(file=paste0(".\\plots\\",plotdir,"\\africa_multinom fit avg_response scale.png"), width=10, height=6)
 
 
 
@@ -656,15 +732,22 @@ cases_tot$country = factor(cases_tot$country, levels=unique(cases_tot$country),
                               labels=gsub("Congo - Kinshasa", "Democratic Republic of the Congo", unique(cases_tot$country)))
 cases_tot$country = factor(cases_tot$country, levels=levels_countries)
 
-# smooth out weekday effects in case nrs using GAM (if testing data is available one could correct for testing intensity as well)
+# smooth out weekday effects in case nrs using GAM (& potentially correct for unequal testing intensity)
 library(mgcv)
-fit_cases = gam(cases_new ~ s(DATE_NUM, bs="cs", k=7, fx=F, by=country) + country +
-                  WEEKDAY # +
-                # s(tested_new, bs="cs", k=8, fx=F, by=region)
-                ,
+k=7
+fit_cases = gam(cases_new ~ s(DATE_NUM, bs="cs", k=k, m=c(2), fx=F, by=country) + country +
+                  WEEKDAY, # + 
+                  # s(TESTS_ALL, bs="cs", k=8, fx=F),
                 family=poisson(log), data=cases_tot,
+                method = "REML",
+                knots = list(DATE_NUM = c(min(cases_tot$DATE_NUM)-14,
+                                          seq(min(cases_tot$DATE_NUM)+0.5*diff(range(cases_tot$DATE_NUM))/(k-2), 
+                                              max(cases_tot$DATE_NUM)-0.5*diff(range(cases_tot$DATE_NUM))/(k-2), length.out=k-2),
+                                          max(cases_tot$DATE_NUM)+14))
 ) 
 BIC(fit_cases)
+# 1416701
+
 
 # STACKED AREA CHART OF NEW CASES BY VARIANT (MULTINOMIAL FIT MAPPED ONTO CASE DATA) ####
 
@@ -773,7 +856,7 @@ ggplot(data=fit_africa_multi_preds,
   coord_cartesian(xlim=c(as.Date("2021-01-01"),NA)) +
   scale_y_log10()
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\cases per day_log10 y scale_multinomial fit raw case data.png"), width=8, height=6)
+# ggsave(file=paste0(".\\plots\\",plotdir,"\\cases per day_log10 y scale_multinomial fit raw case data.png"), width=8, height=6)
 
 ggplot(data=fit_africa_multi_preds,
        aes(x=collection_date-7, y=smoothed_cases, group=LINEAGE2)) +
@@ -814,7 +897,7 @@ Re.from.r <- function(r, gamma_mean=4.7, gamma_sd=2.9) { # Nishiura et al. 2020,
 
 # calculate average instantaneous growth rates & 95% CLs using emtrends ####
 # based on the slope of the GAM fit on a log link scale
-avg_r_cases = as.data.frame(emtrends(fit_cases, ~ DATE_NUM, by="region", var="DATE_NUM", 
+avg_r_cases = as.data.frame(emtrends(fit_cases, ~ DATE_NUM, by="country", var="DATE_NUM", 
                                      at=list(DATE_NUM=seq(date.from,
                                                           date.to, by=3)
                                      ), # weekday="Wednesday",
@@ -828,13 +911,13 @@ avg_r_cases$Re_LOWER = Re.from.r(avg_r_cases$r_LOWER)
 avg_r_cases$Re_UPPER = Re.from.r(avg_r_cases$r_UPPER)
 avg_r_cases = avg_r_cases[complete.cases(avg_r_cases),]
 qplot(data=avg_r_cases, x=DATE-7, y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribbon", alpha=I(0.5), fill=I("steelblue")) +
-  facet_wrap(~ region) +
+  facet_wrap(~ country) +
   geom_line() + theme_hc() + xlab("Date of infection") +
   scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
                      labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A","M","J","J")) +
   # scale_y_continuous(limits=c(1/2, 2), trans="log2") +
   geom_hline(yintercept=1, colour=I("red")) +
-  ggtitle("Re IN THE UK AT MOMENT OF INFECTION BASED ON NEW CASES\n(data gov.uk)") +
+  ggtitle("Re VALUES IN SELECTED AFRICAN COUNTRIES\n(case data WHO & Google)") +
   # labs(tag = tag) +
   # theme(plot.margin = margin(t = 20, r = 10, b = 20, l = 0)) +
   theme(plot.tag.position = "bottomright",
@@ -843,32 +926,32 @@ qplot(data=avg_r_cases, x=DATE-7, y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribb
 
 # calculate above-average intrinsic growth rates per day of each variant over time based on multinomial fit using emtrends weighted effect contrasts ####
 # for best model fit3_sanger_multi
-above_avg_r_variants4 = do.call(rbind, lapply(levels_REGION, function(region) { do.call(rbind, 
+above_avg_r_variants1 = do.call(rbind, lapply(levels_countries, function(country) { do.call(rbind, 
                                                                                         lapply(seq(date.from,
                                                                                                    date.to, by=3), 
                                                                                                function (d) { 
-                                                                                                 wt = as.data.frame(emmeans(fit4_cogukp2_multi, ~ LINEAGE2 , by="REGION", 
-                                                                                                                            at=list(DATE_NUM=d, REGION=region), type="response"))$prob   # important: these should sum to 1
+                                                                                                 wt = as.data.frame(emmeans(fit1_africa_multi, ~ LINEAGE2 , by="country", 
+                                                                                                                            at=list(DATE_NUM=d, country=country), type="response"))$prob   # important: these should sum to 1
                                                                                                  # wt = rep(1/length(levels_VARIANTS), length(levels_VARIANTS)) 
                                                                                                  # this would give equal weights, equivalent to emmeans:::eff.emmc(levs=levels_LINEAGE2)
                                                                                                  cons = lapply(seq_along(wt), function (i) { con = -wt; con[i] = 1 + con[i]; con })
                                                                                                  names(cons) = seq_along(cons)
-                                                                                                 EMT = emtrends(fit4_cogukp2_multi,  ~ LINEAGE2 , by=c("DATE_NUM", "REGION"),
+                                                                                                 EMT = emtrends(fit1_africa_multi,  ~ LINEAGE2 , by=c("DATE_NUM", "country"),
                                                                                                                 var="DATE_NUM", mode="latent",
-                                                                                                                at=list(DATE_NUM=d, REGION=region))
+                                                                                                                at=list(DATE_NUM=d, country=country))
                                                                                                  out = as.data.frame(confint(contrast(EMT, cons), adjust="none", df=NA))
                                                                                                  # sum(out$estimate*wt) # should sum to zero
                                                                                                  return(out) } )) } ))
-above_avg_r_variants = above_avg_r_variants4
+above_avg_r_variants = above_avg_r_variants1
 above_avg_r_variants$contrast = factor(above_avg_r_variants$contrast, 
                                        levels=1:length(levels_LINEAGE2), 
-                                       labels=levels(data_agbyweekregion1$LINEAGE2))
+                                       labels=levels_LINEAGE2)
 above_avg_r_variants$LINEAGE2 = above_avg_r_variants$contrast # gsub(" effect|\\(|\\)","",above_avg_r_variants$contrast)
 above_avg_r_variants$collection_date = as.Date(above_avg_r_variants$DATE_NUM, origin="1970-01-01")
-range(above_avg_r_variants$collection_date) # "2020-09-01" "2021-07-31"
+range(above_avg_r_variants$collection_date) # "2021-01-01" "2021-07-30"
 # average growth rate of all lineages calculated from case nrs
-above_avg_r_variants$avg_r = avg_r_cases$r[match(interaction(above_avg_r_variants$collection_date,above_avg_r_variants$REGION),
-                                                 interaction(avg_r_cases$DATE,avg_r_cases$region))]  
+above_avg_r_variants$avg_r = avg_r_cases$r[match(interaction(above_avg_r_variants$collection_date,above_avg_r_variants$country),
+                                                 interaction(avg_r_cases$DATE,avg_r_cases$country))]  
 above_avg_r_variants$r = above_avg_r_variants$avg_r+above_avg_r_variants$estimate
 above_avg_r_variants$r_LOWER = above_avg_r_variants$avg_r+above_avg_r_variants$asymp.LCL
 above_avg_r_variants$r_UPPER = above_avg_r_variants$avg_r+above_avg_r_variants$asymp.UCL
@@ -877,7 +960,7 @@ above_avg_r_variants$Re_LOWER = Re.from.r(above_avg_r_variants$r_LOWER)
 above_avg_r_variants$Re_UPPER = Re.from.r(above_avg_r_variants$r_UPPER)
 df = data.frame(contrast=NA,
                 DATE_NUM=avg_r_cases$DATE_NUM, # -7 to calculate back to time of infection
-                REGION=avg_r_cases$region,
+                country=avg_r_cases$country,
                 estimate=NA,
                 SE=NA,
                 df=NA,
@@ -895,10 +978,10 @@ df = data.frame(contrast=NA,
                 Re_UPPER=avg_r_cases$Re_UPPER)
 # df = df[df$DATE_NUM<=max(above_avg_r_variants$DATE_NUM)&df$DATE_NUM>=(min(above_avg_r_variants$DATE_NUM)+7),]
 above_avg_r_variants = rbind(above_avg_r_variants, df)
-above_avg_r_variants$LINEAGE2 = factor(above_avg_r_variants$LINEAGE2, levels=c(levels_LINEAGE2_plot,"avg"))
+above_avg_r_variants$LINEAGE2 = factor(above_avg_r_variants$LINEAGE2, levels=c(levels_LINEAGE2,"avg"))
 above_avg_r_variants$prob = fit_africa_multi_preds$prob[match(interaction(round(above_avg_r_variants$DATE_NUM),
                                                                                    as.character(above_avg_r_variants$LINEAGE2),
-                                                                                   as.character(above_avg_r_variants$REGION)),
+                                                                                   as.character(above_avg_r_variants$country)),
                                                                        interaction(round(fit_africa_multi_preds$DATE_NUM),
                                                                                    as.character(fit_africa_multi_preds$LINEAGE2),
                                                                                    as.character(fit_africa_multi_preds$country)))]
@@ -918,21 +1001,21 @@ qplot(data=above_avg_r_variants2[!((above_avg_r_variants2$LINEAGE2 %in% c("other
       x=collection_date-7, # -7 to calculate back to date of infection
       y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribbon", colour=LINEAGE2, fill=LINEAGE2, alpha=I(0.5),
       group=LINEAGE2, linetype=I(0)) +
-  facet_wrap(~ REGION) +
+  facet_wrap(~ country) +
   # geom_ribbon(aes(fill=variant, colour=variant), alpha=I(0.5))
   geom_line(aes(colour=LINEAGE2), lwd=I(0.72)) + theme_hc() + xlab("Date of infection") +
   scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
                      labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A","M","J","J")) +
   # scale_y_continuous(limits=c(1/ymax,ymax), trans="log2") +
   geom_hline(yintercept=1, colour=I("red")) +
-  ggtitle("Re VALUES OF SARS-CoV2 VARIANTS IN THE UK\nAT MOMENT OF INFECTION\n(based on gov.uk case data & multinomial fit to\nCOG-UK lineage frequencies)") +
+  ggtitle("Re VALUES BY VARIANT IN SELECTED AFRICAN COUNTRIES\n(case data WHO & Google)") +
   # labs(tag = tag) +
   # theme(plot.margin = margin(t = 20, r = 10, b = 20, l = 0)) +
   theme(plot.tag.position = "bottomright",
         plot.tag = element_text(vjust = 1, hjust = 1, size=8)) +
   coord_cartesian(xlim=c(as.Date("2020-11-01"),max(cases_tot$date))) +
-  scale_fill_manual("variant", values=c(tail(lineage_cols1,-1),"black")) +
-  scale_colour_manual("variant", values=c(tail(lineage_cols1,-1),"black")) +
+  scale_fill_manual("variant", values=c(head(lineage_cols2,-1),"black")) +
+  scale_colour_manual("variant", values=c(head(lineage_cols2,-1),"black")) +
   theme(legend.position="right") 
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\Re values per variant_avgRe_from_cases_with clipping.png"), width=8, height=6)
