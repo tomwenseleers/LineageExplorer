@@ -12,7 +12,7 @@ library(ggplot2)
 library(ggthemes)
 
 today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-07-12")
+today = as.Date("2021-07-15")
 today_num = as.numeric(today)
 plotdir = "UK_COGUK"
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
