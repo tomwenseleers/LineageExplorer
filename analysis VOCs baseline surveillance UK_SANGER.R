@@ -1,7 +1,7 @@
 # ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT VOCs IN ENGLAND BASED ON SANGER INSTITUTE BASELINE SURVEILLANCE SEQUENCING DATA ####
 # (this excludes data from individuals with known travel history & most surge testing/active surveillance)
 
-# last update 5 JULY 2021
+# last update 15 JULY 2021
 
 library(nnet)
 # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
@@ -13,7 +13,7 @@ library(ggplot2)
 library(ggthemes)
 
 today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-07-05")
+today = as.Date("2021-07-15")
 today_num = as.numeric(today)
 plotdir = "UK_SANGER"
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
@@ -45,14 +45,14 @@ head(sanger)
 
 # sanger = sanger[grepl("2021-", sanger[,"WeekEndDate"]),]
 sanger = sanger[!(sanger$Lineage=="None"|sanger$Lineage=="Lineage data suppressed"),]
-range(sanger$WeekEndDate) # "2021-09-05" "2021-06-26"
+range(sanger$WeekEndDate) # "2021-09-05" "2021-07-03"
 # sanger$Week = lubridate::week(sanger$WeekEndDate)
 sanger$DATE_NUM = as.numeric(sanger$WeekEndDate)-3.5 # using week midpoint
 colnames(sanger)
 
 sanger = sanger[rep(seq_len(nrow(sanger)), sanger$Count),] # convert to long format
 sanger$Count = NULL
-nrow(sanger) # 280752
+nrow(sanger) # 299025
 
 nrow(sanger[sanger$WeekEndDate>=(max(sanger$WeekEndDate)-14),]) # 36754 (last 2 weeks)
 nrow(sanger[grepl("B.1.617",sanger$Lineage, fixed=TRUE)&sanger$WeekEndDate>=(max(sanger$WeekEndDate)-14),]) # 35791 (last 2 weeks)
@@ -200,8 +200,8 @@ muller_sanger_raw1 = ggplot(data=data_agbyweek1, aes(x=collection_date, y=count,
   # geom_col(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE1), width=1, position="fill") +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE2, group=LINEAGE2), position="fill") +
   scale_fill_manual("", values=lineage_cols1) +
-  scale_x_continuous(breaks=as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01")),
-                     labels=substring(months(as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01"))),1,1),
+  scale_x_continuous(breaks=as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
+                     labels=substring(months(as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
                      limits=as.Date(c("2020-09-01",NA)), expand=c(0,0)) + #  
   # guides(color = guide_legend(reverse=F, nrow=2, byrow=T), fill = guide_legend(reverse=F, nrow=2, byrow=T)) +
   theme_hc() +
@@ -220,8 +220,8 @@ muller_sangerbyregion_raw1 = ggplot(data=data_agbyweekregion1, aes(x=collection_
   # geom_col(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE1), width=1, position="fill") +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE2, group=LINEAGE2), position="fill") +
   scale_fill_manual("", values=lineage_cols1) +
-  scale_x_continuous(breaks=as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01")),
-                     labels=substring(months(as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01"))),1,1),
+  scale_x_continuous(breaks=as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
+                     labels=substring(months(as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
                      limits=as.Date(c("2020-09-01",NA)), expand=c(0,0)) + #  
   # guides(color = guide_legend(reverse=F, nrow=2, byrow=T), fill = guide_legend(reverse=F, nrow=2, byrow=T)) +
   theme_hc() +
@@ -244,8 +244,8 @@ muller_sangerbynhsregion_raw1 = ggplot(data=data_agbyweeknhsregion1, aes(x=colle
   # geom_col(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE1), width=1, position="fill") +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE2, group=LINEAGE2), position="fill") +
   scale_fill_manual("", values=lineage_cols1) +
-  scale_x_continuous(breaks=as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01")),
-                     labels=substring(months(as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01"))),1,1),
+  scale_x_continuous(breaks=as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
+                     labels=substring(months(as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
                      limits=as.Date(c("2020-09-01",NA)), expand=c(0,0)) + #  
   # guides(color = guide_legend(reverse=F, nrow=2, byrow=T), fill = guide_legend(reverse=F, nrow=2, byrow=T)) +
   theme_hc() +
@@ -305,14 +305,14 @@ delta_r_sanger = data.frame(confint(emtrsanger,
                                    adjust="none", df=NA)$contrasts, 
                             p.value=as.data.frame(emtrsanger$contrasts)$p.value)
 delta_r_sanger
-# contrast    estimate           SE df     asymp.LCL   asymp.UCL      p.value
-# 1      other - B.1.1.7  0.03881435 0.001544900 NA  0.03578640  0.04184230 0.0000000000
-# 2 (B.1.177+) - B.1.1.7 -0.03319271 0.002629929 NA -0.03834728 -0.02803815 0.0000000000
-# 3    B.1.525 - B.1.1.7 -0.04780911 0.013747618 NA -0.07475395 -0.02086428 0.0040781597
-# 4    B.1.351 - B.1.1.7  0.01920245 0.004481360 NA  0.01041914  0.02798575 0.0001980897
-# 5        P.1 - B.1.1.7 -0.11705918 0.026790560 NA -0.16956771 -0.06455064 0.0001401820
-# 6  B.1.617.1 - B.1.1.7 -0.12864249 0.011682278 NA -0.15153933 -0.10574564 0.0000000000
-# 7  B.1.617.2 - B.1.1.7  0.11785610 0.001835523 NA  0.11425854  0.12145366 0.0000000000
+# contrast    estimate          SE df    asymp.LCL   asymp.UCL      p.value
+# 1      other - B.1.1.7  0.04133590 0.001676323 NA  0.038050370  0.04462144 0.000000e+00
+# 2 (B.1.177+) - B.1.1.7 -0.03234702 0.002786124 NA -0.037807726 -0.02688632 0.000000e+00
+# 3    B.1.525 - B.1.1.7 -0.20072493 0.026937676 NA -0.253521805 -0.14792806 2.245903e-11
+# 4    B.1.351 - B.1.1.7  0.01260162 0.005418425 NA  0.001981706  0.02322154 1.124007e-01
+# 5        P.1 - B.1.1.7 -0.28900452 0.039343772 NA -0.366116893 -0.21189214 4.167244e-11
+# 6  B.1.617.1 - B.1.1.7 -0.55045470 0.036390397 NA -0.621778568 -0.47913083 0.000000e+00
+# 7  B.1.617.2 - B.1.1.7  0.11869136 0.001940373 NA  0.114888295  0.12249442 0.000000e+00
 
 # If we take the exponent of the product of these growth rate advantages/disadvantages and the generation time (e.g. 4.7 days, Nishiura et al 2020)
 # we get the transmission advantage/disadvantage (here expressed in percent) :
@@ -320,14 +320,14 @@ delta_r_sanger
 transmadv_sanger =  sign(delta_r_sanger[,c(2,5,6)])*100*(exp(abs(delta_r_sanger[,c(2,5,6)])*5.5)-1)
 transmadv_sanger =  data.frame(contrast=delta_r_sanger$contrast, transmadv_sanger)
 transmadv_sanger
-# contrast   estimate   asymp.LCL asymp.UCL
-# 1      other - B.1.1.7   23.79774   21.753122  25.87670
-# 2 (B.1.177+) - B.1.1.7  -20.02861  -23.480126 -16.67356
-# 3    B.1.525 - B.1.1.7  -30.07618  -50.854669 -12.15970
-# 4    B.1.351 - B.1.1.7   11.13922    5.897904  16.63995
-# 5        P.1 - B.1.1.7  -90.37497 -154.116440 -42.62214
-# 6  B.1.617.1 - B.1.1.7 -102.89810 -130.128194 -78.89002
-# 7  B.1.617.2 - B.1.1.7   91.21123   87.464996  95.03232
+# contrast     estimate   asymp.LCL   asymp.UCL
+# 1      other - B.1.1.7    25.526595    23.27865    27.81553
+# 2 (B.1.177+) - B.1.1.7   -19.471616   -23.11424   -15.93677
+# 3    B.1.525 - B.1.1.7  -201.616790  -303.24330  -125.60248
+# 4    B.1.351 - B.1.1.7     7.176725     1.09590    13.62331
+# 5        P.1 - B.1.1.7  -390.141945  -649.05551  -220.72273
+# 6  B.1.617.1 - B.1.1.7 -1964.557172 -2956.27555 -1294.63744
+# 7  B.1.617.2 - B.1.1.7    92.091657    88.11544    96.15192
 
 # so this would estimate that B.1.617.2 was 91% more infectious than B.1.1.7 [87%-95%] 95% CLs
 
@@ -335,14 +335,14 @@ transmadv_sanger
 transmadv_sanger =  sign(delta_r_sanger[,c(2,5,6)])*100*(exp(abs(delta_r_sanger[,c(2,5,6)])*4.7)-1)
 transmadv_sanger =  data.frame(contrast=delta_r_sanger$contrast, transmadv_sanger)
 transmadv_sanger
-# contrast   estimate   asymp.LCL  asymp.UCL
-# 1      other - B.1.1.7  20.01271   18.316860  21.73286
-# 2 (B.1.177+) - B.1.1.7 -16.88329  -19.749541 -14.08565
-# 3    B.1.525 - B.1.1.7 -25.19506  -42.097544 -10.30313
-# 4    B.1.351 - B.1.1.7   9.44495    5.018881  14.05756
-# 5        P.1 - B.1.1.7 -73.35618 -121.880383 -35.44399
-# 6  B.1.617.1 - B.1.1.7 -83.05559 -103.854204 -64.37900
-# 7  B.1.617.2 - B.1.1.7  74.00671   71.089243  76.97392
+# contrast     estimate     asymp.LCL  asymp.UCL
+# 1      other - B.1.1.7    21.443475    19.5825496   23.33336
+# 2 (B.1.177+) - B.1.1.7   -16.419634   -19.4462524  -13.46971
+# 3    B.1.525 - B.1.1.7  -156.871859  -229.2188303 -100.42338
+# 4    B.1.351 - B.1.1.7     6.101673     0.9357526   11.53199
+# 5        P.1 - B.1.1.7  -288.965799  -458.8715062 -170.71409
+# 6  B.1.617.1 - B.1.1.7 -1229.166426 -1758.5083032 -850.59214
+# 7  B.1.617.2 - B.1.1.7    74.691150    71.5963941   77.84172
 
 # pairwise growth rate advantages for all strain comparisons (i.e. pairwise differences in growth rate per day among the different lineages)
 emtrsanger_pairw = emtrends(fit4_sanger_multi, pairwise ~ LINEAGE2,  
@@ -352,35 +352,35 @@ delta_r_sanger_pairw = data.frame(confint(emtrsanger_pairw,
                                     adjust="none", df=NA)$contrasts, 
                             p.value=as.data.frame(emtrsanger_pairw$contrasts)$p.value)
 delta_r_sanger_pairw
-# contrast    estimate          SE df   asymp.LCL   asymp.UCL      p.value
-# 1         B.1.1.7 - other -0.03881435 0.001544900 NA -0.04184230 -0.03578640 0.000000e+00
-# 2    B.1.1.7 - (B.1.177+)  0.03319271 0.002629929 NA  0.02803815  0.03834728 0.000000e+00
-# 3       B.1.1.7 - B.1.525  0.04780911 0.013747618 NA  0.02086428  0.07475395 1.425967e-02
-# 4       B.1.1.7 - B.1.351 -0.01920245 0.004481360 NA -0.02798575 -0.01041914 7.528841e-04
-# 5           B.1.1.7 - P.1  0.11705918 0.026790560 NA  0.06455064  0.16956771 5.355400e-04
-# 6     B.1.1.7 - B.1.617.1  0.12864249 0.011682278 NA  0.10574564  0.15153933 0.000000e+00
-# 7     B.1.1.7 - B.1.617.2 -0.11785610 0.001835523 NA -0.12145366 -0.11425854 0.000000e+00
-# 8      other - (B.1.177+)  0.07200707 0.002303176 NA  0.06749292  0.07652121 0.000000e+00
-# 9         other - B.1.525  0.08662347 0.013832191 NA  0.05951287  0.11373406 6.943774e-08
-# 10        other - B.1.351  0.01961191 0.004727180 NA  0.01034680  0.02887701 1.288021e-03
-# 11            other - P.1  0.15587353 0.026832358 NA  0.10328307  0.20846398 7.266475e-07
-# 12      other - B.1.617.1  0.16745684 0.011782163 NA  0.14436423  0.19054946 0.000000e+00
-# 13      other - B.1.617.2 -0.07904174 0.002359554 NA -0.08366639 -0.07441710 0.000000e+00
-# 14   (B.1.177+) - B.1.525  0.01461640 0.013995547 NA -0.01281437  0.04204717 9.668974e-01
-# 15   (B.1.177+) - B.1.351 -0.05239516 0.005183890 NA -0.06255540 -0.04223492 1.854072e-14
-# 16       (B.1.177+) - P.1  0.08386646 0.026916540 NA  0.03111101  0.13662191 4.330189e-02
-# 17 (B.1.177+) - B.1.617.1  0.09544978 0.011973591 NA  0.07198197  0.11891758 4.071965e-12
-# 18 (B.1.177+) - B.1.617.2 -0.15104881 0.003177206 NA -0.15727602 -0.14482160 0.000000e+00
-# 19      B.1.525 - B.1.351 -0.06701156 0.014453849 NA -0.09534058 -0.03868254 1.759214e-04
-# 20          B.1.525 - P.1  0.06925006 0.030107712 NA  0.01024003  0.12826009 2.990893e-01
-# 21    B.1.525 - B.1.617.1  0.08083337 0.018033000 NA  0.04548934  0.11617740 3.363488e-04
-# 22    B.1.525 - B.1.617.2 -0.16566521 0.013855222 NA -0.19282095 -0.13850948 0.000000e+00
-# 23          B.1.351 - P.1  0.13626162 0.027157130 NA  0.08303463  0.18948862 3.268526e-05
-# 24    B.1.351 - B.1.617.1  0.14784493 0.012502068 NA  0.12334133  0.17234854 0.000000e+00
-# 25    B.1.351 - B.1.617.2 -0.09865365 0.004787434 NA -0.10803685 -0.08927045 0.000000e+00
-# 26        P.1 - B.1.617.1  0.01158331 0.029237597 NA -0.04572132  0.06888795 9.999266e-01
-# 27        P.1 - B.1.617.2 -0.23491527 0.026819609 NA -0.28748074 -0.18234981 4.785061e-14
-# 28  B.1.617.1 - B.1.617.2 -0.24649859 0.011811466 NA -0.26964863 -0.22334854 0.000000e+00
+# contrast    estimate          SE df   asymp.LCL    asymp.UCL      p.value
+# 1         B.1.1.7 - other -0.04133590 0.001676323 NA -0.04462144 -0.038050370 0.000000e+00
+# 2    B.1.1.7 - (B.1.177+)  0.03234702 0.002786124 NA  0.02688632  0.037807726 0.000000e+00
+# 3       B.1.1.7 - B.1.525  0.20072493 0.026937676 NA  0.14792806  0.253521805 8.986711e-11
+# 4       B.1.1.7 - B.1.351 -0.01260162 0.005418425 NA -0.02322154 -0.001981706 2.852833e-01
+# 5           B.1.1.7 - P.1  0.28900452 0.039343772 NA  0.21189214  0.366116893 1.666559e-10
+# 6     B.1.1.7 - B.1.617.1  0.55045470 0.036390397 NA  0.47913083  0.621778568 0.000000e+00
+# 7     B.1.1.7 - B.1.617.2 -0.11869136 0.001940373 NA -0.12249442 -0.114888295 0.000000e+00
+# 8      other - (B.1.177+)  0.07368293 0.002463392 NA  0.06885477  0.078511086 0.000000e+00
+# 9         other - B.1.525  0.24206083 0.026988550 NA  0.18916425  0.294957419 2.464695e-14
+# 10        other - B.1.351  0.02873428 0.005660718 NA  0.01763948  0.039829084 2.501113e-05
+# 11            other - P.1  0.33034042 0.039378298 NA  0.25316037  0.407520466 3.342882e-13
+# 12      other - B.1.617.1  0.59179060 0.036428380 NA  0.52039229  0.663188917 0.000000e+00
+# 13      other - B.1.617.2 -0.07735545 0.002517449 NA -0.08228956 -0.072421344 0.000000e+00
+# 14   (B.1.177+) - B.1.525  0.16837791 0.027080396 NA  0.11530131  0.221454507 8.799156e-08
+# 15   (B.1.177+) - B.1.351 -0.04494865 0.006082400 NA -0.05686993 -0.033027361 1.287439e-10
+# 16       (B.1.177+) - P.1  0.25665749 0.039441186 NA  0.17935419  0.333960799 1.865273e-08
+# 17 (B.1.177+) - B.1.617.1  0.51810768 0.036496609 NA  0.44657564  0.589639715 0.000000e+00
+# 18 (B.1.177+) - B.1.617.2 -0.15103838 0.003361304 NA -0.15762641 -0.144450345 0.000000e+00
+# 19      B.1.525 - B.1.351 -0.21332655 0.027476453 NA -0.26717941 -0.159473696 1.414380e-11
+# 20          B.1.525 - P.1  0.08827959 0.047666630 NA -0.00514529  0.181704464 5.854824e-01
+# 21    B.1.525 - B.1.617.1  0.34972977 0.045275014 NA  0.26099237  0.438467167 1.789557e-11
+# 22    B.1.525 - B.1.617.2 -0.31941629 0.027004955 NA -0.37234502 -0.266487547 0.000000e+00
+# 23          B.1.351 - P.1  0.30160614 0.039713925 NA  0.22376828  0.379444003 3.873113e-11
+# 24    B.1.351 - B.1.617.1  0.56305632 0.036789901 NA  0.49094944  0.635163205 0.000000e+00
+# 25    B.1.351 - B.1.617.2 -0.10608973 0.005712051 NA -0.11728515 -0.094894318 0.000000e+00
+# 26        P.1 - B.1.617.1  0.26145018 0.053595641 NA  0.15640466  0.366495709 6.119535e-05
+# 27        P.1 - B.1.617.2 -0.40769587 0.039386033 NA -0.48489108 -0.330500666 1.010303e-14
+# 28  B.1.617.1 - B.1.617.2 -0.66914606 0.036444306 NA -0.74057558 -0.597716528 0.000000e+00
 
 
 # predicted incidences on average over all ONS regions from multinomial fit
@@ -391,19 +391,19 @@ multinom_preds_today_avg = data.frame(emmeans(fit4_sanger_multi, ~ LINEAGE2|1,
                                               mode="prob", df=NA))
 multinom_preds_today_avg
 # LINEAGE2         prob           SE df     asymp.LCL    asymp.UCL
-# 1   B.1.1.7 2.954502e-03 2.265854e-04 NA  2.510403e-03 3.398601e-03
-# 2     other 5.183601e-04 6.227155e-05 NA  3.963101e-04 6.404101e-04
-# 3  B.1.177+ 1.036337e-07 4.334769e-08 NA  1.867378e-08 1.885936e-07
-# 4   B.1.525 5.036763e-05 4.831555e-05 NA -4.432911e-05 1.450644e-04
-# 5   B.1.351 1.415020e-04 7.154772e-05 NA  1.271045e-06 2.817329e-04
-# 6       P.1 1.541517e-05 8.470995e-06 NA -1.187677e-06 3.201801e-05
-# 7 B.1.617.1 1.377736e-05 3.378513e-05 NA -5.244028e-05 7.999501e-05
-# 8 B.1.617.2 9.963060e-01 2.863106e-04 NA  9.957448e-01 9.968671e-01
+# 1   B.1.1.7 8.903186e-04 8.295589e-05 NA  7.277281e-04 1.052909e-03
+# 2     other 2.393638e-04 3.453290e-05 NA  1.716805e-04 3.070470e-04
+# 3  B.1.177+ 2.219902e-08 1.085236e-08 NA  9.287788e-10 4.346927e-08
+# 4   B.1.525 2.826428e-06 1.402237e-06 NA  7.809300e-08 5.574762e-06
+# 5   B.1.351 3.905257e-05 3.236933e-05 NA -2.439015e-05 1.024953e-04
+# 6       P.1 3.694265e-06 2.427126e-06 NA -1.062815e-06 8.451344e-06
+# 7 B.1.617.1 7.358664e-09 6.764799e-09 NA -5.900097e-09 2.061743e-08
+# 8 B.1.617.2 9.988247e-01 1.098416e-04 NA  9.986094e-01 9.990400e-01
 
-# 99.7% [99.6%-99.8%] non-B.1.1.7
+# 99.91% [99.88%-99.95%] non-B.1.1.7
 colSums(multinom_preds_today_avg[-1, c("prob","asymp.LCL","asymp.UCL")])
 #      prob asymp.LCL asymp.UCL 
-# 0.9970455 0.9960445 0.9980465 
+# 0.9991097 0.9987557 0.9994636 
 
 # here given by region:
 multinom_preds_today_byregion = data.frame(emmeans(fit3_sanger_multi, ~ LINEAGE2|DATE_NUM, by=c("REGION"),
@@ -411,91 +411,91 @@ multinom_preds_today_byregion = data.frame(emmeans(fit3_sanger_multi, ~ LINEAGE2
                                                    mode="prob", df=NA))
 multinom_preds_today_byregion
 # LINEAGE2 DATE_NUM                   REGION         prob           SE df     asymp.LCL    asymp.UCL
-# 1    B.1.1.7    18813                   London 1.666193e-03 1.193941e-04 NA  1.432185e-03 1.900201e-03
-# 2      other    18813                   London 2.800717e-05 3.567232e-06 NA  2.101553e-05 3.499882e-05
-# 3   B.1.177+    18813                   London 2.445328e-09 6.092829e-10 NA  1.251155e-09 3.639500e-09
-# 4    B.1.525    18813                   London 1.845143e-05 6.807011e-06 NA  5.109930e-06 3.179292e-05
-# 5    B.1.351    18813                   London 1.863911e-04 3.925581e-05 NA  1.094511e-04 2.633311e-04
-# 6        P.1    18813                   London 9.333754e-05 4.250577e-05 NA  1.002776e-05 1.766473e-04
-# 7  B.1.617.1    18813                   London 1.807454e-07 8.419723e-08 NA  1.572188e-08 3.457690e-07
-# 8  B.1.617.2    18813                   London 9.980074e-01 1.468807e-04 NA  9.977196e-01 9.982953e-01
-# 9    B.1.1.7    18813               North West 1.017427e-03 6.879610e-05 NA  8.825892e-04 1.152265e-03
-# 10     other    18813               North West 6.265656e-05 7.708334e-06 NA  4.754851e-05 7.776462e-05
-# 11  B.1.177+    18813               North West 1.626935e-08 3.984869e-09 NA  8.459150e-09 2.407955e-08
-# 12   B.1.525    18813               North West 4.793657e-06 1.802408e-06 NA  1.261002e-06 8.326312e-06
-# 13   B.1.351    18813               North West 9.779989e-06 2.554857e-06 NA  4.772561e-06 1.478742e-05
-# 14       P.1    18813               North West 2.693128e-06 1.578714e-06 NA -4.010939e-07 5.787350e-06
-# 15 B.1.617.1    18813               North West 1.490135e-09 1.243997e-09 NA -9.480546e-10 3.928324e-09
-# 16 B.1.617.2    18813               North West 9.989026e-01 7.404598e-05 NA  9.987575e-01 9.990478e-01
-# 17   B.1.1.7    18813               South West 2.782273e-03 2.313716e-04 NA  2.328793e-03 3.235753e-03
-# 18     other    18813               South West 1.299041e-04 1.917492e-05 NA  9.232195e-05 1.674862e-04
-# 19  B.1.177+    18813               South West 2.429684e-08 6.253294e-09 NA  1.204060e-08 3.655307e-08
-# 20   B.1.525    18813               South West 1.362977e-05 8.138257e-06 NA -2.320923e-06 2.958046e-05
-# 21   B.1.351    18813               South West 5.467179e-05 2.291603e-05 NA  9.757198e-06 9.958638e-05
-# 22       P.1    18813               South West 2.256014e-05 1.785026e-05 NA -1.242573e-05 5.754601e-05
-# 23 B.1.617.1    18813               South West 3.591016e-07 1.976281e-07 NA -2.824240e-08 7.464456e-07
-# 24 B.1.617.2    18813               South West 9.969966e-01 2.489434e-04 NA  9.965087e-01 9.974845e-01
-# 25   B.1.1.7    18813               South East 2.278296e-03 1.731680e-04 NA  1.938893e-03 2.617699e-03
-# 26     other    18813               South East 1.844802e-05 2.443870e-06 NA  1.365813e-05 2.323792e-05
-# 27  B.1.177+    18813               South East 2.364301e-09 5.919424e-10 NA  1.204116e-09 3.524487e-09
-# 28   B.1.525    18813               South East 2.016280e-05 7.980177e-06 NA  4.521937e-06 3.580366e-05
-# 29   B.1.351    18813               South East 7.634639e-05 1.986231e-05 NA  3.741698e-05 1.152758e-04
-# 30       P.1    18813               South East 3.488857e-05 1.869638e-05 NA -1.755652e-06 7.153279e-05
-# 31 B.1.617.1    18813               South East 8.660939e-08 4.593787e-08 NA -3.427186e-09 1.766460e-07
-# 32 B.1.617.2    18813               South East 9.975718e-01 1.842510e-04 NA  9.972106e-01 9.979329e-01
-# 33   B.1.1.7    18813          East of England 2.408574e-03 1.771156e-04 NA  2.061434e-03 2.755714e-03
-# 34     other    18813          East of England 5.078026e-05 6.644017e-06 NA  3.775823e-05 6.380230e-05
-# 35  B.1.177+    18813          East of England 5.237053e-09 1.313501e-09 NA  2.662639e-09 7.811467e-09
-# 36   B.1.525    18813          East of England 6.631263e-06 3.063060e-06 NA  6.277766e-07 1.263475e-05
-# 37   B.1.351    18813          East of England 4.520119e-05 1.238967e-05 NA  2.091788e-05 6.948450e-05
-# 38       P.1    18813          East of England 1.314101e-05 7.990231e-06 NA -2.519551e-06 2.880158e-05
-# 39 B.1.617.1    18813          East of England 3.169998e-08 1.796072e-08 NA -3.502377e-09 6.690233e-08
-# 40 B.1.617.2    18813          East of England 9.974756e-01 1.851675e-04 NA  9.971127e-01 9.978386e-01
-# 41   B.1.1.7    18813            East Midlands 4.151149e-03 2.899840e-04 NA  3.582791e-03 4.719507e-03
-# 42     other    18813            East Midlands 2.918748e-04 3.693768e-05 NA  2.194783e-04 3.642714e-04
-# 43  B.1.177+    18813            East Midlands 5.126980e-08 1.269717e-08 NA  2.638380e-08 7.615579e-08
-# 44   B.1.525    18813            East Midlands 2.465403e-06 1.646718e-06 NA -7.621053e-07 5.692911e-06
-# 45   B.1.351    18813            East Midlands 3.279779e-05 1.017072e-05 NA  1.286354e-05 5.273203e-05
-# 46       P.1    18813            East Midlands 2.360292e-06 2.593646e-06 NA -2.723161e-06 7.443745e-06
-# 47 B.1.617.1    18813            East Midlands 6.470771e-08 3.347685e-08 NA -9.057159e-10 1.303211e-07
-# 48 B.1.617.2    18813            East Midlands 9.955192e-01 3.127572e-04 NA  9.949062e-01 9.961322e-01
-# 49   B.1.1.7    18813            West Midlands 3.373648e-03 2.363506e-04 NA  2.910410e-03 3.836887e-03
-# 50     other    18813            West Midlands 2.384492e-04 3.014389e-05 NA  1.793683e-04 2.975301e-04
-# 51  B.1.177+    18813            West Midlands 3.624275e-08 9.003455e-09 NA  1.859631e-08 5.388920e-08
-# 52   B.1.525    18813            West Midlands 1.572839e-05 6.342010e-06 NA  3.298278e-06 2.815850e-05
-# 53   B.1.351    18813            West Midlands 4.680206e-05 1.311040e-05 NA  2.110615e-05 7.249798e-05
-# 54       P.1    18813            West Midlands 2.441384e-06 2.676050e-06 NA -2.803577e-06 7.686344e-06
-# 55 B.1.617.1    18813            West Midlands 1.689266e-07 8.120541e-08 NA  9.766947e-09 3.280863e-07
-# 56 B.1.617.2    18813            West Midlands 9.963227e-01 2.572636e-04 NA  9.958185e-01 9.968270e-01
-# 57   B.1.1.7    18813               North East 5.995176e-03 5.871899e-04 NA  4.844305e-03 7.146047e-03
-# 58     other    18813               North East 6.660327e-04 9.633013e-05 NA  4.772291e-04 8.548363e-04
-# 59  B.1.177+    18813               North East 5.907007e-08 1.524674e-08 NA  2.918701e-08 8.895312e-08
-# 60   B.1.525    18813               North East 3.749864e-06 3.016991e-06 NA -2.163331e-06 9.663058e-06
-# 61   B.1.351    18813               North East 3.974176e-05 1.696362e-05 NA  6.493674e-06 7.298985e-05
-# 62       P.1    18813               North East 9.932360e-06 1.102504e-05 NA -1.167632e-05 3.154104e-05
-# 63 B.1.617.1    18813               North East 2.279342e-08 2.547463e-08 NA -2.713594e-08 7.272279e-08
-# 64 B.1.617.2    18813               North East 9.932853e-01 6.579160e-04 NA  9.919958e-01 9.945748e-01
-# 65   B.1.1.7    18813 Yorkshire and The Humber 9.592254e-03 7.023372e-04 NA  8.215698e-03 1.096881e-02
-# 66     other    18813 Yorkshire and The Humber 1.205835e-03 1.468447e-04 NA  9.180245e-04 1.493645e-03
-# 67  B.1.177+    18813 Yorkshire and The Humber 1.630458e-07 3.995088e-08 NA  8.474353e-08 2.413481e-07
-# 68   B.1.525    18813 Yorkshire and The Humber 1.125562e-05 5.260396e-06 NA  9.454334e-07 2.156581e-05
-# 69   B.1.351    18813 Yorkshire and The Humber 3.694422e-05 1.245305e-05 NA  1.253669e-05 6.135175e-05
-# 70       P.1    18813 Yorkshire and The Humber 3.160175e-13 1.451496e-13 NA  3.152959e-14 6.005054e-13
-# 71 B.1.617.1    18813 Yorkshire and The Humber 3.184170e-08 2.119718e-08 NA -9.704013e-09 7.338742e-08
-# 72 B.1.617.2    18813 Yorkshire and The Humber 9.891535e-01 7.955072e-04 NA  9.875944e-01 9.907127e-01
+# 1    B.1.1.7    18823                   London 5.475627e-04 4.632683e-05 NA  4.567638e-04 6.383616e-04
+# 2      other    18823                   London 1.202951e-05 1.754252e-06 NA  8.591243e-06 1.546779e-05
+# 3   B.1.177+    18823                   London 4.579322e-10 1.284367e-10 NA  2.062008e-10 7.096636e-10
+# 4    B.1.525    18823                   London 3.923375e-06 1.828840e-06 NA  3.389140e-07 7.507836e-06
+# 5    B.1.351    18823                   London 3.509343e-05 9.792646e-06 NA  1.590020e-05 5.428667e-05
+# 6        P.1    18823                   London 2.178505e-05 1.261644e-05 NA -2.942709e-06 4.651281e-05
+# 7  B.1.617.1    18823                   London 3.131337e-09 2.046319e-09 NA -8.793735e-10 7.142048e-09
+# 8  B.1.617.2    18823                   London 9.993796e-01 5.330063e-05 NA  9.992751e-01 9.994841e-01
+# 9    B.1.1.7    18823               North West 3.180787e-04 2.597922e-05 NA  2.671604e-04 3.689971e-04
+# 10     other    18823               North West 2.652611e-05 3.781412e-06 NA  1.911468e-05 3.393754e-05
+# 11  B.1.177+    18823               North West 2.964806e-09 8.208011e-10 NA  1.356066e-09 4.573547e-09
+# 12   B.1.525    18823               North West 1.103412e-06 5.211052e-07 NA  8.206468e-08 2.124759e-06
+# 13   B.1.351    18823               North West 1.884436e-06 6.067355e-07 NA  6.952560e-07 3.073616e-06
+# 14       P.1    18823               North West 5.849483e-07 4.136760e-07 NA -2.258418e-07 1.395738e-06
+# 15 B.1.617.1    18823               North West 1.718983e-11 2.029102e-11 NA -2.257983e-11 5.695950e-11
+# 16 B.1.617.2    18823               North West 9.996518e-01 2.842421e-05 NA  9.995961e-01 9.997075e-01
+# 17   B.1.1.7    18823               South West 9.386320e-04 8.382461e-05 NA  7.743388e-04 1.102925e-03
+# 18     other    18823               South West 5.883745e-05 9.456249e-06 NA  4.030354e-05 7.737135e-05
+# 19  B.1.177+    18823               South West 4.742188e-09 1.357091e-09 NA  2.082339e-09 7.402038e-09
+# 20   B.1.525    18823               South West 2.586475e-06 1.850367e-06 NA -1.040178e-06 6.213129e-06
+# 21   B.1.351    18823               South West 6.822621e-06 3.812089e-06 NA -6.489364e-07 1.429418e-05
+# 22       P.1    18823               South West 6.102640e-06 5.152242e-06 NA -3.995568e-06 1.620085e-05
+# 23 B.1.617.1    18823               South West 4.286534e-09 3.442276e-09 NA -2.460204e-09 1.103327e-08
+# 24 B.1.617.2    18823               South West 9.989870e-01 9.028691e-05 NA  9.988101e-01 9.991640e-01
+# 25   B.1.1.7    18823               South East 7.350753e-04 6.438463e-05 NA  6.088838e-04 8.612669e-04
+# 26     other    18823               South East 7.753925e-06 1.161027e-06 NA  5.478354e-06 1.002950e-05
+# 27  B.1.177+    18823               South East 4.346798e-10 1.222054e-10 NA  1.951617e-10 6.741979e-10
+# 28   B.1.525    18823               South East 4.146430e-06 2.042548e-06 NA  1.431087e-07 8.149751e-06
+# 29   B.1.351    18823               South East 1.122454e-05 3.753231e-06 NA  3.868337e-06 1.858073e-05
+# 30       P.1    18823               South East 9.254327e-06 5.936514e-06 NA -2.381026e-06 2.088968e-05
+# 31 B.1.617.1    18823               South East 1.521400e-09 1.094749e-09 NA -6.242682e-10 3.667069e-09
+# 32 B.1.617.2    18823               South East 9.992325e-01 6.710302e-05 NA  9.991010e-01 9.993641e-01
+# 33   B.1.1.7    18823          East of England 7.617648e-04 6.597938e-05 NA  6.324476e-04 8.910820e-04
+# 34     other    18823          East of England 2.124378e-05 3.168719e-06 NA  1.503320e-05 2.745435e-05
+# 35  B.1.177+    18823          East of England 9.513367e-10 2.683929e-10 NA  4.252963e-10 1.477377e-09
+# 36   B.1.525    18823          East of England 9.571694e-07 5.730803e-07 NA -1.660473e-07 2.080386e-06
+# 37   B.1.351    18823          East of England 5.710658e-06 2.059216e-06 NA  1.674668e-06 9.746648e-06
+# 38       P.1    18823          East of England 3.385215e-06 2.398665e-06 NA -1.316082e-06 8.086512e-06
+# 39 B.1.617.1    18823          East of England 7.465032e-10 5.374302e-10 NA -3.068406e-10 1.799847e-09
+# 40 B.1.617.2    18823          East of England 9.992069e-01 6.854822e-05 NA  9.990726e-01 9.993413e-01
+# 41   B.1.1.7    18823            East Midlands 1.347371e-03 1.119231e-04 NA  1.128006e-03 1.566736e-03
+# 42     other    18823            East Midlands 1.289916e-04 1.870607e-05 NA  9.232838e-05 1.656548e-04
+# 43  B.1.177+    18823            East Midlands 9.756149e-09 2.721983e-09 NA  4.421161e-09 1.509114e-08
+# 44   B.1.525    18823            East Midlands 6.152041e-07 4.453531e-07 NA -2.576719e-07 1.488080e-06
+# 45   B.1.351    18823            East Midlands 6.499494e-06 2.370710e-06 NA  1.852987e-06 1.114600e-05
+# 46       P.1    18823            East Midlands 6.152931e-07 7.126296e-07 NA -7.814352e-07 2.012021e-06
+# 47 B.1.617.1    18823            East Midlands 1.332655e-09 9.219637e-10 NA -4.743605e-10 3.139671e-09
+# 48 B.1.617.2    18823            East Midlands 9.985159e-01 1.234029e-04 NA  9.982740e-01 9.987578e-01
+# 49   B.1.1.7    18823            West Midlands 1.093367e-03 9.089511e-05 NA  9.152160e-04 1.271518e-03
+# 50     other    18823            West Midlands 1.042224e-04 1.512431e-05 NA  7.457927e-05 1.338655e-04
+# 51  B.1.177+    18823            West Midlands 6.826268e-09 1.910748e-09 NA  3.081271e-09 1.057126e-08
+# 52   B.1.525    18823            West Midlands 3.317887e-06 1.656918e-06 NA  7.038773e-08 6.565387e-06
+# 53   B.1.351    18823            West Midlands 9.813911e-06 3.282690e-06 NA  3.379958e-06 1.624786e-05
+# 54       P.1    18823            West Midlands 6.418441e-07 7.410265e-07 NA -8.105412e-07 2.094229e-06
+# 55 B.1.617.1    18823            West Midlands 3.172223e-09 2.109440e-09 NA -9.622035e-10 7.306650e-09
+# 56 B.1.617.2    18823            West Midlands 9.987886e-01 1.007588e-04 NA  9.985911e-01 9.989861e-01
+# 57   B.1.1.7    18823               North East 1.892488e-03 2.026410e-04 NA  1.495319e-03 2.289657e-03
+# 58     other    18823               North East 2.885136e-04 4.636203e-05 NA  1.976457e-04 3.793815e-04
+# 59  B.1.177+    18823               North East 1.099204e-08 3.167869e-09 NA  4.783126e-09 1.720094e-08
+# 60   B.1.525    18823               North East 2.960449e-12 1.103099e-12 NA  7.984142e-13 5.122483e-12
+# 61   B.1.351    18823               North East 6.495539e-06 3.171891e-06 NA  2.787460e-07 1.271233e-05
+# 62       P.1    18823               North East 3.223653e-11 2.848948e-11 NA -2.360182e-11 8.807488e-11
+# 63 B.1.617.1    18823               North East 6.735090e-20 4.489521e-20 NA -2.064210e-20 1.553439e-19
+# 64 B.1.617.2    18823               North East 9.978125e-01 2.350910e-04 NA  9.973517e-01 9.982733e-01
+# 65   B.1.1.7    18823 Yorkshire and The Humber 3.034587e-03 2.582784e-04 NA  2.528371e-03 3.540803e-03
+# 66     other    18823 Yorkshire and The Humber 5.320806e-04 7.450845e-05 NA  3.860468e-04 6.781145e-04
+# 67  B.1.177+    18823 Yorkshire and The Humber 3.086616e-08 8.523229e-09 NA  1.416094e-08 4.757138e-08
+# 68   B.1.525    18823 Yorkshire and The Humber 2.664404e-06 1.467576e-06 NA -2.119924e-07 5.540800e-06
+# 69   B.1.351    18823 Yorkshire and The Humber 6.653768e-06 2.616444e-06 NA  1.525632e-06 1.178190e-05
+# 70       P.1    18823 Yorkshire and The Humber 2.462453e-12 2.221722e-11 NA -4.108250e-11 4.600740e-11
+# 71 B.1.617.1    18823 Yorkshire and The Humber 7.033905e-10 5.748977e-10 NA -4.233883e-10 1.830169e-09
+# 72 B.1.617.2    18823 Yorkshire and The Humber 9.964240e-01 3.065398e-04 NA  9.958232e-01 9.970248e-01
 
 multinom_preds_delta_today_byregion = multinom_preds_today_byregion[multinom_preds_today_byregion$LINEAGE2=="B.1.617.2",]
 multinom_preds_delta_today_byregion
 # LINEAGE2 DATE_NUM                   REGION      prob           SE df asymp.LCL asymp.UCL
-# 8  B.1.617.2    18813                   London 0.9980074 1.468807e-04 NA 0.9977196 0.9982953
-# 16 B.1.617.2    18813               North West 0.9989026 7.404598e-05 NA 0.9987575 0.9990478
-# 24 B.1.617.2    18813               South West 0.9969966 2.489434e-04 NA 0.9965087 0.9974845
-# 32 B.1.617.2    18813               South East 0.9975718 1.842510e-04 NA 0.9972106 0.9979329
-# 40 B.1.617.2    18813          East of England 0.9974756 1.851675e-04 NA 0.9971127 0.9978386
-# 48 B.1.617.2    18813            East Midlands 0.9955192 3.127572e-04 NA 0.9949062 0.9961322
-# 56 B.1.617.2    18813            West Midlands 0.9963227 2.572636e-04 NA 0.9958185 0.9968270
-# 64 B.1.617.2    18813               North East 0.9932853 6.579160e-04 NA 0.9919958 0.9945748
-# 72 B.1.617.2    18813 Yorkshire and The Humber 0.9891535 7.955072e-04 NA 0.9875944 0.9907127
+# 8  B.1.617.2    18823                   London 0.9993796 5.330063e-05 NA 0.9992751 0.9994841
+# 16 B.1.617.2    18823               North West 0.9996518 2.842421e-05 NA 0.9995961 0.9997075
+# 24 B.1.617.2    18823               South West 0.9989870 9.028691e-05 NA 0.9988101 0.9991640
+# 32 B.1.617.2    18823               South East 0.9992325 6.710302e-05 NA 0.9991010 0.9993641
+# 40 B.1.617.2    18823          East of England 0.9992069 6.854822e-05 NA 0.9990726 0.9993413
+# 48 B.1.617.2    18823            East Midlands 0.9985159 1.234029e-04 NA 0.9982740 0.9987578
+# 56 B.1.617.2    18823            West Midlands 0.9987886 1.007588e-04 NA 0.9985911 0.9989861
+# 64 B.1.617.2    18823               North East 0.9978125 2.350910e-04 NA 0.9973517 0.9982733
+# 72 B.1.617.2    18823 Yorkshire and The Humber 0.9964240 3.065398e-04 NA 0.9958232 0.9970248
 
 # CALCULATION OF TRANSMISSION ADVANTAGE THROUGH TIME ####
 
@@ -778,7 +778,7 @@ SGTF_predsbyregion$LINEAGE2 = factor(SGTF_predsbyregion$LINEAGE2, levels=c(level
         at=list(DATE_NUM=today_num), 
         type="response"))[,c(2,6,5)]
 #        prob asymp.UCL asymp.LCL
-# 1 0.9973022 0.9966437 0.9978318
+# 1 0.999616 0.9994938 0.9997086
 
 # here given by NHS region:
 data.frame(REGION=data.frame(emmeans(fit_SGTF, ~ DATE_NUM, by=c("REGION"),
@@ -787,16 +787,16 @@ data.frame(REGION=data.frame(emmeans(fit_SGTF, ~ DATE_NUM, by=c("REGION"),
            1-as.data.frame(emmeans(fit_SGTF, ~ DATE_NUM, by=c("REGION"),
                         at=list(DATE_NUM=today_num), 
                         type="response"))[,c(3,7,6)])
-#                     REGION      prob asymp.UCL asymp.LCL
-# 1                   London 0.9744834 0.9649967 0.9814484
-# 2               North West 0.9997466 0.9996810 0.9997987
-# 3               South West 0.9981229 0.9909365 0.9996135
-# 4               South East 0.9980492 0.9969066 0.9987702
-# 5          East of England 0.9968837 0.9954483 0.9978675
-# 6            East Midlands 0.9954652 0.9935775 0.9967998
-# 7            West Midlands 0.9967837 0.9954200 0.9977423
-# 8               North East 0.9970730 0.9942716 0.9985064
-# 9 Yorkshire and The Humber 0.9976482 0.9964750 0.9984316
+# REGION      prob asymp.UCL asymp.LCL
+# 1                   London 0.9902240 0.9852642 0.9935254
+# 2               North West 0.9999768 0.9999688 0.9999828
+# 3               South West 0.9996824 0.9977497 0.9999553
+# 4               South East 0.9997088 0.9994737 0.9998389
+# 5          East of England 0.9994794 0.9991473 0.9996822
+# 6            East Midlands 0.9993138 0.9989201 0.9995640
+# 7            West Midlands 0.9995577 0.9992987 0.9997211
+# 8               North East 0.9997146 0.9993081 0.9998823
+# 9 Yorkshire and The Humber 0.9998095 0.9996763 0.9998878
 
 
 
@@ -806,7 +806,7 @@ data.frame(REGION=data.frame(emmeans(fit_SGTF, ~ DATE_NUM, by=c("REGION"),
 
 fit_sanger_multi_preds2 = fit_sanger_multi_preds
 ymin = 0.001
-ymax = 0.998
+ymax = 0.9998
 fit_sanger_multi_preds2$asymp.LCL[fit_sanger_multi_preds2$asymp.LCL<ymin] = ymin
 fit_sanger_multi_preds2$asymp.UCL[fit_sanger_multi_preds2$asymp.UCL<ymin] = ymin
 fit_sanger_multi_preds2$asymp.UCL[fit_sanger_multi_preds2$asymp.UCL>ymax] = ymax
@@ -850,7 +850,7 @@ plot_sanger_mfit_logit = qplot(data=fit_sanger_multi_predsbyregion2,
   # guides(colour=FALSE) +
   theme(legend.position = "right") +
   xlab("Collection date")+
-  coord_cartesian(xlim=c(as.Date("2020-09-01"),NA), ylim=c(0.001, 0.998), expand=c(0,0))
+  coord_cartesian(xlim=c(as.Date("2020-09-01"),NA), ylim=c(0.001, 0.9991), expand=c(0,0))
 plot_sanger_mfit_logit
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\sanger_multinom fit by ONS region_logit scale.png"), width=8, height=6)
@@ -934,7 +934,7 @@ plot_sanger_mfit_logit = qplot(data=rbind(fit_sanger_multi_predsbyregion2[,1:9],
   # guides(colour=FALSE) +
   theme(legend.position = "right") +
   xlab("Collection date")+
-  coord_cartesian(xlim=c(as.Date("2020-09-01"),NA), ylim=c(0.001, 0.998), expand=c(0,0))
+  coord_cartesian(xlim=c(as.Date("2020-09-01"),NA), ylim=c(0.001, 0.9991), expand=c(0,0))
 plot_sanger_mfit_logit
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\sanger S dropout_multinom fit by ONS region_logit scale.png"), width=8, height=6)
@@ -1397,7 +1397,7 @@ qplot(data=fit_sanger_multi_predsbyregion_day, x=collection_date, y=totcases, ge
 fit_sanger_multi_predsbyregion_day$weekday = factor(weekdays(fit_sanger_multi_predsbyregion_day$collection_date))
 fit_cases = gam(totcases ~ s(DATE_NUM, bs="cs", k=8, by=REGION) + REGION + weekday,
                 family=poisson(log), data=fit_sanger_multi_predsbyregion_day[fit_sanger_multi_predsbyregion_day$LINEAGE2==levels_LINEAGE2[[1]],],
-)
+) # TO DO: add testing
 BIC(fit_cases)
 # calculate average instantaneous growth rates & 95% CLs using emtrends ####
 # based on the slope of the GAM fit on a log link scale
