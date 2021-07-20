@@ -7,7 +7,7 @@
 # https://covid-19.sciensano.be/nl/covid-19-epidemiologische-situatie (federal test platform) & "Genomic surveillance of SARS-CoV-2 in Belgium", 
 # reports, https://www.uzleuven.be/nl/laboratoriumgeneeskunde/genomic-surveillance-sars-cov-2-belgium
 
-# Tom Wenseleers, last update 14 JULY 2021 for VOC data & 15 July for Re calculations
+# Tom Wenseleers, last update 14 JULY 2021 for VOC data & 20 July for Re calculations
 
 library(lme4)
 library(splines)
@@ -425,7 +425,7 @@ library(scales)
 # cases_tot$WEEKDAY = weekdays(cases_tot$date)
 
 source("scripts/downloadData.R") # download latest data with new confirmed cases per day from Sciensano website, code adapted from https://github.com/JoFAM/covidBE_analysis by Joris Meys
-cases_tot = cases_tot[cases_tot$DATE<(as.Date(Sys.time())-2),] # we leave out last 2 days since they are incomplete
+cases_tot = cases_tot[cases_tot$DATE<(as.Date(Sys.time())-3),] # we leave out last 3 days since they are incomplete
 range(cases_tot$DATE) # "2020-03-01" "2021-07-12"
 cases_tot = cases_tot[cases_tot$DATE>=as.Date("2020-08-01"),]
 
@@ -437,8 +437,8 @@ fit_cases = gam(CASES ~ s(DATE_NUM, bs="cs", k=k, m=c(2), fx=F) +
                 family=poisson(log), data=cases_tot,
                 method = "REML",
                 knots = list(DATE_NUM = c(min(cases_tot$DATE_NUM)-14,
-                                          seq(min(cases_tot$DATE_NUM)+0.5*diff(range(cases_tot$DATE_NUM))/(k-2), 
-                                              max(cases_tot$DATE_NUM)-0.5*diff(range(cases_tot$DATE_NUM))/(k-2), length.out=k-2),
+                                          seq(min(cases_tot$DATE_NUM)+1*diff(range(cases_tot$DATE_NUM))/(k-2), 
+                                              max(cases_tot$DATE_NUM)-1*diff(range(cases_tot$DATE_NUM))/(k-2), length.out=k-2),
                                           max(cases_tot$DATE_NUM)+14))
 ) 
 BIC(fit_cases)
