@@ -51,7 +51,7 @@ suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 filedate = as.Date(gsub("_","-",dat)) # file date
 filedate_num = as.numeric(filedate)
 # today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-07-15")
+today = as.Date("2021-07-20")
 today_num = as.numeric(today)
 
 set_sum_contrasts() # we use effect coding for all models
@@ -382,21 +382,22 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\belgium_baseline_surveillance_multino
 
 # estimated share of different variants of concern among lab diagnoses today
 be_seq_mfit0_preds[as.character(be_seq_mfit0_preds$collection_date)==as.character(today),]
-#                variant collection_date_num        prob           SE df    asymp.LCL   asymp.UCL collection_date
-# 1121   B.1.1.7 (alpha)             18823.5 0.071047307 0.0065914651 NA 0.0581282724 0.083966341      2021-07-15
-# 1122    B.1.351 (beta)             18823.5 0.001965596 0.0006434333 NA 0.0007044902 0.003226703      2021-07-15
-# 1123       P.1 (gamma)             18823.5 0.014205855 0.0020795930 NA 0.0101299272 0.018281782      2021-07-15
-# 1124 B.1.617.2 (delta)             18823.5 0.907485065 0.0083180847 NA 0.8911819182 0.923788211      2021-07-15
-# 1125             other             18823.5 0.005296178 0.0010092581 NA 0.0033180684 0.007274288      2021-07-15
+# variant collection_date_num        prob           SE df    asymp.LCL   asymp.UCL collection_date totcases cases smoothed_totcases smoothed_cases
+# 1146   B.1.1.7 (alpha)             18828.5 0.041031592 0.0046945303 NA 0.0318304819 0.050232702      2021-07-20       NA    NA          1075.497      44.129336
+# 1147    B.1.351 (beta)             18828.5 0.001269254 0.0004588889 NA 0.0003698486 0.002168660      2021-07-20       NA    NA          1075.497       1.365079
+# 1148       P.1 (gamma)             18828.5 0.008711306 0.0014788902 NA 0.0058127345 0.011609877      2021-07-20       NA    NA          1075.497       9.368980
+# 1149 B.1.617.2 (delta)             18828.5 0.945725581 0.0060560036 NA 0.9338560323 0.957595130      2021-07-20       NA    NA          1075.497    1017.124609
+# 1150             other             18828.5 0.003262266 0.0007006156 NA 0.0018890848 0.004635448      2021-07-20       NA    NA          1075.497       3.508556
   
 # estimated share of different variants of concern among new infections today (assuming 1 week between infection & diagnosis)
 be_seq_mfit0_preds[as.character(be_seq_mfit0_preds$collection_date)==as.character(today+7),]
-#                variant collection_date_num        prob           SE df    asymp.LCL   asymp.UCL collection_date
-# 1156   B.1.1.7 (alpha)             18830.5 0.032767181 0.0040314503 NA 0.0248656834 0.040668678      2021-07-22
-# 1157    B.1.351 (beta)             18830.5 0.001059895 0.0003978615 NA 0.0002801008 0.001839689      2021-07-22
-# 1158       P.1 (gamma)             18830.5 0.007125610 0.0012771503 NA 0.0046224412 0.009628778      2021-07-22
-# 1159 B.1.617.2 (delta)             18830.5 0.956374095 0.0052440668 NA 0.9460959134 0.966652277      2021-07-22
-# 1160             other             18830.5 0.002673219 0.0006004018 NA 0.0014964531 0.003849985      2021-07-22
+#                variant collection_date_num         prob           SE df    asymp.LCL   asymp.UCL collection_date
+# 1181   B.1.1.7 (alpha)             18835.5 0.0185110822 0.0026727493 NA 0.0132725897 0.023749575      2021-07-27 
+# 1182    B.1.351 (beta)             18835.5 0.0006694824 0.0002746422 NA 0.0001311937 0.001207771      2021-07-27      
+# 1183       P.1 (gamma)             18835.5 0.0042742500 0.0008676939 NA 0.0025736013 0.005974899      2021-07-27      
+# 1184 B.1.617.2 (delta)             18835.5 0.9749344903 0.0035481817 NA 0.9679801820 0.981888799      2021-07-27     
+# 1185             other             18835.5 0.0016106952 0.0004017041 NA 0.0008233696 0.002398021      2021-07-27     
+
 
   
 
