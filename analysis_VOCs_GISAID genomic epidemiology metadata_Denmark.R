@@ -1,6 +1,6 @@
 # ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT VOCs IN DENMARK (GISAID GENOMIC EPIDEMIOLOGY METADATA)
 # T. Wenseleers
-# last update 12 July 2021
+# last update 20 July 2021
 
 library(nnet)
 # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
@@ -13,56 +13,27 @@ library(ggthemes)
 library(scales)
 
 today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-07-12")
+today = as.Date("2021-07-20")
 today_num = as.numeric(today)
 plotdir = "Denmark_GISAID"
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 
-# import GISAID genomic epidemiology metadata (file version metadata_2021-07-09_15-10.tsv.gz)
-GISAID = read_tsv(gzfile(".//data//GISAID_genomic_epidemiology//metadata_2021-07-09_15-10.tsv.gz"), col_types = cols(.default = "c")) 
+# import GISAID genomic epidemiology metadata
+GISAID = read_tsv(gzfile(".//data//GISAID_genomic_epidemiology//metadata_2021-07-19_12-00.tsv.gz"), col_types = cols(.default = "c")) 
 GISAID = as.data.frame(GISAID)
 
 GISAID$date = as.Date(GISAID$date)
 GISAID = GISAID[!is.na(GISAID$date),]
-unique(GISAID$host)
-# [1] "Human"                               "Environment"                         "Feline"                              "unknown"                            
-# [5] "Rhinolophus shameli"                 "Rhinolophus malayanus"               "Rhinolophus pusillus"                "Rhinolophus sinicus"                
-# [9] "Rhinolophus stheno"                  "Rhinolophus affinis"                 "Felis catus"                         "Canis lupus familiaris"             
-# [13] "Gorilla gorilla gorilla"             "Mesocricetus auratus"                "Prionailurus bengalensis euptilurus" "Panthera leo"                       
-# [17] "Mink"                                "Mustela putorius furo"               "Chlorocebus sabaeus"                 "Mus musculus"                       
-# [21] "Mus musculus (BALB/c mice)"          "Manis javanica"                      "Manis pentadactyla"                  "Panthera tigris jacksoni" 
-
 GISAID[GISAID$host!="Human","strain"]
 GISAID = GISAID[GISAID$host=="Human",]
 GISAID = GISAID[GISAID$date>=as.Date("2020-01-01"),]
-range(GISAID$date) # "2020-01-01" "2021-07-05"
-
-firstdetB16172 = GISAID[GISAID$pango_lineage=="B.1.617.2",]
-firstdetB16172 = firstdetB16172[!is.na(firstdetB16172$date),]
-firstdetB16172 = firstdetB16172[firstdetB16172$date==min(firstdetB16172$date),]
-firstdetB16172 # 7 sept 63r old male from Madhya Pradesh
-
-# GISAID = GISAID[grepl("2021-", GISAID$date),]
-sum(is.na(GISAID$purpose_of_sequencing)) == nrow(GISAID) # field purpose_of_sequencing left blank unfortunately
-nrow(GISAID) # 1901769
+range(GISAID$date) # "2020-01-01" "2021-07-15"
 GISAID$Week = lubridate::week(GISAID$date)
 GISAID$Year = lubridate::year(GISAID$date)
 GISAID$Year_Week = interaction(GISAID$Year,GISAID$Week)
 library(lubridate)
 GISAID$floor_date = as.Date(as.character(cut(GISAID$date, "week")))+3.5 # week midpoint date
 GISAID$DATE_NUM = as.numeric(GISAID$date)
-colnames(GISAID)
-unique(GISAID$region)
-# "Asia"          "Europe"        "Africa"        "South America" "Oceania"       "North America"
-unique(GISAID$country)
-unique(GISAID$division) # = city or province or region, sometimes just country
-unique(GISAID$location) # = city
-
-length(unique(GISAID$country[grepl("B.1.617",GISAID$pango_lineage,fixed=T)])) # B.1.617+ now found in 67 countries
-table(GISAID$pango_lineage[grepl("B.1.617",GISAID$pango_lineage,fixed=T)])
-# B.1.617 B.1.617.1 B.1.617.2 B.1.617.3 
-# 2      4388     51068       147
-
 GISAID$pango_lineage[grepl("B.1.177",GISAID$pango_lineage,fixed=T)] = "B.1.177+"
 GISAID$pango_lineage[grepl("B.1.36\\>",GISAID$pango_lineage)] = "B.1.36+"
 
@@ -71,115 +42,28 @@ GISAID$LINEAGE1 = GISAID$pango_lineage
 GISAID$LINEAGE2 = GISAID$pango_lineage
 GISAID[grepl(sel_target_VOC, GISAID$LINEAGE1, fixed=TRUE),"LINEAGE1"] = paste0(sel_target_VOC,"+") # in LINEAGE1 we recode B.1.617.1,2&3 all as B.1.617+
 
-table_country_lineage = as.data.frame(table(GISAID$country, GISAID$LINEAGE1))
-colnames(table_country_lineage) = c("Country","Lineage","Count")
-tblB1617 = table_country_lineage[grepl(sel_target_VOC, table_country_lineage$Lineage, fixed=T)&table_country_lineage$Count>10,]
-tblB1617
-#              Country  Lineage Count
-# 170497      Australia B.1.617+   252
-# 170501        Bahrain B.1.617+    24
-# 170502     Bangladesh B.1.617+    44
-# 170505        Belgium B.1.617+   247
-# 170513         Brazil B.1.617+    16
-# 170519         Canada B.1.617+   346
-# 170530 Czech Republic B.1.617+    17
-# 170532        Denmark B.1.617+   121
-# 170542        Finland B.1.617+    19
-# 170543         France B.1.617+   141
-# 170548        Germany B.1.617+   836
-# 170562          India B.1.617+  7435
-# 170563      Indonesia B.1.617+    75
-# 170564           Iran B.1.617+    11
-# 170566        Ireland B.1.617+   299
-# 170567         Israel B.1.617+    63
-# 170568          Italy B.1.617+   184
-# 170570          Japan B.1.617+   170
-# 170581     Luxembourg B.1.617+    58
-# 170583         Malawi B.1.617+    26
-# 170584       Malaysia B.1.617+    12
-# 170588         Mexico B.1.617+    48
-# 170596          Nepal B.1.617+    34
-# 170597    Netherlands B.1.617+    85
-# 170598    New Zealand B.1.617+    17
-# 170602         Norway B.1.617+    69
-# 170611         Poland B.1.617+    71
-# 170612       Denmark B.1.617+   126
-# 170613          Qatar B.1.617+    23
-# 170615        Romania B.1.617+    19
-# 170616         Denmark B.1.617+   278
-# 170627      Singapore B.1.617+   762
-# 170632   South Africa B.1.617+    21
-# 170633    South Korea B.1.617+    32
-# 170635          Denmark B.1.617+   264
-# 170638         Sweden B.1.617+    42
-# 170639    Switzerland B.1.617+   113
-# 170641       Thailand B.1.617+    94
-# 170651 United Kingdom B.1.617+ 40092
-# 170653            USA B.1.617+  2859
-# 170656        Vietnam B.1.617+    54
-
-sel_countries_target = unique(as.character(table_country_lineage[grepl(sel_target_VOC, table_country_lineage$Lineage)&table_country_lineage$Count>100,]$Country))
-sel_countries_target
-# [1] "Australia"      "Belgium"        "Canada"         "Denmark"        "France"         "Germany"        "India"          "Ireland"       
-# [9] "Italy"          "Japan"          "Denmark"       "Denmark"         "Singapore"      "Denmark"          "Switzerland"    "United Kingdom"
-# [17] "USA"    
-
-sel_ref_lineage = "B.1.1.7"
-
-sel_countries_ref = as.character(table_country_lineage[table_country_lineage$Lineage==sel_ref_lineage&table_country_lineage$Count>10&table_country_lineage$Country %in% sel_countries_target,]$Country)
-sel_countries_ref
-# [1] "Australia"      "Belgium"        "Canada"         "Denmark"        "France"         "Germany"        "India"          "Ireland"       
-# [9] "Italy"          "Japan"          "Denmark"       "Denmark"         "Singapore"      "Denmark"          "Switzerland"    "United Kingdom"
-# [17] "USA"
-
-sel_countries = intersect(sel_countries_target, sel_countries_ref)
-sel_countries
-# [1] "Australia"      "Belgium"        "Canada"         "Denmark"        "France"         "Germany"        "India"          "Ireland"       
-# [9] "Italy"          "Japan"          "Denmark"       "Denmark"         "Singapore"      "Denmark"          "Switzerland"    "United Kingdom"
-# [17] "USA" 
-
-# sel_countries = sel_countries[!(sel_countries %in% c("Japan","USA"))] # Japan is almost only import & for USA we do separate analysis by state
-
-
-
-
 
 # ANALYSIS OF VOCs IN DENMARK ####
 
 sel_countries = "Denmark"
-
-tblB117 = table_country_lineage[table_country_lineage$Lineage==sel_ref_lineage&table_country_lineage$Count>10&table_country_lineage$Country %in% sel_countries,]
-tblB117
-
 GISAID_sel = GISAID[GISAID$country %in% sel_countries,]
 
 # use data from Jan  1 onwards
 GISAID_sel = GISAID_sel[GISAID_sel$date>=as.Date("2021-01-01"),]
 GISAID_sel = GISAID_sel[-which(GISAID_sel$LINEAGE1=="B.1.617+"&GISAID_sel$date<=as.Date("2021-05-01")),] # B.1.617+ cases before 1st of May are assumed to be all travel related and are removed
-nrow(GISAID_sel) # 78813
-range(GISAID_sel$date) # "2021-01-01" "2021-06-14"
-
-rowSums(table(GISAID_sel$LINEAGE1,GISAID_sel$country))
-            
-# GISAID_sel = GISAID_sel[GISAID_sel$country_exposure=="India"&GISAID_sel$country!="India",]
-# nrow(GISAID_sel[is.na(GISAID_sel$LINEAGE1),]) # 0 unknown pango clade
 GISAID_sel = GISAID_sel[!is.na(GISAID_sel$LINEAGE1),]
-nrow(GISAID_sel) # 25935
+nrow(GISAID_sel) # 83697
+range(GISAID_sel$date) # "2021-01-04" "2021-07-12"
 
 GISAID_sel = GISAID_sel[GISAID_sel$country==GISAID_sel$country_exposure,] # we remove travel-related cases (none indicated here as such)
-nrow(GISAID_sel) # 25924
-
-sum(GISAID_sel$LINEAGE1=="B.1.617+") # 126
-unique(GISAID_sel$country[GISAID_sel$LINEAGE1=="B.1.1.7"])
-sum(GISAID_sel$LINEAGE1=="B.1.1.7") # 4206
-sum(GISAID_sel$LINEAGE1=="B.1.1.519") # 0
+nrow(GISAID_sel) # 83697
 
 table(GISAID_sel$LINEAGE1)
 table(GISAID_sel$LINEAGE2)
 
 main_lineages = names(table(GISAID_sel$LINEAGE1))[100*table(GISAID_sel$LINEAGE1)/sum(table(GISAID_sel$LINEAGE1)) > 5]
 main_lineages
-# "B.1.1.7"  "B.1.177+"  
+# "B.1.1.7"  "B.1.177+" "B.1.617+" 
 VOCs = c("B.1.617.1","B.1.617.2","B.1.617+","B.1.618","B.1.1.7","B.1.351","P.1","B.1.1.318","B.1.1.207","B.1.429",
          "B.1.525","B.1.526","B.1.1.519")
 main_lineages = union(main_lineages, VOCs)
@@ -192,12 +76,10 @@ remove2 = remove2[!(remove2 %in% c("B.1.351","B.1.1.7","P.1","B.1.617.2","B.1.61
 GISAID_sel$LINEAGE1[(GISAID_sel$LINEAGE1 %in% remove1)] = "other" # minority VOCs
 GISAID_sel$LINEAGE2[(GISAID_sel$LINEAGE2 %in% remove2)] = "other" # minority VOCs
 table(GISAID_sel$LINEAGE1)
-# B.1.1.519   B.1.1.7  B.1.177+   B.1.351  B.1.617+     other       P.1 
-# 61     16588      4887       249       590      2897       652 
 GISAID_sel$LINEAGE1 = factor(GISAID_sel$LINEAGE1)
 GISAID_sel$LINEAGE1 = relevel(GISAID_sel$LINEAGE1, ref="B.1.1.7") # we code UK strain as the reference level
 levels(GISAID_sel$LINEAGE1)
-# "B.1.1.7"   "B.1.1.519" "B.1.177+"  "B.1.351"   "B.1.617+"  "other"     "P.1"
+# "B.1.1.7"   "B.1.1.519" "B.1.177+"  "B.1.351"   "B.1.617+"  "other"     "P.1" 
 levels_LINEAGE1 = c("B.1.1.7","B.1.1.519","B.1.177+",
                     "B.1.351","P.1","B.1.617+","other")
 GISAID_sel$LINEAGE1 = factor(GISAID_sel$LINEAGE1, levels=levels_LINEAGE1)
@@ -210,16 +92,9 @@ levels_LINEAGE2 = c("B.1.1.7","B.1.1.519","B.1.177+",
                     "B.1.351","P.1","B.1.617.1","B.1.617.2","other")
 GISAID_sel$LINEAGE2 = factor(GISAID_sel$LINEAGE2, levels=levels_LINEAGE2)
 
-# GISAID_sel = GISAID_sel[GISAID_sel$division!="India",]
-table(GISAID_sel$country)
-
-
 # B.1.617+ cases before Apr 14 are likely mostly imported cases, so we remove those
 # GISAID_sel = GISAID_sel[-which(grepl("B.1.617", GISAID_sel$pango_lineage, fixed=TRUE)&GISAID_sel$date<=as.Date("2021-04-14")),]
 
-table(GISAID_sel$LINEAGE1)
-
-range(GISAID_sel$date) # "2020-01-04" "2021-07-01"
 
 # aggregated data to make Muller plots of raw data
 # aggregate by day to identify days on which INSA performed (days with a lot of sequences)
@@ -315,51 +190,61 @@ library(splines)
 set.seed(1)
 fit1_denmark_multi = nnet::multinom(LINEAGE2 ~ scale(DATE_NUM), weights=count, data=data_agbyweek2, maxit=1000)
 fit2_denmark_multi = nnet::multinom(LINEAGE2 ~ ns(DATE_NUM, df=2), weights=count, data=data_agbyweek2, maxit=1000)
-fit3_denmark_multi = nnet::multinom(LINEAGE2 ~ ns(DATE_NUM, df=3), weights=count, data=data_agbyweek2, maxit=1000)
 BIC(fit1_denmark_multi, fit2_denmark_multi, fit3_denmark_multi) 
 # df      BIC
-# fit1_denmark_multi 14 71433.46
-# fit2_denmark_multi 21 70447.54
-# fit3_denmark_multi 28 69976.69
+# fit1_denmark_multi 14 73550.65
+# fit2_denmark_multi 21 72449.78 # fit2_denmark_multi has best BIC, but I will use the slightly simpler model fit1_denmark_multi
 
 # growth rate advantage compared to UK type B.1.1.7 (difference in growth rate per day) 
-emtrdenmark = emtrends(fit3_denmark_multi, trt.vs.ctrl ~ LINEAGE2,  
+emtrdenmark = emtrends(fit1_denmark_multi, trt.vs.ctrl ~ LINEAGE2,  
                    var="DATE_NUM",  mode="latent",
                    at=list(DATE_NUM=max(GISAID_sel$DATE_NUM)))
 delta_r_denmark = data.frame(confint(emtrdenmark, 
-                                 adjust="none", df=NA)$contrasts, 
-                         p.value=as.data.frame(emtrdenmark$contrasts)$p.value)
+                             adjust="none", df=NA)$contrasts)[,-c(3,4)]
+rownames(delta_r_denmark) = delta_r_denmark[,"contrast"]
+delta_r_denmark = delta_r_denmark[,-1]
 delta_r_denmark
-# contrast    estimate          SE df   asymp.LCL   asymp.UCL      p.value
-# 1  B.1.1.519 - B.1.1.7 -0.51684515 0.053077520 NA -0.62087517 -0.41281512 1.185426e-09
-# 2 (B.1.177+) - B.1.1.7 -0.06239653 0.007844668 NA -0.07777180 -0.04702127 7.899654e-08
-# 3    B.1.351 - B.1.1.7  0.04013818 0.013892026 NA  0.01291031  0.06736605 4.124731e-02
-# 4        P.1 - B.1.1.7  0.07871240 0.013602852 NA  0.05205130  0.10537350 2.171890e-05
-# 5  B.1.617.1 - B.1.1.7 -0.12670275 0.169025592 NA -0.45798683  0.20458132 9.120316e-01
-# 6  B.1.617.2 - B.1.1.7  0.21060837 0.005316432 NA  0.20018836  0.22102839 0.000000e+00
-# 7      other - B.1.1.7 -0.12084121 0.014769368 NA -0.14978864 -0.09189378 4.514648e-08
+#                          estimate    asymp.LCL    asymp.UCL
+# B.1.1.519 - B.1.1.7   0.013203524  0.008727501  0.017679547
+# (B.1.177+) - B.1.1.7 -0.071049929 -0.072234136 -0.069865723
+# B.1.351 - B.1.1.7    -0.008324931 -0.012971289 -0.003678574
+# P.1 - B.1.1.7         0.018830468  0.009290130  0.028370807
+# B.1.617.1 - B.1.1.7   0.030361915 -0.012489689  0.073213518
+# B.1.617.2 - B.1.1.7   0.195251727  0.189242832  0.201260622
+# other - B.1.1.7      -0.065910277 -0.067150605 -0.064669949
 
+# implied increase in infectiousness (due to combination of increased transmissibility and/or immune escape)
+# assuming generation time of 4.7 days (Nishiura et al. 2020)
+# delta has a 150% [143-157%] increased infectiousness compared to alpha
+exp(delta_r_denmark*4.7) 
+# estimate asymp.LCL asymp.UCL
+# B.1.1.519 - B.1.1.7  1.0640225 1.0418722 1.0866438
+# (B.1.177+) - B.1.1.7 0.7161006 0.7121260 0.7200973
+# B.1.351 - B.1.1.7    0.9616284 0.9408561 0.9828593
+# P.1 - B.1.1.7        1.0925377 1.0446309 1.1426416
+# B.1.617.1 - B.1.1.7  1.1533849 0.9429882 1.4107247
+# B.1.617.2 - B.1.1.7  2.5034834 2.4337695 2.5751941
+# other - B.1.1.7      0.7336096 0.7293454 0.7378987
 
-# fitted prop of different LINEAGES in the denmark today
-# 96.5% [95.7%-97.3%] now estimated to be B.1.617.2 across all regions
-multinom_preds_today_avg = data.frame(emmeans(fit3_denmark_multi, ~ LINEAGE2|1,
+# fitted prop of different LINEAGES in the Denmark today
+multinom_preds_today_avg = data.frame(emmeans(fit1_denmark_multi, ~ LINEAGE2|1,
                                               at=list(DATE_NUM=today_num), 
                                               mode="prob", df=NA))
 multinom_preds_today_avg
 # LINEAGE2         prob           SE df     asymp.LCL    asymp.UCL
-# 1   B.1.1.7 3.368355e-02 3.899300e-03 NA  2.604106e-02 4.132604e-02
-# 2 B.1.1.519 4.528459e-15 1.178929e-14 NA -1.857813e-14 2.763504e-14
-# 3  B.1.177+ 7.906416e-06 3.636448e-06 NA  7.791099e-07 1.503372e-05
-# 4   B.1.351 2.221271e-04 1.423233e-04 NA -5.682137e-05 5.010755e-04
-# 5       P.1 1.185503e-03 6.062293e-04 NA -2.684210e-06 2.373691e-03
-# 6 B.1.617.1 3.516920e-08 2.418128e-07 NA -4.387751e-07 5.091135e-07
-# 7 B.1.617.2 9.649008e-01 4.070808e-03 NA  9.569221e-01 9.728794e-01
-# 8     other 9.360646e-08 8.476283e-08 NA -7.252564e-08 2.597386e-07
+# 1   B.1.1.7 6.606891e-03 5.663453e-04 NA  5.496875e-03 7.716908e-03
+# 2 B.1.1.519 6.414887e-05 1.341316e-05 NA  3.785956e-05 9.043818e-05
+# 3  B.1.177+ 6.019805e-08 7.775292e-09 NA  4.495876e-08 7.543735e-08
+# 4   B.1.351 5.808679e-06 1.620409e-06 NA  2.632736e-06 8.984623e-06
+# 5       P.1 2.447024e-05 9.547994e-06 NA  5.756513e-06 4.318396e-05
+# 6 B.1.617.1 3.411288e-06 5.124408e-06 NA -6.632367e-06 1.345494e-05
+# 7 B.1.617.2 9.932951e-01 5.745849e-04 NA  9.921689e-01 9.944213e-01
+# 8     other 9.459156e-08 1.257654e-08 NA  6.994200e-08 1.192411e-07
 
 # % non-B.1.1.7
 colSums(multinom_preds_today_avg[-1, c("prob","asymp.LCL","asymp.UCL")])
 #      prob asymp.LCL asymp.UCL 
-# 0.9663164 0.9568629 0.9757700 
+# 0.9933931 0.9922087 0.9945775 
 
 
 # PLOT MULTINOMIAL FIT
@@ -370,7 +255,7 @@ date.to = as.numeric(as.Date("2021-07-31")) # max(GISAID_sel$DATE_NUM)+extrapola
 
 # multinomial model predictions (fastest, but no confidence intervals)
 predgrid = expand.grid(list(DATE_NUM=seq(date.from, date.to)))
-fit_denmark_multi_preds = data.frame(predgrid, as.data.frame(predict(fit3_denmark_multi, newdata=predgrid, type="prob")),check.names=F)
+fit_denmark_multi_preds = data.frame(predgrid, as.data.frame(predict(fit1_denmark_multi, newdata=predgrid, type="prob")),check.names=F)
 library(tidyr)
 library(tidyselect)
 fit_denmark_multi_preds = gather(fit_denmark_multi_preds, LINEAGE2, prob, all_of(levels_LINEAGE2), factor_key=TRUE)
@@ -417,7 +302,7 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\denmark_muller plots multipanel_multi
 # PLOT MODEL FIT WITH DATA & CONFIDENCE INTERVALS
 
 # multinomial model predictions by state with confidence intervals (but slower)
-fit_denmark_multi_preds_withCI = data.frame(emmeans(fit3_denmark_multi,
+fit_denmark_multi_preds_withCI = data.frame(emmeans(fit1_denmark_multi,
                                                         ~ LINEAGE2,
                                                         by=c("DATE_NUM"),
                                                         at=list(DATE_NUM=seq(date.from, date.to, by=1)),  # by=XX to speed up things a bit
@@ -465,7 +350,7 @@ plot_denmark_mfit_logit = qplot(data=fit_denmark_multi_preds2, x=collection_date
   # guides(colour=FALSE) +
   theme(legend.position = "right") +
   xlab("Collection date")+
-  coord_cartesian(xlim=c(as.Date("2021-01-01"),as.Date(date.to, origin="1970-01-01")), ylim=c(0.001, 0.9901), expand=c(0,0))
+  coord_cartesian(xlim=c(as.Date("2021-01-01"),as.Date(date.to, origin="1970-01-01")), ylim=c(0.001, 0.9991), expand=c(0,0))
 plot_denmark_mfit_logit
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\denmark_multinom fit_logit scale.png"), width=10, height=6)
@@ -538,8 +423,8 @@ fit_cases = gam(cases_new ~ s(DATE_NUM, bs="cs", k=k, m=c(2), fx=F) +
                 family=poisson(log), data=cases_tot,
                 method = "REML",
                 knots = list(DATE_NUM = c(min(cases_tot$DATE_NUM)-14,
-                                          seq(min(cases_tot$DATE_NUM)+0.7*diff(range(cases_tot$DATE_NUM))/(k-2), 
-                                              max(cases_tot$DATE_NUM)-0.7*diff(range(cases_tot$DATE_NUM))/(k-2), length.out=k-2),
+                                          seq(min(cases_tot$DATE_NUM)+1*diff(range(cases_tot$DATE_NUM))/(k-2), 
+                                              max(cases_tot$DATE_NUM)-1*diff(range(cases_tot$DATE_NUM))/(k-2), length.out=k-2),
                                           max(cases_tot$DATE_NUM)+14))
 ) 
 BIC(fit_cases)
@@ -641,11 +526,11 @@ qplot(data=avg_r_cases, x=DATE-7, y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribb
 above_avg_r_variants0 = do.call(rbind, lapply(seq(date.from,
                                                   date.to), 
                                               function (d) { 
-                                                wt = as.data.frame(emmeans(fit3_denmark_multi, ~ LINEAGE2 , at=list(DATE_NUM=d), type="response"))$prob   # important: these should sum to 1
+                                                wt = as.data.frame(emmeans(fit1_denmark_multi, ~ LINEAGE2 , at=list(DATE_NUM=d), type="response"))$prob   # important: these should sum to 1
                                                 # wt = rep(1/length(levels_VARIANTS), length(levels_VARIANTS)) # this would give equal weights, equivalent to emmeans:::eff.emmc(levs=levels_LINEAGE2)
                                                 cons = lapply(seq_along(wt), function (i) { con = -wt; con[i] = 1 + con[i]; con })
                                                 names(cons) = seq_along(cons)
-                                                EMT = emtrends(fit3_denmark_multi,  ~ LINEAGE2 , by=c("DATE_NUM"),
+                                                EMT = emtrends(fit1_denmark_multi,  ~ LINEAGE2 , by=c("DATE_NUM"),
                                                                var="DATE_NUM", mode="latent",
                                                                at=list(DATE_NUM=d))
                                                 out = as.data.frame(confint(contrast(EMT, cons), adjust="none", df=NA))
