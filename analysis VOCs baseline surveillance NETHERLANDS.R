@@ -113,7 +113,7 @@ nl_baseline$variant = factor(nl_baseline$variant, levels=levels_VARIANTS)
 nl_baseline$prop = nl_baseline$count/nl_baseline$total
 nl_baseline$collection_date_num = as.numeric(nl_baseline$collection_date)
 
-range(nl_baseline$collection_date) # "2020-12-03" "2021-07-01"
+range(nl_baseline$collection_date) # "2020-12-03" "2021-07-08"
 
 
 # Muller plot raw data
