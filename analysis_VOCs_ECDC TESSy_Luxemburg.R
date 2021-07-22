@@ -1,4 +1,4 @@
-# ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT VOCs IN GREECE (ECDC TESSy VARIANT DATA)
+# ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT VOCs IN LUXEMBURG (ECDC TESSy VARIANT DATA)
 # T. Wenseleers
 # last update 22 July 2021
 
@@ -17,7 +17,7 @@ library(tsibble)
 today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
 today = as.Date("2021-07-22")
 today_num = as.numeric(today)
-plotdir = "Greece_TESSy"
+plotdir = "Luxemburg_TESSy"
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 
 # import ECDC TESSy variant data from https://www.ecdc.europa.eu/en/publications-data/data-virus-variants-covid-19-eueea
@@ -44,9 +44,9 @@ TESSY = TESSY[rep(seq_len(nrow(TESSY)), TESSY$count),] # convert to long format
 TESSY$count = NULL
 head(TESSY)
 
-# ANALYSIS OF VOCs IN GREECE ####
+# ANALYSIS OF VOCs IN LUXEMBURG ####
 
-selected_countries = c("Greece")
+selected_countries = c("Luxembourg")
 TESSY_sel = TESSY[TESSY$country %in% selected_countries,]
 # use data from Jan  1 onwards
 TESSY_sel = TESSY_sel[TESSY_sel$date>=as.Date("2021-01-01"),]
@@ -70,7 +70,7 @@ data_agbyweek$DATE_NUM = as.numeric(data_agbyweek$date)
 # MULLER PLOT (RAW DATA)
 library(scales)
 n2 = length(levels(TESSY_sel$variant))
-lineage_cols2 = hcl(h = seq(15, 320, length = n2), l = 65, c = 200)
+lineage_cols2 = hcl(h = seq(15, 280, length = n2), l = 65, c = 200)
 lineage_cols2[which(levels(TESSY_sel$variant)=="B.1.1.7")] = "#0085FF"
 lineage_cols2[which(levels(TESSY_sel$variant)=="B.1.351")] = "#9A9D00"
 lineage_cols2[which(levels(TESSY_sel$variant)=="P.1")] = "cyan3"
@@ -78,7 +78,7 @@ lineage_cols2[which(levels(TESSY_sel$variant)=="B.1.617.1")] = muted("magenta")
 lineage_cols2[which(levels(TESSY_sel$variant)=="B.1.617.2")] = "magenta"
 lineage_cols2[which(levels(TESSY_sel$variant)=="Other")] = "grey75"
 
-muller_greece_raw2 = ggplot(data=data_agbyweek, aes(x=date, y=count, group=variant)) + 
+muller_luxemburg_raw2 = ggplot(data=data_agbyweek, aes(x=date, y=count, group=variant)) + 
   # facet_wrap(~ STATE, ncol=1) +
   # geom_col(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE1), width=1, position="fill") +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), position="fill") +
@@ -93,13 +93,13 @@ muller_greece_raw2 = ggplot(data=data_agbyweek, aes(x=date, y=count, group=varia
   ylab("Share") + 
   theme(legend.position="right",  
         axis.title.x=element_blank()) +
-  labs(title = "SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN GREECE\n(ECDC TESSy data)") 
+  labs(title = "SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN LUXEMBURG\n(ECDC TESSy data)") 
 # +
 # coord_cartesian(xlim=c(1,max(TESSY_sel$Week)))
-muller_greece_raw2
+muller_luxemburg_raw2
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\greece_muller plots_raw data.png"), width=8, height=6)
-# ggsave(file=paste0(".\\plots\\",plotdir,"\\greece_muller plots_raw data.pdf"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",plotdir,"\\luxemburg_muller plots_raw data.png"), width=8, height=6)
+# ggsave(file=paste0(".\\plots\\",plotdir,"\\luxemburg_muller plots_raw data.pdf"), width=8, height=6)
 
 
 # multinomial fits
@@ -107,64 +107,103 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\greece_muller plots_raw data.png"), w
 library(nnet)
 library(splines)
 set.seed(1)
-fit1_greece_multi = nnet::multinom(variant ~ scale(DATE_NUM), weights=count, data=data_agbyweek, maxit=1000)
-fit2_greece_multi = nnet::multinom(variant ~ ns(DATE_NUM, df=2), weights=count, data=data_agbyweek, maxit=1000)
-fit3_greece_multi = nnet::multinom(variant ~ ns(DATE_NUM, df=3), weights=count, data=data_agbyweek, maxit=1000)
-BIC(fit1_greece_multi, fit2_greece_multi, fit3_greece_multi) 
+fit1_luxemburg_multi = nnet::multinom(variant ~ scale(DATE_NUM), weights=count, data=data_agbyweek, maxit=1000)
+fit2_luxemburg_multi = nnet::multinom(variant ~ ns(DATE_NUM, df=2), weights=count, data=data_agbyweek, maxit=1000)
+fit3_luxemburg_multi = nnet::multinom(variant ~ ns(DATE_NUM, df=3), weights=count, data=data_agbyweek, maxit=1000)
+BIC(fit1_luxemburg_multi, fit2_luxemburg_multi, fit3_luxemburg_multi) 
 # df      BIC
-# fit1_greece_multi 14 28876.60
-# fit2_greece_multi 21 27951.83
-# fit3_greece_multi 28 27531.69
+# fit1_luxemburg_multi 14 13009.08
+# fit2_luxemburg_multi 21 12477.33
+# fit3_luxemburg_multi 28 12485.93
 
 # growth rate advantage compared to UK type B.1.1.7 (difference in growth rate per day) 
-emtrgreece = emtrends(fit3_greece_multi, trt.vs.ctrl ~ variant,  
+emtrluxemburg = emtrends(fit2_luxemburg_multi, trt.vs.ctrl ~ variant,  
                    var="DATE_NUM",  mode="latent",
                    at=list(DATE_NUM=max(TESSY_sel$DATE_NUM)))
-delta_r_greece = data.frame(confint(emtrgreece, 
+delta_r_luxemburg = data.frame(confint(emtrluxemburg, 
                              adjust="none", df=NA)$contrasts)[,-c(3,4)]
-rownames(delta_r_greece) = delta_r_greece[,"contrast"]
-delta_r_greece = delta_r_greece[,-1]
-delta_r_greece
-# estimate    asymp.LCL    asymp.UCL
-# B.1.525 - B.1.1.7   -0.065643366 -0.172726491  0.041439758
-# B.1.351 - B.1.1.7    0.142672451  0.129660800  0.155684102
-# P.1 - B.1.1.7        0.053456150 -0.020159755  0.127072054
-# B.1.621 - B.1.1.7   -0.403752139 -0.677527926 -0.129976352
-# B.1.617.1 - B.1.1.7 -3.430288449 -3.797915818 -3.062661079
-# B.1.617.2 - B.1.1.7  0.177823147  0.164699827  0.190946466
-# Other - B.1.1.7     -0.003699635 -0.007978155  0.000578884
+rownames(delta_r_luxemburg) = delta_r_luxemburg[,"contrast"]
+delta_r_luxemburg = delta_r_luxemburg[,-1]
+delta_r_luxemburg
+# estimate    asymp.LCL   asymp.UCL
+# B.1.525 - B.1.1.7   -0.04073545 -0.094317451  0.01284656
+# B.1.351 - B.1.1.7   -0.05123277 -0.064510165 -0.03795538
+# P.1 - B.1.1.7        0.12429662  0.115226542  0.13336670
+# B.1.620 - B.1.1.7    0.06572873  0.008029858  0.12342760
+# B.1.617.1 - B.1.1.7 -0.07954161 -0.223313914  0.06423070
+# B.1.617.2 - B.1.1.7  0.06149278  0.045441139  0.07754443
+# Other - B.1.1.7      0.04934369  0.042251585  0.05643580
 
 # implied increase in infectiousness (due to combination of increased transmissibility and/or immune escape)
 # assuming generation time of 4.7 days (Nishiura et al. 2020)
-exp(delta_r_greece*4.7) 
-# estimate    asymp.LCL    asymp.UCL
-# B.1.525 - B.1.1.7   7.345305e-01 4.440516e-01 1.215028e+00
-# B.1.351 - B.1.1.7   1.955333e+00 1.839338e+00 2.078643e+00
-# P.1 - B.1.1.7       1.285624e+00 9.095995e-01 1.817094e+00
-# B.1.621 - B.1.1.7   1.499228e-01 4.140386e-02 5.428681e-01
-# B.1.617.1 - B.1.1.7 9.957490e-08 1.769110e-08 5.604605e-07
-# B.1.617.2 - B.1.1.7 2.306587e+00 2.168616e+00 2.453335e+00
-# Other - B.1.1.7     9.827620e-01 9.631970e-01 1.002724e+00
+exp(delta_r_luxemburg*4.7) 
+# estimate asymp.LCL asymp.UCL
+# B.1.525 - B.1.1.7   0.8257555 0.6419197 1.0622389
+# B.1.351 - B.1.1.7   0.7860035 0.7384530 0.8366158
+# P.1 - B.1.1.7       1.7935450 1.7186941 1.8716558
+# B.1.620 - B.1.1.7   1.3619603 1.0384615 1.7862344
+# B.1.617.1 - B.1.1.7 0.6880832 0.3500864 1.3524047
+# B.1.617.2 - B.1.1.7 1.3351132 1.2380943 1.4397346
+# Other - B.1.1.7     1.2610130 1.2196726 1.3037546
 
-# fitted prop of different LINEAGES in the Greece today
-multinom_preds_today_avg = data.frame(emmeans(fit3_greece_multi, ~ variant|1,
+# pairwise growth contrasts
+emtrluxemburg2 = emtrends(fit2_luxemburg_multi, pairwise ~ variant,  
+                         var="DATE_NUM",  mode="latent",
+                         at=list(DATE_NUM=max(TESSY_sel$DATE_NUM)))
+delta_r_luxemburg2 = data.frame(confint(emtrluxemburg2, 
+                                       adjust="none", df=NA)$contrasts)[,-c(3,4)]
+rownames(delta_r_luxemburg2) = delta_r_luxemburg2[,"contrast"]
+delta_r_luxemburg2 = delta_r_luxemburg2[,-1]
+delta_r_luxemburg2
+# estimate     asymp.LCL    asymp.UCL
+# B.1.1.7 - B.1.525      0.040735447 -0.0128465569  0.094317451
+# B.1.1.7 - B.1.351      0.051232774  0.0379553831  0.064510165
+# B.1.1.7 - P.1         -0.124296622 -0.1333667032 -0.115226542
+# B.1.1.7 - B.1.620     -0.065728731 -0.1234276039 -0.008029858
+# B.1.1.7 - B.1.617.1    0.079541609 -0.0642306967  0.223313914
+# B.1.1.7 - B.1.617.2   -0.061492784 -0.0775444298 -0.045441139
+# B.1.1.7 - Other       -0.049343695 -0.0564358045 -0.042251585
+# B.1.525 - B.1.351      0.010497327 -0.0446994357  0.065694089
+# B.1.525 - P.1         -0.165032070 -0.2190957391 -0.110968400
+# B.1.525 - B.1.620     -0.106464178 -0.1849979717 -0.027930385
+# B.1.525 - B.1.617.1    0.038806161 -0.1144898044  0.192102127
+# B.1.525 - B.1.617.2   -0.102228232 -0.1579912889 -0.046465174
+# B.1.525 - Other       -0.090079142 -0.1439178706 -0.036240413
+# B.1.351 - P.1         -0.175529396 -0.1914866818 -0.159572111
+# B.1.351 - B.1.620     -0.116961505 -0.1761123147 -0.057810695
+# B.1.351 - B.1.617.1    0.028308835 -0.1160497534  0.172667423
+# B.1.351 - B.1.617.2   -0.112725558 -0.1334905200 -0.091960597
+# B.1.351 - Other       -0.100576469 -0.1150523850 -0.086100553
+# P.1 - B.1.620          0.058567891  0.0007087148  0.116427068
+# P.1 - B.1.617.1        0.203838231  0.0597956040  0.347880858
+# P.1 - B.1.617.2        0.062803838  0.0490601706  0.076547505
+# P.1 - Other            0.074952928  0.0651969128  0.084708942
+# B.1.620 - B.1.617.1    0.145270340 -0.0096058198  0.300146499
+# B.1.620 - B.1.617.2    0.004235947 -0.0549104235  0.063382317
+# B.1.620 - Other        0.016385036 -0.0414829312  0.074253004
+# B.1.617.1 - B.1.617.2 -0.141034393 -0.2857395214  0.003670735
+# B.1.617.1 - Other     -0.128885303 -0.2727886762  0.015018069
+# B.1.617.2 - Other      0.012149090 -0.0039804374  0.028278617
+
+# fitted prop of different LINEAGES in the Luxemburg today
+multinom_preds_today_avg = data.frame(emmeans(fit2_luxemburg_multi, ~ variant|1,
                                               at=list(DATE_NUM=today_num), 
                                               mode="prob", df=NA))
 multinom_preds_today_avg
-# variant          prob            SE df      asymp.LCL     asymp.UCL
-# 1   B.1.1.7  1.961844e-02  2.743277e-03 NA   1.424171e-02  2.499516e-02
-# 2   B.1.525  1.550954e-06  4.030417e-06 NA  -6.348518e-06  9.450426e-06
-# 3   B.1.351  1.066047e-01  1.807852e-02 NA   7.117146e-02  1.420380e-01
-# 4       P.1  2.787717e-04  3.364344e-04 NA  -3.806276e-04  9.381710e-04
-# 5   B.1.621  2.628011e-09  1.238298e-08 NA  -2.164219e-08  2.689821e-08
-# 6 B.1.617.1 8.483729e-106 1.448931e-105 NA -1.991481e-105 3.688226e-105
-# 7 B.1.617.2  8.648352e-01  1.986121e-02 NA   8.259079e-01  9.037624e-01
-# 8     Other  8.661361e-03  1.321740e-03 NA   6.070797e-03  1.125192e-02
+# variant         prob           SE df     asymp.LCL    asymp.UCL
+# 1   B.1.1.7 7.187240e-03 1.496120e-03 NA  4.254898e-03 1.011958e-02
+# 2   B.1.525 2.516961e-05 3.935259e-05 NA -5.196005e-05 1.022993e-04
+# 3   B.1.351 1.771490e-05 9.773524e-06 NA -1.440851e-06 3.687066e-05
+# 4       P.1 8.267223e-01 2.140117e-02 NA  7.847768e-01 8.686678e-01
+# 5   B.1.620 4.292593e-04 6.461227e-04 NA -8.371180e-04 1.695637e-03
+# 6 B.1.617.1 3.343527e-07 1.522635e-06 NA -2.649956e-06 3.318662e-06
+# 7 B.1.617.2 1.569259e-01 2.148869e-02 NA  1.148088e-01 1.990430e-01
+# 8     Other 8.692077e-03 2.229850e-03 NA  4.321651e-03 1.306250e-02
 
 # % non-B.1.1.7
 colSums(multinom_preds_today_avg[-1, c("prob","asymp.LCL","asymp.UCL")])
 #      prob asymp.LCL asymp.UCL 
-# 0.9803816 0.9027632 1.0580000 
+# 0.9928128 0.9030141 1.0826114
 
 
 # PLOT MULTINOMIAL FIT
@@ -175,14 +214,14 @@ date.to = as.numeric(as.Date("2021-07-31")) # max(TESSY_sel$DATE_NUM)+extrapolat
 
 # multinomial model predictions (fastest, but no confidence intervals)
 predgrid = expand.grid(list(DATE_NUM=seq(date.from, date.to)))
-fit_greece_multi_preds = data.frame(predgrid, as.data.frame(predict(fit3_greece_multi, newdata=predgrid, type="prob")),check.names=F)
+fit_luxemburg_multi_preds = data.frame(predgrid, as.data.frame(predict(fit2_luxemburg_multi, newdata=predgrid, type="prob")),check.names=F)
 library(tidyr)
 library(tidyselect)
-fit_greece_multi_preds = gather(fit_greece_multi_preds, variant, prob, all_of(levels_VARIANTS), factor_key=TRUE)
-fit_greece_multi_preds$date = as.Date(fit_greece_multi_preds$DATE_NUM, origin="1970-01-01")
-fit_greece_multi_preds$variant = factor(fit_greece_multi_preds$variant, levels=levels_VARIANTS) 
+fit_luxemburg_multi_preds = gather(fit_luxemburg_multi_preds, variant, prob, all_of(levels_VARIANTS), factor_key=TRUE)
+fit_luxemburg_multi_preds$date = as.Date(fit_luxemburg_multi_preds$DATE_NUM, origin="1970-01-01")
+fit_luxemburg_multi_preds$variant = factor(fit_luxemburg_multi_preds$variant, levels=levels_VARIANTS) 
 
-muller_greece_mfit = ggplot(data=fit_greece_multi_preds, 
+muller_luxemburg_mfit = ggplot(data=fit_luxemburg_multi_preds, 
                                    aes(x=date, y=prob, group=variant)) + 
   # facet_wrap(~ STATE) +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), position="stack") +
@@ -196,24 +235,24 @@ muller_greece_mfit = ggplot(data=fit_greece_multi_preds,
   theme_hc() + theme(legend.position="right", 
                      axis.title.x=element_blank()) + 
   ylab("Share") +
-  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN GREECE\n(ECDC TESSy data, multinomial fit)")
-muller_greece_mfit
+  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN LUXEMBURG\n(ECDC TESSy data, multinomial fit)")
+muller_luxemburg_mfit
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\greece_muller plots_multinom fit.png"), width=10, height=6)
-# ggsave(file=paste0(".\\plots\\",plotdir,"\\greece_muller plots_multinom fit.pdf"), width=10, height=6)
+ggsave(file=paste0(".\\plots\\",plotdir,"\\luxemburg_muller plots_multinom fit.png"), width=10, height=6)
+# ggsave(file=paste0(".\\plots\\",plotdir,"\\luxemburg_muller plots_multinom fit.pdf"), width=10, height=6)
 
 
 library(ggpubr)
-ggarrange(muller_greece_raw2 + coord_cartesian(xlim=c(as.Date("2021-01-01"),as.Date(date.to, origin="1970-01-01")))+
+ggarrange(muller_luxemburg_raw2 + coord_cartesian(xlim=c(as.Date("2021-01-01"),as.Date(date.to, origin="1970-01-01")))+
             theme(legend.background = element_rect(fill = alpha("white", 0)),
                   legend.key = element_rect(fill = alpha("white", 0)),
                   legend.text=element_text(color = "white")) +
             guides(colour = guide_legend(override.aes = list(alpha = 0)),
                    fill = guide_legend(override.aes = list(alpha = 0))), 
-          muller_greece_mfit+ggtitle("Multinomial fit"), ncol=1)
+          muller_luxemburg_mfit+ggtitle("Multinomial fit"), ncol=1)
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\greece_muller plots multipanel_multinom fit.png"), width=10, height=10)
-# ggsave(file=paste0(".\\plots\\",plotdir,"\\greece_muller plots multipanel_multinom fit.pdf"), width=10, height=10)
+ggsave(file=paste0(".\\plots\\",plotdir,"\\luxemburg_muller plots multipanel_multinom fit.png"), width=10, height=10)
+# ggsave(file=paste0(".\\plots\\",plotdir,"\\luxemburg_muller plots multipanel_multinom fit.pdf"), width=10, height=10)
 
 
 
@@ -222,26 +261,26 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\greece_muller plots multipanel_multin
 # PLOT MODEL FIT WITH DATA & CONFIDENCE INTERVALS
 
 # multinomial model predictions by state with confidence intervals (but slower)
-fit_greece_multi_preds_withCI = data.frame(emmeans(fit3_greece_multi,
+fit_luxemburg_multi_preds_withCI = data.frame(emmeans(fit2_luxemburg_multi,
                                                         ~ variant,
                                                         by=c("DATE_NUM"),
                                                         at=list(DATE_NUM=seq(date.from, date.to, by=1)),  # by=XX to speed up things a bit
                                                         mode="prob", df=NA))
-fit_greece_multi_preds_withCI$date = as.Date(fit_greece_multi_preds_withCI$DATE_NUM, origin="1970-01-01")
-fit_greece_multi_preds_withCI$variant = factor(fit_greece_multi_preds_withCI$variant, levels=levels_variant)
-fit_greece_multi_preds2 = fit_greece_multi_preds_withCI
+fit_luxemburg_multi_preds_withCI$date = as.Date(fit_luxemburg_multi_preds_withCI$DATE_NUM, origin="1970-01-01")
+fit_luxemburg_multi_preds_withCI$variant = factor(fit_luxemburg_multi_preds_withCI$variant, levels=levels_variant)
+fit_luxemburg_multi_preds2 = fit_luxemburg_multi_preds_withCI
 
 
 # on logit scale:
 
 ymin = 0.001
 ymax = 0.999
-fit_greece_multi_preds2$asymp.LCL[fit_greece_multi_preds2$asymp.LCL<ymin] = ymin
-fit_greece_multi_preds2$asymp.UCL[fit_greece_multi_preds2$asymp.UCL<ymin] = ymin
-fit_greece_multi_preds2$asymp.UCL[fit_greece_multi_preds2$asymp.UCL>ymax] = ymax
-fit_greece_multi_preds2$prob[fit_greece_multi_preds2$prob<ymin] = ymin
+fit_luxemburg_multi_preds2$asymp.LCL[fit_luxemburg_multi_preds2$asymp.LCL<ymin] = ymin
+fit_luxemburg_multi_preds2$asymp.UCL[fit_luxemburg_multi_preds2$asymp.UCL<ymin] = ymin
+fit_luxemburg_multi_preds2$asymp.UCL[fit_luxemburg_multi_preds2$asymp.UCL>ymax] = ymax
+fit_luxemburg_multi_preds2$prob[fit_luxemburg_multi_preds2$prob<ymin] = ymin
 
-plot_greece_mfit_logit = qplot(data=fit_greece_multi_preds2, x=date, y=prob, geom="blank") +
+plot_luxemburg_mfit_logit = qplot(data=fit_luxemburg_multi_preds2, x=date, y=prob, geom="blank") +
   # facet_wrap(~ STATE) +
   geom_ribbon(aes(y=prob, ymin=asymp.LCL, ymax=asymp.UCL, colour=NULL,
                   fill=variant
@@ -251,7 +290,7 @@ plot_greece_mfit_logit = qplot(data=fit_greece_multi_preds2, x=date, y=prob, geo
   ), alpha=I(1)) +
   ylab("Share (%)") +
   theme_hc() + xlab("") +
-  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN GREECE\n(ECDC TESSy data, multinomial fit)") +
+  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN LUXEMBURG\n(ECDC TESSy data, multinomial fit)") +
   scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
                      labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
                      limits=as.Date(c("2021-01-01",NA)), expand=c(0,0)) +
@@ -271,14 +310,14 @@ plot_greece_mfit_logit = qplot(data=fit_greece_multi_preds2, x=date, y=prob, geo
   theme(legend.position = "right") +
   xlab("Collection date")+
   coord_cartesian(xlim=c(as.Date("2021-01-01"),as.Date(date.to, origin="1970-01-01")), ylim=c(0.001, 0.991), expand=c(0,0))
-plot_greece_mfit_logit
+plot_luxemburg_mfit_logit
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\greece_multinom fit_logit scale.png"), width=10, height=6)
-# ggsave(file=paste0(".\\plots\\",plotdir,"\\greece_multinom fit_logit scale.pdf"), width=10, height=6)
+ggsave(file=paste0(".\\plots\\",plotdir,"\\luxemburg_multinom fit_logit scale.png"), width=10, height=6)
+# ggsave(file=paste0(".\\plots\\",plotdir,"\\luxemburg_multinom fit_logit scale.pdf"), width=10, height=6)
 
 
 # on response scale:
-plot_greece_mfit = qplot(data=fit_greece_multi_preds2, x=date, y=100*prob, geom="blank") +
+plot_luxemburg_mfit = qplot(data=fit_luxemburg_multi_preds2, x=date, y=100*prob, geom="blank") +
   # facet_wrap(~ STATE) +
   geom_ribbon(aes(y=100*prob, ymin=100*asymp.LCL, ymax=100*asymp.UCL, colour=NULL,
                   fill=variant
@@ -288,7 +327,7 @@ plot_greece_mfit = qplot(data=fit_greece_multi_preds2, x=date, y=100*prob, geom=
   ), alpha=I(1)) +
   ylab("Share (%)") +
   theme_hc() + xlab("") +
-  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN GREECE\n(ECDC TESSy data, multinomial fit)") +
+  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN LUXEMBURG\n(ECDC TESSy data, multinomial fit)") +
   scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
                      labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
                      limits=as.Date(c("2021-01-01",NA)), expand=c(0,0)) +
@@ -309,10 +348,10 @@ plot_greece_mfit = qplot(data=fit_greece_multi_preds2, x=date, y=100*prob, geom=
   # guides(colour=FALSE) +
   theme(legend.position = "right") +
   xlab("Collection date")
-plot_greece_mfit
+plot_luxemburg_mfit
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\greece_multinom fit_response scale.png"), width=10, height=6)
-# ggsave(file=paste0(".\\plots\\",plotdir,"\\greece_multinom fit_response scale.pdf"), width=10, height=6)
+ggsave(file=paste0(".\\plots\\",plotdir,"\\luxemburg_multinom fit_response scale.png"), width=10, height=6)
+# ggsave(file=paste0(".\\plots\\",plotdir,"\\luxemburg_multinom fit_response scale.pdf"), width=10, height=6)
 
 
 
@@ -325,7 +364,7 @@ library(dplyr)
 library(ggplot2)
 library(scales)  
 
-cases_tot = as.data.frame(get_national_data(countries = "Greece"))
+cases_tot = as.data.frame(get_national_data(countries = "Luxembourg"))
 cases_tot = cases_tot[cases_tot$date>=as.Date("2020-08-01"),]
 cases_tot$DATE_NUM = as.numeric(cases_tot$date)
 # cases_tot$BANKHOLIDAY = bankholiday(cases_tot$date)
@@ -351,15 +390,15 @@ BIC(fit_cases)
 
 # STACKED AREA CHART OF NEW CASES BY VARIANT (MULTINOMIAL FIT MAPPED ONTO CASE DATA) ####
 
-fit_greece_multi_preds_withCI$totcases = cases_tot$cases_new[match(round(fit_greece_multi_preds_withCI$DATE_NUM),cases_tot$DATE_NUM)]
-fit_greece_multi_preds_withCI$cases = fit_greece_multi_preds_withCI$totcases * fit_greece_multi_preds_withCI$prob
-fit_greece_multi_preds_withCI$cases[fit_greece_multi_preds_withCI$cases<=0.001] = NA
+fit_luxemburg_multi_preds_withCI$totcases = cases_tot$cases_new[match(round(fit_luxemburg_multi_preds_withCI$DATE_NUM),cases_tot$DATE_NUM)]
+fit_luxemburg_multi_preds_withCI$cases = fit_luxemburg_multi_preds_withCI$totcases * fit_luxemburg_multi_preds_withCI$prob
+fit_luxemburg_multi_preds_withCI$cases[fit_luxemburg_multi_preds_withCI$cases<=0.001] = NA
 cases_emmeans = as.data.frame(emmeans(fit_cases, ~ DATE_NUM, at=list(DATE_NUM=seq(date.from, date.to, by=0.5), BANHOLIDAY="no"), type="response"))
-fit_greece_multi_preds_withCI$smoothed_totcases = cases_emmeans$rate[match(fit_greece_multi_preds_withCI$DATE_NUM,cases_emmeans$DATE_NUM)]
-fit_greece_multi_preds_withCI$smoothed_cases = fit_greece_multi_preds_withCI$smoothed_totcases * fit_greece_multi_preds_withCI$prob
-fit_greece_multi_preds_withCI$smoothed_cases[fit_greece_multi_preds_withCI$smoothed_cases<=0.001] = NA
+fit_luxemburg_multi_preds_withCI$smoothed_totcases = cases_emmeans$rate[match(fit_luxemburg_multi_preds_withCI$DATE_NUM,cases_emmeans$DATE_NUM)]
+fit_luxemburg_multi_preds_withCI$smoothed_cases = fit_luxemburg_multi_preds_withCI$smoothed_totcases * fit_luxemburg_multi_preds_withCI$prob
+fit_luxemburg_multi_preds_withCI$smoothed_cases[fit_luxemburg_multi_preds_withCI$smoothed_cases<=0.001] = NA
 
-ggplot(data=fit_greece_multi_preds_withCI[fit_greece_multi_preds_withCI$date>=as.Date("2021-02-18"),], 
+ggplot(data=fit_luxemburg_multi_preds_withCI[fit_luxemburg_multi_preds_withCI$date>=as.Date("2021-02-18"),], 
        aes(x=date, y=cases, group=variant)) + 
   # facet_wrap(~ REGION, scale="free", ncol=3) +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), position="stack") +
@@ -370,15 +409,15 @@ ggplot(data=fit_greece_multi_preds_withCI[fit_greece_multi_preds_withCI$date>=as
   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
   theme_hc() + theme(legend.position="right") + 
   ylab("New confirmed cases per day") + xlab("Date of diagnosis") +
-  ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT\nIN GREECE\n(case data & multinomial fit to ECDC TESSy data)") +
+  ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT\nIN LUXEMBURG\n(case data & multinomial fit to ECDC TESSy data)") +
   scale_fill_manual("variant", values=lineage_cols2) +
   scale_colour_manual("variant", values=lineage_cols2) +
   coord_cartesian(xlim=c(as.Date("2021-02-18"),NA))
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\cases per day_stacked area multinomial fit raw case data.png"), width=8, height=6)
 
-ggplot(data=fit_greece_multi_preds_withCI[fit_greece_multi_preds_withCI$date>=as.Date("2021-02-18")&
-                                              fit_greece_multi_preds_withCI$date<=max(cases_tot$date),], 
+ggplot(data=fit_luxemburg_multi_preds_withCI[fit_luxemburg_multi_preds_withCI$date>=as.Date("2021-02-18")&
+                                              fit_luxemburg_multi_preds_withCI$date<=max(cases_tot$date),], 
        aes(x=date-7, y=smoothed_cases, group=variant)) + 
   # facet_wrap(~ REGION, scale="free", ncol=3) +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), position="stack") +
@@ -389,7 +428,7 @@ ggplot(data=fit_greece_multi_preds_withCI[fit_greece_multi_preds_withCI$date>=as
   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
   theme_hc() + theme(legend.position="right") + 
   ylab("New confirmed cases per day (smoothed)") + xlab("Date of infection") +
-  ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT\nIN GREECE\n(case data & multinomial fit to ECDC TESSy data)") +
+  ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT\nIN LUXEMBURG\n(case data & multinomial fit to ECDC TESSy data)") +
   scale_fill_manual("variant", values=lineage_cols2) +
   scale_colour_manual("variant", values=lineage_cols2) +
   coord_cartesian(xlim=c(as.Date("2021-02-18"),max(cases_tot$date)))
@@ -434,7 +473,7 @@ qplot(data=avg_r_cases, x=DATE-7, y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribb
                      labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A","M","J","J")) +
   # scale_y_continuous(limits=c(1/2, 2), trans="log2") +
   geom_hline(yintercept=1, colour=I("red")) +
-  ggtitle("Re IN GREECE AT MOMENT OF INFECTION BASED ON NEW CASES") +
+  ggtitle("Re IN LUXEMBURG AT MOMENT OF INFECTION BASED ON NEW CASES") +
   # labs(tag = tag) +
   # theme(plot.margin = margin(t = 20, r = 10, b = 20, l = 0)) +
   theme(plot.tag.position = "bottomright",
@@ -442,15 +481,15 @@ qplot(data=avg_r_cases, x=DATE-7, y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribb
 # coord_cartesian(xlim=c(as.Date("2020-01-01"),NA))
 
 # calculate above-average intrinsic growth rates per day of each variant over time based on multinomial fit using emtrends weighted effect contrasts ####
-# for best model fit3_sanger_multi
+# for best model fit2_sanger_multi
 above_avg_r_variants3 = do.call(rbind, lapply(seq(date.from,
                                                   date.to), 
                                               function (d) { 
-                                                wt = as.data.frame(emmeans(fit3_greece_multi, ~ variant , at=list(DATE_NUM=d), type="response"))$prob   # important: these should sum to 1
+                                                wt = as.data.frame(emmeans(fit2_luxemburg_multi, ~ variant , at=list(DATE_NUM=d), type="response"))$prob   # important: these should sum to 1
                                                 # wt = rep(1/length(levels_variantS), length(levels_variantS)) # this would give equal weights, equivalent to emmeans:::eff.emmc(levs=levels_variant)
                                                 cons = lapply(seq_along(wt), function (i) { con = -wt; con[i] = 1 + con[i]; con })
                                                 names(cons) = seq_along(cons)
-                                                EMT = emtrends(fit3_greece_multi,  ~ variant , by=c("DATE_NUM"),
+                                                EMT = emtrends(fit2_luxemburg_multi,  ~ variant , by=c("DATE_NUM"),
                                                                var="DATE_NUM", mode="latent",
                                                                at=list(DATE_NUM=d))
                                                 out = as.data.frame(confint(contrast(EMT, cons), adjust="none", df=NA))
@@ -492,10 +531,10 @@ df = data.frame(contrast=NA,
 # df = df[df$DATE_NUM<=max(above_avg_r_variants$DATE_NUM)&df$DATE_NUM>=(min(above_avg_r_variants$DATE_NUM)+7),]
 above_avg_r_variants = rbind(above_avg_r_variants, df)
 above_avg_r_variants$variant = factor(above_avg_r_variants$variant, levels=c(levels_VARIANTS,"avg"))
-above_avg_r_variants$prob = fit_greece_multi_preds_withCI$prob[match(interaction(above_avg_r_variants$DATE_NUM,
+above_avg_r_variants$prob = fit_luxemburg_multi_preds_withCI$prob[match(interaction(above_avg_r_variants$DATE_NUM,
                                                                       above_avg_r_variants$variant),
-                                                          interaction(fit_greece_multi_preds_withCI$DATE_NUM,
-                                                                      fit_greece_multi_preds_withCI$variant))]
+                                                          interaction(fit_luxemburg_multi_preds_withCI$DATE_NUM,
+                                                                      fit_luxemburg_multi_preds_withCI$variant))]
 above_avg_r_variants2 = above_avg_r_variants
 ymax = 4
 ymin = 1/2
@@ -519,7 +558,7 @@ qplot(data=above_avg_r_variants2[!((above_avg_r_variants2$variant %in% c("other"
                      labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A","M","J","J")) +
   # scale_y_continuous(limits=c(1/ymax,ymax), trans="log2") +
   geom_hline(yintercept=1, colour=I("red")) +
-  ggtitle("Re VALUES OF SARS-CoV2 VARIANTS IN GREECE\nAT MOMENT OF INFECTION\n(based on case data & multinomial fit to ECDC TESSy data)") +
+  ggtitle("Re VALUES OF SARS-CoV2 VARIANTS IN LUXEMBURG\nAT MOMENT OF INFECTION\n(based on case data & multinomial fit to ECDC TESSy data)") +
   # labs(tag = tag) +
   # theme(plot.margin = margin(t = 20, r = 10, b = 20, l = 0)) +
   theme(plot.tag.position = "bottomright",
@@ -530,4 +569,4 @@ qplot(data=above_avg_r_variants2[!((above_avg_r_variants2$variant %in% c("other"
   theme(legend.position="right") 
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\Re values per variant_avgRe_from_cases_with clipping.png"), width=8, height=6)
-        
+          
