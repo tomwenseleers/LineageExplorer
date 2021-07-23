@@ -1,6 +1,6 @@
 # ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT VOCs IN BELGIUM BASED ON ANALYSIS OF GISAID PATIENT METADATA
 # T. Wenseleers
-# last update 30 JUNE 2021
+# last update 22 July 2021
 
 library(nnet)
 # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
@@ -13,7 +13,7 @@ library(ggthemes)
 library(scales)
 
 today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-07-02")
+today = as.Date("2021-07-22")
 today_num = as.numeric(today)
 plotdir = "BE_GISAID"
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
@@ -23,17 +23,19 @@ d1 = read_tsv(".//data//GISAID//Belgium//gisaid_hcov-19_2021_05_29_08_belgium_su
 d2 = read_tsv(".//data//GISAID//Belgium//gisaid_hcov-19_2021_05_29_08_belgium_subm_jan_feb_2021.tsv", col_types = cols(.default = "c"))
 d3 = read_tsv(".//data//GISAID//Belgium//gisaid_hcov-19_2021_05_29_09_belgium_subm_mar_apr_2021.tsv", col_types = cols(.default = "c"))
 d4 = read_tsv(".//data//GISAID//Belgium//gisaid_hcov-19_2021_06_18_22_belgium_subm_may_2021.tsv", col_types = cols(.default = "c")) # downloaded 3/6/2021
-d5 = read_tsv(".//data//GISAID//Belgium//gisaid_hcov-19_2021_06_30_20_belgium_subm_june_2021.tsv", col_types = cols(.default = "c")) # downloaded 3/6/2021
+d5 = read_tsv(".//data//GISAID//Belgium//gisaid_hcov-19_2021_07_22_19_belgium_subm_june_2021.tsv", col_types = cols(.default = "c")) # downloaded 3/6/2021
+d6 = read_tsv(".//data//GISAID//Belgium//gisaid_hcov-19_2021_07_22_19_belgium_subm_july_2021.tsv", col_types = cols(.default = "c")) # downloaded 3/6/2021
 d1 = as.data.frame(d1)
 d2 = as.data.frame(d2)
 d3 = as.data.frame(d3)
 d4 = as.data.frame(d4)
 d5 = as.data.frame(d5)
-GISAID_belgium1 = rbind(d1, d2, d3, d4, d5)
+d6 = as.data.frame(d6)
+GISAID_belgium1 = rbind(d1, d2, d3, d4, d5, d6)
 GISAID_belgium1 = GISAID_belgium1[GISAID_belgium1[,"Host"]=="Human",]
 GISAID_belgium1[,"Collection date"] = as.Date(GISAID_belgium1[,"Collection date"])
 GISAID_belgium1 = GISAID_belgium1[!is.na(GISAID_belgium1[,"Collection date"]),]
-nrow(GISAID_belgium1) # 29328
+nrow(GISAID_belgium1) # 34122
 unique(GISAID_belgium1[,"Virus name"])
 unique(GISAID_belgium1[,"Location"])
 unique(GISAID_belgium1[,"Host"])
@@ -41,20 +43,20 @@ unique(GISAID_belgium1[,"Additional location information"]) # ZIP codes # someti
 
 # anonymous records without location info are assumed to be active surveillance of cluster outbreaks & included in active surveillance (cf weekly Sciensano report)
 GISAID_belgium1[,"Additional location information"][grepl("nknown",GISAID_belgium1[,"Additional location information"])] = NA
-sum(is.na(GISAID_belgium1[,"Additional location information"])) # 6434
+sum(is.na(GISAID_belgium1[,"Additional location information"])) # 6609
 unique(GISAID_belgium1[,"Additional location information"])
 
 library(stringr)
 ZIP = str_extract(GISAID_belgium1[,"Additional location information"],"[0-9]{4}") # extract ZIP codes
 unique(ZIP)
-sum(!is.na(ZIP)) # 22810
-sum(is.na(ZIP)) # 6518 - anonymous records, these are assumed to be active surveillance of cluster outbreaks
+sum(!is.na(ZIP)) # 27428
+sum(is.na(ZIP)) # 6694 - anonymous records, these are assumed to be active surveillance of cluster outbreaks
 
 muni = read.csv(".//data//GISAID//Belgium//mapping_municips.csv") # post codes & cities & provinces
 province = muni$province_label_nl[match(ZIP, muni$postcode)] # province
 city = muni$municipality_label_nl[match(ZIP, muni$postcode)] # city
-sum(is.na(city)) # 6552
-sum(is.na(ZIP))  # 6518
+sum(is.na(city)) # 6737
+sum(is.na(ZIP))  # 6694
 wrongZIP = which(is.na(city)&!is.na(ZIP))
 ZIP[wrongZIP] = NA
 
@@ -62,24 +64,24 @@ anonym = grepl("Belgium$",GISAID_belgium1[,"Additional location information"])|
   is.na(GISAID_belgium1[,"Additional location information"])|
   grepl("CHU|infected|travel|Travel",GISAID_belgium1[,"Additional location information"]) |
   is.na(ZIP)
-sum(anonym) # 6602
+sum(anonym) # 6787
 unique(GISAID_belgium1[!is.na(GISAID_belgium1[,"Sampling strategy"]),"Sampling strategy"])
 traveller = grepl("travel|Travel|infected",GISAID_belgium1[,"Additional location information"])|grepl("travel|Travel",GISAID_belgium1[,"Sampling strategy"])|
   grepl("travel|Travel|Holiday",GISAID_belgium1[,"Additional host information"])  
-sum(traveller) # 201
+sum(traveller) # 250
 Sdropout = grepl("S-gene dropout",GISAID_belgium1[,"Sampling strategy"])|
   grepl("S-gene dropout",GISAID_belgium1[,"Additional host information"])  
 sum(Sdropout) # 61 - should be much higher though...
 actsurv = anonym|traveller|grepl("Longitudinal|Outbreak|Active|active|dropout|Atypical|travel|Travel|Atypische|CLUSTER|cluster|Cluster",GISAID_belgium1[,"Sampling strategy"])|
   grepl("Longitudinal|Outbreak|Active|active|dropout|Atypical|travel|Travel|Atypische|CLUSTER|cluster|Cluster|HR contact|Outbreak|Nurse|Holiday",GISAID_belgium1[,"Additional host information"])  
-sum(actsurv) # 7831
-sum(actsurv[GISAID_belgium1[,"Collection date"]>=as.Date("2020-11-30")]) # 5169 # In Sciensano weekly report of 21st of May 2021 this is 4710
+sum(actsurv) # 8747
+sum(actsurv[GISAID_belgium1[,"Collection date"]>=as.Date("2020-11-30")]) # 6084 # In Sciensano weekly report of 21st of May 2021 this is 4710
 sum(actsurv[GISAID_belgium1[,"Collection date"]>=as.Date("2020-11-30")&GISAID_belgium1[,"Collection date"]<=as.Date("2021-01-31")]) # 1191 # In Sciensano weekly report of 21st of May 2021 this is 1975
 
 reinfection = grepl("Breakthrough",GISAID_belgium1[,"Sampling strategy"])
 sum(reinfection) # 18
 infectionpostvaccination = grepl("Vaccination|vaccination",GISAID_belgium1[,"Sampling strategy"])
-sum(infectionpostvaccination) # 152
+sum(infectionpostvaccination) # 183
 
 asymptomatic = grepl("Asymptomatic|asympto",GISAID_belgium1[,"Patient status"])
 symptomatic = grepl("Ho|Out|Am|Dec|dec| sympto|Not hosp|Relea",GISAID_belgium1[,"Patient status"])|grepl(" symptoms|ILI",GISAID_belgium1[,"Additional host information"])
@@ -101,7 +103,7 @@ died[unknown] = NA
 # sum(bassurv) # 8856
 
 bassurv = !actsurv
-sum(bassurv) # 21497
+sum(bassurv) # 25375
 purpose_of_sequencing = rep("active_surveillance", nrow(GISAID_belgium1))
 purpose_of_sequencing[bassurv] = "baseline_surveillance"
 
@@ -113,7 +115,7 @@ GISAID_belgium1[,"Gender"][grepl("unknown",GISAID_belgium1[,"Gender"])] = NA
 GISAID_belgium1[,"Gender"][!grepl("F|M",GISAID_belgium1[,"Gender"])] = NA
 unique(GISAID_belgium1[,"Gender"]) # "F" "M" NA 
 
-sum(!is.na(GISAID_belgium1[,"Gender"] )) # 26268 with gender info
+sum(!is.na(GISAID_belgium1[,"Gender"] )) # 30635 with gender info
 
 GISAID_belgium1[,"Patient age"][grepl("nknown",GISAID_belgium1[,"Patient age"])] = NA
 GISAID_belgium1[,"Patient age"][grepl("month",GISAID_belgium1[,"Patient age"])] = 0
@@ -127,7 +129,7 @@ GISAID_belgium1[,"Patient age"][grepl("2020-1985",GISAID_belgium1[,"Patient age"
 GISAID_belgium1[,"Patient age"][grepl("2020-1972",GISAID_belgium1[,"Patient age"])] = as.character(2021-1972)
 GISAID_belgium1[,"Patient age"] = as.numeric(GISAID_belgium1[,"Patient age"])
 GISAID_belgium1[,"Patient age"][GISAID_belgium1[,"Patient age"]>200] = NA
-sum(!is.na(GISAID_belgium1[,"Patient age"] )) # 26281 with age info
+sum(!is.na(GISAID_belgium1[,"Patient age"] )) # 30650 with age info
 
 GISAID_belgium1[,"Virus name"] = gsub("hCoV-19/","",GISAID_belgium1[,"Virus name"])
 
@@ -193,14 +195,13 @@ GISAID_belgium1[grepl("B.1.617", GISAID_belgium1$LINEAGE1, fixed=TRUE),"LINEAGE1
 # get extra fields "genbank_accession", "Nextstrain_clade", "originating_lab", "submitting_lab", "authors", "url", "title", "paper_url"
 # from genomic epidemiology GISAID metadata
 # (check with Emmanuel André & Lize Cuypers which labs were doing active surveillance vs baseline surveillance)
-# we use genomic epidemiology GISAID data file version metadata_2021-06-29_10-41.tsv.gz with data for all countries :
-GISAID = read_tsv(gzfile(".//data//GISAID_genomic_epidemiology//metadata_2021-06-29_10-41.tsv.gz"), col_types = cols(.default = "c")) 
+GISAID = read_tsv(gzfile(".//data//GISAID_genomic_epidemiology//metadata_2021-07-20_00-11.tsv.gz"), col_types = cols(.default = "c")) 
 GISAID = as.data.frame(GISAID)
 GISAID$date = as.Date(GISAID$date)
 GISAID = GISAID[!is.na(GISAID$date),]
 GISAID = GISAID[GISAID$host=="Human",]
 GISAID_genepi_belgium = GISAID[GISAID$country=="Belgium",]
-nrow(GISAID_genepi_belgium) # 28078
+nrow(GISAID_genepi_belgium) # 33739
 
 # add (genbank_accession,) Nextstrain_clade, originating_lab, submitting_lab, authors, url, title & paper_url to GISAID_belgium1
 # GISAID_belgium1$genbank_accession = GISAID_genepi_belgium$genbank_accession[match(GISAID_belgium1$gisaid_epi_isl,GISAID_genepi_belgium$gisaid_epi_isl)]
@@ -234,7 +235,7 @@ GISAID_belgium1$originating_lab_does_baseline_surveillance = labnames$do_baselin
 GISAID_belgium1$purpose_of_sequencing[GISAID_belgium1$originating_lab_does_baseline_surveillance=="no"] = "active_surveillance"
 
 # write parsed & cleaned up file to csv
-write.csv(GISAID_belgium1, ".//data//GISAID//Belgium//gisaid_hcov-19_2021_06_21_ALL PARSED.csv",row.names=F)
+write.csv(GISAID_belgium1, ".//data//GISAID//Belgium//gisaid_hcov-19_2021_07_22_ALL PARSED.csv",row.names=F)
 
 
 
@@ -253,14 +254,14 @@ lineage_cols2 = c("#0085FF","#9A9D00","cyan3",#muted("magenta"),
 
 # GISAID_belgium = GISAID_sel[GISAID_sel$country=="Belgium",]
 GISAID_belgium = GISAID_belgium1 # [GISAID_belgium1$purpose_of_sequencing=="baseline_surveillance",] # if desired subset to baseline surveillance
-sum((GISAID_belgium$LINEAGE2=="B.1.617.2")&(GISAID_belgium$date<="2021-05-01")) # 67 # before May 1st probably mostly travel related, so we delete those
+sum((GISAID_belgium$LINEAGE2=="B.1.617.2")&(GISAID_belgium$date<="2021-05-01")) # 101 # before May 1st probably mostly travel related, so we delete those
 GISAID_belgium = GISAID_belgium[-which((GISAID_belgium$LINEAGE2=="B.1.617.2")&(GISAID_belgium$date<="2021-05-01")),]
-nrow(GISAID_belgium) # 29261
+nrow(GISAID_belgium) # 34021
 sum(!is.na(GISAID_belgium$age)) # 26215 with age info
 
 # use data from Feb  1 onwards
 GISAID_belgium = GISAID_belgium[GISAID_belgium$date>=as.Date("2021-02-01"),]
-nrow(GISAID_belgium) # 23082
+nrow(GISAID_belgium) # 27826
 range(GISAID_belgium$date) # "2021-02-01" "2021-06-25"
 
 
@@ -388,6 +389,7 @@ data_agbyweekregion1$collection_date_num = as.numeric(data_agbyweekregion1$colle
 data_agbyweekregion1$prop = data_agbyweekregion1$count/data_agbyweekregion1$total
 data_agbyweekregion1 = data_agbyweekregion1[data_agbyweekregion1$total!=0,]
 data_agbyweekregion1$floor_date = NULL
+data_agbyweekregion1$DATE_NUM = as.numeric(data_agbyweekregion1$collection_date)
 
 data_agbyweekregion2 = as.data.frame(table(GISAID_belgium$floor_date, GISAID_belgium$province, GISAID_belgium$LINEAGE2))
 colnames(data_agbyweekregion2) = c("floor_date", "province", "LINEAGE2", "count")
@@ -402,6 +404,7 @@ data_agbyweekregion2$collection_date_num = as.numeric(data_agbyweekregion2$colle
 data_agbyweekregion2$prop = data_agbyweekregion2$count/data_agbyweekregion2$total
 data_agbyweekregion2 = data_agbyweekregion2[data_agbyweekregion2$total!=0,]
 data_agbyweekregion2$floor_date = NULL
+data_agbyweekregion2$DATE_NUM = as.numeric(data_agbyweekregion2$collection_date)
 
 
 # MULLER PLOT (RAW DATA)
@@ -422,8 +425,8 @@ muller_belgium_raw2 = ggplot(data=data_agbyweek2, aes(x=collection_date, y=count
   # geom_col(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE1), width=1, position="fill") +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE2, group=LINEAGE2), position="fill") +
   scale_fill_manual("", values=lineage_cols2) +
-  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01")),
-                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01"))),1,1),
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
                      limits=as.Date(c("2021-02-01",NA)), expand=c(0,0)) +
   # guides(color = guide_legend(reverse=F, nrow=2, byrow=T), fill = guide_legend(reverse=F, nrow=2, byrow=T)) +
   theme_hc() +
@@ -466,17 +469,17 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\belgium_muller plots by province_raw 
 library(nnet)
 library(splines)
 set.seed(1)
-fit1_belgium_multi = nnet::multinom(LINEAGE2 ~ province + DATE_NUM, data=GISAID_belgium, maxit=1000)
-fit2_belgium_multi = nnet::multinom(LINEAGE2 ~ province + ns(DATE_NUM, df=2), data=GISAID_belgium, maxit=1000)
-fit3_belgium_multi = nnet::multinom(LINEAGE2 ~ province + ns(DATE_NUM, df=3), data=GISAID_belgium, maxit=1000)
-fit4_belgium_multi = nnet::multinom(LINEAGE2 ~ province * DATE_NUM, data=GISAID_belgium, maxit=1000)
-fit5_belgium_multi = nnet::multinom(LINEAGE2 ~ province * ns(DATE_NUM, df=2), data=GISAID_belgium, maxit=1000)
-fit6_belgium_multi = nnet::multinom(LINEAGE2 ~ province * ns(DATE_NUM, df=3), data=GISAID_belgium, maxit=1000)
+fit1_belgium_multi = nnet::multinom(LINEAGE2 ~ province + DATE_NUM, weights=count, data=data_agbyweekregion2, maxit=1000)
+fit2_belgium_multi = nnet::multinom(LINEAGE2 ~ province + ns(DATE_NUM, df=2), weights=count, data=data_agbyweekregion2, maxit=1000)
+fit3_belgium_multi = nnet::multinom(LINEAGE2 ~ province + ns(DATE_NUM, df=3), weights=count, data=data_agbyweekregion2, maxit=1000)
+fit4_belgium_multi = nnet::multinom(LINEAGE2 ~ province * DATE_NUM, weights=count, data=data_agbyweekregion2, maxit=1000)
+fit5_belgium_multi = nnet::multinom(LINEAGE2 ~ province * ns(DATE_NUM, df=2), weights=count, data=data_agbyweekregion2, maxit=1000)
+fit6_belgium_multi = nnet::multinom(LINEAGE2 ~ province * ns(DATE_NUM, df=3), weights=count, data=data_agbyweekregion2, maxit=1000)
 BIC(fit1_belgium_multi, fit2_belgium_multi, fit3_belgium_multi, fit4_belgium_multi, fit5_belgium_multi, fit6_belgium_multi) 
 # fit3_belgium_multi fits best (lowest BIC)
 
 # equivalent fit with B.1.617.1,2&3 all recoded to B.1.617+
-fit3_belgium_multi1 = nnet::multinom(LINEAGE1 ~ province + ns(DATE_NUM, df=3), data=GISAID_belgium, maxit=1000)
+fit3_belgium_multi1 = nnet::multinom(LINEAGE1 ~ province + ns(DATE_NUM, df=3), weights=count, data=data_agbyweekregion1, maxit=1000)
 
 # growth rate advantage compared to UK type B.1.1.7 (difference in growth rate per day) 
 emtrbelgium = emtrends(fit3_belgium_multi, trt.vs.ctrl ~ LINEAGE2,  
@@ -486,11 +489,11 @@ delta_r_belgium = data.frame(confint(emtrbelgium,
                                    adjust="none", df=NA)$contrasts, 
                            p.value=as.data.frame(emtrbelgium$contrasts)$p.value)
 delta_r_belgium
-#                             contrast    estimate          SE df    asymp.LCL    asymp.UCL      p.value
-# 1    B.1.351 (beta) - B.1.1.7 (alpha) -0.01234990 0.010556414 NA -0.033040092  0.008340289 5.797181e-01
-# 2       P.1 (gamma) - B.1.1.7 (alpha)  0.00414066 0.004700001 NA -0.005071173  0.013352492 7.573321e-01
-# 3 B.1.617.2 (delta) - B.1.1.7 (alpha)  0.09862973 0.009382445 NA  0.080240471  0.117018981 5.525025e-12
-# 4             other - B.1.1.7 (alpha) -0.02219051 0.005690887 NA -0.033344439 -0.011036573 1.001881e-03
+# contrast     estimate          SE df    asymp.LCL   asymp.UCL      p.value
+# 1    B.1.351 (beta) - B.1.1.7 (alpha)  0.007895568 0.011218349 NA -0.014091993 0.029883129 8.504015e-01
+# 2       P.1 (gamma) - B.1.1.7 (alpha)  0.010931356 0.004346878 NA  0.002411631 0.019451082 5.143778e-02
+# 3 B.1.617.2 (delta) - B.1.1.7 (alpha)  0.114975576 0.004652507 NA  0.105856829 0.124094322 5.478729e-12
+# 4             other - B.1.1.7 (alpha) -0.009753111 0.006024083 NA -0.021560098 0.002053875 3.158844e-01
 
 
 # pairwise growth rate difference (differences in growth rate per day) 
@@ -504,32 +507,30 @@ delta_r_belgium_pairw
 
 
 # estimated proportion of different LINEAGES among new lab diagnoses in Belgium today
-today # "2021-06-30"
-# 53% [45%-61%] 95% CLs now estimated to be B.1.617.2 across all provinces
+today # "2021-07-22"
 multinom_preds_today_avg = data.frame(emmeans(fit3_belgium_multi, ~ LINEAGE2|1,
                                               at=list(DATE_NUM=today_num), 
                                               mode="prob", df=NA))
 multinom_preds_today_avg
-#            LINEAGE2        prob          SE df    asymp.LCL   asymp.UCL
-# 1   B.1.1.7 (alpha) 0.423132459 0.040476815 NA 0.3437993591 0.502465560
-# 2    B.1.351 (beta) 0.002851451 0.001268513 NA 0.0003652113 0.005337691
-# 3       P.1 (gamma) 0.045755775 0.008947532 NA 0.0282189350 0.063292615
-# 4 B.1.617.2 (delta) 0.519005628 0.046018060 NA 0.4288118887 0.609199368
-# 5             other 0.009254686 0.002305727 NA 0.0047355438 0.013773828
+# LINEAGE2         prob           SE df     asymp.LCL   asymp.UCL
+# 1   B.1.1.7 (alpha) 0.0590939685 0.0076513065 NA  0.0440976834 0.074090254
+# 2    B.1.351 (beta) 0.0008618624 0.0004823028 NA -0.0000834337 0.001807159
+# 3       P.1 (gamma) 0.0084816049 0.0017662215 NA  0.0050198744 0.011943335
+# 4 B.1.617.2 (delta) 0.9298616298 0.0087761790 NA  0.9126606350 0.947062625
+# 5             other 0.0017009343 0.0005225389 NA  0.0006767769 0.002725092
 
 # estimated proportion of different LINEAGES among new infections in Belgium today
-today+7 # "2021-07-07"
-# 65% [55%-76%] 95% CLs now estimated to be B.1.617.2 across all provinces
+today+7 # "2021-07-29"
 multinom_preds_infections_today_avg = data.frame(emmeans(fit3_belgium_multi, ~ LINEAGE2|1,
                                               at=list(DATE_NUM=today_num+7), 
                                               mode="prob", df=NA))
 multinom_preds_infections_today_avg
-#            LINEAGE2        prob          SE df     asymp.LCL   asymp.UCL
-# 1   B.1.1.7 (alpha) 0.306806022 0.047972249 NA  2.127821e-01 0.400829901
-# 2    B.1.351 (beta) 0.002056169 0.001079600 NA -5.980847e-05 0.004172145
-# 3       P.1 (gamma) 0.032199472 0.008456293 NA  1.562544e-02 0.048773502
-# 4 B.1.617.2 (delta) 0.653246641 0.054434814 NA  5.465564e-01 0.759936917
-# 5             other 0.005691696 0.001765821 NA  2.230751e-03 0.009152642
+# LINEAGE2         prob           SE df     asymp.LCL   asymp.UCL
+# 1   B.1.1.7 (alpha) 0.0282886017 0.0046109281 NA  0.0192513488 0.037325855
+# 2    B.1.351 (beta) 0.0004478730 0.0002872306 NA -0.0001150887 0.001010835
+# 3       P.1 (gamma) 0.0042975283 0.0010666923 NA  0.0022068499 0.006388207
+# 4 B.1.617.2 (delta) 0.9662076831 0.0053538743 NA  0.9557142822 0.976701084
+# 5             other 0.0007583139 0.0002711070 NA  0.0002269540 0.001289674
 
 # estimates proportion of lab diagnoses that would be delta by province
 multinom_preds_today_byprovince = data.frame(emmeans(fit3_belgium_multi, ~ LINEAGE2|1, by="province",
@@ -538,24 +539,21 @@ multinom_preds_today_byprovince = data.frame(emmeans(fit3_belgium_multi, ~ LINEA
 multinom_delta_today_byprovince = multinom_preds_today_byprovince[multinom_preds_today_byprovince$LINEAGE2=="B.1.617.2 (delta)",]
 multinom_delta_today_byprovince = multinom_delta_today_byprovince[order(multinom_delta_today_byprovince$prob, decreasing=T),]
 multinom_delta_today_byprovince
-#             LINEAGE2                       province      prob         SE df   asymp.LCL asymp.UCL
-# 49 B.1.617.2 (delta)                  Waals-Brabant 0.8932666 0.02760571 NA  0.83916037 0.9473728
-# 44 B.1.617.2 (delta)                 Vlaams-Brabant 0.6919104 0.06454564 NA  0.56540329 0.8184175
-# 9  B.1.617.2 (delta) Brussels Hoofdstedelijk Gewest 0.6873691 0.05057837 NA  0.58823728 0.7865009
-# 24 B.1.617.2 (delta)                           Luik 0.6871625 0.05646488 NA  0.57649337 0.7978316
-# 34 B.1.617.2 (delta)                          Namen 0.6346767 0.07293299 NA  0.49173069 0.7776228
-# 4  B.1.617.2 (delta)                      Antwerpen 0.5526134 0.05243729 NA  0.44983823 0.6553886
-# 39 B.1.617.2 (delta)                Oost-Vlaanderen 0.5440225 0.07626131 NA  0.39455304 0.6934919
-# 19 B.1.617.2 (delta)                        Limburg 0.3059149 0.06601264 NA  0.17653249 0.4352973
-# 14 B.1.617.2 (delta)                     Henegouwen 0.2833831 0.12745192 NA  0.03358188 0.5331842
-# 29 B.1.617.2 (delta)                      Luxemburg 0.2783542 0.15058816 NA -0.01679313 0.5735016
-# 54 B.1.617.2 (delta)                West-Vlaanderen 0.1503885 0.04005753 NA  0.07187723 0.2288999
+# LINEAGE2                       province      prob          SE df asymp.LCL asymp.UCL
+# 4  B.1.617.2 (delta)                  Waals-Brabant 0.9891398 0.002067111 NA 0.9850884 0.9931913
+# 14 B.1.617.2 (delta) Brussels Hoofdstedelijk Gewest 0.9637334 0.004883713 NA 0.9541615 0.9733053
+# 9  B.1.617.2 (delta)                Oost-Vlaanderen 0.9623247 0.006516756 NA 0.9495521 0.9750973
+# 19 B.1.617.2 (delta)                 Vlaams-Brabant 0.9614156 0.006338129 NA 0.9489931 0.9738381
+# 29 B.1.617.2 (delta)                      Antwerpen 0.9533694 0.005747596 NA 0.9421043 0.9646345
+# 24 B.1.617.2 (delta)                          Namen 0.9532257 0.010195810 NA 0.9332423 0.9732091
+# 34 B.1.617.2 (delta)                     Henegouwen 0.9460868 0.013633259 NA 0.9193661 0.9728075
+# 39 B.1.617.2 (delta)                        Limburg 0.9256243 0.010616296 NA 0.9048168 0.9464319
+# 44 B.1.617.2 (delta)                           Luik 0.9239902 0.012637925 NA 0.8992203 0.9487600
+# 49 B.1.617.2 (delta)                      Luxemburg 0.8638874 0.051792605 NA 0.7623758 0.9653990
+# 54 B.1.617.2 (delta)                West-Vlaanderen 0.7856806 0.027884165 NA 0.7310286 0.8403325
 
 # reorder provinces by incidence of delta
-levels_PROVINCES = multinom_delta_today_byprovince$province
-levels_PROVINCES = c("Brussels Hoofdstedelijk Gewest", "Waals-Brabant", "Namen", "Vlaams-Brabant",
-                     "Luik", "Antwerpen", "Oost-Vlaanderen", "Limburg", "Henegouwen", "Luxemburg",                     
-                     "West-Vlaanderen")
+levels_PROVINCES = as.character(multinom_delta_today_byprovince$province[order(multinom_delta_today_byprovince$prob, decreasing=T)])
 data_agbyweekregion2$province = factor(data_agbyweekregion2$province, levels=levels_PROVINCES)
 
 # redo plot of raw data by province using this order
@@ -564,8 +562,8 @@ muller_belgiumbyprovince_raw2 = ggplot(data=data_agbyweekregion2, aes(x=collecti
   # geom_col(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE1), width=1, position="fill") +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE2, group=LINEAGE2), position="fill") +
   scale_fill_manual("", values=lineage_cols2) +
-  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01")),
-                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01"))),1,1),
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
                      limits=as.Date(c("2021-02-01",NA)), expand=c(0,0)) +
   # guides(color = guide_legend(reverse=F, nrow=2, byrow=T), fill = guide_legend(reverse=F, nrow=2, byrow=T)) +
   theme_hc() +
