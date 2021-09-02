@@ -172,21 +172,23 @@ BIC(fit1_ecuador_multi, fit2_ecuador_multi, fit3_ecuador_multi)
 # growth rate advantage compared to Delta (difference in growth rate per day) 
 emtrecuador = emtrends(fit2_ecuador_multi, trt.vs.ctrl ~ LINEAGE,  
                    var="DATE_NUM",  mode="latent",
-                   at=list(DATE_NUM=max(GISAID_sel$DATE_NUM)))
+                   at=list(DATE_NUM=max(GISAID_sel$DATE_NUM)),
+                   adjust="none", df=NA)
 delta_r_ecuador = data.frame(confint(emtrecuador, 
                                  adjust="none", df=NA)$contrasts, 
-                         p.value=as.data.frame(emtrecuador$contrasts)$p.value)
+                         p.value=as.data.frame(emtrecuador$contrasts,
+                                               adjust="none", df=NA)$p.value)
 delta_r_ecuador
 #                               contrast    estimate          SE df   asymp.LCL   asymp.UCL      p.value
-# 1   B.1.1.7 - Delta (B.1.617.2 & AY.X) -0.06352316 0.007377517 NA -0.07798283 -0.04906349 2.768272e-08
-# 2       B.1 - Delta (B.1.617.2 & AY.X) -0.03565389 0.006738965 NA -0.04886202 -0.02244576 1.163510e-04
-# 3     B.1.1 - Delta (B.1.617.2 & AY.X) -0.05497295 0.006974833 NA -0.06864337 -0.04130253 1.555401e-07
-# 4 B.1.1.519 - Delta (B.1.617.2 & AY.X) -0.19373530 0.058346029 NA -0.30809142 -0.07937919 1.882970e-02
-# 5   B.1.526 - Delta (B.1.617.2 & AY.X) -0.06405146 0.007124604 NA -0.07801542 -0.05008749 1.157116e-08
-# 6   B.1.621 - Delta (B.1.617.2 & AY.X) -0.06718344 0.011423284 NA -0.08957266 -0.04479421 2.449824e-05
-# 7      C.37 - Delta (B.1.617.2 & AY.X) -0.05560485 0.008232973 NA -0.07174119 -0.03946852 2.559508e-06
-# 8       P.1 - Delta (B.1.617.2 & AY.X) -0.04263453 0.007571965 NA -0.05747531 -0.02779376 4.737465e-05
-# 9     other - Delta (B.1.617.2 & AY.X) -0.04429881 0.006690498 NA -0.05741194 -0.03118568 3.592978e-06
+# 1   B.1.1.7 - Delta (B.1.617.2 & AY.X) -0.06352316 0.007377517 NA -0.07798283 -0.04906349 7.282418e-18
+# 2       B.1 - Delta (B.1.617.2 & AY.X) -0.03565389 0.006738965 NA -0.04886202 -0.02244576 1.218443e-07
+# 3     B.1.1 - Delta (B.1.617.2 & AY.X) -0.05497295 0.006974833 NA -0.06864337 -0.04130253 3.231745e-15
+# 4 B.1.1.519 - Delta (B.1.617.2 & AY.X) -0.19373530 0.058346029 NA -0.30809142 -0.07937919 8.987119e-04
+# 5   B.1.526 - Delta (B.1.617.2 & AY.X) -0.06405146 0.007124604 NA -0.07801542 -0.05008749 2.468316e-19
+# 6   B.1.621 - Delta (B.1.617.2 & AY.X) -0.06718344 0.011423284 NA -0.08957266 -0.04479421 4.071263e-09
+# 7      C.37 - Delta (B.1.617.2 & AY.X) -0.05560485 0.008232973 NA -0.07174119 -0.03946852 1.439019e-11
+# 8       P.1 - Delta (B.1.617.2 & AY.X) -0.04263453 0.007571965 NA -0.05747531 -0.02779376 1.796074e-08
+# 9     other - Delta (B.1.617.2 & AY.X) -0.04429881 0.006690498 NA -0.05741194 -0.03118568 3.564068e-11
 
 
 # fitted prop of different LINEAGES in the ecuador today
@@ -194,7 +196,7 @@ multinom_preds_today_avg = data.frame(emmeans(fit2_ecuador_multi, ~ LINEAGE|1,
                                               at=list(DATE_NUM=today_num), 
                                               mode="prob", df=NA))
 multinom_preds_today_avg
-# LINEAGE         prob           SE df     asymp.LCL    asymp.UCL
+#                     LINEAGE         prob           SE df     asymp.LCL    asymp.UCL
 # 1  Delta (B.1.617.2 & AY.X) 6.151157e-01 6.794144e-02 NA  4.819530e-01 7.482785e-01
 # 2                   B.1.1.7 1.488667e-02 5.251346e-03 NA  4.594223e-03 2.517912e-02
 # 3                       B.1 7.138983e-02 1.918437e-02 NA  3.378917e-02 1.089905e-01
@@ -379,7 +381,7 @@ range(cases_tot$date)
 
 # smooth out weekday effects in case nrs using GAM (if testing data is available one could correct for testing intensity as well)
 library(mgcv)
-k=20
+k=25
 fit_cases = gam(cases_new ~ s(DATE_NUM, bs="cs", k=k, m=c(2), fx=F) + 
                   WEEKDAY, # + 
                 # BANKHOLIDAY,
@@ -408,8 +410,8 @@ ggplot(data=fit_ecuador_multi_preds_withCI[fit_ecuador_multi_preds_withCI$collec
        aes(x=collection_date, y=cases, group=LINEAGE)) + 
   # facet_wrap(~ REGION, scale="free", ncol=3) +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE, group=LINEAGE), position="stack") +
-  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
-                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01"))),1,1),
                      # limits=c(as.Date("2021-03-01"),max(cases_tot$date)), 
                      expand=c(0,0)) +
   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
@@ -427,8 +429,8 @@ ggplot(data=fit_ecuador_multi_preds_withCI[fit_ecuador_multi_preds_withCI$collec
        aes(x=collection_date-7, y=smoothed_cases, group=LINEAGE)) + 
   # facet_wrap(~ REGION, scale="free", ncol=3) +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE, group=LINEAGE), position="stack") +
-  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
-                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01"))),1,1),
                      # limits=c(as.Date("2021-03-01"),today), 
                      expand=c(0,0)) +
   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
@@ -475,8 +477,8 @@ avg_r_cases = avg_r_cases[complete.cases(avg_r_cases),]
 qplot(data=avg_r_cases, x=DATE-7, y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribbon", alpha=I(0.5), fill=I("steelblue")) +
   # facet_wrap(~ REGION) +
   geom_line() + theme_hc() + xlab("Date of infection") +
-  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
-                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A","M","J","J")) +
+  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01")),
+                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A","M","J","J","A","S")) +
   # scale_y_continuous(limits=c(1/2, 2), trans="log2") +
   geom_hline(yintercept=1, colour=I("red")) +
   ggtitle("Re IN ECUADOR AT MOMENT OF INFECTION BASED ON NEW CASES") +
@@ -542,8 +544,8 @@ above_avg_r_variants$prob = fit_ecuador_multi_preds_withCI$prob[match(interactio
                                                           interaction(fit_ecuador_multi_preds_withCI$DATE_NUM,
                                                                       fit_ecuador_multi_preds_withCI$LINEAGE))]
 above_avg_r_variants2 = above_avg_r_variants
-ymax = 4
-ymin = 1/2
+ymax = 3
+ymin = 1/3
 above_avg_r_variants2$Re[above_avg_r_variants2$Re>=ymax] = NA
 above_avg_r_variants2$Re[above_avg_r_variants2$Re<=ymin] = NA
 above_avg_r_variants2$Re_LOWER[above_avg_r_variants2$Re_LOWER>=ymax] = ymax
@@ -560,8 +562,8 @@ qplot(data=above_avg_r_variants2[!((above_avg_r_variants2$variant %in% c("other"
   # facet_wrap(~ REGION) +
   # geom_ribbon(aes(fill=variant, colour=variant), alpha=I(0.5))
   geom_line(aes(colour=variant), lwd=I(0.72)) + theme_hc() + xlab("Date of infection") +
-  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
-                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A","M","J","J")) +
+  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01")),
+                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A","M","J","J","A","S")) +
   # scale_y_continuous(limits=c(1/ymax,ymax), trans="log2") +
   geom_hline(yintercept=1, colour=I("red")) +
   ggtitle("Re VALUES OF SARS-CoV2 VARIANTS IN ECUADOR\nAT MOMENT OF INFECTION\n(based on case data & multinomial fit to GISAID data)") +

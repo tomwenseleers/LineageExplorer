@@ -171,24 +171,26 @@ BIC(fit1_colombia_multi, fit2_colombia_multi, fit3_colombia_multi)
 # fit2_colombia_multi 27 7794.385
 # fit3_colombia_multi 36 7791.964
 
-# growth rate advantage compared to UK type B.1.1.7 (difference in growth rate per day) 
+# growth rate advantage compared to Delta (difference in growth rate per day) 
 emtrcolombia = emtrends(fit2_colombia_multi, trt.vs.ctrl ~ LINEAGE,  
                    var="DATE_NUM",  mode="latent",
-                   at=list(DATE_NUM=max(GISAID_sel$DATE_NUM)))
+                   at=list(DATE_NUM=max(GISAID_sel$DATE_NUM)),
+                   adjust="none", df=NA)
 delta_r_colombia = data.frame(confint(emtrcolombia, 
                                  adjust="none", df=NA)$contrasts, 
-                         p.value=as.data.frame(emtrcolombia$contrasts)$p.value)
+                         p.value=as.data.frame(emtrcolombia$contrasts,
+                                               adjust="none", df=NA)$p.value)
 delta_r_colombia
 #                               contrast   estimate         SE df  asymp.LCL   asymp.UCL      p.value
-# 1   B.1.1.7 - Delta (B.1.617.2 & AY.X) -0.2597552 0.03879164 NA -0.3357854 -0.18372496 2.965782e-06
-# 2       B.1 - Delta (B.1.617.2 & AY.X) -0.1348861 0.02829909 NA -0.1903513 -0.07942094 4.664768e-04
-# 3 B.1.1.348 - Delta (B.1.617.2 & AY.X) -0.1413660 0.02834222 NA -0.1969158 -0.08581631 2.596141e-04
-# 4 B.1.1.519 - Delta (B.1.617.2 & AY.X) -0.1675437 0.10398469 NA -0.3713499  0.03626258 5.012878e-01
-# 5   B.1.111 - Delta (B.1.617.2 & AY.X) -0.1577205 0.02845130 NA -0.2134841 -0.10195701 5.961070e-05
-# 6   B.1.621 - Delta (B.1.617.2 & AY.X) -0.1071242 0.02788882 NA -0.1617853 -0.05246311 5.189448e-03
-# 7   B.1.625 - Delta (B.1.617.2 & AY.X) -0.1237144 0.02823278 NA -0.1790496 -0.06837917 1.283631e-03
-# 8       P.1 - Delta (B.1.617.2 & AY.X) -0.1359082 0.02812549 NA -0.1910331 -0.08078324 3.920068e-04
-# 9     other - Delta (B.1.617.2 & AY.X) -0.1277001 0.02821707 NA -0.1830045 -0.07239565 8.803971e-04
+# 1   B.1.1.7 - Delta (B.1.617.2 & AY.X) -0.2597552 0.03879164 NA -0.3357854 -0.18372496 2.139625e-11
+# 2       B.1 - Delta (B.1.617.2 & AY.X) -0.1348861 0.02829909 NA -0.1903513 -0.07942094 1.875024e-06
+# 3 B.1.1.348 - Delta (B.1.617.2 & AY.X) -0.1413660 0.02834222 NA -0.1969158 -0.08581631 6.106260e-07
+# 4 B.1.1.519 - Delta (B.1.617.2 & AY.X) -0.1675437 0.10398469 NA -0.3713499  0.03626258 1.071287e-01
+# 5   B.1.111 - Delta (B.1.617.2 & AY.X) -0.1577205 0.02845130 NA -0.2134841 -0.10195701 2.964407e-08
+# 6   B.1.621 - Delta (B.1.617.2 & AY.X) -0.1071242 0.02788882 NA -0.1617853 -0.05246311 1.224764e-04
+# 7   B.1.625 - Delta (B.1.617.2 & AY.X) -0.1237144 0.02823278 NA -0.1790496 -0.06837917 1.176264e-05
+# 8       P.1 - Delta (B.1.617.2 & AY.X) -0.1359082 0.02812549 NA -0.1910331 -0.08078324 1.350276e-06
+# 9     other - Delta (B.1.617.2 & AY.X) -0.1277001 0.02821707 NA -0.1830045 -0.07239565 6.021513e-06
 
 
 # fitted prop of different LINEAGES in the colombia today
@@ -196,17 +198,17 @@ multinom_preds_today_avg = data.frame(emmeans(fit2_colombia_multi, ~ LINEAGE|1,
                                               at=list(DATE_NUM=today_num), 
                                               mode="prob", df=NA))
 multinom_preds_today_avg
-# LINEAGE         prob           SE df     asymp.LCL    asymp.UCL
-# 1  Delta (B.1.617.2 & AY.X) 9.367369e-01 7.803111e-02 NA  7.837988e-01 1.089675e+00
-# 2                   B.1.1.7 7.206668e-10 2.236118e-09 NA -3.662044e-09 5.103377e-09
-# 3                       B.1 1.069311e-04 1.460059e-04 NA -1.792352e-04 3.930975e-04
-# 4                 B.1.1.348 5.796898e-05 8.004976e-05 NA -9.892567e-05 2.148636e-04
-# 5                 B.1.1.519 5.033288e-08 6.022883e-07 NA -1.130131e-06 1.230796e-06
-# 6                   B.1.111 1.417380e-06 2.104932e-06 NA -2.708210e-06 5.542970e-06
-# 7                   B.1.621 5.912327e-02 7.294892e-02 NA -8.385399e-02 2.021005e-01
-# 8                   B.1.625 1.616423e-03 2.126398e-03 NA -2.551240e-03 5.784087e-03
-# 9                       P.1 1.581280e-03 2.030016e-03 NA -2.397479e-03 5.560038e-03
-# 10                    other 7.757304e-04 1.023255e-03 NA -1.229813e-03 2.781274e-03
+#                     LINEAGE         prob           SE df     asymp.LCL    asymp.UCL
+# 1  Delta (B.1.617.2 & AY.X) 9.428746e-01 7.238942e-02 NA  8.009939e-01 1.084755e+00
+# 2                   B.1.1.7 5.594461e-10 1.757191e-09 NA -2.884585e-09 4.003477e-09
+# 3                       B.1 9.405029e-05 1.314746e-04 NA -1.636352e-04 3.517358e-04
+# 4                 B.1.1.348 5.065675e-05 7.159234e-05 NA -8.966167e-05 1.909752e-04
+# 5                 B.1.1.519 4.284738e-08 5.171000e-07 NA -9.706499e-07 1.056345e-06
+# 6                   B.1.111 1.218500e-06 1.847427e-06 NA -2.402390e-06 4.839390e-06
+# 7                   B.1.621 5.346518e-02 6.777241e-02 NA -7.936630e-02 1.862967e-01
+# 8                   B.1.625 1.437682e-03 1.938927e-03 NA -2.362545e-03 5.237909e-03
+# 9                       P.1 1.389378e-03 1.830105e-03 NA -2.197561e-03 4.976317e-03
+# 10                    other 6.872071e-04 9.292053e-04 NA -1.134002e-03 2.508416e-03
 
 
 
@@ -332,8 +334,8 @@ plot_colombia_mfit = qplot(data=fit_colombia_multi_preds2, x=collection_date, y=
   ylab("Share (%)") +
   theme_hc() + xlab("") +
   ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN COLOMBIA\n(GISAID data, multinomial fit)") +
-  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01")),
-                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01"))),1,1),
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01"))),1,1),
                      limits=as.Date(c("2021-01-01",NA)), expand=c(0,0)) +
   # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
   #                     labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
@@ -378,7 +380,7 @@ range(cases_tot$date)
 
 # smooth out weekday effects in case nrs using GAM (if testing data is available one could correct for testing intensity as well)
 library(mgcv)
-k=20
+k=25
 fit_cases = gam(cases_new ~ s(DATE_NUM, bs="cs", k=k, m=c(2), fx=F) + 
                   WEEKDAY, # + 
                 # BANKHOLIDAY,
@@ -407,8 +409,8 @@ ggplot(data=fit_colombia_multi_preds_withCI[fit_colombia_multi_preds_withCI$coll
        aes(x=collection_date, y=cases, group=LINEAGE)) + 
   # facet_wrap(~ REGION, scale="free", ncol=3) +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE, group=LINEAGE), position="stack") +
-  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
-                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01"))),1,1),
                      # limits=c(as.Date("2021-03-01"),max(cases_tot$date)), 
                      expand=c(0,0)) +
   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
@@ -426,8 +428,8 @@ ggplot(data=fit_colombia_multi_preds_withCI[fit_colombia_multi_preds_withCI$coll
        aes(x=collection_date-7, y=smoothed_cases, group=LINEAGE)) + 
   # facet_wrap(~ REGION, scale="free", ncol=3) +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE, group=LINEAGE), position="stack") +
-  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
-                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01"))),1,1),
                      # limits=c(as.Date("2021-03-01"),today), 
                      expand=c(0,0)) +
   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
@@ -474,8 +476,8 @@ avg_r_cases = avg_r_cases[complete.cases(avg_r_cases),]
 qplot(data=avg_r_cases, x=DATE-7, y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribbon", alpha=I(0.5), fill=I("steelblue")) +
   # facet_wrap(~ REGION) +
   geom_line() + theme_hc() + xlab("Date of infection") +
-  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
-                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A","M","J","J")) +
+  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01")),
+                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A","M","J","J","A","S")) +
   # scale_y_continuous(limits=c(1/2, 2), trans="log2") +
   geom_hline(yintercept=1, colour=I("red")) +
   ggtitle("Re IN COLOMBIA AT MOMENT OF INFECTION BASED ON NEW CASES") +
@@ -541,8 +543,8 @@ above_avg_r_variants$prob = fit_colombia_multi_preds_withCI$prob[match(interacti
                                                           interaction(fit_colombia_multi_preds_withCI$DATE_NUM,
                                                                       fit_colombia_multi_preds_withCI$LINEAGE))]
 above_avg_r_variants2 = above_avg_r_variants
-ymax = 4
-ymin = 1/2
+ymax = 3
+ymin = 1/3
 above_avg_r_variants2$Re[above_avg_r_variants2$Re>=ymax] = NA
 above_avg_r_variants2$Re[above_avg_r_variants2$Re<=ymin] = NA
 above_avg_r_variants2$Re_LOWER[above_avg_r_variants2$Re_LOWER>=ymax] = ymax
@@ -559,8 +561,8 @@ qplot(data=above_avg_r_variants2[!((above_avg_r_variants2$variant %in% c("other"
   # facet_wrap(~ REGION) +
   # geom_ribbon(aes(fill=variant, colour=variant), alpha=I(0.5))
   geom_line(aes(colour=variant), lwd=I(0.72)) + theme_hc() + xlab("Date of infection") +
-  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
-                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A","M","J","J")) +
+  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01")),
+                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A","M","J","J","A","S")) +
   # scale_y_continuous(limits=c(1/ymax,ymax), trans="log2") +
   geom_hline(yintercept=1, colour=I("red")) +
   ggtitle("Re VALUES OF SARS-CoV2 VARIANTS IN COLOMBIA\nAT MOMENT OF INFECTION\n(based on case data & multinomial fit to GISAID data)") +

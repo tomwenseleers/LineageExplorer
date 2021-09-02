@@ -208,6 +208,7 @@ BIC(fit1_southafrica_multi, fit2_southafrica_multi, fit3_southafrica_multi, fit4
 # fit3_southafrica_multi 24 9326.383
 # fit4_southafrica_multi 30 9363.778
 
+# model with province/division included as an extra factor
 data_agbyweekregion2$LINEAGE2 = relevel(data_agbyweekregion2$LINEAGE2, ref=sel_target_VOC)
 data_agbyweekregion2$DATE_NUM = as.numeric(data_agbyweekregion2$collection_date)
 set.seed(1)
@@ -221,7 +222,8 @@ BIC(fit1_southafrica_byregion_multi, fit2_southafrica_byregion_multi, fit3_south
 # growth rate advantage compared to Delta (difference in growth rate per day) 
 emtrsouthafrica = emtrends(fit2_southafrica_multi, trt.vs.ctrl ~ LINEAGE2,  
                    var="DATE_NUM",  mode="latent",
-                   at=list(DATE_NUM=max(GISAID_sel$DATE_NUM)))
+                   at=list(DATE_NUM=max(GISAID_sel$DATE_NUM)),
+                   adjust="none", df=NA)
 delta_r_southafrica = data.frame(confint(emtrsouthafrica, 
                                  adjust="none", df=NA)$contrasts, 
                          p.value=as.data.frame(emtrsouthafrica$contrasts, adjust="none", df=NA)$p.value)
@@ -237,12 +239,13 @@ delta_r_southafrica
 # growth rate advantage compared to Delta in model by province
 emtrsouthafrica2 = emtrends(fit2_southafrica_byregion_multi, trt.vs.ctrl ~ LINEAGE2,  
                            var="DATE_NUM",  mode="latent",
-                           at=list(DATE_NUM=max(GISAID_sel$DATE_NUM)))
+                           at=list(DATE_NUM=max(GISAID_sel$DATE_NUM)),
+                           adjust="none", df=NA)
 delta_r_southafrica2 = data.frame(confint(emtrsouthafrica2, 
                                          adjust="none", df=NA)$contrasts, 
                                  p.value=as.data.frame(emtrsouthafrica2$contrasts, adjust="none", df=NA)$p.value)
 delta_r_southafrica2
-#                           contrast      estimate          SE df    asymp.LCL    asymp.UCL       p.value
+#                               contrast      estimate          SE df    asymp.LCL    asymp.UCL       p.value
 # 1   B.1.1.7 - Delta (B.1.617.2 & AY.X) -1.076696e-01 0.007715790 NA  -0.12279230  -0.09254696  2.955596e-44
 # 2 B.1.1.519 - Delta (B.1.617.2 & AY.X) -8.762580e+01 0.002313123 NA -87.63033448 -87.62126721  0.000000e+00
 # 3   B.1.351 - Delta (B.1.617.2 & AY.X) -1.207763e-01 0.005330230 NA  -0.13122332  -0.11032921 1.144214e-113
@@ -252,7 +255,6 @@ delta_r_southafrica2
 
 
 # fitted prop of different LINEAGES in the south africa today
-# 99% [97%-100%] now estimated to be B.1.617.2 across all regions
 multinom_preds_today_avg = data.frame(emmeans(fit2_southafrica_multi, ~ LINEAGE2|1,
                                               at=list(DATE_NUM=today_num), 
                                               mode="prob", df=NA))
@@ -438,7 +440,7 @@ cases_tot$WEEKDAY = weekdays(cases_tot$date)
 # cases_tot = cases_tot[cases_tot$date<=(max(cases_tot$date)-3),] # cut off data from last 3 days (incomplete)
 
 # smooth out weekday effects in case nrs using GAM (if testing data is available one could correct for testing intensity as well)
-fit_cases = gam(cases_new ~ s(DATE_NUM, bs="cs", k=20, fx=F) + 
+fit_cases = gam(cases_new ~ s(DATE_NUM, bs="cs", k=25, fx=F) + 
                   WEEKDAY, # + 
                 # BANKHOLIDAY,
                 # s(TESTS_ALL, bs="cs", k=8, fx=F),
@@ -460,8 +462,8 @@ ggplot(data=fit_southafrica_multi_preds_withCI[fit_southafrica_multi_preds_withC
        aes(x=collection_date, y=cases, group=LINEAGE2)) + 
   # facet_wrap(~ REGION, scale="free", ncol=3) +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE2, group=LINEAGE2), position="stack") +
-  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
-                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-07801","2021-09-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01"))),1,1),
                      # limits=c(as.Date("2021-03-01"),max(cases_tot$date)), 
                      expand=c(0,0)) +
   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
@@ -479,8 +481,8 @@ ggplot(data=fit_southafrica_multi_preds_withCI[fit_southafrica_multi_preds_withC
        aes(x=collection_date-7, y=smoothed_cases, group=LINEAGE2)) + 
   # facet_wrap(~ REGION, scale="free", ncol=3) +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE2, group=LINEAGE2), position="stack") +
-  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
-                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01"))),1,1),
                      # limits=c(as.Date("2021-03-01"),today), 
                      expand=c(0,0)) +
   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
@@ -527,8 +529,8 @@ avg_r_cases = avg_r_cases[complete.cases(avg_r_cases),]
 qplot(data=avg_r_cases, x=DATE-7, y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribbon", alpha=I(0.5), fill=I("steelblue")) +
   # facet_wrap(~ REGION) +
   geom_line() + theme_hc() + xlab("Date of infection") +
-  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
-                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A","M","J","J")) +
+  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01")),
+                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A","M","J","J","A","S")) +
   # scale_y_continuous(limits=c(1/2, 2), trans="log2") +
   geom_hline(yintercept=1, colour=I("red")) +
   ggtitle("Re IN SOUTH AFRICA AT MOMENT OF INFECTION BASED ON NEW CASES") +
@@ -594,8 +596,8 @@ above_avg_r_variants$prob = fit_southafrica_multi_preds_withCI$prob[match(intera
                                                           interaction(fit_southafrica_multi_preds_withCI$DATE_NUM,
                                                                       fit_southafrica_multi_preds_withCI$LINEAGE2))]
 above_avg_r_variants2 = above_avg_r_variants
-ymax = 2
-ymin = 1/2
+ymax = 3
+ymin = 1/3
 above_avg_r_variants2$Re[above_avg_r_variants2$Re>=ymax] = NA
 above_avg_r_variants2$Re[above_avg_r_variants2$Re<=ymin] = NA
 above_avg_r_variants2$Re_LOWER[above_avg_r_variants2$Re_LOWER>=ymax] = ymax
@@ -612,8 +614,8 @@ qplot(data=above_avg_r_variants2[!((above_avg_r_variants2$variant %in% c("other"
   # facet_wrap(~ REGION) +
   # geom_ribbon(aes(fill=variant, colour=variant), alpha=I(0.5))
   geom_line(aes(colour=variant), lwd=I(0.72)) + theme_hc() + xlab("Date of infection") +
-  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
-                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A","M","J","J")) +
+  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01")),
+                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A","M","J","J","A","S")) +
   # scale_y_continuous(limits=c(1/ymax,ymax), trans="log2") +
   geom_hline(yintercept=1, colour=I("red")) +
   ggtitle("Re VALUES OF SARS-CoV2 VARIANTS IN SOUTH AFRICA\nAT MOMENT OF INFECTION\n(based on case data & multinomial fit to\nGISAID data)") +
