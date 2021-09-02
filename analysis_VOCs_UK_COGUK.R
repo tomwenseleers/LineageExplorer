@@ -1,6 +1,6 @@
 # ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT VOCs IN THE UK BASED ON COG-UK SEQUENCING DATA ####
 
-# last update 12 JULY 2021
+# last update 19 August 2021
 
 library(nnet)
 # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
@@ -12,7 +12,7 @@ library(ggplot2)
 library(ggthemes)
 
 today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-07-15")
+today = as.Date("2021-08-19")
 today_num = as.numeric(today)
 plotdir = "UK_COGUK"
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
@@ -29,12 +29,13 @@ head(coguk)
 # use data from sept 2020 onwards & Pillar 2 (community as opposed to hospitalised) only
 cogukp1 = coguk[coguk$date>=as.Date("2020-09-01")&coguk$is_pillar_2=="N",]
 cogukp2 = coguk[coguk$date>=as.Date("2020-09-01")&coguk$is_pillar_2=="Y",]
+cogukp2 = coguk[coguk$date>=as.Date("2020-09-01"),]
 
 # B.1.617+ cases before Apr 14 are likely mostly imported cases, so we remove those
 cogukp2 = cogukp2[-which(grepl("B.1.617", cogukp2$lineage, fixed=TRUE)&cogukp2$date<=as.Date("2021-04-14")),]  
 
-nrow(cogukp2) # 
-range(cogukp2$date) # "2020-09-01" "2021-06-29"
+nrow(cogukp2) # 560231
+range(cogukp2$date) # "2020-09-01" "2021-08-14"
 library(lubridate)
 cogukp2$WeekEndDate = floor_date(cogukp2$date,unit="week")+6 # lubridate::week(cogukp2$date)
 cogukp2$DATE_NUM = as.numeric(cogukp2$date) 
@@ -53,6 +54,8 @@ cogukp2[grepl(sel_target_VOC, cogukp2$LINEAGE1, fixed=T),"LINEAGE1"] = paste0(se
 sel_target_VOC = paste0(sel_target_VOC, "+")
 cogukp2[grepl("B.1.177", cogukp2$LINEAGE1, fixed=T),"LINEAGE1"] = "B.1.177+"
 cogukp2[grepl("B.1.177", cogukp2$LINEAGE2, fixed=T),"LINEAGE2"] = "B.1.177+"
+cogukp2[grepl("AY.3", cogukp2$LINEAGE1, fixed=T),"LINEAGE1"] = "AY.3"
+cogukp2[grepl("AY.3", cogukp2$LINEAGE2, fixed=T),"LINEAGE2"] = "AY.3"
 
 sum("B.1.1.7"==cogukp2$LINEAGE1) #  B.1.1.7
 
@@ -66,7 +69,8 @@ sel_ref_lineage = "B.1.1.7"
 
 # sel_lineages = as.character(table_lineage[table_lineage$Prop>0.01,"lineage"][order(table_lineage[table_lineage$Prop>0.01,"Prop"], decreasing=TRUE)])
 # sel_lineages = unique(c(sel_lineages, sel_target_VOC, sel_ref_lineage))
-sel_lineages = c("B.1.1.7","B.1.177+","B.1.351", "B.1.525","B.1.617+","B.1.617.1","B.1.617.2","P.1")
+sel_lineages = c("B.1.1.7","B.1.177+","B.1.351", "B.1.525","B.1.617+","B.1.617.1","B.1.617.2",
+                 "AY.3","AY.4","AY.5","AY.6","AY.9","AY.12","P.1","B.1.621","C.37")
 
 cogukp2$LINEAGE1[!(cogukp2$LINEAGE1 %in% sel_lineages)] = "other"
 cogukp2$LINEAGE2[!(cogukp2$LINEAGE2 %in% sel_lineages)] = "other"
@@ -75,8 +79,8 @@ sum(table(cogukp2$LINEAGE1))
 table(cogukp2$LINEAGE1)
 table(cogukp2$LINEAGE2)
 
-levels_LINEAGE1 = c("other","B.1.1.7","B.1.177+","B.1.351","B.1.525","B.1.617+","P.1")
-levels_LINEAGE2 = c("other","B.1.1.7","B.1.177+","B.1.351","B.1.525","B.1.617.1","B.1.617.2","P.1")
+levels_LINEAGE1 = c("other","B.1.1.7","B.1.177+","B.1.351","B.1.525","B.1.617+","AY.3","AY.4","AY.5","AY.6","AY.9","AY.12","P.1","B.1.621","C.37")
+levels_LINEAGE2 = c("other","B.1.1.7","B.1.177+","B.1.351","B.1.525","B.1.617.1","B.1.617.2","AY.3","AY.4","AY.5","AY.6","AY.9","AY.12","P.1","B.1.621","C.37")
 cogukp2$LINEAGE1 = factor(cogukp2$LINEAGE1, levels=levels_LINEAGE1)
 cogukp2$LINEAGE2 = factor(cogukp2$LINEAGE2, levels=levels_LINEAGE2)
 
@@ -120,7 +124,8 @@ data_agbyweekregion1[data_agbyweekregion1$collection_date==max(data_agbyweekregi
 # MULLER PLOT (RAW DATA)
 unique(cogukp2$LINEAGE2)
 # levels_LINEAGE2_plot = rev(c("B.1.1.7","B.1.617.2","B.1.617.1","P.1","B.1.351","B.1.525","B.1.177+","other")) # "B.1.617.1","B.1.617.2","B.1.617.3"
-levels_LINEAGE2_plot = c("other","B.1.177+","B.1.525","B.1.351","P.1","B.1.1.7","B.1.617.1","B.1.617.2")
+levels_LINEAGE2_plot = c("other","B.1.177+","B.1.525","B.1.351","P.1","B.1.621","C.37","B.1.1.7","B.1.617.1","B.1.617.2",
+                         "AY.3","AY.4","AY.5","AY.6","AY.9","AY.12")
 
 library(scales)
 n1 = length(levels_LINEAGE2_plot)
@@ -129,6 +134,12 @@ lineage_cols1 = c(hcl(h = seq(0, 260, length = n1-1), l = 60, c = 200), muted("d
 # lineage_cols1[which(levels_LINEAGE2_plot=="B.1.617+")] = "magenta" # muted("magenta",l=50,c=100)
 lineage_cols1[which(levels_LINEAGE2_plot=="B.1.617.1")] = muted("magenta") # muted("magenta",l=50,c=100)
 lineage_cols1[which(levels_LINEAGE2_plot=="B.1.617.2")] = "magenta" # muted("magenta",l=50,c=100)
+lineage_cols1[which(levels_LINEAGE2_plot=="AY.3")] = muted("magenta",l=60,c=100) # muted("magenta",l=50,c=100)
+lineage_cols1[which(levels_LINEAGE2_plot=="AY.4")] = muted("magenta",l=70,c=95) # muted("magenta",l=50,c=100)
+lineage_cols1[which(levels_LINEAGE2_plot=="AY.5")] = muted("magenta",l=80,c=90) # muted("magenta",l=50,c=100)
+lineage_cols1[which(levels_LINEAGE2_plot=="AY.6")] = muted("magenta",l=90,c=85) # muted("magenta",l=50,c=100)
+lineage_cols1[which(levels_LINEAGE2_plot=="AY.9")] = muted("magenta",l=95,c=80) # muted("magenta",l=50,c=100)
+lineage_cols1[which(levels_LINEAGE2_plot=="AY.12")] = muted("magenta",l=100,c=75) # muted("magenta",l=50,c=100)
 lineage_cols1[which(levels_LINEAGE2_plot=="B.1.1.7")] = "#0085FF"
 
 # lineage_cols1[which(levels_LINEAGE1_plot=="B.1.617.1")] = "magenta" # muted("magenta",l=50,c=100)
@@ -196,7 +207,7 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\cogukp2_muller plots by region_raw da
 # multinomial fits
 library(nnet)
 library(splines)
-data_agbyweekregion1$LINEAGE2 = relevel(data_agbyweekregion1$LINEAGE2, ref="B.1.1.7") # we take B.1.1.7 as baseline / reference level
+data_agbyweekregion1$LINEAGE2 = relevel(data_agbyweekregion1$LINEAGE2, ref="B.1.617.2") # we take B.1.617.2 as baseline / reference level
 data_agbyweekregion1$DATE_NUM = data_agbyweekregion1$collection_date_num
 set.seed(1)
 fit1_cogukp2_multi = nnet::multinom(LINEAGE2 ~ REGION + DATE_NUM, weights=count, data=data_agbyweekregion1, maxit=1000)
@@ -206,23 +217,31 @@ fit4_cogukp2_multi = nnet::multinom(LINEAGE2 ~ REGION * ns(DATE_NUM, df=2), weig
 BIC(fit1_cogukp2_multi, fit2_cogukp2_multi, fit3_cogukp2_multi, fit4_cogukp2_multi) 
 # fit4_cogukp2_multi fits best (lowest BIC)
 
-# growth rate advantages of different VOCs compared to UK type B.1.1.7 (difference in growth rate per day) 
+# growth rate advantages of different VOCs compared to B.1.617.2 (difference in growth rate per day) 
 # PS p values are not Tukey corrected, you can do that with argument adjust="tukey"
-emtrcogukp2 = emtrends(fit4_cogukp2_multi, trt.vs.ctrl1 ~ LINEAGE2,  
+emtrcogukp2 = emtrends(fit1_cogukp2_multi, trt.vs.ctrl1 ~ LINEAGE2,  
                      var="DATE_NUM",  mode="latent",
                      at=list(DATE_NUM=max(cogukp2$DATE_NUM)))
 delta_r_cogukp2 = data.frame(confint(emtrcogukp2, 
-                                   adjust="none", df=NA)$contrasts, 
-                            p.value=as.data.frame(emtrcogukp2$contrasts)$p.value)
+                                   adjust="sidak")$contrasts, 
+                            p.value=as.data.frame(emtrcogukp2$contrasts, adjust="sidak")$p.value)
 delta_r_cogukp2
-# contrast    estimate          SE df   asymp.LCL    asymp.UCL      p.value
-# 1      other - B.1.1.7  0.02861600 0.002937140 NA  0.02285932  0.034372693 1.356497e-10
-# 2 (B.1.177+) - B.1.1.7 -0.04206022 0.007281690 NA -0.05633207 -0.027788370 8.715882e-07
-# 3    B.1.525 - B.1.1.7 -0.03369598 0.019907178 NA -0.07271333  0.005321373 3.846499e-01
-# 4    B.1.351 - B.1.1.7  0.16029831 0.005336575 NA  0.14983882  0.170757809 1.356012e-10
-# 5        P.1 - B.1.1.7  0.07724817 0.010624484 NA  0.05642456  0.098071775 1.329832e-09
-# 6  B.1.617.1 - B.1.1.7 -0.27783485 0.012413103 NA -0.30216408 -0.253505614 1.356012e-10
-# 7  B.1.617.2 - B.1.1.7  0.10303213 0.003709768 NA  0.09576112  0.110303146 1.356012e-10
+#                  contrast      estimate           SE df      lower.CL      upper.CL p.value
+# 1       other - B.1.617.2 -0.1306979638 5.160734e-07 75 -0.1306995244 -0.1306964032       0
+# 2  (B.1.177+) - B.1.617.2 -0.1352586005 4.982448e-07 75 -0.1352601072 -0.1352570938       0
+# 3     B.1.525 - B.1.617.2 -0.0913361633 2.374811e-06 75 -0.0913433448 -0.0913289818       0
+# 4     B.1.351 - B.1.617.2 -0.0883649130 1.923571e-06 75 -0.0883707300 -0.0883590961       0
+# 5         P.1 - B.1.617.2 -0.0372586514 3.669823e-06 75 -0.0372697491 -0.0372475537       0
+# 6     B.1.621 - B.1.617.2  0.0005499132 7.997453e-06 75  0.0005257286  0.0005740977       0
+# 7        C.37 - B.1.617.2 -0.0033005011 1.923078e-05 75 -0.0033586555 -0.0032423466       0
+# 8     B.1.1.7 - B.1.617.2 -0.0940628244 3.946591e-07 75 -0.0940640179 -0.0940616309       0
+# 9   B.1.617.1 - B.1.617.2 -0.0519277199 2.944443e-06 75 -0.0519366239 -0.0519188158       0
+# 10       AY.3 - B.1.617.2  0.0019873485 9.534131e-06 75  0.0019585170  0.0020161800       0
+# 11       AY.4 - B.1.617.2  0.0035981465 2.164111e-07 75  0.0035974921  0.0035988009       0
+# 12       AY.5 - B.1.617.2  0.0024698537 7.452185e-07 75  0.0024676001  0.0024721073       0
+# 13       AY.6 - B.1.617.2  0.0138973971 6.778161e-07 75  0.0138953473  0.0138994468       0
+# 14       AY.9 - B.1.617.2 -0.0130866047 7.677073e-07 75 -0.0130889263 -0.0130842831       0
+# 15      AY.12 - B.1.617.2 -0.0024457012 8.796347e-07 75 -0.0024483613 -0.0024430412       0
 
 # If we take the exponent of the product of these growth rate advantages/disadvantages and the generation time (e.g. 4.7 days, Nishiura et al. 2020)
 # we get the transmission advantage/disadvantage (here expressed in percent) :

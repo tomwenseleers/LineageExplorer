@@ -1,6 +1,6 @@
 # ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT VOCs IN BELGIUM BASED ON ANALYSIS OF GISAID PATIENT METADATA
 # T. Wenseleers
-# last update 22 July 2021
+# last update 31 August 2021
 
 library(nnet)
 # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
@@ -13,7 +13,7 @@ library(ggthemes)
 library(scales)
 
 today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-07-22")
+today = as.Date("2021-08-31")
 today_num = as.numeric(today)
 plotdir = "BE_GISAID"
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
@@ -22,20 +22,22 @@ suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 d1 = read_tsv(".//data//GISAID//Belgium//gisaid_hcov-19_2021_05_29_08_belgium_subm_jan_dec_2020.tsv", col_types = cols(.default = "c"))
 d2 = read_tsv(".//data//GISAID//Belgium//gisaid_hcov-19_2021_05_29_08_belgium_subm_jan_feb_2021.tsv", col_types = cols(.default = "c"))
 d3 = read_tsv(".//data//GISAID//Belgium//gisaid_hcov-19_2021_05_29_09_belgium_subm_mar_apr_2021.tsv", col_types = cols(.default = "c"))
-d4 = read_tsv(".//data//GISAID//Belgium//gisaid_hcov-19_2021_06_18_22_belgium_subm_may_2021.tsv", col_types = cols(.default = "c")) # downloaded 3/6/2021
-d5 = read_tsv(".//data//GISAID//Belgium//gisaid_hcov-19_2021_07_22_19_belgium_subm_june_2021.tsv", col_types = cols(.default = "c")) # downloaded 3/6/2021
-d6 = read_tsv(".//data//GISAID//Belgium//gisaid_hcov-19_2021_07_22_19_belgium_subm_july_2021.tsv", col_types = cols(.default = "c")) # downloaded 3/6/2021
+d4 = read_tsv(".//data//GISAID//Belgium//gisaid_hcov-19_2021_06_18_22_belgium_subm_may_2021.tsv", col_types = cols(.default = "c")) 
+d5 = read_tsv(".//data//GISAID//Belgium//gisaid_hcov-19_2021_07_22_19_belgium_subm_june_2021.tsv", col_types = cols(.default = "c"))
+d6 = read_tsv(".//data//GISAID//Belgium//gisaid_hcov-19_2021_08_31_17_belgium_subm_july_2021.tsv", col_types = cols(.default = "c"))
+d7 = read_tsv(".//data//GISAID//Belgium//gisaid_hcov-19_2021_08_31_17_belgium_subm_aug_2021.tsv", col_types = cols(.default = "c"))
 d1 = as.data.frame(d1)
 d2 = as.data.frame(d2)
 d3 = as.data.frame(d3)
 d4 = as.data.frame(d4)
 d5 = as.data.frame(d5)
 d6 = as.data.frame(d6)
-GISAID_belgium1 = rbind(d1, d2, d3, d4, d5, d6)
+d7 = as.data.frame(d7)
+GISAID_belgium1 = rbind(d1, d2, d3, d4, d5, d6, d7)
 GISAID_belgium1 = GISAID_belgium1[GISAID_belgium1[,"Host"]=="Human",]
 GISAID_belgium1[,"Collection date"] = as.Date(GISAID_belgium1[,"Collection date"])
 GISAID_belgium1 = GISAID_belgium1[!is.na(GISAID_belgium1[,"Collection date"]),]
-nrow(GISAID_belgium1) # 34122
+nrow(GISAID_belgium1) # 40338
 unique(GISAID_belgium1[,"Virus name"])
 unique(GISAID_belgium1[,"Location"])
 unique(GISAID_belgium1[,"Host"])
@@ -43,20 +45,20 @@ unique(GISAID_belgium1[,"Additional location information"]) # ZIP codes # someti
 
 # anonymous records without location info are assumed to be active surveillance of cluster outbreaks & included in active surveillance (cf weekly Sciensano report)
 GISAID_belgium1[,"Additional location information"][grepl("nknown",GISAID_belgium1[,"Additional location information"])] = NA
-sum(is.na(GISAID_belgium1[,"Additional location information"])) # 6609
+sum(is.na(GISAID_belgium1[,"Additional location information"])) # 7086
 unique(GISAID_belgium1[,"Additional location information"])
 
 library(stringr)
 ZIP = str_extract(GISAID_belgium1[,"Additional location information"],"[0-9]{4}") # extract ZIP codes
 unique(ZIP)
-sum(!is.na(ZIP)) # 27428
-sum(is.na(ZIP)) # 6694 - anonymous records, these are assumed to be active surveillance of cluster outbreaks
+sum(!is.na(ZIP)) # 33100
+sum(is.na(ZIP)) # 7238 - anonymous records, these are assumed to be active surveillance of cluster outbreaks
 
 muni = read.csv(".//data//GISAID//Belgium//mapping_municips.csv") # post codes & cities & provinces
 province = muni$province_label_nl[match(ZIP, muni$postcode)] # province
 city = muni$municipality_label_nl[match(ZIP, muni$postcode)] # city
-sum(is.na(city)) # 6737
-sum(is.na(ZIP))  # 6694
+sum(is.na(city)) # 7295
+sum(is.na(ZIP))  # 7238
 wrongZIP = which(is.na(city)&!is.na(ZIP))
 ZIP[wrongZIP] = NA
 
@@ -64,24 +66,24 @@ anonym = grepl("Belgium$",GISAID_belgium1[,"Additional location information"])|
   is.na(GISAID_belgium1[,"Additional location information"])|
   grepl("CHU|infected|travel|Travel",GISAID_belgium1[,"Additional location information"]) |
   is.na(ZIP)
-sum(anonym) # 6787
+sum(anonym) # 7345
 unique(GISAID_belgium1[!is.na(GISAID_belgium1[,"Sampling strategy"]),"Sampling strategy"])
 traveller = grepl("travel|Travel|infected",GISAID_belgium1[,"Additional location information"])|grepl("travel|Travel",GISAID_belgium1[,"Sampling strategy"])|
   grepl("travel|Travel|Holiday",GISAID_belgium1[,"Additional host information"])  
-sum(traveller) # 250
+sum(traveller) # 382
 Sdropout = grepl("S-gene dropout",GISAID_belgium1[,"Sampling strategy"])|
   grepl("S-gene dropout",GISAID_belgium1[,"Additional host information"])  
 sum(Sdropout) # 61 - should be much higher though...
 actsurv = anonym|traveller|grepl("Longitudinal|Outbreak|Active|active|dropout|Atypical|travel|Travel|Atypische|CLUSTER|cluster|Cluster",GISAID_belgium1[,"Sampling strategy"])|
   grepl("Longitudinal|Outbreak|Active|active|dropout|Atypical|travel|Travel|Atypische|CLUSTER|cluster|Cluster|HR contact|Outbreak|Nurse|Holiday",GISAID_belgium1[,"Additional host information"])  
-sum(actsurv) # 8747
-sum(actsurv[GISAID_belgium1[,"Collection date"]>=as.Date("2020-11-30")]) # 6084 # In Sciensano weekly report of 21st of May 2021 this is 4710
-sum(actsurv[GISAID_belgium1[,"Collection date"]>=as.Date("2020-11-30")&GISAID_belgium1[,"Collection date"]<=as.Date("2021-01-31")]) # 1191 # In Sciensano weekly report of 21st of May 2021 this is 1975
+sum(actsurv) # 10308
+sum(actsurv[GISAID_belgium1[,"Collection date"]>=as.Date("2020-11-30")]) # 7566 # In Sciensano weekly report of 21st of May 2021 this is 4710
+sum(actsurv[GISAID_belgium1[,"Collection date"]>=as.Date("2020-11-30")&GISAID_belgium1[,"Collection date"]<=as.Date("2021-01-31")]) # 1205 # In Sciensano weekly report of 21st of May 2021 this is 1975
 
 reinfection = grepl("Breakthrough",GISAID_belgium1[,"Sampling strategy"])
-sum(reinfection) # 18
+sum(reinfection) # 60
 infectionpostvaccination = grepl("Vaccination|vaccination",GISAID_belgium1[,"Sampling strategy"])
-sum(infectionpostvaccination) # 183
+sum(infectionpostvaccination) # 320
 
 asymptomatic = grepl("Asymptomatic|asympto",GISAID_belgium1[,"Patient status"])
 symptomatic = grepl("Ho|Out|Am|Dec|dec| sympto|Not hosp|Relea",GISAID_belgium1[,"Patient status"])|grepl(" symptoms|ILI",GISAID_belgium1[,"Additional host information"])
@@ -103,7 +105,7 @@ died[unknown] = NA
 # sum(bassurv) # 8856
 
 bassurv = !actsurv
-sum(bassurv) # 25375
+sum(bassurv) # 30030
 purpose_of_sequencing = rep("active_surveillance", nrow(GISAID_belgium1))
 purpose_of_sequencing[bassurv] = "baseline_surveillance"
 
@@ -115,7 +117,7 @@ GISAID_belgium1[,"Gender"][grepl("unknown",GISAID_belgium1[,"Gender"])] = NA
 GISAID_belgium1[,"Gender"][!grepl("F|M",GISAID_belgium1[,"Gender"])] = NA
 unique(GISAID_belgium1[,"Gender"]) # "F" "M" NA 
 
-sum(!is.na(GISAID_belgium1[,"Gender"] )) # 30635 with gender info
+sum(!is.na(GISAID_belgium1[,"Gender"] )) # 35870 with gender info
 
 GISAID_belgium1[,"Patient age"][grepl("nknown",GISAID_belgium1[,"Patient age"])] = NA
 GISAID_belgium1[,"Patient age"][grepl("month",GISAID_belgium1[,"Patient age"])] = 0
@@ -129,7 +131,7 @@ GISAID_belgium1[,"Patient age"][grepl("2020-1985",GISAID_belgium1[,"Patient age"
 GISAID_belgium1[,"Patient age"][grepl("2020-1972",GISAID_belgium1[,"Patient age"])] = as.character(2021-1972)
 GISAID_belgium1[,"Patient age"] = as.numeric(GISAID_belgium1[,"Patient age"])
 GISAID_belgium1[,"Patient age"][GISAID_belgium1[,"Patient age"]>200] = NA
-sum(!is.na(GISAID_belgium1[,"Patient age"] )) # 30650 with age info
+sum(!is.na(GISAID_belgium1[,"Patient age"] )) # 35908 with age info
 
 GISAID_belgium1[,"Virus name"] = gsub("hCoV-19/","",GISAID_belgium1[,"Virus name"])
 

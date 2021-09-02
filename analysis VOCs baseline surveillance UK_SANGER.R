@@ -1,7 +1,7 @@
 # ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT VOCs IN ENGLAND BASED ON SANGER INSTITUTE BASELINE SURVEILLANCE SEQUENCING DATA ####
 # (this excludes data from individuals with known travel history & most surge testing/active surveillance)
 
-# last update 19 JULY 2021
+# last update 19 AUGUST 2021
 
 library(nnet)
 # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
@@ -13,7 +13,7 @@ library(ggplot2)
 library(ggthemes)
 
 today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-07-19")
+today = as.Date("2021-08-18")
 today_num = as.numeric(today)
 plotdir = "UK_SANGER"
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
@@ -45,18 +45,19 @@ head(sanger)
 
 # sanger = sanger[grepl("2021-", sanger[,"WeekEndDate"]),]
 sanger = sanger[!(sanger$Lineage=="None"|sanger$Lineage=="Lineage data suppressed"),]
-range(sanger$WeekEndDate) # "2021-09-05" "2021-07-10"
+range(sanger$WeekEndDate) # "2021-09-05" "2021-08-07"
 # sanger$Week = lubridate::week(sanger$WeekEndDate)
 sanger$DATE_NUM = as.numeric(sanger$WeekEndDate)-3.5 # using week midpoint
 colnames(sanger)
 
 sanger = sanger[rep(seq_len(nrow(sanger)), sanger$Count),] # convert to long format
 sanger$Count = NULL
-nrow(sanger) # 310515
+nrow(sanger) # 389494
 
-nrow(sanger[sanger$WeekEndDate>=(max(sanger$WeekEndDate)-14),]) # 36754 (last 2 weeks)
-nrow(sanger[grepl("B.1.617",sanger$Lineage, fixed=TRUE)&sanger$WeekEndDate>=(max(sanger$WeekEndDate)-14),]) # 35791 (last 2 weeks)
-nrow(sanger[grepl("B.1.1.7",sanger$Lineage, fixed=TRUE)&sanger$WeekEndDate>=(max(sanger$WeekEndDate)-14),]) # 907
+nrow(sanger[sanger$WeekEndDate>=(max(sanger$WeekEndDate)-14),]) # 67309 (last 2 weeks)
+nrow(sanger[grepl("B.1.617",sanger$Lineage, fixed=TRUE)&sanger$WeekEndDate>=(max(sanger$WeekEndDate)-14),]) # 66801 (last 2 weeks)
+nrow(sanger[grepl("AY.3",sanger$Lineage, fixed=TRUE)&sanger$WeekEndDate>=(max(sanger$WeekEndDate)-14),]) # 467 (last 2 weeks)
+nrow(sanger[grepl("B.1.1.7",sanger$Lineage, fixed=TRUE)&sanger$WeekEndDate>=(max(sanger$WeekEndDate)-14),]) # 11
 
 length(unique(sanger[grepl("B.1.617",sanger$Lineage, fixed=TRUE)&sanger$WeekEndDate>=(max(sanger$WeekEndDate)-14),"LTLA"])) # 311 LTLAs
 
@@ -64,11 +65,11 @@ unique(sanger$Lineage)
 sel_target_VOC = "B.1.617"
 table(sanger$Lineage[grepl("B.1.617",sanger$Lineage, fixed=TRUE)])
 sanger[sanger$Lineage=="B.1.617",]
-sum(table(sanger$Lineage[grepl("B.1.617",sanger$Lineage, fixed=TRUE)])) # 27493 B.1.617
+sum(table(sanger$Lineage[grepl("B.1.617",sanger$Lineage, fixed=TRUE)])) # 174107 B.1.617
 
 unique(sanger$Lineage[grepl("B.1.617",sanger$Lineage, fixed=TRUE)])
 # "B.1.617"   "B.1.617.1" "B.1.617.3" "B.1.617.2"
-sum(grepl("B.1.617",sanger$Lineage, fixed=TRUE)) # 27493 B.1.617+
+sum(grepl("B.1.617",sanger$Lineage, fixed=TRUE)) # 174107 B.1.617+
 sanger$LINEAGE1 = sanger$Lineage
 sanger$LINEAGE2 = sanger$Lineage
 sanger[grepl(sel_target_VOC, sanger$LINEAGE1, fixed=T),"LINEAGE1"] = paste0(sel_target_VOC,"+")
@@ -84,17 +85,21 @@ table_lineage[table_lineage$Prop>0.001,]
 table_lineage = as.data.frame(table(sanger[sanger$WeekEndDate==max(sanger$WeekEndDate),]$LINEAGE2))
 table_lineage$Freq = table_lineage$Freq / sum(table(sanger[sanger$WeekEndDate==max(sanger$WeekEndDate),]$LINEAGE2))
 colnames(table_lineage) = c("Lineage","Prop")
-table_lineage[table_lineage$Prop>0.001,]
-# Lineage        Prop
-# 3   B.1.1.7 0.009735627
-# 5 B.1.617.2 0.989341167
+table_lineage[table_lineage$Prop>0.00001,]
+# Lineage         Prop
+# 1      AY.1 2.959706e-04
+# 2      AY.3 1.200795e-02
+# 3   B.1.1.7 4.228151e-05
+# 4   B.1.351 4.228151e-05
+# 5 B.1.617.2 9.875692e-01
+# 6   B.1.621 4.228151e-05
 
 
-sel_ref_lineage = "B.1.1.7"
+sel_ref_lineage = "B.1.617.2"
 
 # sel_lineages = as.character(table_lineage[table_lineage$Prop>0.01,"Lineage"][order(table_lineage[table_lineage$Prop>0.01,"Prop"], decreasing=TRUE)])
 # sel_lineages = unique(c(sel_lineages, sel_target_VOC, sel_ref_lineage))
-sel_lineages = c("B.1.1.7","B.1.177+","B.1.351", "B.1.525","B.1.617+","B.1.617.1","B.1.617.2","P.1")
+sel_lineages = c("B.1.1.7","B.1.177+","B.1.351", "B.1.525","B.1.617+","B.1.617.2","AY.3","B.1.621","P.1") # "AY.1",
 
 sanger$LINEAGE1[!(sanger$LINEAGE1 %in% sel_lineages)] = "other"
 sanger$LINEAGE2[!(sanger$LINEAGE2 %in% sel_lineages)] = "other"
@@ -103,8 +108,8 @@ sum(table(sanger$LINEAGE1))
 table(sanger$LINEAGE1)
 table(sanger$LINEAGE2)
 
-levels_LINEAGE1 = c("other","B.1.1.7","B.1.177+","B.1.351","B.1.525","B.1.617+","P.1")
-levels_LINEAGE2 = c("other","B.1.1.7","B.1.177+","B.1.351","B.1.525","B.1.617.1","B.1.617.2","P.1")
+levels_LINEAGE1 = c("other","B.1.1.7","B.1.177+","B.1.351","B.1.525","B.1.617+","AY.3","B.1.621","P.1")
+levels_LINEAGE2 = c("other","B.1.1.7","B.1.177+","B.1.351","B.1.525","B.1.617.1","B.1.617.2","AY.3","B.1.621","P.1")
 sanger$LINEAGE1 = factor(sanger$LINEAGE1, levels=levels_LINEAGE1)
 sanger$LINEAGE2 = factor(sanger$LINEAGE2, levels=levels_LINEAGE2)
 
@@ -167,7 +172,7 @@ data_agbyweeknhsregion1[data_agbyweeknhsregion1$collection_date==max(data_agbywe
 # MULLER PLOT (RAW DATA)
 unique(sanger$LINEAGE2)
 # levels_LINEAGE2_plot = rev(c("B.1.1.7","B.1.617.2","B.1.617.1","P.1","B.1.351","B.1.525","B.1.177+","other")) # "B.1.617.1","B.1.617.2","B.1.617.3"
-levels_LINEAGE2_plot = c("other","B.1.177+","B.1.525","B.1.351","P.1","B.1.1.7","B.1.617.1","B.1.617.2")
+levels_LINEAGE2_plot = c("other","B.1.177+","B.1.525","B.1.351","P.1","B.1.1.7","B.1.617.1","B.1.617.2","AY.3","B.1.621")
 
 library(scales)
 n1 = length(levels_LINEAGE2_plot)
@@ -176,6 +181,9 @@ lineage_cols1 = c(hcl(h = seq(0, 260, length = n1-1), l = 60, c = 200), muted("d
 # lineage_cols1[which(levels_LINEAGE2_plot=="B.1.617+")] = "magenta" # muted("magenta",l=50,c=100)
 lineage_cols1[which(levels_LINEAGE2_plot=="B.1.617.1")] = muted("magenta") # muted("magenta",l=50,c=100)
 lineage_cols1[which(levels_LINEAGE2_plot=="B.1.617.2")] = "magenta" # muted("magenta",l=50,c=100)
+# lineage_cols1[which(levels_LINEAGE2_plot=="AY.1")] = muted("magenta",l=90,c=200) # muted("magenta",l=50,c=100)
+lineage_cols1[which(levels_LINEAGE2_plot=="AY.3")] = muted("magenta",l=100,c=200) # muted("magenta",l=50,c=100)
+lineage_cols1[which(levels_LINEAGE2_plot=="B.1.621")] = "limegreen" # muted("magenta",l=50,c=100)
 
 # lineage_cols1[which(levels_LINEAGE1_plot=="B.1.617.1")] = "magenta" # muted("magenta",l=50,c=100)
 # lineage_cols1[which(levels_LINEAGE1_plot=="B.1.617.2")] = "magenta" # muted("magenta",l=80,c=255)
@@ -185,6 +193,7 @@ lineage_cols1[which(levels_LINEAGE2_plot=="other")] = "grey70"
 lineage_cols1[which(levels_LINEAGE2_plot=="B.1.177+")] = "grey55"  
 # lineage_cols1[which(levels_LINEAGE1_plot=="B.1.351")] = muted("cyan")  
 lineage_cols1[which(levels_LINEAGE2_plot=="P.1")] = "cyan3"  
+
 
 data_agbyweek1$LINEAGE2 = factor(data_agbyweek1$LINEAGE2, levels=levels_LINEAGE2_plot)
 data_agbyweekregion1$LINEAGE2 = factor(data_agbyweekregion1$LINEAGE2, levels=levels_LINEAGE2_plot)
@@ -200,8 +209,8 @@ muller_sanger_raw1 = ggplot(data=data_agbyweek1, aes(x=collection_date, y=count,
   # geom_col(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE1), width=1, position="fill") +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE2, group=LINEAGE2), position="fill") +
   scale_fill_manual("", values=lineage_cols1) +
-  scale_x_continuous(breaks=as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
-                     labels=substring(months(as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
+  scale_x_continuous(breaks=as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01")),
+                     labels=substring(months(as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01"))),1,1),
                      limits=as.Date(c("2020-09-01",NA)), expand=c(0,0)) + #  
   # guides(color = guide_legend(reverse=F, nrow=2, byrow=T), fill = guide_legend(reverse=F, nrow=2, byrow=T)) +
   theme_hc() +
@@ -220,8 +229,8 @@ muller_sangerbyregion_raw1 = ggplot(data=data_agbyweekregion1, aes(x=collection_
   # geom_col(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE1), width=1, position="fill") +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE2, group=LINEAGE2), position="fill") +
   scale_fill_manual("", values=lineage_cols1) +
-  scale_x_continuous(breaks=as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
-                     labels=substring(months(as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
+  scale_x_continuous(breaks=as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01")),
+                     labels=substring(months(as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01"))),1,1),
                      limits=as.Date(c("2020-09-01",NA)), expand=c(0,0)) + #  
   # guides(color = guide_legend(reverse=F, nrow=2, byrow=T), fill = guide_legend(reverse=F, nrow=2, byrow=T)) +
   theme_hc() +
@@ -244,8 +253,8 @@ muller_sangerbynhsregion_raw1 = ggplot(data=data_agbyweeknhsregion1, aes(x=colle
   # geom_col(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE1), width=1, position="fill") +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE2, group=LINEAGE2), position="fill") +
   scale_fill_manual("", values=lineage_cols1) +
-  scale_x_continuous(breaks=as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
-                     labels=substring(months(as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
+  scale_x_continuous(breaks=as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01")),
+                     labels=substring(months(as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01"))),1,1),
                      limits=as.Date(c("2020-09-01",NA)), expand=c(0,0)) + #  
   # guides(color = guide_legend(reverse=F, nrow=2, byrow=T), fill = guide_legend(reverse=F, nrow=2, byrow=T)) +
   theme_hc() +
@@ -267,14 +276,14 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\sanger_muller plots by NHS region_raw
 # multinomial fits
 library(nnet)
 library(splines)
-sanger$LINEAGE1 = relevel(sanger$LINEAGE1, ref="B.1.1.7") # we take B.1.1.7 as baseline / reference level
-sanger$LINEAGE2 = relevel(sanger$LINEAGE2, ref="B.1.1.7")
+sanger$LINEAGE1 = relevel(sanger$LINEAGE1, ref="B.1.617.2") # we take B.1.617.2 as baseline / reference level
+sanger$LINEAGE2 = relevel(sanger$LINEAGE2, ref="B.1.617.2")
 # sanger$DATE_NUM_WEEK = sanger$DATE_NUM/7
 
 data_agbyweekregion1$DATE_NUM = data_agbyweekregion1$collection_date_num
-data_agbyweekregion1$LINEAGE2 = relevel(data_agbyweekregion1$LINEAGE2, ref="B.1.1.7")
+data_agbyweekregion1$LINEAGE2 = relevel(data_agbyweekregion1$LINEAGE2, ref="B.1.617.2")
 data_agbyweeknhsregion1$DATE_NUM = data_agbyweeknhsregion1$collection_date_num
-data_agbyweeknhsregion1$LINEAGE2 = relevel(data_agbyweeknhsregion1$LINEAGE2, ref="B.1.1.7")
+data_agbyweeknhsregion1$LINEAGE2 = relevel(data_agbyweeknhsregion1$LINEAGE2, ref="B.1.617.2")
 
 
 # by ONS region
@@ -305,14 +314,16 @@ delta_r_sanger = data.frame(confint(emtrsanger,
                                    adjust="none", df=NA)$contrasts, 
                             p.value=as.data.frame(emtrsanger$contrasts)$p.value)
 delta_r_sanger
-# contrast    estimate          SE df     asymp.LCL   asymp.UCL  p.value
-# 1      other - B.1.1.7  0.04443611 0.001823864 NA  0.0408613972  0.04801081 0.000000
-# 2 (B.1.177+) - B.1.1.7 -0.03032572 0.002863841 NA -0.0359387496 -0.02471270 0.000000
-# 3    B.1.525 - B.1.1.7 -0.49782579 0.033036593 NA -0.5625763195 -0.43307525 0.000000
-# 4    B.1.351 - B.1.1.7  0.01112313 0.005796734 NA -0.0002382605  0.02248452 0.260228
-# 5        P.1 - B.1.1.7 -0.90010009 0.024860825 NA -0.9488264163 -0.85137377 0.000000
-# 6  B.1.617.1 - B.1.1.7 -0.41811917 0.023246980 NA -0.4636824165 -0.37255593 0.000000
-# 7  B.1.617.2 - B.1.1.7  0.11593970 0.002061355 NA  0.1118995202  0.11997988 0.000000
+# contrast     estimate          SE df   asymp.LCL   asymp.UCL      p.value
+# 1    B.1.1.7 - B.1.617.2 -0.110536956 0.002286665 NA -0.11501874 -0.10605517 0.000000e+00
+# 2      other - B.1.617.2 -0.045313421 0.002913800 NA -0.05102436 -0.03960248 0.000000e+00
+# 3 (B.1.177+) - B.1.617.2 -0.140184083 0.004073131 NA -0.14816727 -0.13220089 0.000000e+00
+# 4    B.1.525 - B.1.617.2 -0.233519462 0.020200236 NA -0.27311120 -0.19392773 0.000000e+00
+# 5    B.1.351 - B.1.617.2 -0.099935389 0.007297939 NA -0.11423909 -0.08563169 0.000000e+00
+# 6        P.1 - B.1.617.2 -0.202795208 0.034627764 NA -0.27066438 -0.13492604 1.370191e-07
+# 7  B.1.617.1 - B.1.617.2 -0.052440807 0.111765075 NA -0.27149633  0.16661471 9.882125e-01
+# 8       AY.3 - B.1.617.2  0.149283420 0.014154044 NA  0.12154200  0.17702484 0.000000e+00
+# 9    B.1.621 - B.1.617.2 -0.009192041 0.038827277 NA -0.08529211  0.06690802 9.990399e-01
 
 # If we take the exponent of the product of these growth rate advantages/disadvantages and the generation time (e.g. 4.7 days, Nishiura et al 2020)
 # we get the transmission advantage/disadvantage (here expressed in percent) :
@@ -320,31 +331,35 @@ delta_r_sanger
 transmadv_sanger =  sign(delta_r_sanger[,c(2,5,6)])*100*(exp(abs(delta_r_sanger[,c(2,5,6)])*5.5)-1)
 transmadv_sanger =  data.frame(contrast=delta_r_sanger$contrast, transmadv_sanger)
 transmadv_sanger
-# contrast      estimate     asymp.LCL    asymp.UCL
-# 1      other - B.1.1.7     27.685316  2.519943e+01     30.22056
-# 2 (B.1.177+) - B.1.1.7    -18.150787 -2.185518e+01    -14.55901
-# 3    B.1.525 - B.1.1.7  -1445.668858 -2.106891e+03   -982.56021
-# 4    B.1.351 - B.1.1.7      6.308729 -1.311292e-01     13.16365
-# 5        P.1 - B.1.1.7 -14025.270510 -1.836654e+04 -10704.58584
-# 6  B.1.617.1 - B.1.1.7   -897.074647 -1.181035e+03   -676.05842
-# 7  B.1.617.2 - B.1.1.7     89.206412  8.504842e+01     93.45783
+# contrast   estimate  asymp.LCL  asymp.UCL
+# 1    B.1.1.7 - B.1.617.2  -83.66684  -88.25045  -79.19483
+# 2      other - B.1.617.2  -28.30292  -32.39689  -24.33553
+# 3 (B.1.177+) - B.1.617.2 -116.19540 -125.89950 -106.90818
+# 4    B.1.525 - B.1.617.2 -261.23446 -349.11625 -190.54913
+# 5    B.1.351 - B.1.617.2  -73.26372  -87.44494  -60.15538
+# 6        P.1 - B.1.617.2 -205.07078 -343.11276 -110.03273
+# 7  B.1.617.1 - B.1.617.2  -33.43235 -345.14497  150.02255
+# 8       AY.3 - B.1.617.2  127.29051   95.12711  164.75551
+# 9    B.1.621 - B.1.617.2   -5.18560  -59.85654   44.48336
 
-# so this would estimate that B.1.617.2 was 91% more infectious than B.1.1.7 [87%-95%] 95% CLs
 
 # or with generation time of 4.7 days (Nishiura et al. 2020)
 transmadv_sanger =  sign(delta_r_sanger[,c(2,5,6)])*100*(exp(abs(delta_r_sanger[,c(2,5,6)])*4.7)-1)
 transmadv_sanger =  data.frame(contrast=delta_r_sanger$contrast, transmadv_sanger)
 transmadv_sanger
-# contrast     estimate     asymp.LCL   asymp.UCL
-# 1      other - B.1.1.7    23.225977    21.1729365    25.31380
-# 2 (B.1.177+) - B.1.1.7   -15.318872   -18.4016087   -12.31640
-# 3    B.1.525 - B.1.1.7  -937.896537 -1307.0898123  -665.57247
-# 4    B.1.351 - B.1.1.7     5.366937    -0.1120451    11.14631
-# 5        P.1 - B.1.1.7 -6774.956747 -8544.2906610 -5367.77430
-# 6  B.1.617.1 - B.1.1.7  -613.605508  -784.0181053  -476.04343
-# 7  B.1.617.2 - B.1.1.7    72.446455    69.2027891    75.75230
+# contrast    estimate  asymp.LCL  asymp.UCL
+# 1    B.1.1.7 - B.1.617.2  -68.122668  -71.70163  -64.61831
+# 2      other - B.1.617.2  -23.735134  -27.10134  -20.45808
+# 3 (B.1.177+) - B.1.617.2  -93.259796 -100.64885  -86.14285
+# 4    B.1.525 - B.1.617.2 -199.678927 -260.96926 -148.79531
+# 5    B.1.351 - B.1.617.2  -59.950839  -71.07360  -49.55125
+# 6        P.1 - B.1.617.2 -159.383500 -256.84188  -88.54233
+# 7  B.1.617.1 - B.1.617.2  -27.950309 -258.23992  118.82216
+# 8       AY.3 - B.1.617.2  101.704198   77.04742  129.79484
+# 9    B.1.621 - B.1.617.2   -4.414941  -49.31275   36.95301
 
 # pairwise growth rate advantages for all strain comparisons (i.e. pairwise differences in growth rate per day among the different lineages)
+
 emtrsanger_pairw = emtrends(fit4_sanger_multi, pairwise ~ LINEAGE2,  
                       var="DATE_NUM",  mode="latent",
                       at=list(DATE_NUM=max(sanger$DATE_NUM)))
@@ -352,35 +367,6 @@ delta_r_sanger_pairw = data.frame(confint(emtrsanger_pairw,
                                     adjust="none", df=NA)$contrasts, 
                             p.value=as.data.frame(emtrsanger_pairw$contrasts)$p.value)
 delta_r_sanger_pairw
-# contrast    estimate          SE df   asymp.LCL     asymp.UCL      p.value
-# 1         B.1.1.7 - other -0.04443611 0.001823864 NA -0.04801081 -0.0408613972 0.000000e+00
-# 2    B.1.1.7 - (B.1.177+)  0.03032572 0.002863841 NA  0.02471270  0.0359387496 5.218048e-15
-# 3       B.1.1.7 - B.1.525  0.49782579 0.033036593 NA  0.43307525  0.5625763195 0.000000e+00
-# 4       B.1.1.7 - B.1.351 -0.01112313 0.005796734 NA -0.02248452  0.0002382605 5.397504e-01
-# 5           B.1.1.7 - P.1  0.90010009 0.024860825 NA  0.85137377  0.9488264163 0.000000e+00
-# 6     B.1.1.7 - B.1.617.1  0.41811917 0.023246980 NA  0.37255593  0.4636824165 0.000000e+00
-# 7     B.1.1.7 - B.1.617.2 -0.11593970 0.002061355 NA -0.11997988 -0.1118995202 0.000000e+00
-# 8      other - (B.1.177+)  0.07476183 0.002560427 NA  0.06974348  0.0797801743 0.000000e+00
-# 9         other - B.1.525  0.54226189 0.033085770 NA  0.47741497  0.6071088106 0.000000e+00
-# 10        other - B.1.351  0.03331298 0.006064523 NA  0.02142673  0.0451992221 3.482491e-06
-# 11            other - P.1  0.94453620 0.024924911 NA  0.89568427  0.9933881273 0.000000e+00
-# 12      other - B.1.617.1  0.46255528 0.023317513 NA  0.41685379  0.5082567643 0.000000e+00
-# 13      other - B.1.617.2 -0.07150360 0.002693824 NA -0.07678339 -0.0662237985 0.000000e+00
-# 14   (B.1.177+) - B.1.525  0.46750006 0.033159492 NA  0.40250865  0.5324914737 0.000000e+00
-# 15   (B.1.177+) - B.1.351 -0.04144885 0.006453787 NA -0.05409804 -0.0287996633 2.952938e-08
-# 16       (B.1.177+) - P.1  0.86977437 0.025022324 NA  0.82073152  0.9188172241 0.000000e+00
-# 17 (B.1.177+) - B.1.617.1  0.38779345 0.023422313 NA  0.34188656  0.4337003397 0.000000e+00
-# 18 (B.1.177+) - B.1.617.2 -0.14626543 0.003484532 NA -0.15309498 -0.1394358682 0.000000e+00
-# 19      B.1.525 - B.1.351 -0.50894892 0.033540264 NA -0.57468663 -0.4432112058 0.000000e+00
-# 20          B.1.525 - P.1  0.40227431 0.041344577 NA  0.32124043  0.4833081893 1.720846e-14
-# 21    B.1.525 - B.1.617.1 -0.07970661 0.040394623 NA -0.15887862 -0.0005346076 5.027443e-01
-# 22    B.1.525 - B.1.617.2 -0.61376549 0.033097950 NA -0.67863628 -0.5488946987 0.000000e+00
-# 23          B.1.351 - P.1  0.91122322 0.025523216 NA  0.86119864  0.9612478073 0.000000e+00
-# 24    B.1.351 - B.1.617.1  0.42924230 0.023955320 NA  0.38229074  0.4761938667 0.000000e+00
-# 25    B.1.351 - B.1.617.2 -0.10481657 0.006106167 NA -0.11678444 -0.0928487044 0.000000e+00
-# 26        P.1 - B.1.617.1 -0.48198092 0.034032509 NA -0.54868341 -0.4152784294 0.000000e+00
-# 27        P.1 - B.1.617.2 -1.01603980 0.024921690 NA -1.06488541 -0.9671941815 0.000000e+00
-# 28  B.1.617.1 - B.1.617.2 -0.53405887 0.023342245 NA -0.57980883 -0.4883089153 0.000000e+00
 
 
 # predicted incidences on average over all ONS regions from multinomial fit
@@ -390,111 +376,53 @@ multinom_preds_today_avg = data.frame(emmeans(fit4_sanger_multi, ~ LINEAGE2|1,
                                               mode="prob", df=NA))
 multinom_preds_today_avg
 # LINEAGE2         prob           SE df     asymp.LCL    asymp.UCL
-# 1   B.1.1.7 6.279634e-04 5.783971e-05 NA  5.145997e-04 7.413272e-04
-# 2     other 2.379876e-04 3.444099e-05 NA  1.704845e-04 3.054907e-04
-# 3  B.1.177+ 3.182888e-08 2.657944e-08 NA -2.026588e-08 8.392363e-08
-# 4   B.1.525 2.102993e-06 1.148733e-06 NA -1.484825e-07 4.354468e-06
-# 5   B.1.351 2.385924e-05 1.943756e-05 NA -1.423768e-05 6.195615e-05
-# 6       P.1 3.972824e-06 2.713121e-06 NA -1.344795e-06 9.290443e-06
-# 7 B.1.617.1 6.960982e-08 1.121298e-07 NA -1.501606e-07 2.893802e-07
-# 8 B.1.617.2 9.991040e-01 8.312105e-05 NA  9.989411e-01 9.992669e-01
+# 1  B.1.617.2 8.785315e-01 3.808860e-02 NA  8.038792e-01 9.531837e-01
+# 2    B.1.1.7 3.268635e-05 5.695726e-06 NA  2.152294e-05 4.384977e-05
+# 3      other 1.315259e-04 2.241106e-05 NA  8.760104e-05 1.754508e-04
+# 4   B.1.177+ 6.796477e-10 6.482512e-10 NA -5.909013e-10 1.950197e-09
+# 5    B.1.525 4.369317e-07 4.381164e-07 NA -4.217606e-07 1.295624e-06
+# 6    B.1.351 2.221873e-06 3.986086e-06 NA -5.590713e-06 1.003446e-05
+# 7        P.1 1.498532e-07 4.713481e-07 NA -7.739721e-07 1.073679e-06
+# 8  B.1.617.1 3.917538e-07 4.493120e-06 NA -8.414600e-06 9.198108e-06
+# 9       AY.3 1.202447e-01 3.808499e-02 NA  4.559947e-02 1.948899e-01
+# 10   B.1.621 1.056440e-03 9.830802e-04 NA -8.703618e-04 2.983242e-03
 
 # % non-B.1.1.7
 colSums(multinom_preds_today_avg[-1, c("prob","asymp.LCL","asymp.UCL")])
 #      prob asymp.LCL asymp.UCL 
-# 0.9993720 0.9990957 0.9996484 
+# 0.12146854 0.04482303 0.19811405 
 
 # here given by region:
 multinom_preds_today_byregion = data.frame(emmeans(fit3_sanger_multi, ~ LINEAGE2|DATE_NUM, by=c("REGION"),
                                                    at=list(DATE_NUM=today_num), 
                                                    mode="prob", df=NA))
 multinom_preds_today_byregion
-# LINEAGE2 DATE_NUM                   REGION         prob           SE df     asymp.LCL    asymp.UCL
-# 1    B.1.1.7    18827                   London 4.075089e-04 3.712129e-05 NA  3.347525e-04 4.802653e-04
-# 2      other    18827                   London 1.199949e-05 1.831845e-06 NA  8.409140e-06 1.558984e-05
-# 3   B.1.177+    18827                   London 3.013546e-10 8.945339e-11 NA  1.260291e-10 4.766800e-10
-# 4    B.1.525    18827                   London 2.506847e-06 1.284670e-06 NA -1.106026e-08 5.024754e-06
-# 5    B.1.351    18827                   London 2.880330e-05 8.606722e-06 NA  1.193443e-05 4.567216e-05
-# 6        P.1    18827                   London 2.105533e-05 1.282751e-05 NA -4.086120e-06 4.619678e-05
-# 7  B.1.617.1    18827                   London 5.658811e-10 4.024108e-10 NA -2.228296e-10 1.354592e-09
-# 8  B.1.617.2    18827                   London 9.995281e-01 4.417063e-05 NA  9.994416e-01 9.996147e-01
-# 9    B.1.1.7    18827               North West 2.377364e-04 2.079198e-05 NA  1.969848e-04 2.784879e-04
-# 10     other    18827               North West 2.682791e-05 4.001663e-06 NA  1.898480e-05 3.467103e-05
-# 11  B.1.177+    18827               North West 1.966500e-09 5.765459e-10 NA  8.364907e-10 3.096509e-09
-# 12   B.1.525    18827               North West 6.702791e-07 3.482305e-07 NA -1.224022e-08 1.352798e-06
-# 13   B.1.351    18827               North West 1.536748e-06 5.209691e-07 NA  5.156676e-07 2.557829e-06
-# 14       P.1    18827               North West 5.444877e-07 3.979670e-07 NA -2.355134e-07 1.324489e-06
-# 15 B.1.617.1    18827               North West 3.194134e-12 3.878724e-12 NA -4.408026e-12 1.079629e-11
-# 16 B.1.617.2    18827               North West 9.997327e-01 2.338140e-05 NA  9.996869e-01 9.997785e-01
-# 17   B.1.1.7    18827               South West 7.182655e-04 6.592687e-05 NA  5.890512e-04 8.474798e-04
-# 18     other    18827               South West 6.116941e-05 1.006391e-05 NA  4.144450e-05 8.089432e-05
-# 19  B.1.177+    18827               South West 3.236895e-09 9.745056e-10 NA  1.326899e-09 5.146891e-09
-# 20   B.1.525    18827               South West 1.662413e-06 1.233659e-06 NA -7.555146e-07 4.080341e-06
-# 21   B.1.351    18827               South West 5.444646e-06 3.071582e-06 NA -5.755444e-07 1.146484e-05
-# 22       P.1    18827               South West 5.143141e-06 4.380296e-06 NA -3.442082e-06 1.372836e-05
-# 23 B.1.617.1    18827               South West 7.942390e-10 6.732535e-10 NA -5.253135e-10 2.113792e-09
-# 24 B.1.617.2    18827               South West 9.992083e-01 7.253887e-05 NA  9.990661e-01 9.993505e-01
-# 25   B.1.1.7    18827               South East 5.407228e-04 4.996146e-05 NA  4.428002e-04 6.386455e-04
-# 26     other    18827               South East 7.599651e-06 1.181864e-06 NA  5.283241e-06 9.916061e-06
-# 27  B.1.177+    18827               South East 2.818056e-10 8.367942e-11 NA  1.177969e-10 4.458142e-10
-# 28   B.1.525    18827               South East 2.589633e-06 1.387463e-06 NA -1.297453e-07 5.309011e-06
-# 29   B.1.351    18827               South East 8.967661e-06 3.133972e-06 NA  2.825188e-06 1.511013e-05
-# 30       P.1    18827               South East 7.593582e-06 5.079587e-06 NA -2.362226e-06 1.754939e-05
-# 31 B.1.617.1    18827               South East 2.785173e-10 2.151970e-10 NA -1.432611e-10 7.002956e-10
-# 32 B.1.617.2    18827               South East 9.994325e-01 5.233386e-05 NA  9.993300e-01 9.995351e-01
-# 33   B.1.1.7    18827          East of England 5.712838e-04 5.238686e-05 NA  4.686075e-04 6.739602e-04
-# 34     other    18827          East of England 2.144538e-05 3.326310e-06 NA  1.492593e-05 2.796483e-05
-# 35  B.1.177+    18827          East of England 6.329145e-10 1.886338e-10 NA  2.631990e-10 1.002630e-09
-# 36   B.1.525    18827          East of England 6.100389e-07 3.868935e-07 NA -1.482584e-07 1.368336e-06
-# 37   B.1.351    18827          East of England 4.625957e-06 1.734066e-06 NA  1.227250e-06 8.024664e-06
-# 38       P.1    18827          East of England 3.111177e-06 2.270708e-06 NA -1.339329e-06 7.561683e-06
-# 39 B.1.617.1    18827          East of England 1.386050e-10 1.068392e-10 NA -7.079597e-11 3.480059e-10
-# 40 B.1.617.2    18827          East of England 9.993989e-01 5.496385e-05 NA  9.992912e-01 9.995067e-01
-# 41   B.1.1.7    18827            East Midlands 1.024034e-03 9.061650e-05 NA  8.464285e-04 1.201639e-03
-# 42     other    18827            East Midlands 1.335255e-04 2.018335e-05 NA  9.396683e-05 1.730841e-04
-# 43  B.1.177+    18827            East Midlands 6.620632e-09 1.953425e-09 NA  2.791989e-09 1.044927e-08
-# 44   B.1.525    18827            East Midlands 3.975179e-07 2.995944e-07 NA -1.896762e-07 9.847121e-07
-# 45   B.1.351    18827            East Midlands 5.320239e-06 2.016631e-06 NA  1.367716e-06 9.272762e-06
-# 46       P.1    18827            East Midlands 5.735992e-07 6.718224e-07 NA -7.431485e-07 1.890347e-06
-# 47 B.1.617.1    18827            East Midlands 2.503344e-10 1.864818e-10 NA -1.151633e-10 6.158320e-10
-# 48 B.1.617.2    18827            East Midlands 9.988361e-01 1.032452e-04 NA  9.986338e-01 9.990385e-01
-# 49   B.1.1.7    18827            West Midlands 8.513302e-04 7.552862e-05 NA  7.032968e-04 9.993636e-04
-# 50     other    18827            West Midlands 1.083419e-04 1.641291e-05 NA  7.617320e-05 1.405106e-04
-# 51  B.1.177+    18827            West Midlands 4.688771e-09 1.388317e-09 NA  1.967719e-09 7.409822e-09
-# 52   B.1.525    18827            West Midlands 2.199748e-06 1.191874e-06 NA -1.362825e-07 4.535779e-06
-# 53   B.1.351    18827            West Midlands 8.265126e-06 2.893931e-06 NA  2.593125e-06 1.393713e-05
-# 54       P.1    18827            West Midlands 6.151895e-07 7.183278e-07 NA -7.927071e-07 2.023086e-06
-# 55 B.1.617.1    18827            West Midlands 6.099602e-10 4.396447e-10 NA -2.517276e-10 1.471648e-09
-# 56 B.1.617.2    18827            West Midlands 9.990292e-01 8.626968e-05 NA  9.988602e-01 9.991983e-01
-# 57   B.1.1.7    18827               North East 1.424145e-03 1.579653e-04 NA  1.114539e-03 1.733751e-03
-# 58     other    18827               North East 2.950175e-04 4.897152e-05 NA  1.990350e-04 3.909999e-04
-# 59  B.1.177+    18827               North East 7.375410e-09 2.239486e-09 NA  2.986099e-09 1.176472e-08
-# 60   B.1.525    18827               North East 1.960144e-11 1.014428e-11 NA -2.809846e-13 3.948386e-11
-# 61   B.1.351    18827               North East 5.345076e-06 2.673418e-06 NA  1.052740e-07 1.058488e-05
-# 62       P.1    18827               North East 3.184867e-10 1.964249e-10 NA -6.649892e-11 7.034724e-10
-# 63 B.1.617.1    18827               North East 9.962146e-15 7.125305e-15 NA -4.003196e-15 2.392749e-14
-# 64 B.1.617.2    18827               North East 9.982755e-01 1.926661e-04 NA  9.978979e-01 9.986531e-01
-# 65   B.1.1.7    18827 Yorkshire and The Humber 2.257960e-03 2.036632e-04 NA  1.858788e-03 2.657133e-03
-# 66     other    18827 Yorkshire and The Humber 5.400144e-04 7.896215e-05 NA  3.852514e-04 6.947774e-04
-# 67  B.1.177+    18827 Yorkshire and The Humber 2.057236e-08 6.010281e-09 NA  8.792430e-09 3.235230e-08
-# 68   B.1.525    18827 Yorkshire and The Humber 1.675707e-06 9.925174e-07 NA -2.695915e-07 3.621005e-06
-# 69   B.1.351    18827 Yorkshire and The Humber 5.401560e-06 2.204984e-06 NA  1.079870e-06 9.723249e-06
-# 70       P.1    18827 Yorkshire and The Humber 2.268270e-12 1.389217e-12 NA -4.545458e-13 4.991086e-12
-# 71 B.1.617.1    18827 Yorkshire and The Humber 1.292722e-10 1.120796e-10 NA -9.039985e-11 3.489442e-10
-# 72 B.1.617.2    18827 Yorkshire and The Humber 9.971949e-01 2.563056e-04 NA  9.966926e-01 9.976973e-01
 
 multinom_preds_delta_today_byregion = multinom_preds_today_byregion[multinom_preds_today_byregion$LINEAGE2=="B.1.617.2",]
 multinom_preds_delta_today_byregion
-# LINEAGE2 DATE_NUM                   REGION      prob           SE df asymp.LCL asymp.UCL
-# 8  B.1.617.2    18827                   London 0.9995281 4.417063e-05 NA 0.9994416 0.9996147
-# 16 B.1.617.2    18827               North West 0.9997327 2.338140e-05 NA 0.9996869 0.9997785
-# 24 B.1.617.2    18827               South West 0.9992083 7.253887e-05 NA 0.9990661 0.9993505
-# 32 B.1.617.2    18827               South East 0.9994325 5.233386e-05 NA 0.9993300 0.9995351
-# 40 B.1.617.2    18827          East of England 0.9993989 5.496385e-05 NA 0.9992912 0.9995067
-# 48 B.1.617.2    18827            East Midlands 0.9988361 1.032452e-04 NA 0.9986338 0.9990385
-# 56 B.1.617.2    18827            West Midlands 0.9990292 8.626968e-05 NA 0.9988602 0.9991983
-# 64 B.1.617.2    18827               North East 0.9982755 1.926661e-04 NA 0.9978979 0.9986531
-# 72 B.1.617.2    18827 Yorkshire and The Humber 0.9971949 2.563056e-04 NA 0.9966926 0.9976973
+# LINEAGE2 DATE_NUM                   REGION      prob         SE df asymp.LCL asymp.UCL
+# 1  B.1.617.2    18857                   London 0.9235714 0.01372773 NA 0.8966655 0.9504773
+# 11 B.1.617.2    18857               North West 0.9317213 0.01267264 NA 0.9068834 0.9565592
+# 21 B.1.617.2    18857               South West 0.8788023 0.01853060 NA 0.8424830 0.9151216
+# 31 B.1.617.2    18857               South East 0.9218506 0.01388634 NA 0.8946339 0.9490673
+# 41 B.1.617.2    18857          East of England 0.9082957 0.01535809 NA 0.8781943 0.9383970
+# 51 B.1.617.2    18857            East Midlands 0.8830959 0.02018368 NA 0.8435367 0.9226552
+# 61 B.1.617.2    18857            West Midlands 0.9252922 0.01528663 NA 0.8953309 0.9552534
+# 71 B.1.617.2    18857               North East 0.8933075 0.02721134 NA 0.8399742 0.9466407
+# 81 B.1.617.2    18857 Yorkshire and The Humber 0.8758302 0.02031659 NA 0.8360105 0.9156500
+
+multinom_preds_delta_today_byregion = multinom_preds_today_byregion[multinom_preds_today_byregion$LINEAGE2=="AY.3",]
+multinom_preds_delta_today_byregion
+# LINEAGE2 DATE_NUM                   REGION       prob         SE df  asymp.LCL  asymp.UCL
+# 9      AY.3    18857                   London 0.07551662 0.01373400 NA 0.04859846 0.10243477
+# 19     AY.3    18857               North West 0.06825077 0.01267302 NA 0.04341210 0.09308944
+# 29     AY.3    18857               South West 0.12113042 0.01853202 NA 0.08480833 0.15745250
+# 39     AY.3    18857               South East 0.07783274 0.01388968 NA 0.05060947 0.10505602
+# 49     AY.3    18857          East of England 0.09131651 0.01536279 NA 0.06120599 0.12142703
+# 59     AY.3    18857            East Midlands 0.11658406 0.02018997 NA 0.07701246 0.15615567
+# 69     AY.3    18857            West Midlands 0.07459432 0.01528850 NA 0.04462942 0.10455922
+# 79     AY.3    18857               North East 0.10643582 0.02721912 NA 0.05308733 0.15978431
+# 89     AY.3    18857 Yorkshire and The Humber 0.12374337 0.02032636 NA 0.08390443 0.16358230
 
 # CALCULATION OF TRANSMISSION ADVANTAGE THROUGH TIME ####
 
@@ -560,7 +488,7 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\sanger_multinom fit3_transm advantage
 
 # extrapolate = 60
 date.from = as.numeric(as.Date("2020-09-01"))
-date.to = as.numeric(as.Date("2021-07-31")) # max(sanger$DATE_NUM)+extrapolate
+date.to = as.numeric(as.Date("2021-09-14")) # max(sanger$DATE_NUM)+extrapolate
 
 # predictions by ONS region ####
 
@@ -1071,13 +999,15 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\hospital admissions England by NHS re
 # https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/06/COVID-19-daily-admissions-and-beds-20210611.xlsx
 
 # daily hospital admission by age for England
-# https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
+  # https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
 # https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/06/Covid-Publication-10-06-2021-Supplementary-Data.xlsx
 # https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/07/Covid-Publication-08-07-2021-Supplementary-Data.xlsx
 # PS Next publication: Thursday 8 July 2021
 library(rio)
-dat = rio::import(file = "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/07/Covid-Publication-08-07-2021-Supplementary-Data.xlsx",
-            which = 1)
+# dat = rio::import(file = "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/07/Covid-Publication-08-07-2021-Supplementary-Data.xlsx",
+#            which = 1)
+dat = rio::import(file = "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/08/Covid-Publication-12-08-2021-Supplementary-Data.xlsx",
+                  which = 1)
 dat[,1] = NULL
 dates = as.Date(as.vector(unlist(dat[11,-1])), origin="1899-12-30")
 ages = gsub("Total reported admissions and diagnoses  ", "", dat[14:(nrow(dat)-3),1])
@@ -1087,8 +1017,21 @@ dat = data.frame(age=ages, dat, check.names=F)
 library(tidyr)
 hosps_ENG_age = gather(dat, date, newAdmissions, all_of(as.character(dates)), factor_key=TRUE)
 hosps_ENG_age = hosps_ENG_age[hosps_ENG_age$age!="Unknown age",]
-hosps_ENG_age$age = factor(hosps_ENG_age$age, levels=c("0-5","6-17","18-54","55-64","65-74","75-84","85+"))
+hosps_ENG_age$age = factor(hosps_ENG_age$age, levels=c("0-5","6-17","18-24","25-34", "35-44", "45-54","55-64","65-74","75-84","85+"))
 hosps_ENG_age$date = as.Date(as.character(hosps_ENG_age$date))
+
+ggplot(data=hosps_ENG_age, 
+       aes(x=date, y=newAdmissions, group=age, colour=age, fill=age)) +
+  scale_x_continuous(breaks=as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01")),
+                     labels=substring(months(as.Date(c("2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01"))),1,1),
+                     limits=as.Date(c("2020-10-01",NA)), expand=c(0,0)) + # 
+  geom_point(cex=I(0.8)) +
+  geom_smooth(method="gam", se=TRUE, formula = y ~ s(x, k = 35)) + 
+  # facet_wrap(~ type) + 
+  scale_y_log10() + ylab("Daily new confirmed hospital admissions") + 
+  ggtitle("Daily new SARS-CoV2 hospitalisations in England\n(data NHS)") +
+  scale_colour_discrete(guide = guide_legend(reverse = TRUE) ) +
+  scale_fill_discrete(guide = guide_legend(reverse = TRUE) )
 
 # combined with daily new cases by age (matched to closest age category)
 cases_hosps_ENG_age = rbind(data.frame(type="hospitalisations",hosps_ENG_age), 
@@ -1189,7 +1132,7 @@ fit_sanger_multi_predsbyregion_day$totcases = cases_uk_region$newCasesBySpecimen
                                                                                                              cases_uk_region$REGION))]
 fit_sanger_multi_predsbyregion_day$WEEKDAY = factor(weekdays(fit_sanger_multi_predsbyregion_day$collection_date))
 library(mgcv)
-gamfittotcases = gam(totcases ~ s(DATE_NUM, bs="cs", k=7, by=REGION) + REGION + WEEKDAY, family=poisson(log), 
+gamfittotcases = gam(totcases ~ s(DATE_NUM, bs="cs", k=25, by=REGION) + REGION + WEEKDAY, family=poisson(log), 
                      data=fit_sanger_multi_predsbyregion_day[fit_sanger_multi_predsbyregion_day$collection_date<=max(sanger$WeekEndDate),])
 BIC(gamfittotcases) 
 gamfitemmeans = as.data.frame(emmeans(gamfittotcases, ~ DATE_NUM, by=c("REGION","DATE_NUM"),
@@ -1392,7 +1335,7 @@ qplot(data=fit_sanger_multi_predsbyregion_day, x=collection_date, y=totcases, ge
   facet_wrap(~ REGION) + scale_y_log10()
 
 fit_sanger_multi_predsbyregion_day$weekday = factor(weekdays(fit_sanger_multi_predsbyregion_day$collection_date))
-k=8
+k=15
 fit_cases = gam(totcases ~ s(DATE_NUM, bs="cs", k=k, m=c(2), by=REGION) + REGION + weekday,
                 method = "REML",
                 knots = list(DATE_NUM = c(min(fit_sanger_multi_predsbyregion_day$DATE_NUM)-14,
@@ -1423,8 +1366,8 @@ avg_r_cases$REGION = factor(avg_r_cases$REGION, levels=levels_REGION)
 qplot(data=avg_r_cases, x=DATE, y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribbon", alpha=I(0.5), fill=I("steelblue"), group=REGION) +
   facet_wrap(~ REGION) +
   geom_line() + theme_hc() + xlab("") +
-  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01")),
-                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A","M","J")) +
+  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01")),
+                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A","M","J","J","A")) +
   # scale_y_continuous(limits=c(1/2, 2), trans="log2") +
   geom_hline(yintercept=1, colour=I("red")) +
 ggtitle("Re VALUES IN ENGLAND BY REGION BASED ON NEW CONFIRMED CASES") +

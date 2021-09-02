@@ -1,6 +1,6 @@
 # ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT VOCs IN COLOMBIA (GISAID RECORDS)
 # T. Wenseleers
-# last update 15 July 2021
+# last update 31 August 2021
   
   library(nnet)
   # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
@@ -16,13 +16,13 @@
   
   
   today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-  today = as.Date("2021-07-15")
+  today = as.Date("2021-08-31")
   today_num = as.numeric(today)
   plotdir = "Colombia_GISAID"
   suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 
 # import GISAID records for Colombia
-d1 = read_tsv(file(".//data//GISAID//Colombia//gisaid_hcov-19_2021_07_15_20.tsv"), col_types = cols(.default = "c")) 
+d1 = read_tsv(file(".//data//GISAID//Colombia//gisaid_hcov-19_2021_08_31_07.tsv"), col_types = cols(.default = "c")) 
 GISAID = as.data.frame(rbind(d1))
 colnames(GISAID) = c("Virus name","Accession ID","date","Location","host",
                      "Additional location information","Sampling strategy","Gender",                         
@@ -34,7 +34,7 @@ GISAID$date = as.Date(GISAID$date)
 GISAID = GISAID[!is.na(GISAID$date),]
 GISAID = GISAID[GISAID$host=="Human",]
 GISAID = GISAID[GISAID$date>=as.Date("2020-01-01"),]
-range(GISAID$date) # "2020-03-06" "2021-06-22"
+range(GISAID$date) # "2020-03-06" "2021-08-04"
 GISAID$Week = lubridate::week(GISAID$date)
 GISAID$Year = lubridate::year(GISAID$date)
 GISAID$Year_Week = interaction(GISAID$Year,GISAID$Week)
@@ -44,10 +44,12 @@ GISAID = GISAID[GISAID$pango_lineage!="None",]
 
 GISAID$pango_lineage[grepl("B.1.177",GISAID$pango_lineage,fixed=T)] = "B.1.177+"
 GISAID$pango_lineage[grepl("B.1.36\\>",GISAID$pango_lineage)] = "B.1.36+"
+GISAID$pango_lineage[grepl("B.1.617.2|AY",GISAID$pango_lineage)] = "Delta (B.1.617.2 & AY.X)"
 
-sel_target_VOC = "B.1.617"
+sel_target_VOC = "Delta (B.1.617.2 & AY.X)"
+
 GISAID$LINEAGE = GISAID$pango_lineage
-nrow(GISAID) # 1785
+nrow(GISAID) # 2566
 
 
 # ANALYSIS OF VOCs IN COLOMBIA ####
@@ -57,7 +59,7 @@ nrow(GISAID) # 1785
 
 GISAID_sel = GISAID
 
-sum(GISAID_sel$LINEAGE=="B.1.617.2") # 
+sum(GISAID_sel$LINEAGE==sel_target_VOC) # 14
 
 table(GISAID_sel$LINEAGE)
 
@@ -65,21 +67,24 @@ main_lineages = names(table(GISAID_sel$LINEAGE))[100*table(GISAID_sel$LINEAGE)/s
 main_lineages
 # "B.1"       "B.1.1.348" "B.1.111"   "B.1.621"   "B.1.625"   "P.1"  
 VOCs = c("B.1.617.1","B.1.617.2","B.1.617+","B.1.618","B.1.1.7","B.1.351","P.1","B.1.1.318","B.1.1.207","B.1.429",
-         "B.1.525","B.1.526","B.1.1.519","B.1.1.318")
+         "B.1.525","B.1.526","B.1.1.519","B.1.1.318","B.1.621",sel_target_VOC)
 main_lineages = union(main_lineages, VOCs)
 GISAID_sel$LINEAGE[!(GISAID_sel$LINEAGE %in% main_lineages)] = "other" # minority lineages & non-VOCs
 remove = names(table(GISAID_sel$LINEAGE))[table(GISAID_sel$LINEAGE)/sum(table(GISAID_sel$LINEAGE)) < 0.01]
-remove = remove[!(remove %in% c("B.1.351","B.1.1.7","P.1","B.1.617.2","B.1.617.1","B.1.1.519"))]
+remove = remove[!(remove %in% c("B.1.351","B.1.1.7","P.1","B.1.617.2","B.1.617.1","B.1.1.519","B.1.621",sel_target_VOC,"B.1.351","P.1"))]
 GISAID_sel$LINEAGE[(GISAID_sel$LINEAGE %in% remove)] = "other" # minority VOCs
 table(GISAID_sel$LINEAGE)
-# B.1 B.1.1.348 B.1.1.519   B.1.1.7   B.1.111   B.1.526   B.1.621   B.1.625     other       P.1 
-# 292       125         1        86       215        31       303        98       309       325 
+# B.1                B.1.1.348                B.1.1.519                  B.1.1.7                  B.1.111 
+# 285                      140                        1                      122                      181 
+# B.1.621                  B.1.625 Delta (B.1.617.2 & AY.X)                    other                      P.1 
+# 758                      178                       14                      375                      512 
 GISAID_sel$LINEAGE = factor(GISAID_sel$LINEAGE)
 GISAID_sel$LINEAGE = relevel(GISAID_sel$LINEAGE, ref="B.1.1.7") # we code UK strain as the reference level
 levels(GISAID_sel$LINEAGE)
-#  "B.1.1.7"   "B.1"       "B.1.1.348" "B.1.1.519" "B.1.111"   "B.1.526"   "B.1.621"   "B.1.625"   "other"     "P.1" 
-levels_LINEAGE = c("B.1.1.7","B.1","B.1.1.348","B.1.1.519","B.1.111","B.1.526","B.1.621","B.1.625",
-                    "P.1","B.1.617.2","other")
+#  "B.1.1.7"                  "B.1"                      "B.1.1.348"                "B.1.1.519"                "B.1.111"                 
+# "B.1.621"                  "B.1.625"                  "Delta (B.1.617.2 & AY.X)" "other" 
+levels_LINEAGE = c("B.1.1.7","B.1","B.1.1.348","B.1.1.519","B.1.111","B.1.621","B.1.625","P.1",
+                    sel_target_VOC,"other")
 GISAID_sel$LINEAGE = factor(GISAID_sel$LINEAGE, levels=levels_LINEAGE)
 
 
@@ -90,7 +95,7 @@ data_agbyday = as.data.frame(table(GISAID_sel$date, GISAID_sel$LINEAGE))
 colnames(data_agbyday) = c("date", "LINEAGE", "count")
 data_agbyday_sum = aggregate(count ~ date, data=data_agbyday, sum)
 data_agbyday$total = data_agbyday_sum$count[match(data_agbyday$date, data_agbyday_sum$date)]
-sum(data_agbyday[data_agbyday$LINEAGE=="B.1.617.1","total"]) == nrow(GISAID_sel) # correct
+sum(data_agbyday[data_agbyday$LINEAGE=="P.1","total"]) == nrow(GISAID_sel) # correct
 data_agbyday$date = as.Date(as.character(data_agbyday$date))
 data_agbyday$LINEAGE = factor(data_agbyday$LINEAGE, levels=levels_LINEAGE)
 data_agbyday$date_num = as.numeric(data_agbyday$date)
@@ -106,7 +111,7 @@ data_agbyweek = as.data.frame(table(GISAID_sel$floor_date, GISAID_sel$LINEAGE))
 colnames(data_agbyweek) = c("floor_date", "LINEAGE", "count")
 data_agbyweek_sum = aggregate(count ~ floor_date, data=data_agbyweek, sum)
 data_agbyweek$total = data_agbyweek_sum$count[match(data_agbyweek$floor_date, data_agbyweek_sum$floor_date)]
-sum(data_agbyweek[data_agbyweek$LINEAGE=="B.1.617.1","total"]) == nrow(GISAID_sel) # correct
+sum(data_agbyweek[data_agbyweek$LINEAGE=="P.1","total"]) == nrow(GISAID_sel) # correct
 data_agbyweek$collection_date = as.Date(as.character(data_agbyweek$floor_date))
 data_agbyweek$LINEAGE = factor(data_agbyweek$LINEAGE, levels=levels_LINEAGE)
 data_agbyweek$collection_date_num = as.numeric(data_agbyweek$collection_date)
@@ -122,7 +127,8 @@ lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="B.1.351")] = "#9A9D00"
 lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="B.1.177+")] = "grey55"
 lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="P.1")] = "cyan3"
 lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="B.1.617.1")] = muted("magenta")
-lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="B.1.617.2")] = "magenta"
+lineage_cols2[which(levels(GISAID_sel$LINEAGE)==sel_target_VOC)] = "magenta"
+lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="B.1.621")] = "red"
 lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="other")] = "grey75"
 
 muller_colombia_raw2 = ggplot(data=data_agbyweek, aes(x=collection_date, y=count, group=LINEAGE)) + 
@@ -130,8 +136,8 @@ muller_colombia_raw2 = ggplot(data=data_agbyweek, aes(x=collection_date, y=count
   # geom_col(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE1), width=1, position="fill") +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE, group=LINEAGE), position="fill") +
   scale_fill_manual("", values=lineage_cols2) +
-  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
-                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01"))),1,1),
                      limits=as.Date(c("2021-01-01",NA)), 
                      expand=c(0,0)) +
   # guides(color = guide_legend(reverse=F, nrow=2, byrow=T), fill = guide_legend(reverse=F, nrow=2, byrow=T)) +
@@ -150,7 +156,7 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\colombia_muller plots_raw data.png"),
 
 
 # multinomial fits
-data_agbyweek$LINEAGE = relevel(data_agbyweek$LINEAGE, ref="B.1.1.7")
+data_agbyweek$LINEAGE = relevel(data_agbyweek$LINEAGE, ref=sel_target_VOC)
 data_agbyweek$DATE_NUM = as.numeric(data_agbyweek$collection_date)
 
 library(nnet)
@@ -161,9 +167,9 @@ fit2_colombia_multi = nnet::multinom(LINEAGE ~ ns(DATE_NUM, df=2), weights=count
 fit3_colombia_multi = nnet::multinom(LINEAGE ~ ns(DATE_NUM, df=3), weights=count, data=data_agbyweek, maxit=1000)
 BIC(fit1_colombia_multi, fit2_colombia_multi, fit3_colombia_multi) 
 # df      BIC
-# fit1_colombia_multi 14 2471.378
-# fit2_colombia_multi 21 2465.753
-# fit3_colombia_multi 28 2487.492
+# fit1_colombia_multi 18 7936.658
+# fit2_colombia_multi 27 7794.385
+# fit3_colombia_multi 36 7791.964
 
 # growth rate advantage compared to UK type B.1.1.7 (difference in growth rate per day) 
 emtrcolombia = emtrends(fit2_colombia_multi, trt.vs.ctrl ~ LINEAGE,  
@@ -173,14 +179,16 @@ delta_r_colombia = data.frame(confint(emtrcolombia,
                                  adjust="none", df=NA)$contrasts, 
                          p.value=as.data.frame(emtrcolombia$contrasts)$p.value)
 delta_r_colombia
-# contrast      estimate          SE df    asymp.LCL  asymp.UCL    p.value
-# 1       B.1 - B.1.1.7  0.0094180975 0.006170671 NA -0.002676195 0.02151239 0.50108150
-# 2     B.1.1 - B.1.1.7  0.0007490536 0.006198380 NA -0.011399548 0.01289766 0.99972025
-# 3 B.1.1.519 - B.1.1.7 -0.0228687412 0.054550147 NA -0.129785065 0.08404758 0.98467763
-# 4   B.1.526 - B.1.1.7  0.0140298158 0.006155562 NA  0.001965136 0.02609450 0.15897497
-# 5       P.1 - B.1.1.7  0.0157162086 0.009682407 NA -0.003260961 0.03469338 0.44458546
-# 6 B.1.617.2 - B.1.1.7  0.3371900529 0.073893999 NA  0.192360477 0.48201963 0.00105834
-# 7     other - B.1.1.7  0.0155216360 0.005791225 NA  0.004171044 0.02687223 0.07347013
+#                               contrast   estimate         SE df  asymp.LCL   asymp.UCL      p.value
+# 1   B.1.1.7 - Delta (B.1.617.2 & AY.X) -0.2597552 0.03879164 NA -0.3357854 -0.18372496 2.965782e-06
+# 2       B.1 - Delta (B.1.617.2 & AY.X) -0.1348861 0.02829909 NA -0.1903513 -0.07942094 4.664768e-04
+# 3 B.1.1.348 - Delta (B.1.617.2 & AY.X) -0.1413660 0.02834222 NA -0.1969158 -0.08581631 2.596141e-04
+# 4 B.1.1.519 - Delta (B.1.617.2 & AY.X) -0.1675437 0.10398469 NA -0.3713499  0.03626258 5.012878e-01
+# 5   B.1.111 - Delta (B.1.617.2 & AY.X) -0.1577205 0.02845130 NA -0.2134841 -0.10195701 5.961070e-05
+# 6   B.1.621 - Delta (B.1.617.2 & AY.X) -0.1071242 0.02788882 NA -0.1617853 -0.05246311 5.189448e-03
+# 7   B.1.625 - Delta (B.1.617.2 & AY.X) -0.1237144 0.02823278 NA -0.1790496 -0.06837917 1.283631e-03
+# 8       P.1 - Delta (B.1.617.2 & AY.X) -0.1359082 0.02812549 NA -0.1910331 -0.08078324 3.920068e-04
+# 9     other - Delta (B.1.617.2 & AY.X) -0.1277001 0.02821707 NA -0.1830045 -0.07239565 8.803971e-04
 
 
 # fitted prop of different LINEAGES in the colombia today
@@ -189,26 +197,24 @@ multinom_preds_today_avg = data.frame(emmeans(fit2_colombia_multi, ~ LINEAGE|1,
                                               mode="prob", df=NA))
 multinom_preds_today_avg
 # LINEAGE         prob           SE df     asymp.LCL    asymp.UCL
-# 1   B.1.1.7 5.768152e-04 9.523989e-04 NA -1.289852e-03 2.443483e-03
-# 2       B.1 2.327083e-04 3.858554e-04 NA -5.235545e-04 9.889710e-04
-# 3     B.1.1 1.030195e-04 1.716839e-04 NA -2.334748e-04 4.395137e-04
-# 4 B.1.1.519 7.874172e-07 3.328940e-06 NA -5.737185e-06 7.312019e-06
-# 5   B.1.526 2.043508e-03 3.344202e-03 NA -4.511008e-03 8.598023e-03
-# 6       P.1 5.831649e-04 9.781111e-04 NA -1.333898e-03 2.500227e-03
-# 7 B.1.617.2 9.952354e-01 7.761977e-03 NA  9.800222e-01 1.010449e+00
-# 8     other 1.224571e-03 2.008549e-03 NA -2.712113e-03 5.161254e-03
+# 1  Delta (B.1.617.2 & AY.X) 9.367369e-01 7.803111e-02 NA  7.837988e-01 1.089675e+00
+# 2                   B.1.1.7 7.206668e-10 2.236118e-09 NA -3.662044e-09 5.103377e-09
+# 3                       B.1 1.069311e-04 1.460059e-04 NA -1.792352e-04 3.930975e-04
+# 4                 B.1.1.348 5.796898e-05 8.004976e-05 NA -9.892567e-05 2.148636e-04
+# 5                 B.1.1.519 5.033288e-08 6.022883e-07 NA -1.130131e-06 1.230796e-06
+# 6                   B.1.111 1.417380e-06 2.104932e-06 NA -2.708210e-06 5.542970e-06
+# 7                   B.1.621 5.912327e-02 7.294892e-02 NA -8.385399e-02 2.021005e-01
+# 8                   B.1.625 1.616423e-03 2.126398e-03 NA -2.551240e-03 5.784087e-03
+# 9                       P.1 1.581280e-03 2.030016e-03 NA -2.397479e-03 5.560038e-03
+# 10                    other 7.757304e-04 1.023255e-03 NA -1.229813e-03 2.781274e-03
 
-# % non-B.1.1.7
-colSums(multinom_preds_today_avg[-1, c("prob","asymp.LCL","asymp.UCL")])
-#      prob asymp.LCL asymp.UCL 
-# 0.9994232 0.9707024 1.0281439
 
 
 # PLOT MULTINOMIAL FIT
 
 # extrapolate = 30
 date.from = as.numeric(as.Date("2021-01-01"))
-date.to = as.numeric(as.Date("2021-07-31")) # max(GISAID_sel$DATE_NUM)+extrapolate
+date.to = as.numeric(as.Date("2021-09-14")) # max(GISAID_sel$DATE_NUM)+extrapolate
 
 # multinomial model predictions (fastest, but no confidence intervals)
 predgrid = expand.grid(list(DATE_NUM=seq(date.from, date.to)))
@@ -226,8 +232,8 @@ muller_colombia_mfit = ggplot(data=fit_colombia_multi_preds,
   scale_fill_manual("", values=lineage_cols2) +
   annotate("rect", xmin=max(GISAID_sel$DATE_NUM)+1, 
            xmax=as.Date(date.to, origin="1970-01-01"), ymin=0, ymax=1, alpha=0.4, fill="white") + # extrapolated part
-  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
-                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01"))),1,1),
                      limits=as.Date(c("2021-01-01",NA)), expand=c(0,0)) +
   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
   theme_hc() + theme(legend.position="right", 
@@ -258,7 +264,7 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\colombia_muller plots multipanel_mult
 
 # PLOT MODEL FIT WITH DATA & CONFIDENCE INTERVALS
 
-# multinomial model predictions by state with confidence intervals (but slower)
+# multinomial model predictions with confidence intervals (but slower)
 fit_colombia_multi_preds_withCI = data.frame(emmeans(fit2_colombia_multi,
                                                         ~ LINEAGE,
                                                         by=c("DATE_NUM"),
@@ -289,8 +295,8 @@ plot_colombia_mfit_logit = qplot(data=fit_colombia_multi_preds2, x=collection_da
   ylab("Share (%)") +
   theme_hc() + xlab("") +
   ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN COLOMBIA\n(GISAID data, multinomial fit)") +
-  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
-                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01"))),1,1),
                      limits=as.Date(c("2021-01-01",NA)), expand=c(0,0)) +
   scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
                       labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
@@ -326,8 +332,8 @@ plot_colombia_mfit = qplot(data=fit_colombia_multi_preds2, x=collection_date, y=
   ylab("Share (%)") +
   theme_hc() + xlab("") +
   ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN COLOMBIA\n(GISAID data, multinomial fit)") +
-  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
-                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01"))),1,1),
                      limits=as.Date(c("2021-01-01",NA)), expand=c(0,0)) +
   # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
   #                     labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
