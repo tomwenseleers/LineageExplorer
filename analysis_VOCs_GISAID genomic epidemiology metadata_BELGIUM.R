@@ -188,22 +188,20 @@ GISAID_belgium1$DATE_NUM = as.numeric(GISAID_belgium1$date)
 GISAID_belgium1$pango_lineage_simplified = GISAID_belgium1$pango_lineage
 GISAID_belgium1$pango_lineage_simplified[grepl("B.1.177", GISAID_belgium1$pango_lineage_simplified,fixed=T)] = "B.1.177+"
 GISAID_belgium1$pango_lineage_simplified[grepl("B.1.36\\>",GISAID_belgium1$pango_lineage_simplified)] = "B.1.36+"
-GISAID_belgium1$LINEAGE1 = GISAID_belgium1$pango_lineage_simplified
+GISAID_belgium1$pango_lineage_simplified[grepl("B.1.617.2|AY",GISAID_belgium1$pango_lineage_simplified)] = "Delta"
 GISAID_belgium1$LINEAGE2 = GISAID_belgium1$pango_lineage_simplified
-GISAID_belgium1[grepl("B.1.617", GISAID_belgium1$LINEAGE1, fixed=TRUE),"LINEAGE1"] = paste0("B.1.617","+") # in LINEAGE1 we recode B.1.617.1,2&3 all as B.1.617+
-
 
 
 # get extra fields "genbank_accession", "Nextstrain_clade", "originating_lab", "submitting_lab", "authors", "url", "title", "paper_url"
 # from genomic epidemiology GISAID metadata
 # (check with Emmanuel André & Lize Cuypers which labs were doing active surveillance vs baseline surveillance)
-GISAID = read_tsv(gzfile(".//data//GISAID_genomic_epidemiology//metadata_2021-07-20_00-11.tsv.gz"), col_types = cols(.default = "c")) 
+GISAID = read_tsv(gzfile(".//data//GISAID_genomic_epidemiology//metadata_2021-08-27_14-00.tsv.gz"), col_types = cols(.default = "c")) 
 GISAID = as.data.frame(GISAID)
 GISAID$date = as.Date(GISAID$date)
 GISAID = GISAID[!is.na(GISAID$date),]
 GISAID = GISAID[GISAID$host=="Human",]
 GISAID_genepi_belgium = GISAID[GISAID$country=="Belgium",]
-nrow(GISAID_genepi_belgium) # 33739
+nrow(GISAID_genepi_belgium) # 38994
 
 # add (genbank_accession,) Nextstrain_clade, originating_lab, submitting_lab, authors, url, title & paper_url to GISAID_belgium1
 # GISAID_belgium1$genbank_accession = GISAID_genepi_belgium$genbank_accession[match(GISAID_belgium1$gisaid_epi_isl,GISAID_genepi_belgium$gisaid_epi_isl)]

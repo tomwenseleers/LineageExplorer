@@ -1,7 +1,7 @@
 # ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT VOCs IN COLOMBIA (GISAID RECORDS)
 # T. Wenseleers
-# last update 31 August 2021
-  
+# last update 6 SEPTEMBER 2021
+    
   library(nnet)
   # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
   library(mclogit)
@@ -16,13 +16,13 @@
   
   
   today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-  today = as.Date("2021-08-31")
+  today = as.Date("2021-09-06")
   today_num = as.numeric(today)
   plotdir = "Colombia_GISAID"
   suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 
 # import GISAID records for Colombia
-d1 = read_tsv(file(".//data//GISAID//Colombia//gisaid_hcov-19_2021_08_31_07.tsv"), col_types = cols(.default = "c")) 
+d1 = read_tsv(file(".//data//GISAID//Colombia//gisaid_hcov-19_2021_09_06_18.tsv"), col_types = cols(.default = "c")) 
 GISAID = as.data.frame(rbind(d1))
 colnames(GISAID) = c("Virus name","Accession ID","date","Location","host",
                      "Additional location information","Sampling strategy","Gender",                         
@@ -34,7 +34,7 @@ GISAID$date = as.Date(GISAID$date)
 GISAID = GISAID[!is.na(GISAID$date),]
 GISAID = GISAID[GISAID$host=="Human",]
 GISAID = GISAID[GISAID$date>=as.Date("2020-01-01"),]
-range(GISAID$date) # "2020-03-06" "2021-08-04"
+range(GISAID$date) # "2020-03-06" "2021-08-17"
 GISAID$Week = lubridate::week(GISAID$date)
 GISAID$Year = lubridate::year(GISAID$date)
 GISAID$Year_Week = interaction(GISAID$Year,GISAID$Week)
@@ -49,7 +49,7 @@ GISAID$pango_lineage[grepl("B.1.617.2|AY",GISAID$pango_lineage)] = "Delta (B.1.6
 sel_target_VOC = "Delta (B.1.617.2 & AY.X)"
 
 GISAID$LINEAGE = GISAID$pango_lineage
-nrow(GISAID) # 2566
+nrow(GISAID) # 2673
 
 
 # ANALYSIS OF VOCs IN COLOMBIA ####
@@ -59,13 +59,13 @@ nrow(GISAID) # 2566
 
 GISAID_sel = GISAID
 
-sum(GISAID_sel$LINEAGE==sel_target_VOC) # 14
+sum(GISAID_sel$LINEAGE==sel_target_VOC) # 17
 
 table(GISAID_sel$LINEAGE)
 
 main_lineages = names(table(GISAID_sel$LINEAGE))[100*table(GISAID_sel$LINEAGE)/sum(table(GISAID_sel$LINEAGE)) > 5]
 main_lineages
-# "B.1"       "B.1.1.348" "B.1.111"   "B.1.621"   "B.1.625"   "P.1"  
+# "B.1"       "B.1.111"   "B.1.621"   "B.1.625"   "P.1"  
 VOCs = c("B.1.617.1","B.1.617.2","B.1.617+","B.1.618","B.1.1.7","B.1.351","P.1","B.1.1.318","B.1.1.207","B.1.429",
          "B.1.525","B.1.526","B.1.1.519","B.1.1.318","B.1.621",sel_target_VOC)
 main_lineages = union(main_lineages, VOCs)
@@ -74,16 +74,16 @@ remove = names(table(GISAID_sel$LINEAGE))[table(GISAID_sel$LINEAGE)/sum(table(GI
 remove = remove[!(remove %in% c("B.1.351","B.1.1.7","P.1","B.1.617.2","B.1.617.1","B.1.1.519","B.1.621",sel_target_VOC,"B.1.351","P.1"))]
 GISAID_sel$LINEAGE[(GISAID_sel$LINEAGE %in% remove)] = "other" # minority VOCs
 table(GISAID_sel$LINEAGE)
-# B.1                B.1.1.348                B.1.1.519                  B.1.1.7                  B.1.111 
-# 285                      140                        1                      122                      181 
-# B.1.621                  B.1.625 Delta (B.1.617.2 & AY.X)                    other                      P.1 
-# 758                      178                       14                      375                      512 
+# B.1                B.1.1.519                  B.1.1.7                  B.1.111                  B.1.621 
+# 293                        1                      122                      183                      863 
+# B.1.625 Delta (B.1.617.2 & AY.X)                    other                      P.1 
+# 169                       17                      509                      516 
 GISAID_sel$LINEAGE = factor(GISAID_sel$LINEAGE)
 GISAID_sel$LINEAGE = relevel(GISAID_sel$LINEAGE, ref="B.1.1.7") # we code UK strain as the reference level
 levels(GISAID_sel$LINEAGE)
-#  "B.1.1.7"                  "B.1"                      "B.1.1.348"                "B.1.1.519"                "B.1.111"                 
-# "B.1.621"                  "B.1.625"                  "Delta (B.1.617.2 & AY.X)" "other" 
-levels_LINEAGE = c("B.1.1.7","B.1","B.1.1.348","B.1.1.519","B.1.111","B.1.621","B.1.625","P.1",
+# [1] "B.1.1.7"                  "B.1"                      "B.1.1.519"                "B.1.111"                  "B.1.621"                 
+# [6] "B.1.625"                  "Delta (B.1.617.2 & AY.X)" "other"                    "P.1"   
+levels_LINEAGE = c("B.1.1.7","B.1","B.1.1.519","B.1.111","B.1.621","B.1.625","P.1",
                     sel_target_VOC,"other")
 GISAID_sel$LINEAGE = factor(GISAID_sel$LINEAGE, levels=levels_LINEAGE)
 
@@ -167,9 +167,9 @@ fit2_colombia_multi = nnet::multinom(LINEAGE ~ ns(DATE_NUM, df=2), weights=count
 fit3_colombia_multi = nnet::multinom(LINEAGE ~ ns(DATE_NUM, df=3), weights=count, data=data_agbyweek, maxit=1000)
 BIC(fit1_colombia_multi, fit2_colombia_multi, fit3_colombia_multi) 
 # df      BIC
-# fit1_colombia_multi 18 7936.658
-# fit2_colombia_multi 27 7794.385
-# fit3_colombia_multi 36 7791.964
+# fit1_colombia_multi 16 7537.172
+# fit2_colombia_multi 24 7411.351
+# fit3_colombia_multi 32 7414.969
 
 # growth rate advantage compared to Delta (difference in growth rate per day) 
 emtrcolombia = emtrends(fit2_colombia_multi, trt.vs.ctrl ~ LINEAGE,  
@@ -181,16 +181,15 @@ delta_r_colombia = data.frame(confint(emtrcolombia,
                          p.value=as.data.frame(emtrcolombia$contrasts,
                                                adjust="none", df=NA)$p.value)
 delta_r_colombia
-#                               contrast   estimate         SE df  asymp.LCL   asymp.UCL      p.value
-# 1   B.1.1.7 - Delta (B.1.617.2 & AY.X) -0.2597552 0.03879164 NA -0.3357854 -0.18372496 2.139625e-11
-# 2       B.1 - Delta (B.1.617.2 & AY.X) -0.1348861 0.02829909 NA -0.1903513 -0.07942094 1.875024e-06
-# 3 B.1.1.348 - Delta (B.1.617.2 & AY.X) -0.1413660 0.02834222 NA -0.1969158 -0.08581631 6.106260e-07
-# 4 B.1.1.519 - Delta (B.1.617.2 & AY.X) -0.1675437 0.10398469 NA -0.3713499  0.03626258 1.071287e-01
-# 5   B.1.111 - Delta (B.1.617.2 & AY.X) -0.1577205 0.02845130 NA -0.2134841 -0.10195701 2.964407e-08
-# 6   B.1.621 - Delta (B.1.617.2 & AY.X) -0.1071242 0.02788882 NA -0.1617853 -0.05246311 1.224764e-04
-# 7   B.1.625 - Delta (B.1.617.2 & AY.X) -0.1237144 0.02823278 NA -0.1790496 -0.06837917 1.176264e-05
-# 8       P.1 - Delta (B.1.617.2 & AY.X) -0.1359082 0.02812549 NA -0.1910331 -0.08078324 1.350276e-06
-# 9     other - Delta (B.1.617.2 & AY.X) -0.1277001 0.02821707 NA -0.1830045 -0.07239565 6.021513e-06
+#                               contrast    estimate         SE df  asymp.LCL   asymp.UCL      p.value
+# 1   B.1.1.7 - Delta (B.1.617.2 & AY.X) -0.22553739 0.03165344 NA -0.2875770 -0.16349779 1.039221e-12
+# 2       B.1 - Delta (B.1.617.2 & AY.X) -0.09101518 0.01421383 NA -0.1188738 -0.06315657 1.520729e-10
+# 3 B.1.1.519 - Delta (B.1.617.2 & AY.X) -0.13371060 0.11206434 NA -0.3533527  0.08593146 2.328070e-01
+# 4   B.1.111 - Delta (B.1.617.2 & AY.X) -0.11216708 0.01450834 NA -0.1406029 -0.08373124 1.065277e-14
+# 5   B.1.621 - Delta (B.1.617.2 & AY.X) -0.06391647 0.01345337 NA -0.0902846 -0.03754834 2.024508e-06
+# 6   B.1.625 - Delta (B.1.617.2 & AY.X) -0.08165891 0.01417646 NA -0.1094443 -0.05387355 8.402647e-09
+# 7       P.1 - Delta (B.1.617.2 & AY.X) -0.09638995 0.01394038 NA -0.1237126 -0.06906731 4.697107e-12
+# 8     other - Delta (B.1.617.2 & AY.X) -0.08464065 0.01402794 NA -0.1121349 -0.05714640 1.602273e-09
 
 
 # fitted prop of different LINEAGES in the colombia today
@@ -199,16 +198,15 @@ multinom_preds_today_avg = data.frame(emmeans(fit2_colombia_multi, ~ LINEAGE|1,
                                               mode="prob", df=NA))
 multinom_preds_today_avg
 #                     LINEAGE         prob           SE df     asymp.LCL    asymp.UCL
-# 1  Delta (B.1.617.2 & AY.X) 9.428746e-01 7.238942e-02 NA  8.009939e-01 1.084755e+00
-# 2                   B.1.1.7 5.594461e-10 1.757191e-09 NA -2.884585e-09 4.003477e-09
-# 3                       B.1 9.405029e-05 1.314746e-04 NA -1.636352e-04 3.517358e-04
-# 4                 B.1.1.348 5.065675e-05 7.159234e-05 NA -8.966167e-05 1.909752e-04
-# 5                 B.1.1.519 4.284738e-08 5.171000e-07 NA -9.706499e-07 1.056345e-06
-# 6                   B.1.111 1.218500e-06 1.847427e-06 NA -2.402390e-06 4.839390e-06
-# 7                   B.1.621 5.346518e-02 6.777241e-02 NA -7.936630e-02 1.862967e-01
-# 8                   B.1.625 1.437682e-03 1.938927e-03 NA -2.362545e-03 5.237909e-03
-# 9                       P.1 1.389378e-03 1.830105e-03 NA -2.197561e-03 4.976317e-03
-# 10                    other 6.872071e-04 9.292053e-04 NA -1.134002e-03 2.508416e-03
+# 1 Delta (B.1.617.2 & AY.X) 6.407428e-01 1.617906e-01 NA  3.236390e-01 9.578466e-01
+# 2                  B.1.1.7 1.077129e-09 3.359073e-09 NA -5.506533e-09 7.660792e-09
+# 3                      B.1 4.936021e-04 3.670688e-04 NA -2.258395e-04 1.213044e-03
+# 4                B.1.1.519 7.122836e-08 9.645277e-07 NA -1.819211e-06 1.961668e-06
+# 5                  B.1.111 8.410463e-06 7.928390e-06 NA -7.128897e-06 2.394982e-05
+# 6                  B.1.621 3.421333e-01 1.543128e-01 NA  3.968577e-02 6.445809e-01
+# 7                  B.1.625 6.577481e-03 4.351688e-03 NA -1.951671e-03 1.510663e-02
+# 8                      P.1 5.216867e-03 3.074887e-03 NA -8.098008e-04 1.124354e-02
+# 9                    other 4.827430e-03 3.073515e-03 NA -1.196549e-03 1.085141e-02
 
 
 
@@ -216,7 +214,7 @@ multinom_preds_today_avg
 
 # extrapolate = 30
 date.from = as.numeric(as.Date("2021-01-01"))
-date.to = as.numeric(as.Date("2021-09-14")) # max(GISAID_sel$DATE_NUM)+extrapolate
+date.to = as.numeric(as.Date("2021-09-21")) # max(GISAID_sel$DATE_NUM)+extrapolate
 
 # multinomial model predictions (fastest, but no confidence intervals)
 predgrid = expand.grid(list(DATE_NUM=seq(date.from, date.to)))

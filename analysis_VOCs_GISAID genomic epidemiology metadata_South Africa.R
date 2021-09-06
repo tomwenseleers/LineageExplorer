@@ -1,6 +1,6 @@
 # ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT VOCs IN SOUTH AFRICA (GISAID GENOMIC EPIDEMIOLOGY METADATA)
 # T. Wenseleers
-# last update 31 AUGUST 2021
+# last update 6 SEPTEMBER 2021
 
 library(nnet)
 # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
@@ -13,13 +13,13 @@ library(ggthemes)
 library(scales)
 
 today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-08-31")
+today = as.Date("2021-09-06")
 today_num = as.numeric(today)
 plotdir = "South Africa_GISAID"
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 
 # import GISAID genomic epidemiology metadata
-GISAID = read_tsv(gzfile(".//data//GISAID_genomic_epidemiology//metadata_2021-08-27_14-00.tsv.gz"), col_types = cols(.default = "c")) 
+GISAID = read_tsv(gzfile(".//data//GISAID_genomic_epidemiology//metadata_2021-09-03_08-22.tsv.gz"), col_types = cols(.default = "c")) 
 GISAID = as.data.frame(GISAID)
 
 GISAID$date = as.Date(GISAID$date)
@@ -27,8 +27,8 @@ GISAID = GISAID[!is.na(GISAID$date),]
 GISAID[GISAID$host!="Human","strain"]
 GISAID = GISAID[GISAID$host=="Human",]
 GISAID = GISAID[GISAID$date>=as.Date("2020-01-01"),]
-range(GISAID$date) # "2020-01-01" "2021-08-24"
-nrow(GISAID) # 2891312
+range(GISAID$date) # "2020-01-01" "2021-08-30"
+nrow(GISAID) # 3042438
 GISAID$Week = lubridate::week(GISAID$date)
 GISAID$Year = lubridate::year(GISAID$date)
 GISAID$Year_Week = interaction(GISAID$Year,GISAID$Week)
@@ -51,7 +51,6 @@ tblB1617
 
 sel_ref_lineage = "B.1.1.7"
 
-# sel_countries = sel_countries[!(sel_countries %in% c("Japan","USA"))] # Japan is almost only import & for USA we do separate analysis by state
 
 
 
@@ -68,23 +67,23 @@ GISAID_sel = GISAID[GISAID$country %in% sel_countries,]
 
 # use data from Jan  1 onwards
 GISAID_sel = GISAID_sel[GISAID_sel$date>=as.Date("2021-01-01"),]
-nrow(GISAID_sel) # 9654
-range(GISAID_sel$date) # "2021-01-01" "2021-08-12"
+nrow(GISAID_sel) # 11270
+range(GISAID_sel$date) # "2021-01-01" "2021-08-20"
 
 rowSums(table(GISAID_sel$LINEAGE2,GISAID_sel$country))
             
 # GISAID_sel = GISAID_sel[GISAID_sel$country_exposure=="India"&GISAID_sel$country!="India",]
 # nrow(GISAID_sel[is.na(GISAID_sel$LINEAGE1),]) # 0 unknown pango clade
 GISAID_sel = GISAID_sel[!is.na(GISAID_sel$LINEAGE2),]
-nrow(GISAID_sel) # 9654
+nrow(GISAID_sel) # 11270
 
 GISAID_sel = GISAID_sel[GISAID_sel$country==GISAID_sel$country_exposure,] # we remove travel-related cases (none indicated here as such)
 GISAID_sel = GISAID_sel[-which(GISAID_sel$LINEAGE2==sel_target_VOC&GISAID_sel$date<=as.Date("2021-04-14")),] # B.1.617+ cases before April 14 are assumed to be all travel related and are removed
 GISAID_sel = GISAID_sel[-which(GISAID_sel$LINEAGE2=="None"),] 
-nrow(GISAID_sel) # 8977
+nrow(GISAID_sel) # 10555
 
-sum(GISAID_sel$LINEAGE2==sel_target_VOC) # 4123
-sum(GISAID_sel$LINEAGE2=="B.1.1.7") # 182
+sum(GISAID_sel$LINEAGE2==sel_target_VOC) # 5561
+sum(GISAID_sel$LINEAGE2=="B.1.1.7") # 198
 sum(GISAID_sel$LINEAGE2=="B.1.1.519") # 1
 
 table(GISAID_sel$LINEAGE2)
@@ -102,7 +101,8 @@ GISAID_sel$LINEAGE2[(GISAID_sel$LINEAGE2 %in% remove2)] = "other" # minority VOC
 GISAID_sel$LINEAGE2 = factor(GISAID_sel$LINEAGE2)
 GISAID_sel$LINEAGE2 = relevel(GISAID_sel$LINEAGE2, ref="B.1.1.7") # we code UK strain as the reference level
 levels(GISAID_sel$LINEAGE2)
-# "B.1.1.7"   "B.1.351"   "B.1.617.1" "B.1.617.2" "other"   
+# [1] "B.1.1.7"                  "B.1.1.519"                "B.1.351"                  "B.1.617.1"                "C.1.2"                   
+# [6] "Delta (B.1.617.2 & AY.X)" "other" 
 levels_LINEAGE2 = c("B.1.1.7","B.1.1.519",
                     "B.1.351","B.1.617.1",sel_target_VOC,"C.1.2","other")
 GISAID_sel$LINEAGE2 = factor(GISAID_sel$LINEAGE2, levels=levels_LINEAGE2)
@@ -110,7 +110,7 @@ GISAID_sel$LINEAGE2 = factor(GISAID_sel$LINEAGE2, levels=levels_LINEAGE2)
 # GISAID_sel = GISAID_sel[GISAID_sel$division!="India",]
 table(GISAID_sel$LINEAGE2)
 
-range(GISAID_sel$date) # "2020-01-01" "2021-08-12"
+range(GISAID_sel$date) # "2020-01-01" "2021-08-20"
 
 # aggregated data to make Muller plots of raw data
 # aggregate by day to identify days on which INSA performed (days with a lot of sequences)
@@ -166,8 +166,33 @@ lineage_cols2[which(levels(GISAID_sel$LINEAGE2)=="B.1.617.1")] = muted("magenta"
 lineage_cols2[which(levels(GISAID_sel$LINEAGE2)==sel_target_VOC)] = "magenta"
 lineage_cols2[which(levels(GISAID_sel$LINEAGE2)=="other")] = "grey75"
 
-muller_southafrica_raw2 = ggplot(data=data_agbyweek2, aes(x=collection_date, y=count, group=LINEAGE2)) +
-  # facet_wrap(~ STATE, ncol=1) +
+# overall
+muller_southafrica_raw = ggplot(data=data_agbyweek2, aes(x=collection_date, y=count, group=LINEAGE2)) +
+  # facet_wrap(~ division) +
+  # geom_col(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE1), width=1, position="fill") +
+  geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE2, group=LINEAGE2), position="fill") +
+  scale_fill_manual("", values=lineage_cols2) +
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01"))),1,1),
+                     limits=as.Date(c("2021-01-01",NA)), 
+                     expand=c(0,0)) +
+  # guides(color = guide_legend(reverse=F, nrow=2, byrow=T), fill = guide_legend(reverse=F, nrow=2, byrow=T)) +
+  theme_hc() +
+  # labs(title = "MAIN SARS-CoV2 VARIANT LINEAGES IN THE UK") +
+  ylab("Share") + 
+  theme(legend.position="right",  
+        axis.title.x=element_blank()) +
+  labs(title = "SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN SOUTH AFRICA\n(GISAID data)") 
+# +
+# coord_cartesian(xlim=c(1,max(GISAID_sel$Week)))
+muller_southafrica_raw
+
+ggsave(file=paste0(".\\plots\\",plotdir,"\\south africa_muller plots_raw data.png"), width=8, height=6)
+# ggsave(file=paste0(".\\plots\\",plotdir,"\\south africa_muller plots_raw data.pdf"), width=8, height=6)
+
+# by province
+muller_southafrica_raw2 = ggplot(data=data_agbyweekregion2, aes(x=collection_date, y=count, group=LINEAGE2)) +
+  facet_wrap(~ division) +
   # geom_col(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE1), width=1, position="fill") +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE2, group=LINEAGE2), position="fill") +
   scale_fill_manual("", values=lineage_cols2) +
@@ -186,14 +211,18 @@ muller_southafrica_raw2 = ggplot(data=data_agbyweek2, aes(x=collection_date, y=c
 # coord_cartesian(xlim=c(1,max(GISAID_sel$Week)))
 muller_southafrica_raw2
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\south africa_muller plots_raw data.png"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",plotdir,"\\south africa_muller plots_raw data_by province.png"), width=8, height=6)
 # ggsave(file=paste0(".\\plots\\",plotdir,"\\south africa_muller plots_raw data.pdf"), width=8, height=6)
+
+
 
 
 # multinomial fits
 data_agbyweek2$LINEAGE2 = relevel(data_agbyweek2$LINEAGE2, ref=sel_target_VOC)
 data_agbyweek2$DATE_NUM = as.numeric(data_agbyweek2$collection_date)
 
+
+# model without province/division included as an extra factor
 library(nnet)
 library(splines)
 set.seed(1)
@@ -202,11 +231,11 @@ fit2_southafrica_multi = nnet::multinom(LINEAGE2 ~ ns(DATE_NUM, df=2), weights=c
 fit3_southafrica_multi = nnet::multinom(LINEAGE2 ~ ns(DATE_NUM, df=3), weights=count, data=data_agbyweek2, maxit=1000)
 fit4_southafrica_multi = nnet::multinom(LINEAGE2 ~ ns(DATE_NUM, df=4), weights=count, data=data_agbyweek2, maxit=1000)
 BIC(fit1_southafrica_multi, fit2_southafrica_multi, fit3_southafrica_multi, fit4_southafrica_multi) 
-# df      BIC
-# fit1_southafrica_multi 12 9327.093
-# fit2_southafrica_multi 18 9277.020
-# fit3_southafrica_multi 24 9326.383
-# fit4_southafrica_multi 30 9363.778
+#                        df      BIC
+# fit1_southafrica_multi 12 10487.14
+# fit2_southafrica_multi 18 10439.37 
+# fit3_southafrica_multi 24 10489.35
+# fit4_southafrica_multi 30 10527.00
 
 # model with province/division included as an extra factor
 data_agbyweekregion2$LINEAGE2 = relevel(data_agbyweekregion2$LINEAGE2, ref=sel_target_VOC)
@@ -217,9 +246,13 @@ fit2_southafrica_byregion_multi = nnet::multinom(LINEAGE2 ~ ns(DATE_NUM, df=2)+d
 fit3_southafrica_byregion_multi = nnet::multinom(LINEAGE2 ~ ns(DATE_NUM, df=3)+division, weights=count, data=data_agbyweekregion2, maxit=1000)
 fit4_southafrica_byregion_multi = nnet::multinom(LINEAGE2 ~ ns(DATE_NUM, df=4)+division, weights=count, data=data_agbyweekregion2, maxit=1000)
 BIC(fit1_southafrica_byregion_multi, fit2_southafrica_byregion_multi, fit3_southafrica_byregion_multi, fit4_southafrica_byregion_multi) 
+#                                 df      BIC
+# fit1_southafrica_byregion_multi 66 10402.84
+# fit2_southafrica_byregion_multi 72 10392.87 # best model (BEST, lowest BIC)
+# fit3_southafrica_byregion_multi 78 10444.15
+# fit4_southafrica_byregion_multi 84 10473.15
 
-
-# growth rate advantage compared to Delta (difference in growth rate per day) 
+# growth rate advantage compared to Delta in overall model (difference in growth rate per day) 
 emtrsouthafrica = emtrends(fit2_southafrica_multi, trt.vs.ctrl ~ LINEAGE2,  
                    var="DATE_NUM",  mode="latent",
                    at=list(DATE_NUM=max(GISAID_sel$DATE_NUM)),
@@ -228,15 +261,15 @@ delta_r_southafrica = data.frame(confint(emtrsouthafrica,
                                  adjust="none", df=NA)$contrasts, 
                          p.value=as.data.frame(emtrsouthafrica$contrasts, adjust="none", df=NA)$p.value)
 delta_r_southafrica
-#                               contrast    estimate          SE df   asymp.LCL   asymp.UCL      p.value
-# 1   B.1.1.7 - Delta (B.1.617.2 & AY.X) -0.09830134 0.007805915 NA -0.11360065 -0.08300203 2.301911e-36
-# 2 B.1.1.519 - Delta (B.1.617.2 & AY.X) -1.53504676 2.121123445 NA -5.69237232  2.62227880 4.692529e-01
-# 3   B.1.351 - Delta (B.1.617.2 & AY.X) -0.11350011 0.005777771 NA -0.12482434 -0.10217589 6.471509e-86
-# 4 B.1.617.1 - Delta (B.1.617.2 & AY.X) -0.14484941 0.052795676 NA -0.24832704 -0.04137179 6.077234e-03
-# 5     C.1.2 - Delta (B.1.617.2 & AY.X) -0.01891008 0.016313073 NA -0.05088312  0.01306295 2.463755e-01
-# 6     other - Delta (B.1.617.2 & AY.X) -0.06563342 0.005617530 NA -0.07664358 -0.05462327 1.544582e-31
+#                               contrast     estimate          SE df   asymp.LCL   asymp.UCL      p.value
+# 1   B.1.1.7 - Delta (B.1.617.2 & AY.X) -0.083053146 0.007547032 NA -0.09784506 -0.06826124 3.625488e-28
+# 2 B.1.1.519 - Delta (B.1.617.2 & AY.X) -0.585953574 0.646813186 NA -1.85368412  0.68177697 3.649843e-01
+# 3   B.1.351 - Delta (B.1.617.2 & AY.X) -0.101157067 0.005956704 NA -0.11283199 -0.08948214 1.115155e-64
+# 4 B.1.617.1 - Delta (B.1.617.2 & AY.X) -0.108863423 0.041498692 NA -0.19019937 -0.02752748 8.708315e-03
+# 5     C.1.2 - Delta (B.1.617.2 & AY.X) -0.008334439 0.011326303 NA -0.03053358  0.01386471 4.618231e-01
+# 6     other - Delta (B.1.617.2 & AY.X) -0.053854857 0.005526241 NA -0.06468609 -0.04302362 1.932153e-22
 
-# growth rate advantage compared to Delta in model by province
+# growth rate advantage compared to Delta in model by province (BEST)
 emtrsouthafrica2 = emtrends(fit2_southafrica_byregion_multi, trt.vs.ctrl ~ LINEAGE2,  
                            var="DATE_NUM",  mode="latent",
                            at=list(DATE_NUM=max(GISAID_sel$DATE_NUM)),
@@ -245,13 +278,13 @@ delta_r_southafrica2 = data.frame(confint(emtrsouthafrica2,
                                          adjust="none", df=NA)$contrasts, 
                                  p.value=as.data.frame(emtrsouthafrica2$contrasts, adjust="none", df=NA)$p.value)
 delta_r_southafrica2
-#                               contrast      estimate          SE df    asymp.LCL    asymp.UCL       p.value
-# 1   B.1.1.7 - Delta (B.1.617.2 & AY.X) -1.076696e-01 0.007715790 NA  -0.12279230  -0.09254696  2.955596e-44
-# 2 B.1.1.519 - Delta (B.1.617.2 & AY.X) -8.762580e+01 0.002313123 NA -87.63033448 -87.62126721  0.000000e+00
-# 3   B.1.351 - Delta (B.1.617.2 & AY.X) -1.207763e-01 0.005330230 NA  -0.13122332  -0.11032921 1.144214e-113
-# 4 B.1.617.1 - Delta (B.1.617.2 & AY.X) -1.418797e-01 0.056142609 NA  -0.25191722  -0.03184224  1.149986e-02
-# 5     C.1.2 - Delta (B.1.617.2 & AY.X)  6.584242e-04 0.017156488 NA  -0.03296767   0.03428452  9.693866e-01
-# 6     other - Delta (B.1.617.2 & AY.X) -8.092027e-02 0.005523987 NA  -0.09174708  -0.07009345  1.369370e-48
+#                               contrast    estimate          SE df    asymp.LCL   asymp.UCL      p.value
+# 1   B.1.1.7 - Delta (B.1.617.2 & AY.X) -0.09323705 0.007688313 NA -0.108305866 -0.07816823 7.587600e-34
+# 2 B.1.1.519 - Delta (B.1.617.2 & AY.X) -0.70865419 0.637578381 NA -1.958284855  0.54097647 2.663628e-01
+# 3   B.1.351 - Delta (B.1.617.2 & AY.X) -0.10839411 0.005918216 NA -0.119993598 -0.09679462 6.244174e-75
+# 4 B.1.617.1 - Delta (B.1.617.2 & AY.X) -0.13169724 0.055010284 NA -0.239515413 -0.02387906 1.666359e-02
+# 5     C.1.2 - Delta (B.1.617.2 & AY.X)  0.01266797 0.011543460 NA -0.009956794  0.03529274 2.724598e-01
+# 6     other - Delta (B.1.617.2 & AY.X) -0.06692727 0.005762197 NA -0.078220966 -0.05563357 3.462442e-31
 
 
 # fitted prop of different LINEAGES in the south africa today
@@ -259,39 +292,100 @@ multinom_preds_today_avg = data.frame(emmeans(fit2_southafrica_multi, ~ LINEAGE2
                                               at=list(DATE_NUM=today_num), 
                                               mode="prob", df=NA))
 multinom_preds_today_avg
-# LINEAGE2         prob           SE df     asymp.LCL    asymp.UCL
-# 1 Delta (B.1.617.2 & AY.X) 9.914228e-01 6.019520e-03 NA  9.796247e-01 1.003221e+00
-# 2                  B.1.1.7 3.161988e-05 1.797208e-05 NA -3.604750e-06 6.684451e-05
-# 3                B.1.1.519 2.510226e-78 6.102384e-76 NA -1.193535e-75 1.198556e-75
-# 4                  B.1.351 5.382498e-05 2.056559e-05 NA  1.351716e-05 9.413280e-05
-# 5                B.1.617.1 2.163012e-07 7.470039e-07 NA -1.247800e-06 1.680402e-06
-# 6                    C.1.2 7.782132e-03 6.018392e-03 NA -4.013699e-03 1.957796e-02
-# 7                    other 7.094335e-04 2.618915e-04 NA  1.961357e-04 1.222731e-03
+#                   LINEAGE2         prob           SE df     asymp.LCL    asymp.UCL
+# 1 Delta (B.1.617.2 & AY.X) 9.832471e-01 7.986567e-03 NA  9.675937e-01 9.989005e-01
+# 2                  B.1.1.7 5.605154e-05 3.097777e-05 NA -4.663769e-06 1.167669e-04
+# 3                B.1.1.519 3.020925e-32 2.291057e-30 NA -4.460181e-30 4.520599e-30
+# 4                  B.1.351 6.422437e-05 2.560654e-05 NA  1.403646e-05 1.144123e-04
+# 5                B.1.617.1 1.316065e-06 3.698963e-06 NA -5.933769e-06 8.565900e-06
+# 6                    C.1.2 1.563474e-02 7.986229e-03 NA -1.798573e-05 3.128746e-02
+# 7                    other 9.965396e-04 3.606689e-04 NA  2.896415e-04 1.703438e-03
 
 # % non-Delta
 colSums(multinom_preds_today_avg[-1, c("prob","asymp.LCL","asymp.UCL")])
-#      prob asymp.LCL asymp.UCL 
-# 0.008577227 -0.003808899  0.020963352
+#               prob asymp.LCL asymp.UCL 
+# 0.0167528675 0.0002750947 0.0332306403
 
 
 # PLOT MULTINOMIAL FIT
 
 # extrapolate = 30
 date.from = as.numeric(as.Date("2021-01-01"))
-date.to = as.numeric(as.Date("2021-09-14")) # max(GISAID_sel$DATE_NUM)+extrapolate
+date.to = as.numeric(as.Date("2021-09-21")) # max(GISAID_sel$DATE_NUM)+extrapolate
 
-# multinomial model predictions (fastest, but no confidence intervals)
-predgrid = expand.grid(list(DATE_NUM=seq(date.from, date.to)))
-fit_southafrica_multi_preds = data.frame(predgrid, as.data.frame(predict(fit2_southafrica_multi, newdata=predgrid, type="prob")),check.names=F)
-library(tidyr)
-library(tidyselect)
-fit_southafrica_multi_preds = gather(fit_southafrica_multi_preds, LINEAGE2, prob, all_of(levels_LINEAGE2), factor_key=TRUE)
-fit_southafrica_multi_preds$collection_date = as.Date(fit_southafrica_multi_preds$DATE_NUM, origin="1970-01-01")
-fit_southafrica_multi_preds$LINEAGE2 = factor(fit_southafrica_multi_preds$LINEAGE2, levels=levels_LINEAGE2) 
+# # multinomial model predictions (fastest, but no confidence intervals)
+# predgrid = expand.grid(list(DATE_NUM=seq(date.from, date.to)))
+# fit_southafrica_multi_preds = data.frame(predgrid, as.data.frame(predict(fit2_southafrica_multi, newdata=predgrid, type="prob")),check.names=F)
+# library(tidyr)
+# library(tidyselect)
+# fit_southafrica_multi_preds = gather(fit_southafrica_multi_preds, LINEAGE2, prob, all_of(levels_LINEAGE2), factor_key=TRUE)
+# fit_southafrica_multi_preds$collection_date = as.Date(fit_southafrica_multi_preds$DATE_NUM, origin="1970-01-01")
+# fit_southafrica_multi_preds$LINEAGE2 = factor(fit_southafrica_multi_preds$LINEAGE2, levels=levels_LINEAGE2) 
+# 
+# 
+# 
+# muller_southafrica_mfit = ggplot(data=fit_southafrica_multi_preds, 
+#                                    aes(x=collection_date, y=prob, group=LINEAGE2)) + 
+#   # facet_wrap(~ STATE) +
+#   geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE2, group=LINEAGE2), position="stack") +
+#   scale_fill_manual("", values=lineage_cols2) +
+#   annotate("rect", xmin=max(GISAID_sel$DATE_NUM)+1, 
+#            xmax=as.Date(date.to, origin="1970-01-01"), ymin=0, ymax=1, alpha=0.4, fill="white") + # extrapolated part
+#   scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01")),
+#                      labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01"))),1,1),
+#                      limits=as.Date(c("2021-01-01",NA)), expand=c(0,0)) +
+#   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
+#   theme_hc() + theme(legend.position="right", 
+#                      axis.title.x=element_blank()) + 
+#   ylab("Share") +
+#   ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN SOUTH AFRICA\n(GISAID data, multinomial fit)")
+# muller_southafrica_mfit
+# 
+# ggsave(file=paste0(".\\plots\\",plotdir,"\\south africa_muller plots_multinom fit.png"), width=10, height=6)
+# # ggsave(file=paste0(".\\plots\\",plotdir,"\\south africa_muller plots_multinom fit.pdf"), width=10, height=6)
+# 
+# 
+# library(ggpubr)
+# ggarrange(muller_southafrica_raw2 + coord_cartesian(xlim=c(as.Date("2021-01-01"),as.Date(date.to, origin="1970-01-01")))+
+#             theme(legend.background = element_rect(fill = alpha("white", 0)),
+#                   legend.key = element_rect(fill = alpha("white", 0)),
+#                   legend.text=element_text(color = "white")) +
+#             guides(colour = guide_legend(override.aes = list(alpha = 0)),
+#                    fill = guide_legend(override.aes = list(alpha = 0))), 
+#           muller_southafrica_mfit+ggtitle("Multinomial fit"), ncol=1)
+# 
+# ggsave(file=paste0(".\\plots\\",plotdir,"\\south africa_muller plots multipanel_multinom fit.png"), width=10, height=10)
+# # ggsave(file=paste0(".\\plots\\",plotdir,"\\south africa_muller plots multipanel_multinom fit.pdf"), width=10, height=10)
 
-muller_southafrica_mfit = ggplot(data=fit_southafrica_multi_preds, 
-                                   aes(x=collection_date, y=prob, group=LINEAGE2)) + 
-  # facet_wrap(~ STATE) +
+
+
+
+
+# PLOT MODEL FIT WITH DATA & CONFIDENCE INTERVALS
+
+# multinomial model predictions by division/province with confidence intervals (but slower)
+fit_southafrica_multi_preds_withCI = data.frame(emmeans(fit2_southafrica_byregion_multi,
+                                                        ~ LINEAGE2,
+                                                        by=c("DATE_NUM","division"),
+                                                        at=list(DATE_NUM=seq(date.from, date.to, by=3)),  # by=XX to speed up things a bit
+                                                        mode="prob", df=NA))
+fit_southafrica_multi_preds_withCI$collection_date = as.Date(fit_southafrica_multi_preds_withCI$DATE_NUM, origin="1970-01-01")
+fit_southafrica_multi_preds_withCI$LINEAGE2 = factor(fit_southafrica_multi_preds_withCI$LINEAGE2, levels=levels_LINEAGE2)
+fit_southafrica_multi_preds_withCI$division = factor(fit_southafrica_multi_preds_withCI$division)
+# fit_southafrica_multi_preds2 = fit_southafrica_multi_preds_withCI
+
+fit_southafrica_multi_preds_withCI_overall = data.frame(emmeans(fit2_southafrica_multi,
+                                                        ~ LINEAGE2,
+                                                        by=c("DATE_NUM"),
+                                                        at=list(DATE_NUM=seq(date.from, date.to, by=1)),  # by=XX to speed up things a bit
+                                                        mode="prob", df=NA))
+fit_southafrica_multi_preds_withCI_overall$collection_date = as.Date(fit_southafrica_multi_preds_withCI_overall$DATE_NUM, origin="1970-01-01")
+fit_southafrica_multi_preds_withCI_overall$LINEAGE2 = factor(fit_southafrica_multi_preds_withCI_overall$LINEAGE2, levels=levels_LINEAGE2)
+fit_southafrica_multi_preds2 = fit_southafrica_multi_preds_withCI_overall
+
+muller_southafrica_mfit = ggplot(data=fit_southafrica_multi_preds_withCI, 
+                                 aes(x=collection_date, y=prob, group=LINEAGE2)) + 
+  facet_wrap(~ division) +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE2, group=LINEAGE2), position="stack") +
   scale_fill_manual("", values=lineage_cols2) +
   annotate("rect", xmin=max(GISAID_sel$DATE_NUM)+1, 
@@ -319,24 +413,46 @@ ggarrange(muller_southafrica_raw2 + coord_cartesian(xlim=c(as.Date("2021-01-01")
                    fill = guide_legend(override.aes = list(alpha = 0))), 
           muller_southafrica_mfit+ggtitle("Multinomial fit"), ncol=1)
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\south africa_muller plots multipanel_multinom fit.png"), width=10, height=10)
+ggsave(file=paste0(".\\plots\\",plotdir,"\\south africa_muller plots multipanel_multinom fit_by province.png"), width=10, height=10)
+# ggsave(file=paste0(".\\plots\\",plotdir,"\\south africa_muller plots multipanel_multinom fit.pdf"), width=10, height=10)
+
+
+muller_southafrica_mfit_overall = ggplot(data=fit_southafrica_multi_preds2, 
+                                 aes(x=collection_date, y=prob, group=LINEAGE2)) + 
+  # facet_wrap(~ division) +
+  geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE2, group=LINEAGE2), position="stack") +
+  scale_fill_manual("", values=lineage_cols2) +
+  annotate("rect", xmin=max(GISAID_sel$DATE_NUM)+1, 
+           xmax=as.Date(date.to, origin="1970-01-01"), ymin=0, ymax=1, alpha=0.4, fill="white") + # extrapolated part
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01"))),1,1),
+                     limits=as.Date(c("2021-01-01",NA)), expand=c(0,0)) +
+  # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
+  theme_hc() + theme(legend.position="right", 
+                     axis.title.x=element_blank()) + 
+  ylab("Share") +
+  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN SOUTH AFRICA\n(GISAID data, multinomial fit)")
+muller_southafrica_mfit_overall
+
+ggsave(file=paste0(".\\plots\\",plotdir,"\\south africa_muller plots_multinom fit_overall.png"), width=10, height=6)
+# ggsave(file=paste0(".\\plots\\",plotdir,"\\south africa_muller plots_multinom fit_overall.pdf"), width=10, height=6)
+
+
+library(ggpubr)
+ggarrange(muller_southafrica_raw + coord_cartesian(xlim=c(as.Date("2021-01-01"),as.Date(date.to, origin="1970-01-01")))+
+            theme(legend.background = element_rect(fill = alpha("white", 0)),
+                  legend.key = element_rect(fill = alpha("white", 0)),
+                  legend.text=element_text(color = "white")) +
+            guides(colour = guide_legend(override.aes = list(alpha = 0)),
+                   fill = guide_legend(override.aes = list(alpha = 0))), 
+          muller_southafrica_mfit_overall+ggtitle("Multinomial fit"), ncol=1)
+
+ggsave(file=paste0(".\\plots\\",plotdir,"\\south africa_muller plots multipanel_multinom fit_overall.png"), width=10, height=10)
 # ggsave(file=paste0(".\\plots\\",plotdir,"\\south africa_muller plots multipanel_multinom fit.pdf"), width=10, height=10)
 
 
 
 
-
-# PLOT MODEL FIT WITH DATA & CONFIDENCE INTERVALS
-
-# multinomial model predictions by state with confidence intervals (but slower)
-fit_southafrica_multi_preds_withCI = data.frame(emmeans(fit2_southafrica_multi,
-                                                        ~ LINEAGE2,
-                                                        by=c("DATE_NUM"),
-                                                        at=list(DATE_NUM=seq(date.from, date.to, by=1)),  # by=XX to speed up things a bit
-                                                        mode="prob", df=NA))
-fit_southafrica_multi_preds_withCI$collection_date = as.Date(fit_southafrica_multi_preds_withCI$DATE_NUM, origin="1970-01-01")
-fit_southafrica_multi_preds_withCI$LINEAGE2 = factor(fit_southafrica_multi_preds_withCI$LINEAGE2, levels=levels_LINEAGE2)
-fit_southafrica_multi_preds2 = fit_southafrica_multi_preds_withCI
 
 
 # on logit scale:
@@ -450,15 +566,18 @@ BIC(fit_cases)
 
 # STACKED AREA CHART OF NEW CASES BY VARIANT (MULTINOMIAL FIT MAPPED ONTO CASE DATA) ####
 
-fit_southafrica_multi_preds_withCI$totcases = cases_tot$cases_new[match(round(fit_southafrica_multi_preds_withCI$DATE_NUM),cases_tot$DATE_NUM)]
-fit_southafrica_multi_preds_withCI$cases = fit_southafrica_multi_preds_withCI$totcases * fit_southafrica_multi_preds_withCI$prob
-fit_southafrica_multi_preds_withCI$cases[fit_southafrica_multi_preds_withCI$cases<=0.001] = NA
+fit_southafrica_multi_preds_withCI_overall$totcases = cases_tot$cases_new[match(round(fit_southafrica_multi_preds_withCI_overall$DATE_NUM),
+                                                                        cases_tot$DATE_NUM)]
+fit_southafrica_multi_preds_withCI_overall$cases = fit_southafrica_multi_preds_withCI_overall$totcases * fit_southafrica_multi_preds_withCI_overall$prob
+fit_southafrica_multi_preds_withCI_overall$cases[fit_southafrica_multi_preds_withCI_overall$cases<=0.001] = NA
 cases_emmeans = as.data.frame(emmeans(fit_cases, ~ DATE_NUM, at=list(DATE_NUM=seq(date.from, date.to, by=0.5), BANHOLIDAY="no"), type="response"))
-fit_southafrica_multi_preds_withCI$smoothed_totcases = cases_emmeans$rate[match(fit_southafrica_multi_preds_withCI$DATE_NUM,cases_emmeans$DATE_NUM)]
-fit_southafrica_multi_preds_withCI$smoothed_cases = fit_southafrica_multi_preds_withCI$smoothed_totcases * fit_southafrica_multi_preds_withCI$prob
-fit_southafrica_multi_preds_withCI$smoothed_cases[fit_southafrica_multi_preds_withCI$smoothed_cases<=0.001] = NA
+fit_southafrica_multi_preds_withCI_overall$smoothed_totcases = 
+  cases_emmeans$rate[match(fit_southafrica_multi_preds_withCI_overall$DATE_NUM,
+                                                        cases_emmeans$DATE_NUM)]
+fit_southafrica_multi_preds_withCI_overall$smoothed_cases = fit_southafrica_multi_preds_withCI_overall$smoothed_totcases * fit_southafrica_multi_preds_withCI_overall$prob
+fit_southafrica_multi_preds_withCI_overall$smoothed_cases[fit_southafrica_multi_preds_withCI_overall$smoothed_cases<=0.001] = NA
 
-ggplot(data=fit_southafrica_multi_preds_withCI[fit_southafrica_multi_preds_withCI$collection_date>=as.Date("2021-01-01"),], 
+ggplot(data=fit_southafrica_multi_preds_withCI_overall[fit_southafrica_multi_preds_withCI_overall$collection_date>=as.Date("2021-01-01"),], 
        aes(x=collection_date, y=cases, group=LINEAGE2)) + 
   # facet_wrap(~ REGION, scale="free", ncol=3) +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE2, group=LINEAGE2), position="stack") +
@@ -476,8 +595,8 @@ ggplot(data=fit_southafrica_multi_preds_withCI[fit_southafrica_multi_preds_withC
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\cases per day_stacked area multinomial fit raw case data.png"), width=8, height=6)
 
-ggplot(data=fit_southafrica_multi_preds_withCI[fit_southafrica_multi_preds_withCI$collection_date>=as.Date("2021-01-01")&
-                                              fit_southafrica_multi_preds_withCI$collection_date<=max(cases_tot$date),], 
+ggplot(data=fit_southafrica_multi_preds_withCI_overall[fit_southafrica_multi_preds_withCI_overall$collection_date>=as.Date("2021-01-01")&
+                                                         fit_southafrica_multi_preds_withCI_overall$collection_date<=max(cases_tot$date),], 
        aes(x=collection_date-7, y=smoothed_cases, group=LINEAGE2)) + 
   # facet_wrap(~ REGION, scale="free", ncol=3) +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE2, group=LINEAGE2), position="stack") +

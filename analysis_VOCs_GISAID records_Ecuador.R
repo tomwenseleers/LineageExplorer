@@ -1,6 +1,6 @@
 # ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT VOCs IN ECUADOR (GISAID RECORDS)
 # T. Wenseleers
-# last update 1 Sept 2021
+# last update 9 Sept 2021
 
 library(nnet)
 # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
@@ -16,13 +16,13 @@ library(lubridate)
 
 
 today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-09-01")
+today = as.Date("2021-09-09")
 today_num = as.numeric(today)
 plotdir = "Ecuador_GISAID"
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 
 # import GISAID records for Ecuador
-d1 = read_tsv(file(".//data//GISAID//Ecuador//gisaid_hcov-19_2021_09_01_21.tsv"), col_types = cols(.default = "c")) 
+d1 = read_tsv(file(".//data//GISAID//Ecuador//gisaid_hcov-19_2021_09_06_18.tsv"), col_types = cols(.default = "c")) 
 GISAID = as.data.frame(rbind(d1))
 colnames(GISAID) = c("Virus name","Accession ID","date","Location","host",
                      "Additional location information","Sampling strategy","Gender",                         
@@ -49,7 +49,7 @@ GISAID$pango_lineage[grepl("B.1.617.2|AY",GISAID$pango_lineage)] = "Delta (B.1.6
 sel_target_VOC = "Delta (B.1.617.2 & AY.X)"
 
 GISAID$LINEAGE = GISAID$pango_lineage
-nrow(GISAID) # 1713
+nrow(GISAID) # 1715
 
 
 
@@ -165,9 +165,9 @@ fit2_ecuador_multi = nnet::multinom(LINEAGE ~ ns(DATE_NUM, df=2), weights=count,
 fit3_ecuador_multi = nnet::multinom(LINEAGE ~ ns(DATE_NUM, df=3), weights=count, data=data_agbyweek, maxit=1000)
 BIC(fit1_ecuador_multi, fit2_ecuador_multi, fit3_ecuador_multi) 
 # df      BIC
-# fit1_ecuador_multi 18 6601.347
-# fit2_ecuador_multi 27 6490.677
-# fit3_ecuador_multi 36 6494.070
+# fit1_ecuador_multi 18 6632.166
+# fit2_ecuador_multi 27 6516.745
+# fit3_ecuador_multi 36 6515.481
 
 # growth rate advantage compared to Delta (difference in growth rate per day) 
 emtrecuador = emtrends(fit2_ecuador_multi, trt.vs.ctrl ~ LINEAGE,  
@@ -180,15 +180,15 @@ delta_r_ecuador = data.frame(confint(emtrecuador,
                                                adjust="none", df=NA)$p.value)
 delta_r_ecuador
 #                               contrast    estimate          SE df   asymp.LCL   asymp.UCL      p.value
-# 1   B.1.1.7 - Delta (B.1.617.2 & AY.X) -0.06352316 0.007377517 NA -0.07798283 -0.04906349 7.282418e-18
-# 2       B.1 - Delta (B.1.617.2 & AY.X) -0.03565389 0.006738965 NA -0.04886202 -0.02244576 1.218443e-07
-# 3     B.1.1 - Delta (B.1.617.2 & AY.X) -0.05497295 0.006974833 NA -0.06864337 -0.04130253 3.231745e-15
-# 4 B.1.1.519 - Delta (B.1.617.2 & AY.X) -0.19373530 0.058346029 NA -0.30809142 -0.07937919 8.987119e-04
-# 5   B.1.526 - Delta (B.1.617.2 & AY.X) -0.06405146 0.007124604 NA -0.07801542 -0.05008749 2.468316e-19
-# 6   B.1.621 - Delta (B.1.617.2 & AY.X) -0.06718344 0.011423284 NA -0.08957266 -0.04479421 4.071263e-09
-# 7      C.37 - Delta (B.1.617.2 & AY.X) -0.05560485 0.008232973 NA -0.07174119 -0.03946852 1.439019e-11
-# 8       P.1 - Delta (B.1.617.2 & AY.X) -0.04263453 0.007571965 NA -0.05747531 -0.02779376 1.796074e-08
-# 9     other - Delta (B.1.617.2 & AY.X) -0.04429881 0.006690498 NA -0.05741194 -0.03118568 3.564068e-11
+# 1   B.1.1.7 - Delta (B.1.617.2 & AY.X) -0.06250405 0.007358878 NA -0.07692719 -0.04808092 2.001722e-17
+# 2       B.1 - Delta (B.1.617.2 & AY.X) -0.03220188 0.006649485 NA -0.04523463 -0.01916913 1.280459e-06
+# 3     B.1.1 - Delta (B.1.617.2 & AY.X) -0.05126138 0.006913563 NA -0.06481171 -0.03771104 1.219828e-13
+# 4 B.1.1.519 - Delta (B.1.617.2 & AY.X) -0.17898596 0.056225919 NA -0.28918673 -0.06878518 1.455889e-03
+# 5   B.1.526 - Delta (B.1.617.2 & AY.X) -0.06264900 0.007077257 NA -0.07652017 -0.04877783 8.584293e-19
+# 6   B.1.621 - Delta (B.1.617.2 & AY.X) -0.06418843 0.011062935 NA -0.08587139 -0.04250548 6.548306e-09
+# 7      C.37 - Delta (B.1.617.2 & AY.X) -0.06974832 0.008978170 NA -0.08734521 -0.05215142 7.932345e-15
+# 8       P.1 - Delta (B.1.617.2 & AY.X) -0.04232217 0.007637998 NA -0.05729237 -0.02735197 3.007445e-08
+# 9     other - Delta (B.1.617.2 & AY.X) -0.04295414 0.006661620 NA -0.05601067 -0.02989760 1.133344e-10
 
 
 # fitted prop of different LINEAGES in the ecuador today
@@ -197,27 +197,28 @@ multinom_preds_today_avg = data.frame(emmeans(fit2_ecuador_multi, ~ LINEAGE|1,
                                               mode="prob", df=NA))
 multinom_preds_today_avg
 #                     LINEAGE         prob           SE df     asymp.LCL    asymp.UCL
-# 1  Delta (B.1.617.2 & AY.X) 6.151157e-01 6.794144e-02 NA  4.819530e-01 7.482785e-01
-# 2                   B.1.1.7 1.488667e-02 5.251346e-03 NA  4.594223e-03 2.517912e-02
-# 3                       B.1 7.138983e-02 1.918437e-02 NA  3.378917e-02 1.089905e-01
-# 4                     B.1.1 5.100277e-03 1.990495e-03 NA  1.198978e-03 9.001576e-03
-# 5                 B.1.1.519 3.503768e-10 2.667663e-09 NA -4.878147e-09 5.578901e-09
-# 6                   B.1.526 3.958660e-02 1.167651e-02 NA  1.670105e-02 6.247214e-02
-# 7                   B.1.621 4.945651e-02 2.262079e-02 NA  5.120573e-03 9.379245e-02
-# 8                      C.37 4.883069e-02 1.723063e-02 NA  1.505928e-02 8.260210e-02
-# 9                       P.1 9.047199e-02 2.735706e-02 NA  3.685313e-02 1.440908e-01
-# 10                    other 6.516169e-02 1.702995e-02 NA  3.178361e-02 9.853978e-02
+# 1  Delta (B.1.617.2 & AY.X) 6.890935e-01 7.101416e-02 NA  5.499083e-01 8.282787e-01
+# 2                   B.1.1.7 1.082214e-02 4.405715e-03 NA  2.187102e-03 1.945719e-02
+# 3                       B.1 8.615530e-02 2.632146e-02 NA  3.456619e-02 1.377444e-01
+# 4                     B.1.1 5.048683e-03 2.151464e-03 NA  8.318909e-04 9.265474e-03
+# 5                 B.1.1.519 4.271347e-10 3.288519e-09 NA -6.018243e-09 6.872513e-09
+# 6                   B.1.526 2.944876e-02 1.025468e-02 NA  9.349956e-03 4.954757e-02
+# 7                   B.1.621 3.732492e-02 1.985498e-02 NA -1.590127e-03 7.623996e-02
+# 8                      C.37 1.569042e-02 7.497150e-03 NA  9.962814e-04 3.038457e-02
+# 9                       P.1 7.647215e-02 2.787136e-02 NA  2.184528e-02 1.310990e-01
+# 10                    other 4.994413e-02 1.567670e-02 NA  1.921835e-02 8.066990e-02
+
 # % non-Delta
 colSums(multinom_preds_today_avg[-1, c("prob","asymp.LCL","asymp.UCL")])
 #      prob asymp.LCL asymp.UCL 
-# 0.3848843 0.1451000 0.6246685 
+# 0.31090651 0.08740492 0.53440809 
 
 
 # PLOT MULTINOMIAL FIT
 
 # extrapolate = 30
 date.from = as.numeric(as.Date("2021-01-01"))
-date.to = as.numeric(as.Date("2021-09-14")) # max(GISAID_sel$DATE_NUM)+extrapolate
+date.to = as.numeric(as.Date("2021-09-21")) # max(GISAID_sel$DATE_NUM)+extrapolate
 
 # multinomial model predictions (fastest, but no confidence intervals)
 predgrid = expand.grid(list(DATE_NUM=seq(date.from, date.to)))
