@@ -1,6 +1,6 @@
 # ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT VOCs IN THE USA (GISAID GENOMIC EPIDEMIOLOGY METADATA)
 # T. Wenseleers
-# last update 3 AUGUST 2021
+# last update 7 SEPT 2021
 
 library(nnet)
 # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
@@ -13,13 +13,13 @@ library(ggthemes)
 library(scales)
 
 today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-08-03")
+today = as.Date("2021-09-07")
 today_num = as.numeric(today)
 plotdir = "USA_GISAID_genomic_epidemiology"
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 
 # import GISAID genomic epidemiology metadata
-GISAID = read_tsv(gzfile(".//data//GISAID_genomic_epidemiology//metadata_2021-07-26_11-18.tsv.gz"), col_types = cols(.default = "c")) 
+GISAID = read_tsv(gzfile(".//data//GISAID_genomic_epidemiology//metadata_2021-09-03_08-22.tsv.gz"), col_types = cols(.default = "c")) 
 GISAID = as.data.frame(GISAID)
 
 GISAID$date = as.Date(GISAID$date)
@@ -27,8 +27,8 @@ GISAID = GISAID[!is.na(GISAID$date),]
 GISAID[GISAID$host!="Human","strain"]
 GISAID = GISAID[GISAID$host=="Human",]
 GISAID = GISAID[GISAID$date>=as.Date("2020-01-01"),]
-range(GISAID$date) # "2020-01-01" "2021-07-21"
-nrow(GISAID) #  2339555
+range(GISAID$date) # "2020-01-01" "2021-08-30"
+nrow(GISAID) #  3042438
 GISAID$Week = lubridate::week(GISAID$date)
 GISAID$Year = lubridate::year(GISAID$date)
 GISAID$Year_Week = interaction(GISAID$Year,GISAID$Week)
@@ -39,62 +39,50 @@ colnames(GISAID)
 
 length(unique(GISAID$country[grepl("AY",GISAID$pango_lineage,fixed=T)|grepl("B.1.617",GISAID$pango_lineage,fixed=T)])) # B.1.617+ now found in 103 countries
 table(GISAID$pango_lineage[grepl("AY",GISAID$pango_lineage,fixed=T)|grepl("B.1.617",GISAID$pango_lineage,fixed=T)])
-# AY.1      AY.2      AY.3   B.1.617 B.1.617.1 B.1.617.2 B.1.617.3 
-# 371       680      2344         2      5772    241814       279 
 
 GISAID$pango_lineage[grepl("B.1.177",GISAID$pango_lineage,fixed=T)] = "B.1.177+"
 GISAID$pango_lineage[grepl("B.1.36\\>",GISAID$pango_lineage)] = "B.1.36+"
+GISAID$pango_lineage[grepl("B.1.617.2|AY",GISAID$pango_lineage)] = "Delta (B.1.617.2 & AY.X)"
 
-sel_target_VOC = "B.1.617"
-GISAID$LINEAGE1 = GISAID$pango_lineage
+sel_target_VOC = "Delta (B.1.617.2 & AY.X)"
+
 GISAID$LINEAGE2 = GISAID$pango_lineage
-GISAID[grepl(sel_target_VOC, GISAID$LINEAGE1, fixed=TRUE)|grepl("AY",GISAID$pango_lineage,fixed=T),"LINEAGE1"] = paste0(sel_target_VOC,"+") # in LINEAGE1 we recode B.1.617.1,2&3 & AY.1&2&3 all as B.1.617+
 
 
 # ANALYSIS VOCs IN THE USA ####
 sel_countries = "USA"
 GISAID_sel = GISAID[GISAID$country %in% sel_countries,]
 GISAID_sel = GISAID_sel[GISAID_sel$date>=as.Date("2021-01-01"),]
-GISAID_sel = GISAID_sel[!is.na(GISAID_sel$LINEAGE1),]
+GISAID_sel = GISAID_sel[!is.na(GISAID_sel$LINEAGE2),]
+GISAID_sel = GISAID_sel[!GISAID_sel$LINEAGE2=="None",]
 GISAID_sel = GISAID_sel[GISAID_sel$country==GISAID_sel$country_exposure,] # we remove travel-related cases
-range(GISAID_sel$date) # "2021-01-01" "2021-07-20"
-nrow(GISAID_sel) # 501941
+range(GISAID_sel$date) # "2021-01-01" "2021-08-27"
+nrow(GISAID_sel) # 678457
 
-rowSums(table(GISAID_sel$LINEAGE1,GISAID_sel$country))
-            
-main_lineages = names(table(GISAID_sel$LINEAGE1))[100*table(GISAID_sel$LINEAGE1)/sum(table(GISAID_sel$LINEAGE1)) > 3]
+main_lineages = names(table(GISAID_sel$LINEAGE2))[100*table(GISAID_sel$LINEAGE2)/sum(table(GISAID_sel$LINEAGE2)) > 3]
 main_lineages
-# "B.1.1.7"  "B.1.2"    "B.1.427"  "B.1.429"  "B.1.526"  "B.1.617+" "P.1" 
+# [1] "B.1.1.7"                  "B.1.2"                    "B.1.429"                  "B.1.526"                  "Delta (B.1.617.2 & AY.X)"
+# P.1
 VOCs = c("B.1.617.1","B.1.617.2","B.1.617+","B.1.618","B.1.1.7","B.1.351","P.1","B.1.1.318","B.1.1.207","B.1.429",
-         "B.1.525","B.1.526","B.1.1.519","AY.1","AY.2","AY.3")
+         "B.1.525","B.1.526","B.1.1.519","AY.1","AY.2","AY.3","B.1.621")
 main_lineages = union(main_lineages, VOCs)
-GISAID_sel$LINEAGE1[!(GISAID_sel$LINEAGE1 %in% main_lineages)] = "other" # minority lineages & non-VOCs
 GISAID_sel$LINEAGE2[!(GISAID_sel$LINEAGE2 %in% main_lineages)] = "other" # minority lineages & non-VOCs
-remove1 = names(table(GISAID_sel$LINEAGE1))[table(GISAID_sel$LINEAGE1)/sum(table(GISAID_sel$LINEAGE1)) < 0.01]
-remove1 = remove1[!(remove1 %in% c("B.1.351","B.1.1.7","P.1","B.1.617+","B.1.1.519","AY.3"))]
 remove2 = names(table(GISAID_sel$LINEAGE2))[table(GISAID_sel$LINEAGE2)/sum(table(GISAID_sel$LINEAGE2)) < 0.01]
-remove2 = remove2[!(remove2 %in% c("B.1.351","B.1.1.7","P.1","B.1.617.2","B.1.1.519","AY.3"))]
-GISAID_sel$LINEAGE1[(GISAID_sel$LINEAGE1 %in% remove1)] = "other" # minority VOCs
+remove2 = remove2[!(remove2 %in% c("B.1.351","B.1.1.7","P.1","B.1.617.2","B.1.1.519","AY.3","B.1.621"))]
 GISAID_sel$LINEAGE2[(GISAID_sel$LINEAGE2 %in% remove2)] = "other" # minority VOCs
-table(GISAID_sel$LINEAGE1)
-# B.1.1.519   B.1.1.7     B.1.2   B.1.351   B.1.427   B.1.429   B.1.526  B.1.617+     other       P.1 
-# 13334    205676     60912      2449     17207     35145     46535     23760     75860     21063 
-GISAID_sel$LINEAGE1 = factor(GISAID_sel$LINEAGE1)
-GISAID_sel$LINEAGE1 = relevel(GISAID_sel$LINEAGE1, ref="B.1.1.7") # we code UK strain as the reference level
-levels(GISAID_sel$LINEAGE1)
-# "B.1.1.7"   "B.1.1.519" "B.1.2"     "B.1.351"   "B.1.427"   "B.1.429"   "B.1.526"   "B.1.617+"  "other"     "P.1"  
-levels_LINEAGE1 = c("B.1.1.7","B.1.2","B.1.1.519",
-                    "B.1.351","B.1.427","B.1.429","B.1.526",
-                    "P.1","B.1.617+","other")
-GISAID_sel$LINEAGE1 = factor(GISAID_sel$LINEAGE1, levels=levels_LINEAGE1)
-
+table(GISAID_sel$LINEAGE2)
+# B.1.1.519                  B.1.1.7                    B.1.2                  B.1.351                  B.1.429 
+# 13744                   208313                    63725                     2362                    37567 
+# B.1.526                  B.1.621 Delta (B.1.617.2 & AY.X)                    other                      P.1 
+# 26386                     1544                   199501                   102743                    22572 
 GISAID_sel$LINEAGE2 = factor(GISAID_sel$LINEAGE2)
-GISAID_sel$LINEAGE2 = relevel(GISAID_sel$LINEAGE2, ref="B.1.1.7") # we code UK strain as the reference level
+GISAID_sel$LINEAGE2 = relevel(GISAID_sel$LINEAGE2, ref=sel_target_VOC) # we code UK strain as the reference level
 levels(GISAID_sel$LINEAGE2)
-# "B.1.1.7"   "AY.1"      "B.1.1.519" "B.1.2"     "B.1.351"   "B.1.427"   "B.1.429"   "B.1.526"   "B.1.617.2" "other"     "P.1"    
+# [1] "Delta (B.1.617.2 & AY.X)" "B.1.1.519"                "B.1.1.7"                  "B.1.2"                    "B.1.351"                 
+# [6] "B.1.429"                  "B.1.526"                  "B.1.621"                  "other"                    "P.1"    
 levels_LINEAGE2 = c("B.1.1.7","B.1.2","B.1.1.519",
-                    "B.1.351","B.1.427","B.1.429","B.1.526",
-                    "P.1","B.1.617.2","AY.3","other")
+                    "B.1.351","B.1.429","B.1.526",
+                    "P.1","B.1.621",sel_target_VOC,"other")
 GISAID_sel$LINEAGE2 = factor(GISAID_sel$LINEAGE2, levels=levels_LINEAGE2)
 
 GISAID_sel$state  = GISAID_sel$division
@@ -104,7 +92,7 @@ GISAID_sel = GISAID_sel[!grepl("USA",GISAID_sel$state),] # remove data with unsp
 GISAID_sel$state[grepl("Washington",GISAID_sel$state)] = "Washington" # Washtington DC -> Washington
 sel_states <- levels_states <- c("Arkansas", "Arizona", "California", "Colorado", "Connecticut", "Florida", "Indiana", "Kansas", 
                "Massachusetts", "Missouri", "Mississippi", "Louisiana", "Nebraska", "Nevada", "New Jersey", "New York", "Oklahoma",
-               "Texas", "Utah", "Washington") # 20 states with most data for B.1.617.2 or increasing cases
+               "Texas", "Utah", "Puerto Rico") # 20 states with most data for Delta or increasing cases
 length(sel_states)
 GISAID_sel = GISAID_sel[GISAID_sel$state %in% sel_states,]
 
@@ -115,29 +103,20 @@ GISAID_sel$state = factor(GISAID_sel$state, levels=levels_states)
 levels(GISAID_sel$state)
 
 table(GISAID_sel$LINEAGE2)
-# B.1.1.7     B.1.2 B.1.1.519   B.1.351   B.1.427   B.1.429   B.1.526       P.1 B.1.617.2      AY.3     other 
-# 111607     33246      7882      1030     13875     27622     30094     13542     16829      1831     50591 
+# B.1.1.7                    B.1.2                B.1.1.519                  B.1.351                  B.1.429 
+# 104399                    33114                     7245                      666                    26107 
+# B.1.526                      P.1                  B.1.621 Delta (B.1.617.2 & AY.X)                    other 
+# 17329                    12240                      943                   134683                    66813 
 
-range(GISAID_sel$date) # "2020-01-01" "2021-07-20"
+range(GISAID_sel$date) # "2021-01-01" "2021-08-27"
 
 # aggregated data to make Muller plots of raw data
 # aggregated by week for selected variant lineages
-data_agbyweek1 = as.data.frame(table(GISAID_sel$floor_date, GISAID_sel$LINEAGE1))
-colnames(data_agbyweek1) = c("floor_date", "LINEAGE1", "count")
-data_agbyweek1_sum = aggregate(count ~ floor_date, data=data_agbyweek1, sum)
-data_agbyweek1$total = data_agbyweek1_sum$count[match(data_agbyweek1$floor_date, data_agbyweek1_sum$floor_date)]
-sum(data_agbyweek1[data_agbyweek1$LINEAGE1=="B.1.617+","total"]) == nrow(GISAID_sel) # correct
-data_agbyweek1$collection_date = as.Date(as.character(data_agbyweek1$floor_date))
-data_agbyweek1$LINEAGE1 = factor(data_agbyweek1$LINEAGE1, levels=levels_LINEAGE1)
-data_agbyweek1$collection_date_num = as.numeric(data_agbyweek1$collection_date)
-data_agbyweek1$prop = data_agbyweek1$count/data_agbyweek1$total
-data_agbyweek1$floor_date = NULL
-
 data_agbyweek2 = as.data.frame(table(GISAID_sel$floor_date, GISAID_sel$LINEAGE2))
 colnames(data_agbyweek2) = c("floor_date", "LINEAGE2", "count")
 data_agbyweek2_sum = aggregate(count ~ floor_date, data=data_agbyweek2, sum)
 data_agbyweek2$total = data_agbyweek2_sum$count[match(data_agbyweek2$floor_date, data_agbyweek2_sum$floor_date)]
-sum(data_agbyweek2[data_agbyweek2$LINEAGE2=="B.1.617.1","total"]) == nrow(GISAID_sel) # correct
+sum(data_agbyweek2[data_agbyweek2$LINEAGE2=="B.1.1.7","total"]) == nrow(GISAID_sel) # correct
 data_agbyweek2$collection_date = as.Date(as.character(data_agbyweek2$floor_date))
 data_agbyweek2$LINEAGE2 = factor(data_agbyweek2$LINEAGE2, levels=levels_LINEAGE2)
 data_agbyweek2$collection_date_num = as.numeric(data_agbyweek2$collection_date)
@@ -146,26 +125,12 @@ data_agbyweek2$floor_date = NULL
 
 
 # aggregated by week and state for selected variant lineages
-data_agbyweekregion1 = as.data.frame(table(GISAID_sel$floor_date, GISAID_sel$state, GISAID_sel$LINEAGE1))
-colnames(data_agbyweekregion1) = c("floor_date", "division", "LINEAGE1", "count")
-data_agbyweekregion1_sum = aggregate(count ~ floor_date + division, data=data_agbyweekregion1, sum)
-data_agbyweekregion1$total = data_agbyweekregion1_sum$count[match(interaction(data_agbyweekregion1$floor_date,data_agbyweekregion1$division), 
-                                                                  interaction(data_agbyweekregion1_sum$floor_date,data_agbyweekregion1_sum$division))]
-sum(data_agbyweekregion1[data_agbyweekregion1$LINEAGE1=="B.1.617+","total"]) == nrow(GISAID_sel) # correct
-data_agbyweekregion1$collection_date = as.Date(as.character(data_agbyweekregion1$floor_date))
-data_agbyweekregion1$LINEAGE1 = factor(data_agbyweekregion1$LINEAGE1, levels=levels_LINEAGE1)
-data_agbyweekregion1$division = factor(data_agbyweekregion1$division, levels=levels_states)
-data_agbyweekregion1$collection_date_num = as.numeric(data_agbyweekregion1$collection_date)
-data_agbyweekregion1$prop = data_agbyweekregion1$count/data_agbyweekregion1$total
-data_agbyweekregion1 = data_agbyweekregion1[data_agbyweekregion1$total!=0,]
-data_agbyweekregion1$floor_date = NULL
-
 data_agbyweekregion2 = as.data.frame(table(GISAID_sel$floor_date, GISAID_sel$state, GISAID_sel$LINEAGE2))
 colnames(data_agbyweekregion2) = c("floor_date", "division", "LINEAGE2", "count")
 data_agbyweekregion2_sum = aggregate(count ~ floor_date + division, data=data_agbyweekregion2, sum)
 data_agbyweekregion2$total = data_agbyweekregion2_sum$count[match(interaction(data_agbyweekregion2$floor_date,data_agbyweekregion2$division), 
                                                                   interaction(data_agbyweekregion2_sum$floor_date,data_agbyweekregion2_sum$division))]
-sum(data_agbyweekregion2[data_agbyweekregion2$LINEAGE2=="B.1.617.1","total"]) == nrow(GISAID_sel) # correct
+sum(data_agbyweekregion2[data_agbyweekregion2$LINEAGE2=="B.1.1.7","total"]) == nrow(GISAID_sel) # correct
 data_agbyweekregion2$collection_date = as.Date(as.character(data_agbyweekregion2$floor_date))
 data_agbyweekregion2$LINEAGE2 = factor(data_agbyweekregion2$LINEAGE2, levels=levels_LINEAGE2)
 data_agbyweekregion2$division = factor(data_agbyweekregion2$division, levels=levels_states)
@@ -177,25 +142,26 @@ data_agbyweekregion2$floor_date = NULL
 
 # MULLER PLOT (RAW DATA)
 library(scales)
-n1 = length(levels(GISAID_sel$LINEAGE1))
-lineage_cols1 = hcl(h = seq(15, 320, length = n1), l = 65, c = 200)
-lineage_cols1[which(levels(GISAID_sel$LINEAGE1)=="B.1.617+")] = "magenta"
-lineage_cols1[which(levels(GISAID_sel$LINEAGE1)=="other")] = "grey75"
-
 n2 = length(levels(GISAID_sel$LINEAGE2))
 lineage_cols2 = hcl(h = seq(15, 320, length = n2), l = 65, c = 200)
-lineage_cols2[which(levels(GISAID_sel$LINEAGE2)=="B.1.617.1")] = muted("magenta")
-lineage_cols2[which(levels(GISAID_sel$LINEAGE2)=="B.1.617.2")] = "magenta"
-lineage_cols2[which(levels(GISAID_sel$LINEAGE2)=="AY.3")] = muted("magenta")
-lineage_cols2[which(levels(GISAID_sel$LINEAGE2)=="other")] = "grey75"
+lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="B.1.1.7")] = "#0085FF"
+lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="B.1.351")] = "#9A9D00"
+lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="B.1.177+")] = "grey55"
+lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="P.1")] = "cyan3"
+lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="B.1.617.1")] = muted("magenta")
+lineage_cols2[which(levels(GISAID_sel$LINEAGE)==sel_target_VOC)] = "magenta"
+lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="B.1.621")] = "red"
+lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="other")] = "grey75"
+
+
 
 muller_sel_raw2 = ggplot(data=data_agbyweek2, aes(x=collection_date, y=count, group=LINEAGE2)) + 
   # facet_wrap(~ STATE, ncol=1) +
   # geom_col(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE1), width=1, position="fill") +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE2, group=LINEAGE2), position="fill") +
   scale_fill_manual("", values=lineage_cols2) +
-  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01")),
-                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01"))),1,1),
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01"))),1,1),
                      limits=as.Date(c("2021-01-01",NA)), expand=c(0,0)) +
   # guides(color = guide_legend(reverse=F, nrow=2, byrow=T), fill = guide_legend(reverse=F, nrow=2, byrow=T)) +
   theme_hc() +
@@ -217,8 +183,8 @@ muller_usabystate_raw2 = ggplot(data=data_agbyweekregion2, aes(x=collection_date
   # geom_col(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE1), width=1, position="fill") +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE2, group=LINEAGE2), position="fill") +
   scale_fill_manual("", values=lineage_cols2) +
-  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
-                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01"))),1,1),
                      limits=as.Date(c("2021-01-01",NA)), expand=c(0,0)) +
   # guides(color = guide_legend(reverse=F, nrow=2, byrow=T), fill = guide_legend(reverse=F, nrow=2, byrow=T)) +
   theme_hc() +
@@ -237,7 +203,7 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\usa_muller plots by state_raw data.pn
 
 
 # multinomial fits
-data_agbyweekregion2$LINEAGE2 = relevel(data_agbyweekregion2$LINEAGE2, ref="B.1.617.2")
+data_agbyweekregion2$LINEAGE2 = relevel(data_agbyweekregion2$LINEAGE2, ref=sel_target_VOC)
 data_agbyweekregion2$DATE_NUM = as.numeric(data_agbyweekregion2$collection_date)
 data_agbyweekregion2$STATE = data_agbyweekregion2$division
 
@@ -253,7 +219,7 @@ fit6_usa_multi = nnet::multinom(LINEAGE2 ~ ns(DATE_NUM, df=3)*STATE, weights=cou
 BIC(fit1_usa_multi, fit2_usa_multi, fit3_usa_multi, fit4_usa_multi, fit5_usa_multi, fit6_usa_multi) 
 # fit4_usa_multi fits best (lowest BIC)
 
-# growth rate advantage compared to Delta / B.1.617.2 (difference in growth rate per day) 
+# growth rate advantage compared to Delta (difference in growth rate per day) 
 emtrusa = emtrends(fit4_usa_multi, trt.vs.ctrl ~ LINEAGE2,  
                    var="DATE_NUM",  mode="latent",
                    at=list(DATE_NUM=max(GISAID_sel$DATE_NUM)))
@@ -261,19 +227,18 @@ delta_r_usa = data.frame(confint(emtrusa,
                                  adjust="none", df=NA)$contrasts, 
                          p.value=as.data.frame(emtrusa$contrasts)$p.value)
 delta_r_usa
-#                 contrast     estimate          SE df   asymp.LCL   asymp.UCL      p.value
-# 1    B.1.1.7 - B.1.617.2 -0.096669504 0.002064927 NA -0.10071669 -0.09262232 4.028523e-10
-# 2      B.1.2 - B.1.617.2 -0.183434898 0.005675645 NA -0.19455896 -0.17231084 4.028523e-10
-# 3  B.1.1.519 - B.1.617.2 -0.157022778 0.005699977 NA -0.16819453 -0.14585103 4.028523e-10
-# 4    B.1.351 - B.1.617.2 -0.147301754 0.010753115 NA -0.16837747 -0.12622604 4.028523e-10
-# 5    B.1.427 - B.1.617.2 -0.147876149 0.010472476 NA -0.16840182 -0.12735047 4.028523e-10
-# 6    B.1.429 - B.1.617.2 -0.190899176 0.005453771 NA -0.20158837 -0.18020998 4.028523e-10
-# 7    B.1.526 - B.1.617.2 -0.113493862 0.003449500 NA -0.12025476 -0.10673297 4.028523e-10
-# 8        P.1 - B.1.617.2 -0.084216954 0.002779842 NA -0.08966535 -0.07876856 4.028523e-10
-# 9       AY.3 - B.1.617.2  0.005911306 0.011670138 NA -0.01696175  0.02878436 9.880398e-01
-# 10     other - B.1.617.2 -0.072329362 0.003119414 NA -0.07844330 -0.06621542 4.028523e-10
+#                               contrast    estimate          SE df   asymp.LCL   asymp.UCL      p.value
+# 1   B.1.1.7 - Delta (B.1.617.2 & AY.X) -0.10281140 0.001798713 NA -0.10633682 -0.09928599 3.201474e-10
+# 2     B.1.2 - Delta (B.1.617.2 & AY.X) -0.19192801 0.008956736 NA -0.20948289 -0.17437313 3.201474e-10
+# 3 B.1.1.519 - Delta (B.1.617.2 & AY.X) -0.18090539 0.008585867 NA -0.19773338 -0.16407740 3.201474e-10
+# 4   B.1.351 - Delta (B.1.617.2 & AY.X) -0.48146890 0.016940857 NA -0.51467237 -0.44826543 3.201474e-10
+# 5   B.1.429 - Delta (B.1.617.2 & AY.X) -0.20452174 0.007589733 NA -0.21939735 -0.18964614 3.201474e-10
+# 6   B.1.526 - Delta (B.1.617.2 & AY.X) -0.13262611 0.005731685 NA -0.14386001 -0.12139222 3.201474e-10
+# 7       P.1 - Delta (B.1.617.2 & AY.X) -0.08227431 0.002395686 NA -0.08696977 -0.07757885 3.201474e-10
+# 8   B.1.621 - Delta (B.1.617.2 & AY.X) -0.15387160 0.007445594 NA -0.16846469 -0.13927850 3.201474e-10
+# 9     other - Delta (B.1.617.2 & AY.X) -0.04137965 0.001697536 NA -0.04470676 -0.03805254 3.201474e-10
 
-# growth rate advantage compared to Delta / B.1.617.2 (difference in growth rate per day) with simple model fit1_usa_multi
+# growth rate advantage compared to Delta (difference in growth rate per day) with simple model fit1_usa_multi
 emtrusa1 = emtrends(fit1_usa_multi, trt.vs.ctrl ~ LINEAGE2,  
                    var="DATE_NUM",  mode="latent",
                    at=list(DATE_NUM=max(GISAID_sel$DATE_NUM)))
@@ -281,43 +246,28 @@ delta_r_usa1 = data.frame(confint(emtrusa1,
                                  adjust="none")$contrasts, 
                          p.value=as.data.frame(emtrusa1$contrasts, adjust="none")$p.value)
 delta_r_usa1
-#                 contrast    estimate           SE  df    lower.CL    upper.CL       p.value
-# 1    B.1.1.7 - B.1.617.2 -0.08607682 0.0006007248 210 -0.08726104 -0.08489260 2.028816e-211
-# 2      B.1.2 - B.1.617.2 -0.15120206 0.0006649525 210 -0.15251289 -0.14989122 2.939653e-253
-# 3  B.1.1.519 - B.1.617.2 -0.11735341 0.0007002093 210 -0.11873375 -0.11597307 1.377341e-225
-# 4    B.1.351 - B.1.617.2 -0.09032868 0.0011942114 210 -0.09268286 -0.08797451 2.517323e-154
-# 5    B.1.427 - B.1.617.2 -0.12948136 0.0006811168 210 -0.13082406 -0.12813866 5.289104e-237
-# 6    B.1.429 - B.1.617.2 -0.13015868 0.0006545719 210 -0.13144905 -0.12886830 4.411794e-241
-# 7    B.1.526 - B.1.617.2 -0.09226210 0.0006382735 210 -0.09352034 -0.09100385 3.280951e-212
-# 8        P.1 - B.1.617.2 -0.06701099 0.0006435433 210 -0.06827962 -0.06574236 1.031271e-182
-# 9       AY.3 - B.1.617.2  0.02237076 0.0019395857 210  0.01854720  0.02619431  3.683296e-24
-# 10     other - B.1.617.2 -0.13573484 0.0006411076 210 -0.13699867 -0.13447101 8.943659e-247
+#                               contrast    estimate           SE  df    lower.CL    upper.CL       p.value
+# 1   B.1.1.7 - Delta (B.1.617.2 & AY.X) -0.09088555 0.0003910610 189 -0.09165696 -0.09011415 3.348485e-234
+# 2     B.1.2 - Delta (B.1.617.2 & AY.X) -0.15022803 0.0004782972 189 -0.15117152 -0.14928455 7.372213e-259
+# 3 B.1.1.519 - Delta (B.1.617.2 & AY.X) -0.11932578 0.0005230205 189 -0.12035749 -0.11829407 1.091588e-232
+# 4   B.1.351 - Delta (B.1.617.2 & AY.X) -0.09432674 0.0011581385 189 -0.09661128 -0.09204220 3.860114e-149
+# 5   B.1.429 - Delta (B.1.617.2 & AY.X) -0.13217142 0.0004662054 189 -0.13309106 -0.13125179 1.815492e-250
+# 6   B.1.526 - Delta (B.1.617.2 & AY.X) -0.09813818 0.0004650138 189 -0.09905546 -0.09722090 2.567799e-226
+# 7       P.1 - Delta (B.1.617.2 & AY.X) -0.07319760 0.0004189045 189 -0.07402393 -0.07237127 6.709327e-211
+# 8   B.1.621 - Delta (B.1.617.2 & AY.X) -0.03580435 0.0010834037 189 -0.03794147 -0.03366724  1.795290e-80
+# 9     other - Delta (B.1.617.2 & AY.X) -0.13021020 0.0004359496 189 -0.13107015 -0.12935025 9.725817e-255
 
-# pairwise growth rates advantages for simple multinomial model fit1_usa_multi
-emtrusa_pairw1 = emtrends(fit1_usa_multi, pairwise ~ LINEAGE2,  
-                    var="DATE_NUM",  mode="latent",
-                    at=list(DATE_NUM=max(GISAID_sel$DATE_NUM)))
-delta_r_pairw_usa1 = data.frame(confint(emtrusa_pairw1, 
-                                  adjust="none")$contrasts, 
-                          p.value=as.data.frame(emtrusa_pairw1$contrasts, adjust="none")$p.value)
-delta_r_pairw_usa1[grepl("\\<B.1.1.7\\>|\\<B.1.617.2\\>|\\<B.1.351\\>|\\<P.1\\>|^AY.3\\>", delta_r_pairw_usa1$contrast)&
-                   !grepl("\\<B.1.2\\>|\\<B.1.1.519\\>|\\<B.1.351\\>|\\<B.1.427\\>|^B.1.429\\>|^B.1.526\\>", delta_r_pairw_usa1$contrast)
-                   ,]
-#               contrast     estimate           SE  df     lower.CL     upper.CL       p.value
-# 1  B.1.617.2 - B.1.1.7  0.086076821 0.0006007248 210  0.084892598  0.087261045 2.028816e-211
-# 6  B.1.617.2 - B.1.429  0.130158675 0.0006545719 210  0.128868302  0.131449049 4.411794e-241
-# 7  B.1.617.2 - B.1.526  0.092262095 0.0006382735 210  0.091003851  0.093520340 3.280951e-212
-# 8      B.1.617.2 - P.1  0.067010991 0.0006435433 210  0.065742358  0.068279624 1.031271e-182
-# 9     B.1.617.2 - AY.3 -0.022370757 0.0019395857 210 -0.026194310 -0.018547204  3.683296e-24
-# 10   B.1.617.2 - other  0.135734841 0.0006411076 210  0.134471010  0.136998672 8.943659e-247
-# 15   B.1.1.7 - B.1.429  0.044081854 0.0002615028 210  0.043566347  0.044597361 4.117339e-226
-# 16   B.1.1.7 - B.1.526  0.006185274 0.0002413189 210  0.005709556  0.006660992  1.390999e-66
-# 17       B.1.1.7 - P.1 -0.019065830 0.0003306657 210 -0.019717680 -0.018413981 1.026625e-130
-# 18      B.1.1.7 - AY.3 -0.108447578 0.0019642643 210 -0.112319781 -0.104575375 5.313215e-127
-# 19     B.1.1.7 - other  0.049658019 0.0002268189 210  0.049210886  0.050105153 8.124731e-250
-# 53          P.1 - AY.3 -0.089381748 0.0019779236 210 -0.093280878 -0.085482618 3.736995e-110
-# 54         P.1 - other  0.068723850 0.0003889606 210  0.067957082  0.069490617 2.273356e-230
-# 55        AY.3 - other  0.158105598 0.0019770268 210  0.154208236  0.162002960 3.095347e-159
+# # pairwise growth rates advantages for simple multinomial model fit1_usa_multi
+# emtrusa_pairw1 = emtrends(fit1_usa_multi, pairwise ~ LINEAGE2,  
+#                     var="DATE_NUM",  mode="latent",
+#                     at=list(DATE_NUM=max(GISAID_sel$DATE_NUM)))
+# delta_r_pairw_usa1 = data.frame(confint(emtrusa_pairw1, 
+#                                   adjust="none")$contrasts, 
+#                           p.value=as.data.frame(emtrusa_pairw1$contrasts, adjust="none")$p.value)
+# delta_r_pairw_usa1[grepl("\\<B.1.1.7\\>|\\<B.1.617.2\\>|\\<B.1.351\\>|\\<P.1\\>|^AY.3\\>", delta_r_pairw_usa1$contrast)&
+#                    !grepl("\\<B.1.2\\>|\\<B.1.1.519\\>|\\<B.1.351\\>|\\<B.1.427\\>|^B.1.429\\>|^B.1.526\\>", delta_r_pairw_usa1$contrast)
+#                    ,]
+
 
 
 
@@ -326,23 +276,22 @@ multinom_preds_today_avg = data.frame(emmeans(fit4_usa_multi, ~ LINEAGE2|1,
                                               at=list(DATE_NUM=today_num), 
                                               mode="prob", df=NA))
 multinom_preds_today_avg
-# LINEAGE2         prob           SE df     asymp.LCL    asymp.UCL
-# 1  B.1.617.2 7.311699e-01 8.627455e-02 NA  5.620749e-01 9.002649e-01
-# 2    B.1.1.7 1.475671e-02 3.482241e-03 NA  7.931643e-03 2.158178e-02
-# 3      B.1.2 5.724127e-07 5.459968e-07 NA -4.977213e-07 1.642547e-06
-# 4  B.1.1.519 1.981487e-05 6.433251e-06 NA  7.205935e-06 3.242381e-05
-# 5    B.1.351 4.114541e-03 6.733128e-03 NA -9.082148e-03 1.731123e-02
-# 6    B.1.427 1.313007e-05 8.797265e-06 NA -4.112258e-06 3.037239e-05
-# 7    B.1.429 9.436433e-06 2.651604e-06 NA  4.239385e-06 1.463348e-05
-# 8    B.1.526 8.475557e-04 2.652055e-04 NA  3.277625e-04 1.367349e-03
-# 9        P.1 9.428002e-03 2.178736e-03 NA  5.157757e-03 1.369825e-02
-# 10      AY.3 2.349791e-01 9.012996e-02 NA  5.832759e-02 4.116305e-01
-# 11     other 4.661319e-03 6.839249e-04 NA  3.320851e-03 6.001788e-03
+#                    LINEAGE2         prob           SE df     asymp.LCL    asymp.UCL
+# 1  Delta (B.1.617.2 & AY.X) 9.954898e-01 1.030055e-03 NA  9.934709e-01 9.975086e-01
+# 2                   B.1.1.7 2.072669e-04 3.641782e-05 NA  1.358893e-04 2.786445e-04
+# 3                     B.1.2 2.840249e-08 6.489041e-08 NA -9.878037e-08 1.555854e-07
+# 4                 B.1.1.519 4.146986e-07 1.666438e-06 NA -2.851459e-06 3.680857e-06
+# 5                   B.1.351 2.347053e-06 1.807046e-06 NA -1.194693e-06 5.888799e-06
+# 6                   B.1.429 4.118771e-07 1.248523e-06 NA -2.035183e-06 2.858937e-06
+# 7                   B.1.526 5.829119e-06 4.650586e-06 NA -3.285862e-06 1.494410e-05
+# 8                       P.1 4.209269e-04 1.889681e-04 NA  5.055617e-05 7.912977e-04
+# 9                   B.1.621 9.550352e-04 3.309310e-04 NA  3.064223e-04 1.603648e-03
+# 10                    other 2.917963e-03 9.039799e-04 NA  1.146195e-03 4.689731e-03
 
-# % non-B.1.1.7
+# % non-Delta
 colSums(multinom_preds_today_avg[-1, c("prob","asymp.LCL","asymp.UCL")])
-#      prob asymp.LCL asymp.UCL 
-# 0.26883014 0.06599029 0.47166999 
+#            prob asymp.LCL asymp.UCL 
+# 0.004510223 0.001629596 0.007390849 
 
 # fitted prop of delta by state
 lineages_bystate = data.frame(emmeans(fit4_usa_multi,
@@ -351,87 +300,47 @@ lineages_bystate = data.frame(emmeans(fit4_usa_multi,
                    at=list(DATE_NUM=today_num),  
                    mode="prob", df=NA))
 lineages_bystate$DATE = as.Date(lineages_bystate$DATE_NUM, origin="1970-01-01")
-delta_bystate = lineages_bystate[lineages_bystate$LINEAGE2=="B.1.617.2",]
+delta_bystate = lineages_bystate[lineages_bystate$LINEAGE2==sel_target_VOC,]
 deltaplusAY3_bystate = delta_bystate
 delta_bystate = delta_bystate[order(delta_bystate$prob, decreasing=T),]
 delta_bystate
-# LINEAGE2 DATE_NUM         STATE      prob          SE df   asymp.LCL asymp.UCL       DATE
-# 1   B.1.617.2    18837      Arkansas 0.9725283 0.006355744 NA  0.96007131 0.9849854 2021-07-29
-# 177 B.1.617.2    18837      Oklahoma 0.9617354 0.036209243 NA  0.89076663 1.0327043 2021-07-29
-# 56  B.1.617.2    18837       Florida 0.9615188 0.010672231 NA  0.94060161 0.9824360 2021-07-29
-# 188 B.1.617.2    18837         Texas 0.9550654 0.006794461 NA  0.94174849 0.9683823 2021-07-29
-# 210 B.1.617.2    18837    Washington 0.9366521 0.007997447 NA  0.92097743 0.9523268 2021-07-29
-# 12  B.1.617.2    18837       Arizona 0.9121968 0.017661853 NA  0.87758021 0.9468134 2021-07-29
-# 23  B.1.617.2    18837    California 0.8920910 0.016742726 NA  0.85927582 0.9249061 2021-07-29
-# 34  B.1.617.2    18837      Colorado 0.8783566 0.079948557 NA  0.72166036 1.0350529 2021-07-29
-# 155 B.1.617.2    18837    New Jersey 0.8714939 0.065518314 NA  0.74308036 0.9999074 2021-07-29
-# 78  B.1.617.2    18837        Kansas 0.7884555 0.028982193 NA  0.73165146 0.8452596 2021-07-29
-# 67  B.1.617.2    18837       Indiana 0.7639072 0.076466516 NA  0.61403563 0.9137789 2021-07-29
-# 122 B.1.617.2    18837     Louisiana 0.7605992 0.100768666 NA  0.56309628 0.9581022 2021-07-29
-# 100 B.1.617.2    18837      Missouri 0.6231711 0.069413129 NA  0.48712390 0.7592184 2021-07-29
-# 133 B.1.617.2    18837      Nebraska 0.5921500 0.052928320 NA  0.48841238 0.6958876 2021-07-29
-# 45  B.1.617.2    18837   Connecticut 0.5866333 0.233630625 NA  0.12872571 1.0445409 2021-07-29
-# 166 B.1.617.2    18837      New York 0.5584603 0.102746525 NA  0.35708084 0.7598398 2021-07-29
-# 199 B.1.617.2    18837          Utah 0.4890154 1.622069819 NA -2.69018307 3.6682138 2021-07-29
-# 144 B.1.617.2    18837        Nevada 0.4777433 0.278182943 NA -0.06748527 1.0229718 2021-07-29
-# 111 B.1.617.2    18837   Mississippi 0.3795860 0.074545092 NA  0.23348034 0.5256917 2021-07-29
-# 89  B.1.617.2    18837 Massachusetts 0.2620373 0.376413619 NA -0.47571980 0.9997945 2021-07-29
+#                     LINEAGE2 DATE_NUM         STATE      prob           SE df asymp.LCL asymp.UCL       DATE
+# 111 Delta (B.1.617.2 & AY.X)    18877     Louisiana 0.9998712 0.0000676684 NA 0.9997385 1.0000038 2021-09-07
+# 121 Delta (B.1.617.2 & AY.X)    18877      Nebraska 0.9995922 0.0002316194 NA 0.9991383 1.0000462 2021-09-07
+# 71  Delta (B.1.617.2 & AY.X)    18877        Kansas 0.9991467 0.0004674791 NA 0.9982304 1.0000629 2021-09-07
+# 51  Delta (B.1.617.2 & AY.X)    18877       Florida 0.9987323 0.0002528331 NA 0.9982368 0.9992279 2021-09-07
+# 21  Delta (B.1.617.2 & AY.X)    18877    California 0.9986610 0.0001743451 NA 0.9983193 0.9990027 2021-09-07
+# 81  Delta (B.1.617.2 & AY.X)    18877 Massachusetts 0.9986015 0.0002660218 NA 0.9980801 0.9991229 2021-09-07
+# 1   Delta (B.1.617.2 & AY.X)    18877      Arkansas 0.9985756 0.0005031932 NA 0.9975893 0.9995618 2021-09-07
+# 131 Delta (B.1.617.2 & AY.X)    18877        Nevada 0.9982874 0.0006419429 NA 0.9970292 0.9995456 2021-09-07
+# 61  Delta (B.1.617.2 & AY.X)    18877       Indiana 0.9981395 0.0008425738 NA 0.9964881 0.9997909 2021-09-07
+# 41  Delta (B.1.617.2 & AY.X)    18877   Connecticut 0.9979875 0.0008114996 NA 0.9963970 0.9995781 2021-09-07
+# 151 Delta (B.1.617.2 & AY.X)    18877      New York 0.9974086 0.0004838172 NA 0.9964603 0.9983568 2021-09-07
+# 101 Delta (B.1.617.2 & AY.X)    18877   Mississippi 0.9971460 0.0014881653 NA 0.9942292 1.0000627 2021-09-07
+# 171 Delta (B.1.617.2 & AY.X)    18877         Texas 0.9966140 0.0005301810 NA 0.9955749 0.9976531 2021-09-07
+# 141 Delta (B.1.617.2 & AY.X)    18877    New Jersey 0.9960966 0.0012753263 NA 0.9935970 0.9985962 2021-09-07
+# 181 Delta (B.1.617.2 & AY.X)    18877          Utah 0.9957981 0.0011178364 NA 0.9936072 0.9979890 2021-09-07
+# 11  Delta (B.1.617.2 & AY.X)    18877       Arizona 0.9955032 0.0012323561 NA 0.9930878 0.9979186 2021-09-07
+# 91  Delta (B.1.617.2 & AY.X)    18877      Missouri 0.9917820 0.0045478568 NA 0.9828683 1.0006956 2021-09-07
+# 31  Delta (B.1.617.2 & AY.X)    18877      Colorado 0.9892757 0.0063308020 NA 0.9768675 1.0016838 2021-09-07
+# 191 Delta (B.1.617.2 & AY.X)    18877   Puerto Rico 0.9823949 0.0118560008 NA 0.9591576 1.0056323 2021-09-07
+# 161 Delta (B.1.617.2 & AY.X)    18877      Oklahoma 0.9801815 0.0143701588 NA 0.9520165 1.0083465 2021-09-07
 
-AY3_bystate = lineages_bystate[lineages_bystate$LINEAGE2=="AY.3",]
-deltaplusAY3_bystate$prob = deltaplusAY3_bystate$prob + AY3_bystate$prob
-AY3_bystate = AY3_bystate[order(AY3_bystate$prob, decreasing=T),]
-AY3_bystate
-# LINEAGE2 DATE_NUM         STATE        prob          SE df    asymp.LCL  asymp.UCL       DATE
-# 120     AY.3    18837   Mississippi 0.611325715 0.074754318 NA  0.464809945 0.75784149 2021-07-29
-# 98      AY.3    18837 Massachusetts 0.594533640 0.573260388 NA -0.529036074 1.71810335 2021-07-29
-# 153     AY.3    18837        Nevada 0.513241264 0.283411066 NA -0.042234218 1.06871675 2021-07-29
-# 208     AY.3    18837          Utah 0.504525390 1.643488779 NA -2.716653426 3.72570421 2021-07-29
-# 175     AY.3    18837      New York 0.410816471 0.107676179 NA  0.199775039 0.62185790 2021-07-29
-# 142     AY.3    18837      Nebraska 0.389637202 0.053581391 NA  0.284619605 0.49465480 2021-07-29
-# 109     AY.3    18837      Missouri 0.374474353 0.069748563 NA  0.237769681 0.51117903 2021-07-29
-# 54      AY.3    18837   Connecticut 0.357711192 0.254175476 NA -0.140463587 0.85588597 2021-07-29
-# 76      AY.3    18837       Indiana 0.226272666 0.077304130 NA  0.074759355 0.37778598 2021-07-29
-# 131     AY.3    18837     Louisiana 0.223848427 0.101849978 NA  0.024226138 0.42347072 2021-07-29
-# 87      AY.3    18837        Kansas 0.200869317 0.029091290 NA  0.143851435 0.25788720 2021-07-29
-# 43      AY.3    18837      Colorado 0.106321455 0.081172299 NA -0.052773328 0.26541624 2021-07-29
-# 164     AY.3    18837    New Jersey 0.095827797 0.067010260 NA -0.035509899 0.22716549 2021-07-29
-# 32      AY.3    18837    California 0.043512990 0.016862789 NA  0.010462530 0.07656345 2021-07-29
-# 65      AY.3    18837       Florida 0.015969891 0.010047128 NA -0.003722117 0.03566190 2021-07-29
-# 10      AY.3    18837      Arkansas 0.010384319 0.004470036 NA  0.001623209 0.01914543 2021-07-29
-# 197     AY.3    18837         Texas 0.006199843 0.002625712 NA  0.001053542 0.01134615 2021-07-29
-# 186     AY.3    18837      Oklahoma 0.005692452 0.006932587 NA -0.007895168 0.01928007 2021-07-29
-# 219     AY.3    18837    Washington 0.005550881 0.003521063 NA -0.001350276 0.01245204 2021-07-29
-# 21      AY.3    18837       Arizona 0.002865894 0.005214746 NA -0.007354820 0.01308661 2021-07-29
+# AY3_bystate = lineages_bystate[lineages_bystate$LINEAGE2=="AY.3",]
+# deltaplusAY3_bystate$prob = deltaplusAY3_bystate$prob + AY3_bystate$prob
+# AY3_bystate = AY3_bystate[order(AY3_bystate$prob, decreasing=T),]
+# AY3_bystate
+# 
+# 
+# deltaplusAY3_bystate = deltaplusAY3_bystate[order(deltaplusAY3_bystate$prob, decreasing=T),]
+# deltaplusAY3_bystate
 
-deltaplusAY3_bystate = deltaplusAY3_bystate[order(deltaplusAY3_bystate$prob, decreasing=T),]
-deltaplusAY3_bystate
-# LINEAGE2 DATE_NUM         STATE      prob          SE df   asymp.LCL asymp.UCL       DATE
-# 1   B.1.617.2    18837      Arkansas 0.9725283 0.006355744 NA  0.96007131 0.9849854 2021-07-29
-# 12  B.1.617.2    18837       Arizona 0.9121968 0.017661853 NA  0.87758021 0.9468134 2021-07-29
-# 23  B.1.617.2    18837    California 0.8920910 0.016742726 NA  0.85927582 0.9249061 2021-07-29
-# 34  B.1.617.2    18837      Colorado 0.8783566 0.079948557 NA  0.72166036 1.0350529 2021-07-29
-# 45  B.1.617.2    18837   Connecticut 0.5866333 0.233630625 NA  0.12872571 1.0445409 2021-07-29
-# 56  B.1.617.2    18837       Florida 0.9615188 0.010672231 NA  0.94060161 0.9824360 2021-07-29
-# 67  B.1.617.2    18837       Indiana 0.7639072 0.076466516 NA  0.61403563 0.9137789 2021-07-29
-# 78  B.1.617.2    18837        Kansas 0.7884555 0.028982193 NA  0.73165146 0.8452596 2021-07-29
-# 89  B.1.617.2    18837 Massachusetts 0.2620373 0.376413619 NA -0.47571980 0.9997945 2021-07-29
-# 100 B.1.617.2    18837      Missouri 0.6231711 0.069413129 NA  0.48712390 0.7592184 2021-07-29
-# 111 B.1.617.2    18837   Mississippi 0.3795860 0.074545092 NA  0.23348034 0.5256917 2021-07-29
-# 122 B.1.617.2    18837     Louisiana 0.7605992 0.100768666 NA  0.56309628 0.9581022 2021-07-29
-# 133 B.1.617.2    18837      Nebraska 0.5921500 0.052928320 NA  0.48841238 0.6958876 2021-07-29
-# 144 B.1.617.2    18837        Nevada 0.4777433 0.278182943 NA -0.06748527 1.0229718 2021-07-29
-# 155 B.1.617.2    18837    New Jersey 0.8714939 0.065518314 NA  0.74308036 0.9999074 2021-07-29
-# 166 B.1.617.2    18837      New York 0.5584603 0.102746525 NA  0.35708084 0.7598398 2021-07-29
-# 177 B.1.617.2    18837      Oklahoma 0.9617354 0.036209243 NA  0.89076663 1.0327043 2021-07-29
-# 188 B.1.617.2    18837         Texas 0.9550654 0.006794461 NA  0.94174849 0.9683823 2021-07-29
-# 199 B.1.617.2    18837          Utah 0.4890154 1.622069819 NA -2.69018307 3.6682138 2021-07-29
-# 210 B.1.617.2    18837    Washington 0.9366521 0.007997447 NA  0.92097743 0.9523268 2021-07-29
 
 # PLOT MULTINOMIAL FIT
 
 # extrapolate = 30
 date.from = as.numeric(as.Date("2021-01-01"))
-date.to = as.numeric(as.Date("2021-08-14")) # max(GISAID_sel$DATE_NUM)+extrapolate
+date.to = as.numeric(as.Date("2021-09-21")) # max(GISAID_sel$DATE_NUM)+extrapolate
 
 # multinomial model predictions (fastest, but no confidence intervals)
 predgrid = expand.grid(list(DATE_NUM=seq(date.from, date.to), STATE=levels_states))
@@ -455,8 +364,8 @@ muller_usa_mfit_bystate = ggplot(data=fit_usa_multi_preds_bystate,
   scale_fill_manual("", values=lineage_cols2) +
   annotate("rect", xmin=max(GISAID_sel$DATE_NUM)+1, 
            xmax=as.Date(date.to, origin="1970-01-01"), ymin=0, ymax=1, alpha=0.4, fill="white") + # extrapolated part
-  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01")),
-                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01"))),1,1),
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01"))),1,1),
                      limits=as.Date(c("2021-01-01",NA)), expand=c(0,0)) +
   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
   theme_hc() + theme(legend.position="right", 
@@ -474,8 +383,8 @@ muller_usabystate_raw2 = ggplot(data=data_agbyweekregion2, aes(x=collection_date
   # geom_col(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE1), width=1, position="fill") +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE2, group=LINEAGE2), position="fill") +
   scale_fill_manual("", values=lineage_cols2) +
-  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01")),
-                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01"))),1,1),
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01"))),1,1),
                      limits=as.Date(c("2021-01-01",NA)), expand=c(0,0)) +
   # guides(color = guide_legend(reverse=F, nrow=2, byrow=T), fill = guide_legend(reverse=F, nrow=2, byrow=T)) +
   theme_hc() +
@@ -545,8 +454,8 @@ plot_usa_mfit_logit = qplot(data=fit_usa_multi_preds2, x=collection_date, y=prob
   ylab("Share (%)") +
   theme_hc() + xlab("") +
   ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN THE USA\n(GISAID data, multinomial fit)") +
-  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01")),
-                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01"))),1,1),
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01"))),1,1),
                      limits=as.Date(c("2021-01-01",NA)), expand=c(0,0)) +
   scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
                       labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
@@ -582,8 +491,8 @@ plot_usa_mfit = qplot(data=fit_usa_multi_preds2, x=collection_date, y=100*prob, 
   ylab("Share (%)") +
   theme_hc() + xlab("") +
   ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN THE USA\n(GISAID data, multinomial fit)") +
-  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01")),
-                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01"))),1,1),
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01"))),1,1),
                      limits=as.Date(c("2021-01-01",NA)), expand=c(0,0)) +
   # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
   #                     labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
@@ -646,8 +555,8 @@ plot_usa_avg_mfit_logit = qplot(data=fit_usa_multi_preds3, x=collection_date, y=
   ylab("Share (%)") +
   theme_hc() + xlab("") +
   ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN THE USA\n(GISAID data 20 states, multinomial fit)") +
-  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01")),
-                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01"))),1,1),
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01"))),1,1),
                      limits=as.Date(c("2021-01-01",NA)), expand=c(0,0)) +
   scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
                       labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
@@ -683,8 +592,8 @@ plot_usa_avg_mfit = qplot(data=fit_usa_multi_preds3, x=collection_date, y=100*pr
   ylab("Share (%)") +
   theme_hc() + xlab("") +
   ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN THE USA\n(GISAID data 20 states, multinomial fit)") +
-  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01")),
-                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01"))),1,1),
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01"))),1,1),
                      limits=as.Date(c("2021-01-01",NA)), expand=c(0,0)) +
   # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
   #                     labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +

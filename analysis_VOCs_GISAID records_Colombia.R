@@ -120,16 +120,16 @@ data_agbyweek$floor_date = NULL
 
 
 # MULLER PLOT (RAW DATA)
-n2 = length(levels(GISAID_sel$LINEAGE))
-lineage_cols2 = hcl(h = seq(15, 320, length = n2), l = 65, c = 200)
-lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="B.1.1.7")] = "#0085FF"
-lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="B.1.351")] = "#9A9D00"
-lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="B.1.177+")] = "grey55"
-lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="P.1")] = "cyan3"
-lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="B.1.617.1")] = muted("magenta")
-lineage_cols2[which(levels(GISAID_sel$LINEAGE)==sel_target_VOC)] = "magenta"
-lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="B.1.621")] = "red"
-lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="other")] = "grey75"
+  n2 = length(levels(GISAID_sel$LINEAGE))
+  lineage_cols2 = hcl(h = seq(15, 320, length = n2), l = 65, c = 200)
+  lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="B.1.1.7")] = "#0085FF"
+  lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="B.1.351")] = "#9A9D00"
+  lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="B.1.177+")] = "grey55"
+  lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="P.1")] = "cyan3"
+  lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="B.1.617.1")] = muted("magenta")
+  lineage_cols2[which(levels(GISAID_sel$LINEAGE)==sel_target_VOC)] = "magenta"
+  lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="B.1.621")] = "red"
+  lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="other")] = "grey75"
 
 muller_colombia_raw2 = ggplot(data=data_agbyweek, aes(x=collection_date, y=count, group=LINEAGE)) + 
   # facet_wrap(~ STATE, ncol=1) +
