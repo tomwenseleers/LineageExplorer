@@ -1,6 +1,6 @@
 # ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT VOCs IN COLOMBIA (GISAID RECORDS)
 # T. Wenseleers
-# last update 6 SEPTEMBER 2021
+# last update 7 OCTOBER 2021
     
   library(nnet)
   # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
