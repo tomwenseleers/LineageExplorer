@@ -3,7 +3,7 @@
 
 # PLUS CALCULATION OF CUMULATIVE TOTAL OF PREVIOUSLY INFECTED PEOPLE
 
-# T. Wenseleers, 10 Sept. 2021
+# T. Wenseleers, 10 Oct. 2021
 
 fit_economist = read.csv("https://raw.githubusercontent.com/TheEconomist/covid-19-the-economist-global-excess-deaths-model/main/output-data/output-for-interactive/second_map.csv")
 OWID = read.csv("https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv")
@@ -29,8 +29,9 @@ fit_economist$implied_infections_per_100_persons_bot_95_clipped = fit_economist$
 fit_economist$implied_infections_per_100_persons_bot_95_clipped[fit_economist$implied_infections_per_100_persons_bot_95_clipped<0] = 0
 fit_economist$implied_infections_per_100_persons_bot_95_clipped[fit_economist$implied_infections_per_100_persons_bot_95_clipped>100] = 100
 
-# estimated global % that was already infected by the virus on 8 Sept 2021
-# 57% [25-67%]
+# estimated global % that was already infected by the virus on 20 Sept 2021
+max(fit_economist$date) # "2021-09-20"
+# 58% [26-67%]
 weighted.mean(fit_economist$implied_infections_per_100_persons_clipped,
               w=fit_economist$population, na.rm=T)
 weighted.mean(fit_economist$implied_infections_per_100_persons_bot_95_clipped,
@@ -38,7 +39,7 @@ weighted.mean(fit_economist$implied_infections_per_100_persons_bot_95_clipped,
 weighted.mean(fit_economist$implied_infections_per_100_persons_top_95_clipped,
               w=fit_economist$population, na.rm=T)
 
-# estimated % already infected by the virus on 8 Sept 2021
+# estimated % already infected by the virus on 20 Sept 2021
 # 
 do.call(rbind, lapply(unique(fit_economist$continent), function (cont) { 
     list(continent = cont,
@@ -59,4 +60,6 @@ do.call(rbind, lapply(unique(fit_economist$continent), function (cont) {
 # [6,] "Oceania"       2.370656                           0.1146887                                 17.89174      
 
 
+
+# 
 
