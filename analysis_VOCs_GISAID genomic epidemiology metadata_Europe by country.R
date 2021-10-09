@@ -1,6 +1,6 @@
 # ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT VOCs IN SELECTED EUROPEAN COUNTRIES (GISAID records)
 # T. Wenseleers
-# last update 10 JULY 2021
+# last update 8 OCTOBER 2021
 
 library(nnet)
 # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
@@ -13,7 +13,7 @@ library(ggthemes)
 library(scales)
 
 today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-07-10")
+today = as.Date("2021-10-08")
 today_num = as.numeric(today)
 plotdir = "Europe_GISAID_records"
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
@@ -22,6 +22,8 @@ suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 
 library(jsonlite)
 GISAID_json <- jsonlite::stream_in(gzfile(".//data//GISAID_json//provision.json.xz"))
+
+
 
 
 
