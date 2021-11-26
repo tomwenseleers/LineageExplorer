@@ -1,6 +1,6 @@
 # ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT VOCs IN THE USA (GISAID GENOMIC EPIDEMIOLOGY METADATA)
 # T. Wenseleers
-# last update 7 SEPT 2021
+# last update 10 OCT 2021
 
 library(nnet)
 # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
@@ -13,13 +13,13 @@ library(ggthemes)
 library(scales)
 
 today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-09-07")
+today = as.Date("2021-10-10")
 today_num = as.numeric(today)
 plotdir = "USA_GISAID_genomic_epidemiology"
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 
 # import GISAID genomic epidemiology metadata
-GISAID = read_tsv(gzfile(".//data//GISAID_genomic_epidemiology//metadata_2021-09-03_08-22.tsv.gz"), col_types = cols(.default = "c")) 
+GISAID = read_tsv(gzfile(".//data//GISAID_genomic_epidemiology//metadata_2021-10-01_13-45.tsv.gz"), col_types = cols(.default = "c")) 
 GISAID = as.data.frame(GISAID)
 
 GISAID$date = as.Date(GISAID$date)
@@ -27,8 +27,8 @@ GISAID = GISAID[!is.na(GISAID$date),]
 GISAID[GISAID$host!="Human","strain"]
 GISAID = GISAID[GISAID$host=="Human",]
 GISAID = GISAID[GISAID$date>=as.Date("2020-01-01"),]
-range(GISAID$date) # "2020-01-01" "2021-08-30"
-nrow(GISAID) #  3042438
+range(GISAID$date) # "2020-01-01" "2021-10-04"
+nrow(GISAID) #  3851990
 GISAID$Week = lubridate::week(GISAID$date)
 GISAID$Year = lubridate::year(GISAID$date)
 GISAID$Year_Week = interaction(GISAID$Year,GISAID$Week)
@@ -42,9 +42,10 @@ table(GISAID$pango_lineage[grepl("AY",GISAID$pango_lineage,fixed=T)|grepl("B.1.6
 
 GISAID$pango_lineage[grepl("B.1.177",GISAID$pango_lineage,fixed=T)] = "B.1.177+"
 GISAID$pango_lineage[grepl("B.1.36\\>",GISAID$pango_lineage)] = "B.1.36+"
-GISAID$pango_lineage[grepl("B.1.617.2|AY",GISAID$pango_lineage)] = "Delta (B.1.617.2 & AY.X)"
+# GISAID$pango_lineage[grepl("B.1.617.2|AY",GISAID$pango_lineage)] = "Delta (B.1.617.2 & AY.X)"
 
-sel_target_VOC = "Delta (B.1.617.2 & AY.X)"
+# sel_target_VOC = "Delta (B.1.617.2 & AY.X)"
+sel_target_VOC = "B.1.617.2"
 
 GISAID$LINEAGE2 = GISAID$pango_lineage
 
@@ -56,33 +57,29 @@ GISAID_sel = GISAID_sel[GISAID_sel$date>=as.Date("2021-01-01"),]
 GISAID_sel = GISAID_sel[!is.na(GISAID_sel$LINEAGE2),]
 GISAID_sel = GISAID_sel[!GISAID_sel$LINEAGE2=="None",]
 GISAID_sel = GISAID_sel[GISAID_sel$country==GISAID_sel$country_exposure,] # we remove travel-related cases
-range(GISAID_sel$date) # "2021-01-01" "2021-08-27"
-nrow(GISAID_sel) # 678457
+range(GISAID_sel$date) # "2021-01-01" "2021-09-24"
+nrow(GISAID_sel) # 967414
 
 main_lineages = names(table(GISAID_sel$LINEAGE2))[100*table(GISAID_sel$LINEAGE2)/sum(table(GISAID_sel$LINEAGE2)) > 3]
 main_lineages
-# [1] "B.1.1.7"                  "B.1.2"                    "B.1.429"                  "B.1.526"                  "Delta (B.1.617.2 & AY.X)"
-# P.1
+# "AY.25"     "AY.3"      "AY.4"      "B.1.1.7"   "B.1.2"     "B.1.429"   "B.1.526"   "B.1.617.2"
 VOCs = c("B.1.617.1","B.1.617.2","B.1.617+","B.1.618","B.1.1.7","B.1.351","P.1","B.1.1.318","B.1.1.207","B.1.429",
-         "B.1.525","B.1.526","B.1.1.519","AY.1","AY.2","AY.3","B.1.621")
+         "B.1.525","B.1.526","B.1.1.519","AY.1","AY.2","AY.3","AY.4","AY.4","AY.25","AY.26","AY.16","AY.34","B.1.621")
 main_lineages = union(main_lineages, VOCs)
 GISAID_sel$LINEAGE2[!(GISAID_sel$LINEAGE2 %in% main_lineages)] = "other" # minority lineages & non-VOCs
 remove2 = names(table(GISAID_sel$LINEAGE2))[table(GISAID_sel$LINEAGE2)/sum(table(GISAID_sel$LINEAGE2)) < 0.01]
-remove2 = remove2[!(remove2 %in% c("B.1.351","B.1.1.7","P.1","B.1.617.2","B.1.1.519","AY.3","B.1.621"))]
+remove2 = remove2[!(remove2 %in% c("B.1.351","B.1.1.7","P.1","B.1.617.2","B.1.1.519","AY.3","B.1.621","AY.16","B.1.621"))]
 GISAID_sel$LINEAGE2[(GISAID_sel$LINEAGE2 %in% remove2)] = "other" # minority VOCs
 table(GISAID_sel$LINEAGE2)
-# B.1.1.519                  B.1.1.7                    B.1.2                  B.1.351                  B.1.429 
-# 13744                   208313                    63725                     2362                    37567 
-# B.1.526                  B.1.621 Delta (B.1.617.2 & AY.X)                    other                      P.1 
-# 26386                     1544                   199501                   102743                    22572 
 GISAID_sel$LINEAGE2 = factor(GISAID_sel$LINEAGE2)
 GISAID_sel$LINEAGE2 = relevel(GISAID_sel$LINEAGE2, ref=sel_target_VOC) # we code UK strain as the reference level
 levels(GISAID_sel$LINEAGE2)
-# [1] "Delta (B.1.617.2 & AY.X)" "B.1.1.519"                "B.1.1.7"                  "B.1.2"                    "B.1.351"                 
-# [6] "B.1.429"                  "B.1.526"                  "B.1.621"                  "other"                    "P.1"    
-levels_LINEAGE2 = c("B.1.1.7","B.1.2","B.1.1.519",
+# [1] "B.1.617.2" "AY.16"     "AY.25"     "AY.26"     "AY.3"      "AY.4"      "B.1.1.519" "B.1.1.7"   "B.1.2"     "B.1.351"   "B.1.429"  
+# [12] "B.1.526"   "B.1.621"   "other"     "P.1"   
+levels_LINEAGE2 = c("B.1.1.7","B.1.1.519","B.1.2",
                     "B.1.351","B.1.429","B.1.526",
-                    "P.1","B.1.621",sel_target_VOC,"other")
+                    "P.1","B.1.621",sel_target_VOC,
+                    "AY.3","AY.4","AY.16","AY.25","AY.26","other")
 GISAID_sel$LINEAGE2 = factor(GISAID_sel$LINEAGE2, levels=levels_LINEAGE2)
 
 GISAID_sel$state  = GISAID_sel$division
@@ -103,12 +100,12 @@ GISAID_sel$state = factor(GISAID_sel$state, levels=levels_states)
 levels(GISAID_sel$state)
 
 table(GISAID_sel$LINEAGE2)
-# B.1.1.7                    B.1.2                B.1.1.519                  B.1.351                  B.1.429 
-# 104399                    33114                     7245                      666                    26107 
-# B.1.526                      P.1                  B.1.621 Delta (B.1.617.2 & AY.X)                    other 
-# 17329                    12240                      943                   134683                    66813 
+# B.1.1.7 B.1.1.519     B.1.2   B.1.351   B.1.429   B.1.526       P.1   B.1.621 B.1.617.2      AY.3      AY.4     AY.16     AY.25     AY.26 
+# 107860      7543     33335       845     26047     25090     12100      2378    128020     26155     38131       385     39529     12216 
+# other 
+# 113834 
 
-range(GISAID_sel$date) # "2021-01-01" "2021-08-27"
+range(GISAID_sel$date) # "2021-01-01" "2021-09-24"
 
 # aggregated data to make Muller plots of raw data
 # aggregated by week for selected variant lineages
@@ -150,6 +147,11 @@ lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="B.1.177+")] = "grey55"
 lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="P.1")] = "cyan3"
 lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="B.1.617.1")] = muted("magenta")
 lineage_cols2[which(levels(GISAID_sel$LINEAGE)==sel_target_VOC)] = "magenta"
+lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="AY.3")] = muted("red",c=150,l=80)
+lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="AY.4")] = muted("red",c=150,l=70)
+lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="AY.16")] = muted("red",c=150,l=30)
+lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="AY.25")] = muted("red",c=150,l=20)
+lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="AY.26")] = muted("red",c=150,l=10)
 lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="B.1.621")] = "red"
 lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="other")] = "grey75"
 
@@ -216,7 +218,7 @@ fit3_usa_multi = nnet::multinom(LINEAGE2 ~ ns(DATE_NUM, df=2)+STATE, weights=cou
 fit4_usa_multi = nnet::multinom(LINEAGE2 ~ ns(DATE_NUM, df=2)*STATE, weights=count, data=data_agbyweekregion2, maxit=1000)
 fit5_usa_multi = nnet::multinom(LINEAGE2 ~ ns(DATE_NUM, df=3)+STATE, weights=count, data=data_agbyweekregion2, maxit=1000)
 fit6_usa_multi = nnet::multinom(LINEAGE2 ~ ns(DATE_NUM, df=3)*STATE, weights=count, data=data_agbyweekregion2, maxit=1000)
-BIC(fit1_usa_multi, fit2_usa_multi, fit3_usa_multi, fit4_usa_multi, fit5_usa_multi, fit6_usa_multi) 
+BIC(fit1_usa_multi, fit2_usa_multi, fit3_usa_multi, fit4_usa_multi, fit5_usa_multi) 
 # fit4_usa_multi fits best (lowest BIC)
 
 # growth rate advantage compared to Delta (difference in growth rate per day) 
@@ -227,16 +229,47 @@ delta_r_usa = data.frame(confint(emtrusa,
                                  adjust="none", df=NA)$contrasts, 
                          p.value=as.data.frame(emtrusa$contrasts)$p.value)
 delta_r_usa
-#                               contrast    estimate          SE df   asymp.LCL   asymp.UCL      p.value
-# 1   B.1.1.7 - Delta (B.1.617.2 & AY.X) -0.10281140 0.001798713 NA -0.10633682 -0.09928599 3.201474e-10
-# 2     B.1.2 - Delta (B.1.617.2 & AY.X) -0.19192801 0.008956736 NA -0.20948289 -0.17437313 3.201474e-10
-# 3 B.1.1.519 - Delta (B.1.617.2 & AY.X) -0.18090539 0.008585867 NA -0.19773338 -0.16407740 3.201474e-10
-# 4   B.1.351 - Delta (B.1.617.2 & AY.X) -0.48146890 0.016940857 NA -0.51467237 -0.44826543 3.201474e-10
-# 5   B.1.429 - Delta (B.1.617.2 & AY.X) -0.20452174 0.007589733 NA -0.21939735 -0.18964614 3.201474e-10
-# 6   B.1.526 - Delta (B.1.617.2 & AY.X) -0.13262611 0.005731685 NA -0.14386001 -0.12139222 3.201474e-10
-# 7       P.1 - Delta (B.1.617.2 & AY.X) -0.08227431 0.002395686 NA -0.08696977 -0.07757885 3.201474e-10
-# 8   B.1.621 - Delta (B.1.617.2 & AY.X) -0.15387160 0.007445594 NA -0.16846469 -0.13927850 3.201474e-10
-# 9     other - Delta (B.1.617.2 & AY.X) -0.04137965 0.001697536 NA -0.04470676 -0.03805254 3.201474e-10
+# contrast     estimate           SE df    asymp.LCL    asymp.UCL      p.value
+# 1    B.1.1.7 - B.1.617.2 -0.105052459 0.0014492501 NA -0.107892937 -0.102211981 4.495293e-13
+# 2  B.1.1.519 - B.1.617.2 -0.201983188 0.0108313274 NA -0.223212200 -0.180754176 4.495293e-13
+# 3      B.1.2 - B.1.617.2 -0.224519339 0.0108573300 NA -0.245799315 -0.203239363 4.495293e-13
+# 4    B.1.351 - B.1.617.2 -0.370345839 0.0143871389 NA -0.398544113 -0.342147565 4.495293e-13
+# 5    B.1.429 - B.1.617.2 -0.284598137 0.0091023563 NA -0.302438427 -0.266757846 4.495293e-13
+# 6    B.1.526 - B.1.617.2 -0.136166827 0.0050362193 NA -0.146037635 -0.126296018 4.495293e-13
+# 7        P.1 - B.1.617.2 -0.088006914 0.0024821280 NA -0.092871796 -0.083142033 4.495293e-13
+# 8    B.1.621 - B.1.617.2 -0.106636797 0.0062915864 NA -0.118968079 -0.094305514 4.495293e-13
+# 9       AY.3 - B.1.617.2 -0.010592749 0.0009811432 NA -0.012515754 -0.008669743 4.938272e-13
+# 10      AY.4 - B.1.617.2 -0.021813806 0.0009394341 NA -0.023655063 -0.019972549 4.495293e-13
+# 11     AY.16 - B.1.617.2 -0.077107484 0.0104408128 NA -0.097571101 -0.056643867 5.623058e-12
+# 12     AY.25 - B.1.617.2 -0.009387186 0.0009900273 NA -0.011327603 -0.007446768 5.013767e-13
+# 13     AY.26 - B.1.617.2 -0.018243682 0.0014347446 NA -0.021055730 -0.015431634 4.495293e-13
+# 14     other - B.1.617.2  0.003247914 0.0007811895 NA  0.001716811  0.004779018 4.749604e-04
+
+# growth rate advantage compared to Delta (difference in growth rate per day) with simpler model fit3_usa_multi
+emtrusa3 = emtrends(fit3_usa_multi, trt.vs.ctrl ~ LINEAGE2,  
+                    var="DATE_NUM",  mode="latent",
+                    at=list(DATE_NUM=max(GISAID_sel$DATE_NUM)))
+delta_r_usa3 = data.frame(confint(emtrusa3, 
+                                  adjust="none")$contrasts, 
+                          p.value=as.data.frame(emtrusa1$contrasts, adjust="none")$p.value)
+delta_r_usa3
+#                 contrast     estimate           SE  df     lower.CL     upper.CL       p.value
+# 1    B.1.1.7 - B.1.617.2 -0.102402936 0.0006579456 308 -0.103697573 -0.101108299  0.000000e+00
+# 2  B.1.1.519 - B.1.617.2 -0.145413383 0.0032809434 308 -0.151869282 -0.138957484  0.000000e+00
+# 3      B.1.2 - B.1.617.2 -0.202905031 0.0043508781 308 -0.211466236 -0.194343825  0.000000e+00
+# 4    B.1.351 - B.1.617.2 -0.118745078 0.0050107190 308 -0.128604649 -0.108885506 7.123708e-206
+# 5    B.1.429 - B.1.617.2 -0.176262739 0.0029939944 308 -0.182154010 -0.170371468  0.000000e+00
+# 6    B.1.526 - B.1.617.2 -0.112785147 0.0012868563 308 -0.115317289 -0.110253005  0.000000e+00
+# 7        P.1 - B.1.617.2 -0.090434626 0.0009887015 308 -0.092380090 -0.088489162 5.730892e-314
+# 8    B.1.621 - B.1.617.2 -0.072593441 0.0018707865 308 -0.076274580 -0.068912302 4.056907e-186
+# 9       AY.3 - B.1.617.2 -0.006631926 0.0006210513 308 -0.007853966 -0.005409886  1.263945e-32
+# 10      AY.4 - B.1.617.2 -0.017614749 0.0004963625 308 -0.018591439 -0.016638058  3.911132e-65
+# 11     AY.16 - B.1.617.2 -0.015749962 0.0034847134 308 -0.022606819 -0.008893105  5.161124e-16
+# 12     AY.25 - B.1.617.2 -0.007620395 0.0005053321 308 -0.008614735 -0.006626055  1.104530e-15
+# 13     AY.26 - B.1.617.2 -0.012822020 0.0007988113 308 -0.014393838 -0.011250202  4.289186e-30
+# 14     other - B.1.617.2 -0.009201354 0.0004000061 308 -0.009988444 -0.008414263  0.000000e+00
+
+
 
 # growth rate advantage compared to Delta (difference in growth rate per day) with simple model fit1_usa_multi
 emtrusa1 = emtrends(fit1_usa_multi, trt.vs.ctrl ~ LINEAGE2,  
@@ -246,16 +279,22 @@ delta_r_usa1 = data.frame(confint(emtrusa1,
                                  adjust="none")$contrasts, 
                          p.value=as.data.frame(emtrusa1$contrasts, adjust="none")$p.value)
 delta_r_usa1
-#                               contrast    estimate           SE  df    lower.CL    upper.CL       p.value
-# 1   B.1.1.7 - Delta (B.1.617.2 & AY.X) -0.09088555 0.0003910610 189 -0.09165696 -0.09011415 3.348485e-234
-# 2     B.1.2 - Delta (B.1.617.2 & AY.X) -0.15022803 0.0004782972 189 -0.15117152 -0.14928455 7.372213e-259
-# 3 B.1.1.519 - Delta (B.1.617.2 & AY.X) -0.11932578 0.0005230205 189 -0.12035749 -0.11829407 1.091588e-232
-# 4   B.1.351 - Delta (B.1.617.2 & AY.X) -0.09432674 0.0011581385 189 -0.09661128 -0.09204220 3.860114e-149
-# 5   B.1.429 - Delta (B.1.617.2 & AY.X) -0.13217142 0.0004662054 189 -0.13309106 -0.13125179 1.815492e-250
-# 6   B.1.526 - Delta (B.1.617.2 & AY.X) -0.09813818 0.0004650138 189 -0.09905546 -0.09722090 2.567799e-226
-# 7       P.1 - Delta (B.1.617.2 & AY.X) -0.07319760 0.0004189045 189 -0.07402393 -0.07237127 6.709327e-211
-# 8   B.1.621 - Delta (B.1.617.2 & AY.X) -0.03580435 0.0010834037 189 -0.03794147 -0.03366724  1.795290e-80
-# 9     other - Delta (B.1.617.2 & AY.X) -0.13021020 0.0004359496 189 -0.13107015 -0.12935025 9.725817e-255
+# contrast     estimate           SE  df     lower.CL     upper.CL       p.value
+# 1    B.1.1.7 - B.1.617.2 -0.054294577 0.0001865859 294 -0.054661790 -0.053927364  0.000000e+00
+# 2  B.1.1.519 - B.1.617.2 -0.068947991 0.0003149778 294 -0.069567888 -0.068328094  0.000000e+00
+# 3      B.1.2 - B.1.617.2 -0.094231625 0.0002864774 294 -0.094795432 -0.093667819  0.000000e+00
+# 4    B.1.351 - B.1.617.2 -0.054949316 0.0006631556 294 -0.056254450 -0.053644182 7.123708e-206
+# 5    B.1.429 - B.1.617.2 -0.076720007 0.0002538672 294 -0.077219635 -0.076220380  0.000000e+00
+# 6    B.1.526 - B.1.617.2 -0.057038325 0.0002294013 294 -0.057489801 -0.056586848  0.000000e+00
+# 7        P.1 - B.1.617.2 -0.046347872 0.0002358205 294 -0.046811982 -0.045883762 5.730892e-314
+# 8    B.1.621 - B.1.617.2 -0.031811490 0.0004516679 294 -0.032700403 -0.030922578 4.056907e-186
+# 9       AY.3 - B.1.617.2  0.003965319 0.0002938635 294  0.003386976  0.004543662  1.263945e-32
+# 10      AY.4 - B.1.617.2 -0.004975790 0.0002232218 294 -0.005415105 -0.004536475  3.911132e-65
+# 11     AY.16 - B.1.617.2 -0.013680224 0.0015924531 294 -0.016814276 -0.010546171  5.161124e-16
+# 12     AY.25 - B.1.617.2  0.002063584 0.0002433216 294  0.001584711  0.002542457  1.104530e-15
+# 13     AY.26 - B.1.617.2 -0.004783933 0.0003739260 294 -0.005519844 -0.004048022  4.289186e-30
+# 14     other - B.1.617.2 -0.055619411 0.0001879145 294 -0.055989239 -0.055249583  0.000000e+00
+
 
 # # pairwise growth rates advantages for simple multinomial model fit1_usa_multi
 # emtrusa_pairw1 = emtrends(fit1_usa_multi, pairwise ~ LINEAGE2,  

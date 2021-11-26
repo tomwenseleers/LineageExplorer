@@ -1,6 +1,6 @@
-# ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT VOCs IN BRAZIL (GISAID RECORDS)
+# ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT VOCs IN BRAZIL (SÃO PAULO) (GISAID RECORDS)
 # T. Wenseleers
-# last update 7 October 2021
+# last update 10 October 2021
 
 library(nnet)
 # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
@@ -16,7 +16,7 @@ library(lubridate)
 
 
 today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-10-07")
+today = as.Date("2021-10-10")
 today_num = as.numeric(today)
 plotdir = "Brazil_GISAID"
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
@@ -51,51 +51,61 @@ GISAID = GISAID[GISAID$pango_lineage!="None",]
 
 GISAID$pango_lineage[grepl("B.1.177",GISAID$pango_lineage,fixed=T)] = "B.1.177+"
 GISAID$pango_lineage[grepl("B.1.36\\>",GISAID$pango_lineage)] = "B.1.36+"
-GISAID$pango_lineage[grepl("B.1.617.2|AY",GISAID$pango_lineage)] = "Delta (B.1.617.2 & AY.X)"
+GISAID$pango_lineage[grepl("P.1",GISAID$pango_lineage)] = "P.1+"
+# GISAID$pango_lineage[grepl("B.1.617.2|AY",GISAID$pango_lineage)] = "Delta (B.1.617.2 & AY.X)"
+sum(sum(grepl("AY.34",GISAID$pango_lineage,fixed=T))) # 309
+sum(grepl("AY.34",GISAID$pango_lineage,fixed=T)& # 302
+      (grepl("Spike_Q677H",GISAID[,"AA Substitutions"]))&
+      (grepl("Spike_P681R",GISAID[,"AA Substitutions"])))
+GISAID$pango_lineage[grepl("AY.34",GISAID$pango_lineage,fixed=T)&
+                       (grepl("Spike_Q677H",GISAID[,"AA Substitutions"]))&
+                       (grepl("Spike_P681R",GISAID[,"AA Substitutions"]))
+] = "AY.34_with_S:Q677H_and_S:P681R"
+GISAID$pango_lineage[grepl("AY.34",GISAID$pango_lineage,fixed=T)&!(
+  (grepl("Spike_Q677H",GISAID[,"AA Substitutions"]))&
+    (grepl("Spike_P681R",GISAID[,"AA Substitutions"])))
+] = "AY.34_other"
 
-sel_target_VOC = "Delta (B.1.617.2 & AY.X)"
+
+# sel_target_VOC = "Delta (B.1.617.2 & AY.X)"
+sel_target_VOC = "B.1.617.2"
 GISAID$LINEAGE = GISAID$pango_lineage
 nrow(GISAID) # 45640
 
 
-# ANALYSIS OF VOCs IN BRAZIL ####
+# ANALYSIS OF VOCs IN BRAZIL (SÃO PAULO) ####
 
 # sel_countries = "Brazil"
 # GISAID[GISAID$country %in% sel_countries,]
 
 GISAID_sel = GISAID
-
-sum(GISAID_sel$LINEAGE=="Delta (B.1.617.2 & AY.X)") # 8274
+GISAID_sel = GISAID_sel[grepl("Sao Paulo|São Paulo", GISAID_sel$Location),]
+nrow(GISAID_sel) # 17674
 
 table(GISAID_sel$LINEAGE)
 
-main_lineages = names(table(GISAID_sel$LINEAGE))[100*table(GISAID_sel$LINEAGE)/sum(table(GISAID_sel$LINEAGE)) > 2]
+main_lineages = names(table(GISAID_sel$LINEAGE))[100*table(GISAID_sel$LINEAGE)/sum(table(GISAID_sel$LINEAGE)) > 1]
 main_lineages
-# [1] "B.1.1.28"                 "B.1.1.33"                 "Delta (B.1.617.2 & AY.X)" "P.1"                     
-# [5] "P.1.12"                   "P.1.7"                    "P.2" 
+# "AY.4"      "B.1.1.28"  "B.1.1.33"  "B.1.1.7"   "B.1.617.2" "P.1+"     "P.2"  "P.4"
 VOCs = c("B.1.617.1","B.1.617.2","B.1.617+","B.1.618","B.1.1.7","B.1.351","P.1","B.1.1.318","B.1.1.207","B.1.429",
-         "B.1.525","B.1.526","B.1.1.519","B.1.1.318","B.1.621",sel_target_VOC)
+         "B.1.525","B.1.526","B.1.1.519","B.1.1.318","B.1.621",sel_target_VOC,"AY.4","P.1+","AY.34_with_S:Q677H_and_S:P681R","AY.34_other")
 main_lineages = union(main_lineages, VOCs)
 GISAID_sel$LINEAGE[!(GISAID_sel$LINEAGE %in% main_lineages)] = "other" # minority lineages & non-VOCs
 remove = names(table(GISAID_sel$LINEAGE))[table(GISAID_sel$LINEAGE)/sum(table(GISAID_sel$LINEAGE)) < 0.01]
-remove = remove[!(remove %in% c("B.1.351","B.1.1.7","P.1","B.1.617.2","B.1.617.1","B.1.1.519","B.1.621",sel_target_VOC))]
+remove = remove[!(remove %in% c("B.1.351","B.1.1.7","P.1","B.1.617.2","B.1.617.1","B.1.1.519","B.1.621",sel_target_VOC,"AY.34_with_S:Q677H_and_S:P681R","AY.34_other"))]
 GISAID_sel$LINEAGE[(GISAID_sel$LINEAGE %in% remove)] = "other" # minority VOCs
 table(GISAID_sel$LINEAGE)
-# B.1.1.28                 B.1.1.33                B.1.1.519                  B.1.1.7 
-# 2289                     1960                        4                      661 
-# B.1.351                  B.1.621 Delta (B.1.617.2 & AY.X)                    other 
-# 6                       13                     8274                     4081 
-# P.1                   P.1.12                    P.1.7                      P.2 
-# 22841                     1032                     1725                     2754 
 GISAID_sel$LINEAGE = factor(GISAID_sel$LINEAGE)
 GISAID_sel$LINEAGE = relevel(GISAID_sel$LINEAGE, ref=sel_target_VOC) # we code Delta as the reference level
 levels(GISAID_sel$LINEAGE)
-# [1] "Delta (B.1.617.2 & AY.X)" "B.1.1.28"                 "B.1.1.33"                 "B.1.1.519"               
-# [5] "B.1.1.7"                  "B.1.351"                  "B.1.621"                  "other"                   
-# [9] "P.1"                      "P.1.12"                   "P.1.7"                    "P.2"    
+# [1] "B.1.617.2"                      "AY.34_other"                    "AY.34_with_S:Q677H_and_S:P681R" "AY.4"                          
+# [5] "B.1.1.28"                       "B.1.1.33"                       "B.1.1.519"                      "B.1.1.7"                       
+# [9] "B.1.351"                        "B.1.621"                        "other"                          "P.1+"                          
+# [13] "P.2"  
 levels_LINEAGE = c("B.1.1.7","B.1.1.28","B.1.1.33","B.1.1.519",
-                   "B.1.351","P.1","P.1.12","P.1.7","P.2",
-                   "B.1.621",sel_target_VOC,"other")
+                   "B.1.351","P.1+","P.2",
+                   "B.1.621",sel_target_VOC,"AY.4",
+                   "AY.34_with_S:Q677H_and_S:P681R","AY.34_other","other")
 GISAID_sel$LINEAGE = factor(GISAID_sel$LINEAGE, levels=levels_LINEAGE)
 
 
@@ -137,11 +147,21 @@ lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="B.1.1.7")] = "#0085FF"
 lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="B.1.351")] = "#9A9D00"
 lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="B.1.177+")] = "grey55"
 lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="P.1")] = "cyan3"
+lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="P.1+")] = "cyan3"
 lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="B.1.617.1")] = muted("magenta")
 lineage_cols2[which(levels(GISAID_sel$LINEAGE)==sel_target_VOC)] = "magenta"
 lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="B.1.621")] = "red"
 lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="other")] = "grey75"
 lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="P.1.7")] = "darkblue"
+lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="AY.4")] = muted("red",c=150,l=60)
+lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="AY.20")] = muted("red",c=150,l=55)
+lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="AY.23")] = muted("red",c=150,l=50)
+lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="AY.25")] = muted("red",c=150,l=40)
+lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="AY.26")] = muted("red",c=150,l=30)
+lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="AY.30")] = muted("red",c=150,l=20)
+lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="AY.34")] = "blue"
+lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="AY.34_with_S:Q677H_and_S:P681R")] = "blue"
+lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="AY.34_other")] = muted("blue",l=80)
 
 
 muller_brazil_raw2 = ggplot(data=data_agbyweek, aes(x=collection_date, y=count, group=LINEAGE)) + 
@@ -159,7 +179,7 @@ muller_brazil_raw2 = ggplot(data=data_agbyweek, aes(x=collection_date, y=count, 
   ylab("Share") + 
   theme(legend.position="right",  
         axis.title.x=element_blank()) +
-  labs(title = "SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN BRAZIL\n(GISAID data)") 
+  labs(title = "SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN BRAZIL (SÃO PAULO)\n(GISAID data)") 
 # +
 # coord_cartesian(xlim=c(1,max(GISAID_sel$Week)))
 muller_brazil_raw2
@@ -175,18 +195,18 @@ data_agbyweek$DATE_NUM = as.numeric(data_agbyweek$collection_date)
 library(nnet)
 library(splines)
 set.seed(1)
-fit1_brazil_multi = nnet::multinom(LINEAGE ~ scale(DATE_NUM), weights=count, data=data_agbyweek, maxit=1000)
+  fit1_brazil_multi = nnet::multinom(LINEAGE ~ scale(DATE_NUM), weights=count, data=data_agbyweek, maxit=1000)
 fit2_brazil_multi = nnet::multinom(LINEAGE ~ ns(DATE_NUM, df=2), weights=count, data=data_agbyweek, maxit=1000)
 fit3_brazil_multi = nnet::multinom(LINEAGE ~ ns(DATE_NUM, df=3), weights=count, data=data_agbyweek, maxit=1000)
 fit4_brazil_multi = nnet::multinom(LINEAGE ~ ns(DATE_NUM, df=4), weights=count, data=data_agbyweek, maxit=1000)
 fit5_brazil_multi = nnet::multinom(LINEAGE ~ ns(DATE_NUM, df=5), weights=count, data=data_agbyweek, maxit=1000)
 BIC(fit1_brazil_multi, fit2_brazil_multi, fit3_brazil_multi, fit4_brazil_multi, fit5_brazil_multi) 
 # df      BIC
-# fit1_brazil_multi 22 92797.44
-# fit2_brazil_multi 33 83168.06
-# fit3_brazil_multi 44 83072.54
-# fit4_brazil_multi 55 83085.15
-# fit5_brazil_multi 66 83078.63
+# fit1_brazil_multi 24 27146.46
+# fit2_brazil_multi 36 22478.89
+# fit3_brazil_multi 48 22378.42
+# fit4_brazil_multi 60 22204.60
+# fit5_brazil_multi 72 22290.85
 
 # growth rate advantage compared to UK type B.1.1.7 (difference in growth rate per day) 
 emtrbrazil = emtrends(fit3_brazil_multi, trt.vs.ctrl ~ LINEAGE,  
@@ -196,50 +216,50 @@ delta_r_brazil = data.frame(confint(emtrbrazil,
                                  adjust="none", df=NA)$contrasts, 
                          p.value=as.data.frame(emtrbrazil$contrasts)$p.value)
 delta_r_brazil
-# contrast    estimate          SE df   asymp.LCL   asymp.UCL      p.value
-# 1    B.1.1.7 - Delta (B.1.617.2 & AY.X) -0.10547575 0.004265762 NA -0.11383649 -0.09711501 7.496226e-13
-# 2   B.1.1.28 - Delta (B.1.617.2 & AY.X) -0.11327484 0.005028163 NA -0.12312986 -0.10341982 7.496226e-13
-# 3   B.1.1.33 - Delta (B.1.617.2 & AY.X) -0.15074221 0.014403124 NA -0.17897182 -0.12251261 2.542744e-12
-# 4  B.1.1.519 - Delta (B.1.617.2 & AY.X) -1.59630261 0.017126497 NA -1.62986992 -1.56273529 7.496226e-13
-# 5    B.1.351 - Delta (B.1.617.2 & AY.X) -0.09183920 0.025245394 NA -0.14131927 -0.04235914 6.794490e-03
-# 6        P.1 - Delta (B.1.617.2 & AY.X) -0.08485324 0.002431996 NA -0.08961986 -0.08008661 7.496226e-13
-# 7     P.1.12 - Delta (B.1.617.2 & AY.X) -0.06811267 0.002956068 NA -0.07390646 -0.06231889 7.496226e-13
-# 8      P.1.7 - Delta (B.1.617.2 & AY.X) -0.04887383 0.002470977 NA -0.05371685 -0.04403080 7.496226e-13
-# 9        P.2 - Delta (B.1.617.2 & AY.X) -0.21054451 0.007026144 NA -0.22431550 -0.19677352 7.496226e-13
-# 10   B.1.621 - Delta (B.1.617.2 & AY.X) -0.13329162 0.017148450 NA -0.16690196 -0.09968127 9.307848e-09
-# 11     other - Delta (B.1.617.2 & AY.X) -0.05430439 0.002414058 NA -0.05903586 -0.04957292 7.496226e-13
-
+# contrast     estimate          SE df     asymp.LCL   asymp.UCL      p.value
+# 1                         B.1.1.7 - B.1.617.2 -0.087374998 0.007302940 NA -0.1016884980 -0.07306150 4.440892e-16
+# 2                        B.1.1.28 - B.1.617.2 -0.055053273 0.008138880 NA -0.0710051852 -0.03910136 1.993045e-07
+# 3                        B.1.1.33 - B.1.617.2 -0.148984899 0.062595564 NA -0.2716699507 -0.02629985 1.634360e-01
+# 4                       B.1.1.519 - B.1.617.2 -1.062081877 1.049029551 NA -3.1181420160  0.99397826 8.884542e-01
+# 5                         B.1.351 - B.1.617.2 -0.451247237 0.286171175 NA -1.0121324327  0.10963796 5.819617e-01
+# 6                          (P.1+) - B.1.617.2 -0.079675154 0.006014027 NA -0.0914624302 -0.06788788 0.000000e+00
+# 7                             P.2 - B.1.617.2 -0.119431140 0.011667658 NA -0.1422993288 -0.09656295 1.173506e-13
+# 8                         B.1.621 - B.1.617.2 -0.191726268 0.070806987 NA -0.3305054124 -0.05294712 8.023559e-02
+# 9                            AY.4 - B.1.617.2  0.010034685 0.007921667 NA -0.0054914979  0.02556087 7.696245e-01
+# 10 AY.34_with_S:Q677H_and_S:P681R - B.1.617.2  0.022840227 0.011529965 NA  0.0002419105  0.04543854 3.372887e-01
+# 11                    AY.34_other - B.1.617.2 -0.030553116 0.031689108 NA -0.0926626269  0.03155640 9.059228e-01
+# 12                          other - B.1.617.2  0.001135037 0.005530544 NA -0.0097046293  0.01197470 9.998414e-01
 
 # fitted prop of different LINEAGES in the brazil today
 multinom_preds_today_avg = data.frame(emmeans(fit3_brazil_multi, ~ LINEAGE|1,
                                               at=list(DATE_NUM=today_num), 
                                               mode="prob", df=NA))
 multinom_preds_today_avg
-# LINEAGE          prob            SE df      asymp.LCL     asymp.UCL
-# 1  Delta (B.1.617.2 & AY.X)  9.835488e-01  1.776312e-03 NA   9.800673e-01  9.870303e-01
-# 2                   B.1.1.7  2.902756e-06  1.214629e-06 NA   5.221266e-07  5.283385e-06
-# 3                  B.1.1.28  4.384420e-08  3.181148e-08 NA  -1.850515e-08  1.061936e-07
-# 4                  B.1.1.33  3.089929e-12  8.001074e-12 NA  -1.259189e-11  1.877175e-11
-# 5                 B.1.1.519 7.111420e-115 1.067731e-114 NA -1.381573e-114 2.803857e-114
-# 6                   B.1.351  1.329708e-07  3.924089e-07 NA  -6.361366e-07  9.020782e-07
-# 7                       P.1  1.934487e-03  2.418534e-04 NA   1.460463e-03  2.408511e-03
-# 8                    P.1.12  1.026364e-03  1.845248e-04 NA   6.647022e-04  1.388026e-03
-# 9                     P.1.7  8.885202e-03  1.124542e-03 NA   6.681139e-03  1.108926e-02
-# 10                      P.2  6.499910e-14  6.779619e-14 NA  -6.787898e-14  1.978772e-13
-# 11                  B.1.621  1.210975e-06  1.574983e-06 NA  -1.875934e-06  4.297884e-06
-# 12                    other  4.600887e-03  5.828853e-04 NA   3.458453e-03  5.743322e-03
+# LINEAGE         prob           SE df     asymp.LCL    asymp.UCL
+# 1                       B.1.617.2 6.262352e-01 4.991628e-02 NA  5.284011e-01 7.240694e-01
+# 2                         B.1.1.7 7.359889e-06 4.137204e-06 NA -7.488819e-07 1.546866e-05
+# 3                        B.1.1.28 9.491310e-06 8.753624e-06 NA -7.665478e-06 2.664810e-05
+# 4                        B.1.1.33 3.891862e-15 4.579084e-14 NA -8.585654e-14 9.364026e-14
+# 5                       B.1.1.519 9.366678e-81 1.651909e-78 NA -3.228315e-78 3.247048e-78
+# 6                         B.1.351 8.288577e-30 3.315642e-28 NA -6.415652e-28 6.581424e-28
+# 7                            P.1+ 1.132501e-03 3.030626e-04 NA  5.385089e-04 1.726493e-03
+# 8                             P.2 3.139719e-09 4.944515e-09 NA -6.551353e-09 1.283079e-08
+# 9                         B.1.621 2.973020e-08 1.202587e-07 NA -2.059725e-07 2.654329e-07
+# 10                           AY.4 1.705100e-01 3.930430e-02 NA  9.347499e-02 2.475450e-01
+# 11 AY.34_with_S:Q677H_and_S:P681R 1.430898e-01 4.723945e-02 NA  5.050223e-02 2.356775e-01
+# 12                    AY.34_other 1.550819e-04 2.661097e-04 NA -3.664836e-04 6.766473e-04
+# 13                          other 5.886043e-02 1.279767e-02 NA  3.377745e-02 8.394341e-02
 
 # % non-Delta
 colSums(multinom_preds_today_avg[-1, c("prob","asymp.LCL","asymp.UCL")])
-#      prob asymp.LCL asymp.UCL 
-# 0.01645123 0.01226275 0.02063971  
+
 
 
 # PLOT MULTINOMIAL FIT
 
 # extrapolate = 30
 date.from = as.numeric(as.Date("2021-01-01"))
-date.to = as.numeric(as.Date("2021-10-21")) # max(GISAID_sel$DATE_NUM)+extrapolate
+date.to = as.numeric(as.Date("2021-11-14")) # max(GISAID_sel$DATE_NUM)+extrapolate
 
 # multinomial model predictions (fastest, but no confidence intervals)
 predgrid = expand.grid(list(DATE_NUM=seq(date.from, date.to)))
@@ -257,14 +277,14 @@ muller_brazil_mfit = ggplot(data=fit_brazil_multi_preds,
   scale_fill_manual("", values=lineage_cols2) +
   annotate("rect", xmin=max(GISAID_sel$DATE_NUM)+1, 
            xmax=as.Date(date.to, origin="1970-01-01"), ymin=0, ymax=1, alpha=0.4, fill="white") + # extrapolated part
-  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01","2021-10-01")),
-                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01","2021-10-01"))),1,1),
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01","2021-10-01","2021-11-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01","2021-10-01","2021-11-01"))),1,1),
                      limits=as.Date(c("2021-01-01",NA)), expand=c(0,0)) +
   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
   theme_hc() + theme(legend.position="right", 
                      axis.title.x=element_blank()) + 
   ylab("Share") +
-  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN BRAZIL\n(GISAID data, multinomial fit)")
+  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN BRAZIL (SÃO PAULO)\n(GISAID data, multinomial fit)")
 muller_brazil_mfit
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\brazil_muller plots_multinom fit.png"), width=10, height=6)
@@ -319,9 +339,9 @@ plot_brazil_mfit_logit = qplot(data=fit_brazil_multi_preds2, x=collection_date, 
   ), alpha=I(1)) +
   ylab("Share (%)") +
   theme_hc() + xlab("") +
-  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN BRAZIL\n(GISAID data, multinomial fit)") +
-  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01","2021-10-01")),
-                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01","2021-10-01"))),1,1),
+  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN BRAZIL (SÃO PAULO)\n(GISAID data, multinomial fit)") +
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01","2021-10-01","2021-11-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01","2021-10-01","2021-11-01"))),1,1),
                      limits=as.Date(c("2021-01-01",NA)), expand=c(0,0)) +
   scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
                       labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
@@ -356,9 +376,9 @@ plot_brazil_mfit = qplot(data=fit_brazil_multi_preds2, x=collection_date, y=100*
   ), alpha=I(1)) +
   ylab("Share (%)") +
   theme_hc() + xlab("") +
-  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN BRAZIL\n(GISAID data, multinomial fit)") +
-  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01","2021-10-01")),
-                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01","2021-10-01"))),1,1),
+  ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN BRAZIL (SÃO PAULO)\n(GISAID data, multinomial fit)") +
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01","2021-10-01","2021-11-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01","2021-08-01","2021-09-01","2021-10-01","2021-11-01"))),1,1),
                      limits=as.Date(c("2021-01-01",NA)), expand=c(0,0)) +
   # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
   #                     labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
@@ -439,7 +459,7 @@ ggplot(data=fit_brazil_multi_preds_withCI[fit_brazil_multi_preds_withCI$collecti
   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
   theme_hc() + theme(legend.position="right") + 
   ylab("New confirmed cases per day") + xlab("Date of diagnosis") +
-  ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT\nIN BRAZIL\n(case data & multinomial fit to GISAID data)") +
+  ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT\nIN BRAZIL (SÃO PAULO)\n(case data & multinomial fit to GISAID data)") +
   scale_fill_manual("variant", values=lineage_cols2) +
   scale_colour_manual("variant", values=lineage_cols2) +
   coord_cartesian(xlim=c(as.Date("2021-01-01"),NA))
@@ -458,7 +478,7 @@ ggplot(data=fit_brazil_multi_preds_withCI[fit_brazil_multi_preds_withCI$collecti
   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
   theme_hc() + theme(legend.position="right") + 
   ylab("New confirmed cases per day (smoothed)") + xlab("Date of infection") +
-  ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT\nIN BRAZIL\n(case data & multinomial fit to GISAID data)") +
+  ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT\nIN BRAZIL (SÃO PAULO)\n(case data & multinomial fit to GISAID data)") +
   scale_fill_manual("variant", values=lineage_cols2) +
   scale_colour_manual("variant", values=lineage_cols2) +
   coord_cartesian(xlim=c(as.Date("2021-01-01"),max(cases_tot$date)))
@@ -503,7 +523,7 @@ qplot(data=avg_r_cases, x=DATE-7, y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribb
                      labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A","M","J","J")) +
   # scale_y_continuous(limits=c(1/2, 2), trans="log2") +
   geom_hline(yintercept=1, colour=I("red")) +
-  ggtitle("Re IN BRAZIL AT MOMENT OF INFECTION BASED ON NEW CASES") +
+  ggtitle("Re IN BRAZIL (SÃO PAULO) AT MOMENT OF INFECTION BASED ON NEW CASES") +
   # labs(tag = tag) +
   # theme(plot.margin = margin(t = 20, r = 10, b = 20, l = 0)) +
   theme(plot.tag.position = "bottomright",
@@ -588,7 +608,7 @@ qplot(data=above_avg_r_variants2[!((above_avg_r_variants2$variant %in% c("other"
                      labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A","M","J","J")) +
   # scale_y_continuous(limits=c(1/ymax,ymax), trans="log2") +
   geom_hline(yintercept=1, colour=I("red")) +
-  ggtitle("Re VALUES OF SARS-CoV2 VARIANTS IN BRAZIL\nAT MOMENT OF INFECTION\n(based on case data & multinomial fit to GISAID data)") +
+  ggtitle("Re VALUES OF SARS-CoV2 VARIANTS IN BRAZIL (SÃO PAULO)\nAT MOMENT OF INFECTION\n(based on case data & multinomial fit to GISAID data)") +
   # labs(tag = tag) +
   # theme(plot.margin = margin(t = 20, r = 10, b = 20, l = 0)) +
   theme(plot.tag.position = "bottomright",

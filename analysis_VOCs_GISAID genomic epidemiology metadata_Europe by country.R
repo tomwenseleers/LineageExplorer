@@ -1,6 +1,6 @@
 # ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT VOCs IN SELECTED EUROPEAN COUNTRIES (GISAID records)
 # T. Wenseleers
-# last update 8 OCTOBER 2021
+# last update 14 OCTOBER 2021
 
 library(nnet)
 # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
@@ -12,8 +12,8 @@ library(ggplot2)
 library(ggthemes)
 library(scales)
 
-today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-10-08")
+today = as.Date(Sys.time()) 
+# today = as.Date("2021-10-14")
 today_num = as.numeric(today)
 plotdir = "Europe_GISAID_records"
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
@@ -21,59 +21,56 @@ suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 # import GISAID json metadata 
 
 library(jsonlite)
-GISAID_json <- jsonlite::stream_in(gzfile(".//data//GISAID_json//provision.json.xz"))
+GISAID_json = jsonlite::stream_in(gzfile(".//data//GISAID_json//provision.json.xz"))
+# only keep human samples
+GISAID_json = GISAID_json[GISAID_json$covv_host=="Human",] 
+nrow(GISAID_json) # data frame with 4131171 rows
+names(GISAID_json)
+head(GISAID_json$covv_location)
+head(GISAID_json$covv_collection_date)
+head(GISAID_json$covv_lineage)
+unique(GISAID_json$covv_lineage)
+head(GISAID_json$covsurver_existingmutlist)
+head(GISAID_json$covsurver_prot_mutations)
+head(GISAID_json$covsurver_uniquemutlist)
+unique(GISAID_json$covv_sampling_strategy)
 
+library(dplyr)
+GISAID_json = mutate_at(GISAID_json, "covv_sampling_strategy", .funs=toupper)
+GISAID_json = mutate_at(GISAID_json, "covv_add_host_info", .funs=toupper)
+GISAID_json = mutate_at(GISAID_json, "covv_add_location", .funs=toupper)
 
+# remove travel-related cases, active surveillance, surge testing etc
+GISAID_json = GISAID_json[!grepl("ACTIVE|S GENE|COVIGEN|S-GENE|SUSPECT|LONGITUDINAL|ASSAY|DROPOUT|CLUSTER|OUTBREAK|LONGITUDINAL|S GENE|SAME-PATIENT|TRAVEL|VOC|VARIANT|CONTACT|TRACING|PCR TEST|RETURNING|SGTF|TRIAL|FAMILY|DROPOUT|TAQPATH|WEEKLY|NON-RANDOM|SAME PATIENT|TIME-SERIES|TARGET|QUARANTINE|PASSAGE",
+       GISAID_json$covv_sampling_strategy),]
+nrow(GISAID_json) # 4059845 rows
+GISAID_json = GISAID_json[!grepl("ACTIVE|S GENE|COVIGEN|S-GENE|SUSPECT|LONGITUDINAL|ASSAY|DROPOUT|CLUSTER|OUTBREAK|LONGITUDINAL|S GENE|SAME-PATIENT|TRAVEL|VOC|VARIANT|CONTACT|TRACING|PCR TEST|RETURNING|SGTF|TRIAL|FAMILY|DROPOUT|TAQPATH|WEEKLY|NON-RANDOM|SAME PATIENT|TIME-SERIES|TARGET|QUARANTINE|PASSAGE|PASSENGER|INFECTED IN|HOLIDAY|CONTACT|CAME FROM|RETURN|FROM|VISIT|FOREIGN|SKIING|IMPORT|RELATED WITH|ENTERED FROM|CASE FROM",
+                                 GISAID_json$covv_add_host_info),]
+nrow(GISAID_json) # 4050954 rows
+GISAID_json = GISAID_json[!grepl("ACTIVE|S GENE|COVIGEN|S-GENE|SUSPECT|LONGITUDINAL|ASSAY|DROPOUT|CLUSTER|OUTBREAK|LONGITUDINAL|S GENE|SAME-PATIENT|TRAVEL|VOC|VARIANT|CONTACT|TRACING|PCR TEST|RETURNING|SGTF|TRIAL|FAMILY|DROPOUT|TAQPATH|WEEKLY|NON-RANDOM|SAME PATIENT|TIME-SERIES|TARGET|QUARANTINE|PASSAGE|PASSENGER|INFECTED IN|HOLIDAY|CONTACT|CAME FROM|RETURN|FROM|VISIT|FOREIGN|SKIING|IMPORT|RELATED WITH|ENTERED FROM|CASE FROM|HISTOR|SAMPLED AT|TOURIST|VISIT",
+                                 GISAID_json$covv_add_location),]
+nrow(GISAID_json) # 4044265 rows
 
-
-
-d1 = read_tsv(".//data//GISAID//Africa//gisaid_hcov-19_2021_06_28_08_africa_subm_jan_apr_2021.tsv", col_types = cols(.default = "c")) 
-d2 = read_tsv(".//data//GISAID//Africa//gisaid_hcov-19_2021_07_04_15_africa_subm_may_2021.tsv", col_types = cols(.default = "c")) 
-d3 = read_tsv(".//data//GISAID//Africa//gisaid_hcov-19_2021_07_08_21_africa_subm_june_july_8_2021.tsv", col_types = cols(.default = "c")) 
-
-GISAID = as.data.frame(rbind(d1,d2,d3))
-colnames(GISAID)
-# [1] "Virus name"                      "Accession ID"                    "Collection date"                 "Location"                       
-# [5] "Host"                            "Additional location information" "Sampling strategy"               "Gender"                         
-# [9] "Patient age"                     "Patient status"                  "Last vaccinated"                 "Passage"                        
-# [13] "Specimen"                        "Additional host information"     "Lineage"                         "Clade"                          
-# [17] "AA Substitutions"     
-
-GISAID = GISAID[!GISAID$`Sampling strategy` %in% c("Travel Surveillance", "S gene dropout",
-                                                   "Outbreak investigation","Same-patient sampling strategy","S-gene dropout","Active surveillance",
-                                                   "Quarantine testing","Contact Tracing","Longitudinal sampling on same patient(s)"),]
-GISAID = GISAID[!grepl("Suspect|ontact|ravel",GISAID$`Additional host information`),] # remove travel related cases
-GISAID = GISAID[!grepl("ravel",GISAID$`Additional location information`),] # remove travel related cases
-GISAID = GISAID[GISAID$Host=="Human",]
-
+# parse dates & remove records with invalid dates
 library(stringr)
-date_isvalid = sapply(GISAID[,"Collection date"], function (s) str_count(s, pattern = "-")==2)
-sum(date_isvalid) # 19008
-GISAID = GISAID[date_isvalid,]
-GISAID$date = as.Date(GISAID[,"Collection date"]) 
-GISAID = GISAID[!is.na(GISAID$date),]
+date_isvalid = sapply(GISAID_json$covv_collection_date, function (s) str_count(s, pattern = "-")==2)
+GISAID_json = GISAID_json[date_isvalid,]
+GISAID_json$date = as.Date(GISAID_json$covv_collection_date) 
+GISAID_json = GISAID_json[!is.na(GISAID_json$date),]
+nrow(GISAID_json) # 3922622
 
-loc = do.call(cbind, data.table::tstrsplit(unlist(GISAID[,"Location"]), "/", TRUE)) # parse location info
+# parse continent / country / location (PS: location is sometimes city & sometimes province)
+loc = do.call(cbind, data.table::tstrsplit(unlist(GISAID_json$covv_location), "/", TRUE)) # parse location info
 loc = trimws(loc, whitespace = " ")
 unique(loc[,1]) # continent
-unique(loc[,2]) # countries
-unique(loc[,3]) # province
+unique(loc[,2]) # country
+unique(loc[,3]) # city or province
+GISAID_json$continent = loc[,1]
+GISAID_json$country = loc[,2]
+GISAID_json$location = loc[,3]
 
-GISAID$Continent = loc[,1]
-GISAID$Country = loc[,2]
-unique(GISAID$Country)
-# [1] "South Africa"                     "Botswana"                         "Egypt"                            "Mayotte"                         
-# [5] "Zimbabwe"                         "Nigeria"                          "Malawi"                           "Togo"                            
-# [9] "Rwanda"                           "Reunion"                          "Cote d'Ivoire"                    "Democratic Republic of the Congo"
-# [13] "Zambia"                           "Morocco"                          "Cameroon"                         "Senegal"                         
-# [17] "Equatorial Guinea"                "Tunisia"                          "Mozambique"                       "Gambia"                          
-# [21] "Algeria"                          "Lesotho"                          "Kenya"                            "Angola"                          
-# [25] "Republic of the Congo"            "Madagascar"                       "Mali"                             "Ghana"                           
-# [29] "Gabon"                            "Uganda"                           "Guinea"                           "Mauritius"                       
-# [33] "Burkina Faso"                     "Comoros"                          "Ethiopia"                         "Eswatini"                        
-# [37] "Canary Islands"                   "Guinea Bissau"                    "Somalia"                          "Sierra Leone"                    
-# [41] "Niger"                            "Djibouti"                         "South Sudan"                      "Libya"                           
-# [45] "Central African Republic"
+
+
 table(GISAID[GISAID$Lineage=="B.1.617.2",]$Country)
 # Angola                         Botswana Democratic Republic of the Congo                           Gambia 
 # 4                              143                                6                                2 

@@ -1,6 +1,6 @@
 # ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT VOCs IN CHILE (GISAID RECORDS)
 # T. Wenseleers
-# last update 7 OCTOBER 2021
+# last update 25 OCTOBER 2021
     
   library(nnet)
   # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
@@ -15,16 +15,17 @@
   library(lubridate)
   
   
-  today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-  today = as.Date("2021-10-08")
-  today_num = as.numeric(today)
-  plotdir = "Chile_GISAID"
-  suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
+today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
+# today = as.Date("2021-10-10")
+today # 2021-10-25
+today_num = as.numeric(today)
+plotdir = "Chile_GISAID"
+suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 
 # import GISAID records for Chile
 d1 = read_tsv(file(".//data//GISAID//Chile//gisaid_hcov-19_2021_10_08_21_subm_2020.tsv"), col_types = cols(.default = "c")) 
-d2 = read_tsv(file(".//data//GISAID//Chile//gisaid_hcov-19_2021_10_08_21_subm_jan_2020_june_2020.tsv"), col_types = cols(.default = "c")) 
-d3 = read_tsv(file(".//data//GISAID//Chile//gisaid_hcov-19_2021_10_08_21_subm_july_oct_2020.tsv"), col_types = cols(.default = "c")) 
+d2 = read_tsv(file(".//data//GISAID//Chile//gisaid_hcov-19_2021_10_08_21_subm_jan_2021_june_2021.tsv"), col_types = cols(.default = "c")) 
+d3 = read_tsv(file(".//data//GISAID//Chile//gisaid_hcov-19_2021_10_25_19_subm_july_oct_2021.tsv"), col_types = cols(.default = "c")) 
 GISAID = as.data.frame(rbind(d1, d2, d3))
 colnames(GISAID) = c("Virus name","Accession ID","date","Location","host",
                      "Additional location information","Sampling strategy","Gender",                         
@@ -36,7 +37,7 @@ GISAID$date = as.Date(GISAID$date)
 GISAID = GISAID[!is.na(GISAID$date),]
 GISAID = GISAID[GISAID$host=="Human",]
 GISAID = GISAID[GISAID$date>=as.Date("2021-01-01"),]
-range(GISAID$date) # "2021-01-01" "2021-10-04"
+range(GISAID$date) # "2021-01-01" "2021-10-16"
 GISAID$Week = lubridate::week(GISAID$date)
 GISAID$Year = lubridate::year(GISAID$date)
 GISAID$Year_Week = interaction(GISAID$Year,GISAID$Week)
@@ -47,13 +48,28 @@ GISAID = GISAID[GISAID$pango_lineage!="None",]
 GISAID$pango_lineage[grepl("B.1.177",GISAID$pango_lineage,fixed=T)] = "B.1.177+"
 GISAID$pango_lineage[grepl("B.1.621",GISAID$pango_lineage,fixed=T)] = "B.1.621+"
 GISAID$pango_lineage[grepl("B.1.36\\>",GISAID$pango_lineage)] = "B.1.36+"
+sum(sum(grepl("AY.34",GISAID$pango_lineage,fixed=T))) # 104
+sum(grepl("AY.34",GISAID$pango_lineage,fixed=T)& # 103
+      (grepl("Spike_Q677H",GISAID[,"AA Substitutions"]))&
+      (grepl("Spike_P681R",GISAID[,"AA Substitutions"])))
+GISAID$pango_lineage[grepl("AY.34",GISAID$pango_lineage,fixed=T)&
+                       (grepl("Spike_Q677H",GISAID[,"AA Substitutions"]))&
+                       (grepl("Spike_P681R",GISAID[,"AA Substitutions"]))
+                       ] = "AY.34_with_S:Q677H_and_S:P681R"
+GISAID$pango_lineage[grepl("AY.34",GISAID$pango_lineage,fixed=T)&!(
+                       (grepl("Spike_Q677H",GISAID[,"AA Substitutions"]))&
+                       (grepl("Spike_P681R",GISAID[,"AA Substitutions"])))
+] = "AY.34_other"
+
+GISAID[GISAID$pango_lineage=="AY.34_with_S:Q677H_and_S:P681R",]
+
 # GISAID$pango_lineage[grepl("B.1.617.2|AY",GISAID$pango_lineage)] = "Delta (B.1.617.2 & AY.X)"
 
 # sel_target_VOC = "Delta (B.1.617.2 & AY.X)"
 sel_target_VOC = "B.1.617.2"
 
 GISAID$LINEAGE = GISAID$pango_lineage
-nrow(GISAID) # 9211
+nrow(GISAID) # 10491
 
 # ANALYSIS OF VOCs IN CHILE ####
 
@@ -62,19 +78,19 @@ nrow(GISAID) # 9211
 
 GISAID_sel = GISAID
 
-sum(GISAID_sel$LINEAGE==sel_target_VOC) # 603
+sum(GISAID_sel$LINEAGE==sel_target_VOC) # 1197
 
 table(GISAID_sel$LINEAGE)
 
 main_lineages = names(table(GISAID_sel$LINEAGE))[100*table(GISAID_sel$LINEAGE)/sum(table(GISAID_sel$LINEAGE)) > 1]
 main_lineages
-# "AY.25"     "B.1.1"     "B.1.1.348" "B.1.1.7"   "B.1.617.2" "B.1.621+"  "C.37"      "P.1"       "P.1.12" 
+# "AY.25"     "AY.4", "B.1.1"     "B.1.1.348" "B.1.1.7"   "B.1.617.2" "B.1.621+"  "C.37"      "P.1"       "P.1.12"  "P.1.15"
 VOCs = c("B.1.617.1","B.1.617.2","B.1.617+","B.1.618","B.1.1.7","B.1.351","P.1","B.1.1.318","B.1.1.207","B.1.429",
          "B.1.525","B.1.526","B.1.1.519","B.1.1.318","B.1.621+",
          "AY.1","AY.2","AY.3","AY.4","AY.5","AY.6","AY.7","AY.8","AY.9","AY.10","AY.11",
          "AY.12","AY.13","AY.14","AY.15","AY.16","AY.17","AY.18","AY.19","AY.20","AY.21","AY.22",
          "AY.23","AY.24","AY.25","AY.26","AY.27","AY.28","AY.29","AY.30","AY.31","AY.32",
-         "AY.33","AY.34",sel_target_VOC)
+         "AY.33","AY.34",sel_target_VOC,"AY.34_with_S:Q677H_and_S:P681R","AY.34_other")
 main_lineages = union(main_lineages, VOCs)
 GISAID_sel$LINEAGE[!(GISAID_sel$LINEAGE %in% main_lineages)] = "other" # minority lineages & non-VOCs
 remove = unique(c(names(table(GISAID_sel$LINEAGE))[table(GISAID_sel$LINEAGE)/sum(table(GISAID_sel$LINEAGE)) < 0.0005],
@@ -86,38 +102,41 @@ table(GISAID_sel$LINEAGE)
 GISAID_sel$LINEAGE = factor(GISAID_sel$LINEAGE)
 GISAID_sel$LINEAGE = relevel(GISAID_sel$LINEAGE, ref="B.1.1.7") # we code UK strain as the reference level
 levels(GISAID_sel$LINEAGE)
-# "B.1.1.7"   "AY.20"     "AY.25"     "AY.26"     "AY.34"     "AY.4"      "B.1.1"     "B.1.1.348" "B.1.351"   "B.1.429"   "B.1.617.2"
-# "B.1.621+"  "C.37"      "other"     "P.1"       "P.1.12"  
+# [1] "B.1.1.7"                        "AY.20"                          "AY.25"                          "AY.26"                         
+# [5] "AY.3"                           "AY.33"                          "AY.34_with_S:Q677H_and_S:P681R" "AY.4"                          
+# [9] "B.1.1"                          "B.1.1.348"                      "B.1.351"                        "B.1.429"                       
+# [13] "B.1.617.2"                      "B.1.621+"                       "C.37"                           "other"                         
+# [17] "P.1"                            "P.1.12"                         "P.1.15"   
 
-levels_LINEAGE = c("B.1.1.7","B.1.1","B.1.1.348","B.1.351","B.1.429","B.1.621+","C.37","P.1","P.1.12",
-                    sel_target_VOC,"AY.4","AY.20","AY.25","AY.26","AY.34","other")
+levels_LINEAGE = c("B.1.1.7","B.1.1","B.1.1.348","B.1.351","B.1.429","B.1.621+","C.37","P.1","P.1.12","P.1.15",
+                    sel_target_VOC,"AY.3","AY.4","AY.20","AY.25","AY.26","AY.33","AY.34_with_S:Q677H_and_S:P681R","other")
 GISAID_sel$LINEAGE = factor(GISAID_sel$LINEAGE, levels=levels_LINEAGE)
 
-# comparison of mutations in AY.34 & B.1.617.2
-# count of mutations present in AY.34
-t = table(strsplit(paste0(GISAID_sel[GISAID_sel$pango_lineage=="AY.34","AA Substitutions"],collapse=","),",")[[1]])
-t = data.frame(lineage="AY.34", data.frame(sort(t/sum(GISAID_sel$pango_lineage=="AY.34"), decreasing=T)))
-t[t$Freq>0.5,]
-# count of mutations present in B.1.617.2
-t2 = table(strsplit(paste0(GISAID_sel[GISAID_sel$pango_lineage=="B.1.617.2","AA Substitutions"],collapse=","),",")[[1]])
-t2 = data.frame(lineage="B.1.617.2",data.frame(sort(t2/sum(GISAID_sel$pango_lineage=="B.1.617.2"), decreasing=T)))
-t2[t2$Freq>0.5,]
-
-tab_comparison = merge(t,t2, by="Var1")
-tab_comparison = tab_comparison[order(tab_comparison$Freq.x, decreasing=T),]
-tab_comparison[(tab_comparison$Freq.x>0.5|tab_comparison$Freq.y>0.5)&(abs(tab_comparison$Freq.x-tab_comparison$Freq.y)>0.1),]
-# Spike_T95I, N_D377Y and N_G215C more common in AY.34 than in B.1.617.2
-# Spike_D950N more common in AY.34 than in B.1.617.2
-
-# Var1            lineage.x     Freq.x lineage.y     Freq.y
-# 3       N_D377Y     AY.34 0.97530864 B.1.617.2 0.64344942
-# 26   NSP4_V167L     AY.34 0.97530864 B.1.617.2 0.84079602
-# 5       N_G215C     AY.34 0.92592593 B.1.617.2 0.05970149
-# 39 Spike_L452R)     AY.34 0.91358025 B.1.617.2 0.67330017
-# 45   Spike_T95I     AY.34 0.87654321 B.1.617.2 0.46766169
-# 33  Spike_D950N     AY.34 0.65432099 B.1.617.2 0.11774461
-# 32  Spike_D950B     AY.34 0.30864198 B.1.617.2 0.85737977
-# 1      (N_G215C     AY.34 0.04938272 B.1.617.2 0.90713101
+# # comparison of mutations in AY.34 & B.1.617.2
+# # count of mutations present in AY.34
+# t = table(strsplit(paste0(GISAID_sel[GISAID_sel$pango_lineage=="AY.34","AA Substitutions"],collapse=","),",")[[1]])
+# t = data.frame(lineage="AY.34", data.frame(sort(t/sum(GISAID_sel$pango_lineage=="AY.34"), decreasing=T)))
+# t[t$Freq>0.5,]
+# # count of mutations present in B.1.617.2
+# t2 = table(strsplit(paste0(GISAID_sel[GISAID_sel$pango_lineage=="B.1.617.2","AA Substitutions"],collapse=","),",")[[1]])
+# t2 = data.frame(lineage="B.1.617.2",data.frame(sort(t2/sum(GISAID_sel$pango_lineage=="B.1.617.2"), decreasing=T)))
+# t2[t2$Freq>0.5,]
+# 
+# tab_comparison = merge(t,t2, by="Var1")
+# tab_comparison = tab_comparison[order(tab_comparison$Freq.x, decreasing=T),]
+# tab_comparison[(tab_comparison$Freq.x>0.5|tab_comparison$Freq.y>0.5)&(abs(tab_comparison$Freq.x-tab_comparison$Freq.y)>0.1),]
+# # Spike_T95I, N_D377Y and N_G215C more common in AY.34 than in B.1.617.2
+# # Spike_D950N more common in AY.34 than in B.1.617.2
+# 
+# # Var1            lineage.x     Freq.x lineage.y     Freq.y
+# # 3       N_D377Y     AY.34 0.97530864 B.1.617.2 0.64344942
+# # 26   NSP4_V167L     AY.34 0.97530864 B.1.617.2 0.84079602
+# # 5       N_G215C     AY.34 0.92592593 B.1.617.2 0.05970149
+# # 39 Spike_L452R)     AY.34 0.91358025 B.1.617.2 0.67330017
+# # 45   Spike_T95I     AY.34 0.87654321 B.1.617.2 0.46766169
+# # 33  Spike_D950N     AY.34 0.65432099 B.1.617.2 0.11774461
+# # 32  Spike_D950B     AY.34 0.30864198 B.1.617.2 0.85737977
+# # 1      (N_G215C     AY.34 0.04938272 B.1.617.2 0.90713101
 
 
 # aggregated data to make Muller plots of raw data
@@ -160,13 +179,16 @@ data_agbyweek$floor_date = NULL
   lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="P.1")] = "cyan3"
   lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="B.1.617.1")] = muted("magenta")
   lineage_cols2[which(levels(GISAID_sel$LINEAGE)==sel_target_VOC)] = "magenta"
+  lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="AY.3")] = muted("red",c=150,l=65)
   lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="AY.4")] = muted("red",c=150,l=60)
   lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="AY.20")] = muted("red",c=150,l=55)
   lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="AY.23")] = muted("red",c=150,l=50)
   lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="AY.25")] = muted("red",c=150,l=40)
   lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="AY.26")] = muted("red",c=150,l=30)
   lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="AY.30")] = muted("red",c=150,l=20)
+  lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="AY.33")] = muted("red",c=150,l=15)
   lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="AY.34")] = "blue"
+  lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="AY.34_with_S:Q677H_and_S:P681R")] = "blue"
   lineage_cols2[which(levels(GISAID_sel$LINEAGE)=="other")] = "grey75"
 
 muller_chile_raw2 = ggplot(data=data_agbyweek, aes(x=collection_date, y=count, group=LINEAGE)) + 
@@ -205,9 +227,9 @@ fit2_chile_multi = nnet::multinom(LINEAGE ~ ns(DATE_NUM, df=2), weights=count, d
 fit3_chile_multi = nnet::multinom(LINEAGE ~ ns(DATE_NUM, df=3), weights=count, data=data_agbyweek, maxit=1000)
 BIC(fit1_chile_multi, fit2_chile_multi, fit3_chile_multi) 
 # df      BIC
-# fit1_chile_multi 30 29726.91
-# fit2_chile_multi 45 29068.93
-# fit3_chile_multi 60 29148.74
+# fit1_chile_multi 36 38052.99
+# fit2_chile_multi 54 36840.15
+# fit3_chile_multi 72 36883.20
 
 # growth rate advantage compared to Delta (difference in growth rate per day) 
 emtrchile = emtrends(fit2_chile_multi, trt.vs.ctrl ~ LINEAGE,  
@@ -219,56 +241,42 @@ delta_r_chile = data.frame(confint(emtrchile,
                          p.value=as.data.frame(emtrchile$contrasts,
                                                adjust="none", df=NA)$p.value)
 delta_r_chile
-# contrast    estimate          SE df    asymp.LCL    asymp.UCL       p.value
-# 1     B.1.1.7 - B.1.617.2 -0.11082377 0.006372843 NA -0.123314319 -0.098333231  9.822688e-68
-# 2       B.1.1 - B.1.617.2 -0.08229979 0.005197731 NA -0.092487152 -0.072112421  1.819222e-56
-# 3   B.1.1.348 - B.1.617.2 -0.11706127 0.007560563 NA -0.131879698 -0.102242835  4.509108e-54
-# 4     B.1.351 - B.1.617.2 -0.16196820 0.061852219 NA -0.283196322 -0.040740079  8.828312e-03
-# 5     B.1.429 - B.1.617.2 -0.10767627 0.012239242 NA -0.131664747 -0.083687798  1.397412e-18
-# 6  (B.1.621+) - B.1.617.2 -0.04631630 0.005300147 NA -0.056704402 -0.035928207  2.358440e-18
-# 7        C.37 - B.1.617.2 -0.10756543 0.004259414 NA -0.115913729 -0.099217133 1.034665e-140
-# 8         P.1 - B.1.617.2 -0.10161935 0.004046606 NA -0.109550549 -0.093688146 3.655519e-139
-# 9      P.1.12 - B.1.617.2 -0.10290629 0.005088003 NA -0.112878591 -0.092933984  5.865815e-91
-# 10       AY.4 - B.1.617.2  0.01368058 0.010860349 NA -0.007605318  0.034966468  2.077845e-01
-# 11      AY.20 - B.1.617.2 -0.04486000 0.018914489 NA -0.081931712 -0.007788279  1.770519e-02
-# 12      AY.25 - B.1.617.2 -0.01658323 0.007281942 NA -0.030855575 -0.002310888  2.276778e-02
-# 13      AY.26 - B.1.617.2 -0.12267181 0.026279043 NA -0.174177790 -0.071165835  3.040760e-06
-# 14      AY.34 - B.1.617.2  0.15089174 0.016821484 NA  0.117922240  0.183861244  2.960292e-19
-# 15      other - B.1.617.2 -0.06043753 0.004286038 NA -0.068838010 -0.052037051  3.742874e-45
+#                                      contrast      estimate          SE df   asymp.LCL     asymp.UCL       p.value
+# 1                         B.1.1.7 - B.1.617.2 -0.1149014620 0.005203140 NA -0.12509943 -0.1047034955 4.594517e-108
+# 2                           B.1.1 - B.1.617.2 -0.0991964038 0.004944137 NA -0.10888673 -0.0895060734  1.540436e-89
+# 3                       B.1.1.348 - B.1.617.2 -0.1212460621 0.006965389 NA -0.13489797 -0.1075941503  7.309625e-68
+# 4                         B.1.351 - B.1.617.2 -0.0912797202 0.019270451 NA -0.12904911 -0.0535103297  2.171500e-06
+# 5                         B.1.429 - B.1.617.2 -0.1144340213 0.012132941 NA -0.13821415 -0.0906538942  4.035705e-21
+# 6                      (B.1.621+) - B.1.617.2 -0.0673657791 0.004092144 NA -0.07538623 -0.0593453249  6.853717e-61
+# 7                            C.37 - B.1.617.2 -0.1145674796 0.003309171 NA -0.12105334 -0.1080816239 1.212047e-262
+# 8                             P.1 - B.1.617.2 -0.1125397558 0.003191180 NA -0.11879435 -0.1062851577 1.959531e-272
+# 9                          P.1.12 - B.1.617.2 -0.1382642218 0.008029469 NA -0.15400169 -0.1225267523  1.892992e-66
+# 10                         P.1.15 - B.1.617.2 -0.1296083123 0.003494270 NA -0.13645696 -0.1227596684 3.827856e-301
+# 11                           AY.3 - B.1.617.2 -0.0911844738 0.017658760 NA -0.12579501 -0.0565739397  2.421205e-07
+# 12                           AY.4 - B.1.617.2  0.0005515706 0.006473467 NA -0.01213619  0.0132393319  9.320986e-01
+# 13                          AY.20 - B.1.617.2 -0.0709979029 0.016550168 NA -0.10343564 -0.0385601689  1.787859e-05
+# 14                          AY.25 - B.1.617.2 -0.0069549706 0.003143875 NA -0.01311685 -0.0007930891  2.695086e-02
+# 15                          AY.26 - B.1.617.2 -0.0421809408 0.007818553 NA -0.05750502 -0.0268568590  6.853094e-08
+# 16                          AY.33 - B.1.617.2 -0.0501971017 0.017140330 NA -0.08379153 -0.0166026723  3.404967e-03
+# 17 AY.34_with_S:Q677H_and_S:P681R - B.1.617.2  0.0025444564 0.010386123 NA -0.01781197  0.0229008830  8.064671e-01
+# 18                          other - B.1.617.2 -0.0678492413 0.003248796 NA -0.07421676 -0.0614817190  7.418564e-97
   
-# AY.34 103% more infectious than B.1.617.2 with GT of 4.7 days
-exp(0.15089174*4.7) # = 2.03
+# AY.34 1% more infectious than B.1.617.2 with GT of 4.7 days
+exp(0.0025444564*4.7) # = 1
 
 # fitted prop of different LINEAGES in the chile today
 multinom_preds_today_avg = data.frame(emmeans(fit2_chile_multi, ~ LINEAGE|1,
                                               at=list(DATE_NUM=today_num), 
                                               mode="prob", df=NA))
 multinom_preds_today_avg
-#      LINEAGE         prob           SE df     asymp.LCL    asymp.UCL
-# 1  B.1.617.2 9.405405e-02 3.216936e-02 NA  3.100327e-02 1.571048e-01
-# 2    B.1.1.7 1.716700e-05 1.006972e-05 NA -2.569296e-06 3.690329e-05
-# 3      B.1.1 2.480202e-04 1.106531e-04 NA  3.114400e-05 4.648963e-04
-# 4  B.1.1.348 3.208838e-06 2.540812e-06 NA -1.771062e-06 8.188739e-06
-# 5    B.1.351 4.271409e-09 2.566222e-08 NA -4.602562e-08 5.456844e-08
-# 6    B.1.429 2.705602e-06 3.291257e-06 NA -3.745144e-06 9.156348e-06
-# 7   B.1.621+ 1.931572e-02 7.013380e-03 NA  5.569751e-03 3.306170e-02
-# 8       C.37 4.686417e-04 1.761525e-04 NA  1.233891e-04 8.138943e-04
-# 9        P.1 2.501609e-03 9.009619e-04 NA  7.357560e-04 4.267462e-03
-# 10    P.1.12 1.879633e-04 7.986174e-05 NA  3.143714e-05 3.444894e-04
-# 11      AY.4 1.712975e-02 8.176598e-03 NA  1.103912e-03 3.315559e-02
-# 12     AY.20 1.214549e-03 8.978278e-04 NA -5.451611e-04 2.974259e-03
-# 13     AY.25 4.880004e-02 1.795891e-02 NA  1.360122e-02 8.399886e-02
-# 14     AY.26 1.285422e-04 1.216905e-04 NA -1.099668e-04 3.670513e-04
-# 15     AY.34 8.128906e-01 6.181054e-02 NA  6.917442e-01 9.340370e-01
-# 16     other 3.037434e-03 1.130919e-03 NA  8.208746e-04 5.253994e-03
 
 
 
 # PLOT MULTINOMIAL FIT
 
-# extrapolate = 30
+extrapolate = 30
 date.from = as.numeric(as.Date("2021-01-01"))
-date.to = as.numeric(as.Date("2021-11-14")) # max(GISAID_sel$DATE_NUM)+extrapolate
+date.to = today_num+extrapolate
 
 # multinomial model predictions (fastest, but no confidence intervals)
 predgrid = expand.grid(list(DATE_NUM=seq(date.from, date.to)))

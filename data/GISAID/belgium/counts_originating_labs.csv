@@ -1,165 +1,181 @@
 "","Var1","Freq"
 "1","'[Run20210508template bulk upload 20210508.xlsx]intermediaire'!R97",1
-"2","#N/A",1
+"2","#N/A",3
 "3","#VALUE!",3
-"4","Algemeen Klinisch Labo",2
+"4","Algemeen Klinisch Labo",87
 "5","Algemeen Klinisch Labo Lier",1
-"6","Algemeen Medisch Labo",322
+"6","Algemeen Medisch Labo",762
 "7","ALGEMEEN MEDISCH LABO",6
 "8","Algemeen Medisch Laboratorium",14
 "9","Algemeen Medisch Laboratorium (AML)",52
 "10","Antwerp University Hospital",6
-"11","arlon",12
-"12","Arlon",215
+"11","arlon",13
+"12","Arlon",358
 "13","AZ Delta",9
 "14","AZ Delta Medical Laboratories in Roeselare, Belgium",1
-"15","AZ Jan Portaels",11
-"16","AZ Klina",326
-"17","AZ Monica Deurne",1
+"15","AZ Jan Portaels",41
+"16","AZ Klina",470
+"17","AZ Monica Deurne",9
 "18","AZ Rivierenland, Campus Rumst",2
 "19","AZ Sint-Jan",16
 "20","AZ Sint-Jan Brugge",5
-"21","AZ Sint-Jan Brugge-Oostende AV",14
+"21","AZ Sint-Jan Brugge-Oostende AV",17
 "22","AZ Sint-Jan campus Oostende",1
 "23","AZ Sint-Lucas Gent",24
 "24","AZ Sint-Maarten",4
 "25","AZ Sint Blasius",1
-"26","AZ Sint Jan Brugge-Oostende AV",1
-"27","AZ Sint Maarten",29
-"28","AZ St.Jan",1
-"29","AZ St.jan Brugge",10
-"30","AZ St.Jan Brugge",11
-"31","AZ St.Jan Brugge-Oostende",44
-"32","AZ St.Jan Brugge-Oostende AV",11
-"33","AZ St.Jan campus Brugge",5
-"34","AZ St.Jan campus Oostende",5
-"35","AZ St.Jan, campus Oostende",1
-"36","AZ Vesale (Tongres)",4
-"37","AZ Zeno",47
-"38","AZ Zeno Knokke-Blankenberge",33
-"39","AZDelta",1766
-"40","AZT",6
-"41","AZV",3
-"42","Brussels Academic Hospital Lab (LHUB-ULB)",96
-"43","C.H Peltzer - la Tourelle",1
-"44","C.H.Bois de l'Abbaye",4
-"45","C.H.C MontLégia",16
-"46","Cabinet Priv<U+00E9>",10
-"47","Cabinet Privé",6
-"48","Centre de prélèvements du Heysel",1
-"49","Centre de tri Clinique St Jean - Pacheco",1
-"50","Centre de tri Iris-Sud",1
-"51","Centre de tri IRIS-Sud",1
-"52","Centre Hospitalier de l'Ardenne",13
-"53","Centre Hospitalier de Wallonie picarde (CHwapi)",3
-"54","Centre Hospitalier de Wallonie Picarde (CHWaPi)",12
-"55","Centrum voor Medische Analyse",8
-"56","CENTRUM VOOR MEDISCHE ANALYSE",46
-"57","CHC",12
-"58","CHC Liège",2
-"59","CHR Citadelle",18
-"60","CHR de la Citadelle",52
-"61","CHR de La Citadelle",101
-"62","CHR de Namur",1
-"63","CHR Namur",1
-"64","CHR Verviers",1
-"65","Chu Tivoli",5
-"66","CHWAPI - SITE NOTRE DAME",328
-"67","Clinique André Renard Herstal",6
-"68","CLINIQUE N-D DE GRACE",24
-"69","Clinique N.D de Grâce Gosselies",24
-"70","Clinique Saint-Pierre Ottignies",91
-"71","Clinique St Joseph Saint Vith",1
-"72","Cliniques Cud-Luxembourg",15
-"73","Cliniques Saint-Pierre Ottignies",15
-"74","Cliniques Sud-Luxembourg",10
-"75","Cliniques universitaires Saint-Luc",633
-"76","CUB Hopital Erasme Laboratoire d'Anatomie Pathologique",9
-"77","CUSL/UCLouvain COVID testing federal platform",9
-"78","Department of Clinical Microbiology",2393
-"79","Drive in Ohain",1
-"80","Dutch COVID-19 response team",7
-"81","GHDC - SITE ST JOSEPH",25
-"82","GZA Hospital Sint-Augustinus",1
-"83","GZA Sint-Augustinus",1
-"84","GZA Sint-Augustinus Hospital",6
-"85","HCRC",12
-"86","Heilig Hart Hospital",5
-"87","Heilig Hart Hospital Lier",1
-"88","Heilig hart Lier",40
-"89","Heilig Hart Lier",1
-"90","Heilig Hart Mol",1
-"91","Hopital Sainte Therese Bastogne",1
-"92","Hôpitaux Iris Sud Etterbeek-Ixelles",7
-"93","Hospital AZ Rivierenland",35
-"94","I.F.A.C. Hopital Princesse Paola",47
-"95","Imeda Hospital",67
-"96","Imelda",1
-"97","Imelda hospital",7
-"98","Imelda Hospital",35
-"99","Imelda hospital Bonheiden",7
-"100","Imelda Ziekenhuis",23
-"101","Institut de Pathologie et Genetique (IPG)",2
-"102","Institute information KU Leuven, Clinical and Epidemiological Virology",1
-"103","Instituut Tropische Geneeskunde",1
-"104","Jan Yperman Ziekenhuis",1
-"105","jessa",46
-"106","Jessa",1518
-"107","Klinisch Laboratorium GZA",14
-"108","Klinisch Laboratorium ZNA",309
-"109","KU Leuven, Clincal and Epidemiological Virology",1
-"110","KU Leuven, Clinical and Epidemiological Virology",183
-"111","KU Leuven, Rega Institute, Clinical and Epidemiological Virology",9331
-"112","Lab voor klinische biologie",3977
-"113","Labo Klinische Biologie, UZA",41
-"114","Labo Luc Olivier",71
-"115","Labo Medicom",5
-"116","Labo Somedi",2
-"117","Laboratoire de biologie moléculaire - Plateforme Clinique",1
-"118","Laboratoire Hospitalier Universitaire de Bruxelles (LHUB-ULB)",28
-"119","Laboratoire Vivalia - Cliniques St-Joseph",12
-"120","Laboratoire Vivalia -Cliniques St-Joseph",1
-"121","Laboratoires Réunis",1
-"122","Landstuhl Regional Medical Center",4
-"123","LHUB-ULB",742
-"124","Libramont",31
-"125","LKO",67
-"126","LKOLMC",8
-"127","Marche en Famenne",114
-"128","Microbiology Department - University Hospital Brussel",6
-"129","National Plateform bis UMONS/Jolimont",1
-"130","National Platform bis UMONS/Jolimont",709
-"131","OLVZ Aalst",186
-"132","Plateforme BIS Namur",42
-"133","Plateforme Clinique de testing Namuroise",27
-"134","Plateforme de testing namuroise",22
-"135","Plateforme de testing Namuroise",937
-"136","Platform BIS UZA/UAntwerpen",2633
-"137","Platform BIS UZA/UAntwerpen (PLBIS)",9
-"138","Platform BIS UZA/UAntwerpen, University Hospital Antwerp, Edegem, Belgium",23
-"139","Queen Astrid Military Hospital",10
-"140","Saint-Luc Bouge",1
-"141","SCIENSANO National Influenza Centre",1
-"142","SFZ",2
-"143","Somedi",2
-"144","Somedi laboratories",27
-"145","ST. JOZEFKLINIEK-Campus Willebroek",1
-"146","St. Nikolaus-Hospital Eupen",123
-"147","STZ",3
-"148","Synlab",143
-"149","SYNLAB",2386
-"150","SYNLAB - Laboratoire J. Collard",248
-"151","The Institute of Tropical Medicine in Antwerp, Belgium",1
-"152","Trudo",4
-"153","Univeritair Ziekenhuis Antwerpen (UZA)",6
-"154","Universitair Ziekemhuis Antwerpen (UZA)",1
-"155","University Hospital Antwerp (UZA), Drie Eikenstraat 655, 2650 Edegem, Belgium",4
-"156","University Hospital Basel, Clinical Virology",1
-"157","University Hospital Laboratory of Brussels Universitair Laboratorium van Brussel (LHUB-ULB)",1
-"158","University of Liège COVID-19 testing center",1113
-"159","US Air Force School of Aerospace Medicine",14
-"160","UZ Leuven, National Reference Laboratory for Coronaviruses, Laboratory Medicine, Leuven, Belgium",951
-"161","UZA/UAntwerpen (BIS lab), University Hospital Antwerp, Edegem, Belgium",7
-"162","Vivalia - Clinique Saint-Joseph",27
-"163","ZNA Middelheim",1
-"164","ZOL",176
+"26","AZ Sint Jan",1
+"27","AZ Sint Jan Brugge-Oostende AV",1
+"28","AZ Sint Maarten",40
+"29","AZ St. Jozef",4
+"30","AZ St.Jan",1
+"31","AZ St.jan Brugge",10
+"32","AZ St.Jan Brugge",11
+"33","AZ St.Jan Brugge-Oostende",166
+"34","AZ St.Jan Brugge-Oostende AV",11
+"35","AZ St.Jan campus Brugge",5
+"36","AZ St.Jan campus Oostende",5
+"37","AZ St.Jan, campus Oostende",1
+"38","AZ Turnhout",12
+"39","AZ Vesale (Tongres)",4
+"40","AZ Zeno",68
+"41","AZ Zeno Knokke-Blankenberge",49
+"42","AZDelta",3432
+"43","AZT",6
+"44","AZV",3
+"45","Brussels Academic Hospital Lab (LHUB-ULB)",96
+"46","C.H Peltzer - la Tourelle",33
+"47","C.H.Bois de l'Abbaye",22
+"48","C.H.C MontLégia",194
+"49","Cabinet Priv<U+00E9>",14
+"50","Cabinet Privé",6
+"51","Centre de prélèvements du Heysel",1
+"52","Centre de tri Clinique St Jean - Pacheco",1
+"53","Centre de tri Iris-Sud",1
+"54","Centre de tri IRIS-Sud",1
+"55","Centre Hospitalier de l'Ardenne",13
+"56","Centre Hospitalier de Wallonie picarde (CHwapi)",3
+"57","Centre Hospitalier de Wallonie Picarde (CHWaPi)",12
+"58","Centre Hospitalier Interrégional Edith Cavell",3
+"59","Centrum voor Medische Analyse",520
+"60","CENTRUM VOOR MEDISCHE ANALYSE",57
+"61","CHC",12
+"62","CHC Liège",2
+"63","CHM - SITE CHR",31
+"64","CHR - HAUTE SENNE (TI)",1
+"65","CHR Citadelle",18
+"66","CHR de la Citadelle",52
+"67","CHR de La Citadelle",147
+"68","CHR de Namur",1
+"69","CHR Namur",1
+"70","CHR Verviers",2
+"71","Chu Tivoli",5
+"72","CHWAPI - SITE NOTRE DAME",428
+"73","Clinical Virology",1
+"74","Clinique André Renard Herstal",12
+"75","CLINIQUE N-D DE GRACE",225
+"76","Clinique N.D de Grâce Gosselies",24
+"77","Clinique Notre Dame à Hermalle",38
+"78","Clinique Saint-Pierre Ottignies",420
+"79","Clinique St Joseph Saint Vith",34
+"80","Cliniques Cud-Luxembourg",15
+"81","Cliniques Saint-Pierre Ottignies",15
+"82","Cliniques Sud-Luxembourg",10
+"83","Cliniques universitaires Saint-Luc",1466
+"84","CUB Hopital Erasme Laboratoire d'Anatomie Pathologique",9
+"85","CUSL/UCLouvain COVID testing federal platform",9
+"86","Department of Clinical Microbiology",3234
+"87","Drive in Ohain",1
+"88","Dutch COVID-19 response team",7
+"89","GHDC - SITE ST JOSEPH",45
+"90","GZA Hospital Sint-Augustinus",1
+"91","GZA Sint-Augustinus",1
+"92","GZA Sint-Augustinus Hospital",6
+"93","HCRC",12
+"94","Heilig Hart Hospital",5
+"95","Heilig Hart Hospital Lier",1
+"96","Heilig hart Lier",86
+"97","Heilig Hart Lier",1
+"98","Heilig Hart Mol",1
+"99","Heilig Hartziekenhuis Mol",1
+"100","Hopital Sainte Therese Bastogne",1
+"101","Hôpitaux Iris Sud Etterbeek-Ixelles",7
+"102","Hospital AZ Rivierenland",35
+"103","I.F.A.C. Hopital Princesse Paola",47
+"104","Imeda Hospital",66
+"105","Imelda",1
+"106","Imelda hospital",7
+"107","Imelda Hospital",35
+"108","Imelda hospital Bonheiden",7
+"109","Imelda Ziekenhuis",82
+"110","Institut de Pathologie et Genetique (IPG)",2
+"111","Institute information KU Leuven, Clinical and Epidemiological Virology",1
+"112","Instituut Tropische Geneeskunde",12
+"113","Jan Yperman Ziekenhuis",1
+"114","jessa",46
+"115","Jessa",2177
+"116","Jessa Ziekenhuis",21
+"117","Klinisch Laboratorium GZA",14
+"118","Klinisch Laboratorium ZNA",798
+"119","KU Leuven, Clincal and Epidemiological Virology",1
+"120","KU Leuven, Clinical and Epidemiological Virology",183
+"121","KU Leuven, Rega Institute, Clinical and Epidemiological Virology",11052
+"122","Lab voor klinische biologie",6419
+"123","Labo Klinische Biologie, UZA",82
+"124","LABO LKO - LMC",4
+"125","Labo Luc Olivier",74
+"126","Labo Medicom",6
+"127","Labo Somedi",2
+"128","Laboratoire de biologie moléculaire - Plateforme Clinique",1
+"129","Laboratoire Hospitalier Universitaire de Bruxelles (LHUB-ULB)",28
+"130","Laboratoire Vivalia",13
+"131","Laboratoire Vivalia - Cliniques St-Joseph",12
+"132","Laboratoire Vivalia -Cliniques St-Joseph",1
+"133","Laboratoires Réunis",1
+"134","Landstuhl Regional Medical Center",4
+"135","LHUB-ULB",838
+"136","Libramont",31
+"137","LKO",232
+"138","LKOLMC",8
+"139","Marche en Famenne",175
+"140","Microbiology Department - University Hospital Brussel",153
+"141","National Plateform bis UMONS/Jolimont",1
+"142","National Platform bis COVID ULB-IBC",6
+"143","National Platform bis UMONS/Jolimont",1465
+"144","OLVZ Aalst",311
+"145","Plateforme BIS Namur",42
+"146","Plateforme Clinique de testing Namuroise",27
+"147","Plateforme de testing namuroise",22
+"148","Plateforme de testing Namuroise",2152
+"149","Platform BIS UZA/UAntwerpen",4669
+"150","Platform BIS UZA/UAntwerpen (PLBIS)",9
+"151","Platform BIS UZA/UAntwerpen, University Hospital Antwerp, Edegem, Belgium",23
+"152","Queen Astrid Military Hospital",10
+"153","Saint-Luc Bouge",2
+"154","Sainte-Elisabeth",5
+"155","SCIENSANO National Influenza Centre",1
+"156","SEQUENCING AZ TURNHOUT",3
+"157","SFZ",2
+"158","Sint-Dimpna Geel",7
+"159","Somedi",9
+"160","Somedi laboratories",27
+"161","Somedi Laboratories",26
+"162","ST. JOZEFKLINIEK-Campus Willebroek",1
+"163","St. Nikolaus-Hospital Eupen",123
+"164","STZ",3
+"165","Synlab",143
+"166","SYNLAB",4196
+"167","SYNLAB - Laboratoire J. Collard",248
+"168","The Institute of Tropical Medicine in Antwerp, Belgium",1
+"169","Trudo",4
+"170","Univeritair Ziekenhuis Antwerpen (UZA)",6
+"171","Universitair Ziekemhuis Antwerpen (UZA)",1
+"172","University Hospital Antwerp (UZA), Drie Eikenstraat 655, 2650 Edegem, Belgium",4
+"173","University Hospital Laboratory of Brussels Universitair Laboratorium van Brussel (LHUB-ULB)",1
+"174","University of Liège COVID-19 testing center",2200
+"175","US Air Force School of Aerospace Medicine",29
+"176","UZ Leuven, National Reference Laboratory for Coronaviruses, Laboratory Medicine, Leuven, Belgium",951
+"177","UZA/UAntwerpen (BIS lab), University Hospital Antwerp, Edegem, Belgium",7
+"178","Vivalia - Clinique Saint-Joseph",27
+"179","ZNA Middelheim",1
+"180","ZOL",834
