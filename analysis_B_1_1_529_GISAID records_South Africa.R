@@ -536,7 +536,9 @@ cases_prov$province = factor(cases_prov$province, levels=c("Gauteng", "North Wes
 head(cases_prov)
 cases_prov$date = as.Date(cases_prov$date)
 qplot(data=cases_prov, x=date, y=daily_cases, geom="col") + facet_wrap(~ province, scale="free_y") # + scale_y_log10()
+ggsave(file=paste0(".\\plots\\",plotdir,"\\cases by province.png"), width=10, height=6)
 qplot(data=cases_prov, x=date, y=daily_deaths, geom="col") + facet_wrap(~ province, scale="free_y") # + scale_y_log10()
+ggsave(file=paste0(".\\plots\\",plotdir,"\\deaths by province.png"), width=10, height=6)
 names(cases_cum)
 qplot(data=cases_cum, x=date, y=tests_daily, geom="col")
 
