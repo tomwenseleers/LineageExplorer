@@ -704,6 +704,14 @@ fit_southafrica_multi_preds_withCI$variant = factor(fit_southafrica_multi_preds_
 
 fit_southafrica_multi_preds_withCI[fit_southafrica_multi_preds_withCI$date==as.Date("2021-12-03"),] # this date is not plotted in plot below FIX
 
+qplot(data=fit_southafrica_multi_preds_withCI[fit_southafrica_multi_preds_withCI$variant=="Omicron",], x=date, y=cases, geom="line") +
+  xlim(c(as.Date("2021-10-01"), today)) + scale_y_log10() + geom_line(aes(y=smoothed_cases), colour=I("red"), lwd=I(2)) +
+  ylab("new Omicron cases per day") +
+  ggtitle("Inferred nr. of new Omicron cases per day in SA", "(black=observed,\nred=GAM negative binomial spline smooth,\nwith weekday effect smoothed out)")
+ggsave(file=paste0(".\\plots\\",plotdir,"\\omicron cases observed and fitted.png"), width=8, height=6)
+
+  
+
 ggplot(data=fit_southafrica_multi_preds_withCI, 
        aes(x=date, y=cases, group=variant)) + 
   geom_col(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant, width=I(1.1)), position="stack") +
@@ -717,7 +725,7 @@ ggplot(data=fit_southafrica_multi_preds_withCI,
 ggsave(file=paste0(".\\plots\\",plotdir,"\\cases per day_stacked area multinomial fit raw case data.png"), width=8, height=6)
 write.csv(fit_southafrica_multi_preds_withCI, file=paste0(".\\plots\\",plotdir,"\\cases per day by variant South Africa 6 dec 2021.csv"), row.names=F)
 
-ggplot(data=fit_southafrica_multi_preds_withCI[fit_southafrica_multi_preds_withCI$date<=today,], 
+ggplot(data=fit_southafrica_multi_preds_withCI[fit_southafrica_multi_preds_withCI$date<=(today-2),], 
        aes(x=date, y=smoothed_cases, group=variant)) + 
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), position="stack") +
   xaxis +
