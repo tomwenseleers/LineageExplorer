@@ -64,14 +64,14 @@ head(sgtf)[,c(1:4)]
 
 # ANALYSIS OF SGTF DATA USING LOGISTIC REGRESSION ####
 
-# fit (quasi)binomial GLM to SGTF data
+# fit binomial GLM to SGTF data
 
 fit_sgtf0 = glm(cbind(sgtf, non_sgtf) ~ date_num + country, family=binomial(logit), data=sgtf) # taking into account overdispersion via quasibinomial family
 fit_sgtf1 = glm(cbind(sgtf, non_sgtf) ~ date_num * country, family=binomial(logit), data=sgtf) # taking into account overdispersion via quasibinomial family
 AIC(fit_sgtf0, fit_sgtf1)
 #            df      AIC
-# fit_sgtf0  5 728.1557
-# fit_sgtf1  8 668.5033 # fits best
+# fit_sgtf0  5 692.8110
+# fit_sgtf1  8 653.8561 # fits best
 
 summary(fit_sgtf1)
 
@@ -80,38 +80,50 @@ summary(fit_sgtf1)
 # AIC(fit_sgtf0, fit_sgtf1)
 # summary(fit_sgtf)
 
-plot(allEffects(fit_sgtf1))
+plot(allEffects(fit_sgtf1, residuals=T))
 
-# growth rate advantage of Omicron over Delta (difference in growth rate per day)
+# growth rate advantage delta_r of Omicron over Delta (difference in growth rate per day)
 deltar_sgtf_bycountry = as.data.frame(emtrends(fit_sgtf1, ~ date_num, by="country", var="date_num", at=list(date_num=max(dateseq))))[,c(2,3,6,7)] # growth rate advantage of Omicron over Delta
 rownames(deltar_sgtf_bycountry) = deltar_sgtf_bycountry$country
 deltar_sgtf_bycountry$country = NULL
+colnames(deltar_sgtf_bycountry) = c("delta_r","delta_r_asymp.LCL","delta_r_asymp.UCL")
 deltar_sgtf_bycountry
-#              date_num.trend asymp.LCL asymp.UCL
-# South Africa      0.2884629 0.2185518 0.3583740
-# England           0.3986284 0.3829438 0.4143129
-# Denmark           0.3234410 0.2966248 0.3502572
-# Belgium           0.3082760 0.2490408 0.3675112
+#                delta_r delta_r_asymp.LCL delta_r_asymp.UCL
+# South Africa 0.2884629         0.2185518         0.3583740
+# England      0.3986284         0.3829438         0.4143129
+# Denmark      0.3234410         0.2966248         0.3502572
+# Belgium      0.2733339         0.2275811         0.3190866
 
-# avg growth rate advantage of Omicron over Delta across countries (mean difference in growth rate per day)
+# mean growth rate advantage of Omicron over Delta across countries (mean difference in growth rate per day)
 deltar_sgtf = as.data.frame(emtrends(fit_sgtf1, ~ date_num, var="date_num", at=list(date_num=max(dateseq))))[,c(2,5,6)] # growth rate advantage of Omicron over Delta
+colnames(deltar_sgtf) = c("delta_r","delta_r_asymp.LCL","delta_r_asymp.UCL")
 deltar_sgtf
-# date_num.trend asymp.LCL asymp.UCL
-# 1      0.3297021 0.3055134 0.3538908
+#     delta_r delta_r_asymp.LCL delta_r_asymp.UCL
+# 1 0.3209665         0.2986815         0.3432516
 deltar_sgtf_char = sapply(deltar_sgtf, function (x) sprintf(as.character(round(x,2)), 2) )
 deltar_sgtf_char = paste0(deltar_sgtf_char[1], " [", deltar_sgtf_char[2], "-", deltar_sgtf_char[3],"] 95% CLs")
 
 # transmission advantage of Omicron over Delta (using generation time of 4.7 days)
+# i.e. how much higher the effective reproduction number Re value of Omicron is than that of Delta
+# and how many more people the virus infects over the course of a single generation
+# (due to higher immune escape, i.e. more frequent reinfection of people with immunity built up
+# as a result of vaccination or prior exposure)
 transmadv_sgtf_by_country = exp(deltar_sgtf_bycountry*4.7) 
+colnames(transmadv_sgtf_by_country) = c("transmadv","transmadv_asymp.LCL","transmadv_asymp.UCL")
 transmadv_sgtf_by_country
-#              date_num.trend asymp.LCL asymp.UCL
-# South Africa       3.879770  2.793216  5.388990
-# England            6.511393  6.048656  7.009530
-# Denmark            4.573015  4.031492  5.187276
-# Belgium            4.258416  3.223577  5.625460
+#              transmadv transmadv_asymp.LCL transmadv_asymp.UCL
+# South Africa  3.879770            2.793216            5.388990
+# England       6.511393            6.048656            7.009530
+# Denmark       4.573015            4.031492            5.187276
+# Belgium       3.613472            2.914304            4.480377
 
-# avg transmission advantage of Omicron over Delta across countries (using generation time of 4.7 days)
+# mean transmission advantage of Omicron over Delta across countries (using generation time of 4.7 days)
+# i.e. mean fold difference in the effective reproduction number Re of Omicron compared to that of Delta
 transmadv_sgtf = exp(deltar_sgtf*4.7)
+colnames(transmadv_sgtf) = c("transmadv","transmadv_asymp.LCL","transmadv_asymp.UCL")
+transmadv_sgtf
+#   transmadv transmadv_asymp.LCL transmadv_asymp.UCL
+# 1  4.520139            4.070651             5.01926
 transmadv_sgtf_char = sapply(transmadv_sgtf, function (x) sprintf(as.character(round(x,1)), 1) )
 transmadv_sgtf_char = paste0(transmadv_sgtf_char[1], " [", transmadv_sgtf_char[2], "-", transmadv_sgtf_char[3],"] 95% CLs")
 
