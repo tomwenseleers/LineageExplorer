@@ -45,13 +45,14 @@ sgtf_sa = read.csv(".//data//omicron_sgtf//sgtf_south africa.csv")
 sgtf_sa$date = as.Date(sgtf_sa$date)
 sgtf_sa = sgtf_sa[sgtf_sa$date>=as.Date("2021-11-01"),] 
 sgtf_eng = read.csv(".//data//omicron_sgtf//sgtf_england.csv") 
+sgtf_scot = read.csv(".//data//omicron_sgtf//sgtf_scotland.csv") 
 sgtf_dk = read.csv(".//data//omicron_sgtf//sgtf_denmark.csv") 
 sgtf_be = read.csv(".//data//omicron_sgtf//sgtf_belgium.csv") 
 
-sgtf = rbind(sgtf_sa, sgtf_eng, sgtf_dk, sgtf_be)
+sgtf = rbind(sgtf_sa, sgtf_eng, sgtf_scot, sgtf_dk, sgtf_be)
 sgtf$date = as.Date(sgtf$date)
 sgtf$date_num = as.numeric(sgtf$date)
-levels_country = c("South Africa", "England", "Denmark", "Belgium")
+levels_country = c("South Africa", "Scotland", "England", "Denmark", "Belgium")
 sgtf$country = factor(sgtf$country, levels=levels_country)
 sgtf$prop = sgtf$sgtf/sgtf$pos_tests
 sgtf$non_sgtf = sgtf$pos_tests-sgtf$sgtf
@@ -70,8 +71,8 @@ fit_sgtf0 = glm(cbind(sgtf, non_sgtf) ~ date_num + country, family=binomial(logi
 fit_sgtf1 = glm(cbind(sgtf, non_sgtf) ~ date_num * country, family=binomial(logit), data=sgtf) # taking into account overdispersion via quasibinomial family
 AIC(fit_sgtf0, fit_sgtf1)
 #            df      AIC
-# fit_sgtf0  5 692.8110
-# fit_sgtf1  8 653.8561 # fits best
+# fit_sgtf0  6 1658.502
+# fit_sgtf1 10 1574.058 # fits best
 
 summary(fit_sgtf1)
 
@@ -137,13 +138,14 @@ emmeans_sgtf = as.data.frame(emmeans(fit_sgtf1, ~ date_num+country, at=list(date
 colnames(emmeans_sgtf) = c("date_num", "country", "prob", "SE", "df", "asymp.LCL", "asymp.UCL")
 emmeans_sgtf$date = as.Date(emmeans_sgtf$date_num, origin="1970-01-01")
 
-qplot(data=sgtf, x=date, y=prop, geom="point", colour=country, fill=country, size=I(2)) + 
+qplot(data=sgtf, x=date, y=prop, geom="point", colour=country, fill=country, size=I(1.4)) + 
   geom_ribbon(data=emmeans_sgtf, aes(y=prob, ymin=asymp.LCL, ymax=asymp.UCL, colour=NULL), alpha=I(0.5)) +
   geom_line(data=emmeans_sgtf, aes(y=prob), alpha=I(0.5), size=1) +
   scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
                       labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
   xlim(date.from, date.to) +
   coord_cartesian(ylim=c(0.001,0.99)) +
+  # scale_size_continuous(range=c()) +
   ggtitle("Spread of Omicron variant inferred from SGTF data") +
   ylab("Share of Omicron among confirmed cases (%)") +
   annotate("text", x = c(as.Date("2021-10-14")), y = c(0.94),
