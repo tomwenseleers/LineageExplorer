@@ -91,6 +91,7 @@ colnames(deltar_sgtf_bycountry) = c("delta_r","delta_r_asymp.LCL","delta_r_asymp
 deltar_sgtf_bycountry
 #                delta_r delta_r_asymp.LCL delta_r_asymp.UCL
 # South Africa 0.2884629         0.2185518         0.3583740
+# Scotland     0.3187785         0.3104591         0.3270978
 # England      0.3986284         0.3829438         0.4143129
 # Denmark      0.3234410         0.2966248         0.3502572
 # Belgium      0.2733339         0.2275811         0.3190866
@@ -100,7 +101,7 @@ deltar_sgtf = as.data.frame(emtrends(fit_sgtf1, ~ date_num, var="date_num", at=l
 colnames(deltar_sgtf) = c("delta_r","delta_r_asymp.LCL","delta_r_asymp.UCL")
 deltar_sgtf
 #     delta_r delta_r_asymp.LCL delta_r_asymp.UCL
-# 1 0.3209665         0.2986815         0.3432516
+# 1 0.3205289         0.3026234         0.3384345
 deltar_sgtf_char = sapply(deltar_sgtf, function (x) sprintf(as.character(round(x,2)), 2) )
 deltar_sgtf_char = paste0(deltar_sgtf_char[1], " [", deltar_sgtf_char[2], "-", deltar_sgtf_char[3],"] 95% CLs")
 
@@ -114,6 +115,7 @@ colnames(transmadv_sgtf_by_country) = c("transmadv","transmadv_asymp.LCL","trans
 transmadv_sgtf_by_country
 #              transmadv transmadv_asymp.LCL transmadv_asymp.UCL
 # South Africa  3.879770            2.793216            5.388990
+# Scotland      4.473892            4.302334            4.652291
 # England       6.511393            6.048656            7.009530
 # Denmark       4.573015            4.031492            5.187276
 # Belgium       3.613472            2.914304            4.480377
@@ -124,7 +126,7 @@ transmadv_sgtf = exp(deltar_sgtf*4.7)
 colnames(transmadv_sgtf) = c("transmadv","transmadv_asymp.LCL","transmadv_asymp.UCL")
 transmadv_sgtf
 #   transmadv transmadv_asymp.LCL transmadv_asymp.UCL
-# 1  4.520139            4.070651             5.01926
+# 1  4.510852            4.146771            4.906898
 transmadv_sgtf_char = sapply(transmadv_sgtf, function (x) sprintf(as.character(round(x,1)), 1) )
 transmadv_sgtf_char = paste0(transmadv_sgtf_char[1], " [", transmadv_sgtf_char[2], "-", transmadv_sgtf_char[3],"] 95% CLs")
 
