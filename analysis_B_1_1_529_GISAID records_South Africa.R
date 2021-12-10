@@ -519,15 +519,6 @@ qplot(data=cases_cum, x=date, y=tests_daily, geom="col")
 # https://mediahack.co.za/datastories/coronavirus/data/csv.php?table=deaths-age
 # https://mediahack.co.za/datastories/coronavirus/data/csv.php?table=deaths-gender
 
-# hospitalisation data for SA overall (NICD) (no use: only runs until sept)
-hosp = read.csv("https://raw.githubusercontent.com/dsfsi/covid19za/master/data/nicd_hospital_surveillance_data.csv")
-hosp$date = as.Date(hosp$date, "%d-%m-%Y")
-qplot(data=hosp, x=date, y=total_admissions, geom="col")
-hosp$new_admissions = c(0,diff(hosp$total_admissions))
-qplot(data=hosp, x=date, y=new_admissions, geom="col") + xaxis
-# qplot(data=hosp, x=date, y=current_num_in_hospital, geom="col") + xaxis
-# qplot(data=hosp, x=date, y=WC, geom="col") = xaxis
-
 # case data for SA per province
 cases_prov = read.csv("https://mediahack.co.za/datastories/coronavirus/data/csv.php?table=provinces")
 cases_prov = cases_prov[cases_prov$date!="",]
@@ -535,13 +526,40 @@ cases_prov = cases_prov[cases_prov$province!="Unknown",]
 cases_prov$province = factor(cases_prov$province, levels=c("Gauteng", "North West", "Mpumalanga", "Limpopo", "Western Cape", "Free State", "KwaZulu Natal", "Eastern Cape", "Northern Cape"))
 head(cases_prov)
 cases_prov$date = as.Date(cases_prov$date)
-qplot(data=cases_prov, x=date, y=daily_cases, geom="col") + facet_wrap(~ province, scale="free_y") # + scale_y_log10()
-ggsave(file=paste0(".\\plots\\",plotdir,"\\cases by province.png"), width=10, height=6)
-qplot(data=cases_prov, x=date, y=daily_deaths, geom="col") + facet_wrap(~ province, scale="free_y") # + scale_y_log10()
-ggsave(file=paste0(".\\plots\\",plotdir,"\\deaths by province.png"), width=10, height=6)
 names(cases_cum)
 qplot(data=cases_cum, x=date, y=tests_daily, geom="col")
 
+# hospitalisation data for SA per province
+hosp_prov = read.csv("https://raw.githubusercontent.com/dsfsi/covid19za/master/data/covid19za_provincial_raw_hospitalization.csv")
+colnames(hosp_prov)[1] = "province"
+colnames(hosp_prov)[3] = "date"
+hosp_prov = hosp_prov[hosp_prov$province!="Total",]
+hosp_prov$province = factor(hosp_prov$province, 
+                            levels=c("Gauteng", "NorthWest", "Mpumalanga", "Limpopo", "WesternCape", "FreeState", "KwaZulu-Natal", "EasternCape", "NorthernCape"),
+                            labels=c("Gauteng", "North West", "Mpumalanga", "Limpopo", "Western Cape", "Free State", "KwaZulu Natal", "Eastern Cape", "Northern Cape"))
+head(hosp_prov)
+hosp_prov$date = as.Date(hosp_prov$date)
+
+# try with diff(AdmissionstoDate)
+
+# plots of cases, hospitalisations & deaths by province
+qplot(data=cases_prov, x=date, y=daily_cases, geom="col") + facet_wrap(~ province, scale="free_y")  + 
+  ylab("new cases per day") + ggtitle("New confirmed Covid cases per day\nin South Africa") + xaxis # + scale_y_log10()
+ggsave(file=paste0(".\\plots\\",plotdir,"\\cases by province.png"), width=10, height=6)
+
+qplot(data=hosp_prov[hosp_prov$variable=="AdmissionsinPreviousDay",], x=date, y=value, geom="col") + facet_wrap(~ province, scale="free_y") + # + # + scale_y_log10()
+  ylab("new admissions per day") + ggtitle("Covid patients admitted in hospital per day\nin South Africa") + xaxis
+  # facet_wrap(~ variable)
+ggsave(file=paste0(".\\plots\\",plotdir,"\\new hospital admissions by province.png"), width=10, height=6)
+
+qplot(data=hosp_prov[hosp_prov$variable=="CurrentlyAdmitted",], x=date, y=value, geom="col") + facet_wrap(~ province, scale="free_y") +
+  ylab("currently admitted") + ggtitle("Covid patients currently admitted in hospital\nin South Africa") + xaxis # + # + scale_y_log10()
+# facet_wrap(~ variable)
+ggsave(file=paste0(".\\plots\\",plotdir,"\\total hospital admissions by province.png"), width=10, height=6)
+
+qplot(data=cases_prov, x=date, y=daily_deaths, geom="col") + facet_wrap(~ province, scale="free_y") + 
+  ylab("new deaths per day") + ggtitle("Covid mortality in South Africa") + xaxis # + scale_y_log10()
+ggsave(file=paste0(".\\plots\\",plotdir,"\\deaths by province.png"), width=10, height=6)
 
 
 # cases_tot = as.data.frame(get_national_data(countries = "South Africa"))
