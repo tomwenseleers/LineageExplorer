@@ -34,6 +34,11 @@ today_num = as.numeric(today)
 plotdir = "omicron_sgtf"
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 
+extrapolate = 30
+date.from = as.Date("2021-10-14")
+date.to = today+extrapolate
+dateseq = as.numeric(seq(date.from, date.to, by=1))
+
 # X axis for plots
 firststofmonth = seq(as.Date("2020-01-01"), as.Date("2022-12-01"), by="month")
 xaxis = scale_x_continuous(breaks=firststofmonth,
@@ -78,8 +83,8 @@ fit_sgtf0 = glm(cbind(omicron, non_omicron) ~ date_num + country, family=binomia
 fit_sgtf1 = glm(cbind(omicron, non_omicron) ~ date_num * country, family=binomial(logit), data=sgtf) 
 AIC(fit_sgtf0, fit_sgtf1)
 #            df      AIC
-# fit_sgtf0  6 751.0214
-# fit_sgtf1 10 579.5116 # fits best
+# fit_sgtf0  6 820.2803
+# fit_sgtf1 10 623.3438 # fits best
 
 summary(fit_sgtf1)
 
@@ -100,15 +105,15 @@ deltar_sgtf_bycountry
 # South Africa 0.2884629         0.2185518         0.3583740
 # England      0.4782437         0.4560162         0.5004712
 # Scotland     0.3197687         0.2929992         0.3465382
-# Denmark      0.3720588         0.3525031         0.3916145
-# Belgium      0.2326924         0.2020532         0.2633316
+# Denmark      0.3299872         0.3153420         0.3446324
+# Belgium      0.2328476         0.2033660         0.2623292
 
 # mean growth rate advantage of Omicron over Delta across countries (mean difference in growth rate per day)
 deltar_sgtf = as.data.frame(emtrends(fit_sgtf1, ~ date_num, var="date_num", at=list(date_num=max(dateseq))))[,c(2,5,6)] # growth rate advantage of Omicron over Delta
 colnames(deltar_sgtf) = c("delta_r","delta_r_asymp.LCL","delta_r_asymp.UCL")
 deltar_sgtf
 #     delta_r delta_r_asymp.LCL delta_r_asymp.UCL
-# 1 0.3382453         0.3210181         0.3554725
+# 1 0.329862         0.3129128         0.3468112
 deltar_sgtf_char = sapply(deltar_sgtf, function (x) sprintf(as.character(round(x,2)), 2) )
 deltar_sgtf_char = paste0(deltar_sgtf_char[1], " [", deltar_sgtf_char[2], "-", deltar_sgtf_char[3],"] 95% CLs")
 
@@ -124,8 +129,8 @@ transmadv_sgtf_by_country
 # South Africa  3.879770            2.793216            5.388990
 # England       9.466369            8.527327           10.508819
 # Scotland      4.494763            3.963376            5.097395
-# Denmark       5.746990            5.242321            6.300243
-# Belgium       2.985163            2.584805            3.447532
+# Denmark       4.715901            4.402214            5.051940
+# Belgium       2.987341            2.600803            3.431327
 
 # mean transmission advantage of Omicron over Delta across countries (using generation time of 4.7 days)
 # i.e. mean fold difference in the effective reproduction number Re of Omicron compared to that of Delta
@@ -133,16 +138,11 @@ transmadv_sgtf = exp(deltar_sgtf*4.7)
 colnames(transmadv_sgtf) = c("transmadv","transmadv_asymp.LCL","transmadv_asymp.UCL")
 transmadv_sgtf
 #   transmadv transmadv_asymp.LCL transmadv_asymp.UCL
-# 1  4.902538            4.521234            5.315998
+# 1  4.713127            4.352239             5.10394
 transmadv_sgtf_char = sapply(transmadv_sgtf, function (x) sprintf(as.character(round(x,1)), 1) )
 transmadv_sgtf_char = paste0(transmadv_sgtf_char[1], " [", transmadv_sgtf_char[2], "-", transmadv_sgtf_char[3],"] 95% CLs")
 
 # plot model predictions
-extrapolate = 30
-date.from = as.Date("2021-10-14")
-date.to = today+extrapolate
-
-dateseq = as.numeric(seq(date.from, date.to, by=1))
 emmeans_sgtf = as.data.frame(emmeans(fit_sgtf1, ~ date_num+country, at=list(date_num=dateseq, country=levels_country)), type="response")
 colnames(emmeans_sgtf) = c("date_num", "country", "prob", "SE", "df", "asymp.LCL", "asymp.UCL")
 emmeans_sgtf$date = as.Date(emmeans_sgtf$date_num, origin="1970-01-01")
