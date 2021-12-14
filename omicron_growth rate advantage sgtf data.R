@@ -115,13 +115,13 @@ fit_sgtf0 = glm(cbind(omicron, non_omicron) ~ date_num + country, family=binomia
 fit_sgtf1 = glm(cbind(omicron, non_omicron) ~ date_num * country, family=binomial(logit), data=sgtf) 
 AIC(fit_sgtf0, fit_sgtf1)
 #            df      AIC
-# fit_sgtf0  6 885.3442
-# fit_sgtf1 10 797.6278 # fits best
+# fit_sgtf0  6 891.6730
+# fit_sgtf1 10 799.4065 # fits best
 
 summary(fit_sgtf1)
 
-# fit_sgtf0 = glmmPQL(cbind(sgtf, non_sgtf) ~ date_num * country, family=binomial(logit), correlation=corAR1(), random=~1|obs, data=sgtf) # taking into account lag-1 autocorrelation in residuals
-# fit_sgtf1 = glmmPQL(cbind(sgtf, non_sgtf) ~ date_num * country, family=binomial(logit), correlation=corAR1(), random=~1|obs, data=sgtf) # taking into account lag-1 autocorrelation in residuals
+# fit_sgtf0 = glmmPQL(cbind(omicron, non_omicron) ~ date_num * country, family=binomial(logit), correlation=corAR1(), random=~1|obs, data=sgtf) # taking into account lag-1 autocorrelation in residuals
+# fit_sgtf1 = glmmPQL(cbind(omicron, non_omicron) ~ date_num * country, family=binomial(logit), correlation=corAR1(), random=~1|obs, data=sgtf) # taking into account lag-1 autocorrelation in residuals
 # AIC(fit_sgtf0, fit_sgtf1)
 # summary(fit_sgtf)
 
@@ -138,14 +138,14 @@ deltar_sgtf_bycountry
 # England      0.3932711         0.3801003         0.4064418
 # Scotland     0.3257174         0.2983505         0.3530843
 # Denmark      0.3299872         0.3153420         0.3446324
-# Belgium      0.2439724         0.2130805         0.2748644
+# Belgium      0.2487621         0.2206212         0.2769029
 
 # mean growth rate advantage of Omicron over Delta across countries (mean difference in growth rate per day)
 deltar_sgtf = as.data.frame(emtrends(fit_sgtf1, ~ date_num, var="date_num", at=list(date_num=max(dateseq))))[,c(2,5,6)] # growth rate advantage of Omicron over Delta
 colnames(deltar_sgtf) = c("delta_r","delta_r_asymp.LCL","delta_r_asymp.UCL")
 deltar_sgtf
 #     delta_r delta_r_asymp.LCL delta_r_asymp.UCL
-# 1 0.327181         0.3074591         0.3469029
+# 1 0.3281389         0.3085825         0.3476954
 deltar_sgtf_char = sapply(deltar_sgtf, function (x) sprintf(as.character(round(x,2)), 2) )
 deltar_sgtf_char = paste0(deltar_sgtf_char[1], " [", deltar_sgtf_char[2], "-", deltar_sgtf_char[3],"] 95% CLs")
 
@@ -162,7 +162,7 @@ transmadv_sgtf_by_country
 # England       6.349487            5.968357            6.754957
 # Scotland      4.622204            4.064323            5.256661
 # Denmark       4.715901            4.402214            5.051940
-# Belgium       3.147695            2.722303            3.639559
+# Belgium       3.219357            2.820515            3.674598
 
 # mean transmission advantage of Omicron over Delta across countries (using generation time of 4.7 days)
 # i.e. mean fold difference in the effective reproduction number Re of Omicron compared to that of Delta
@@ -170,7 +170,7 @@ transmadv_sgtf = exp(deltar_sgtf*4.7)
 colnames(transmadv_sgtf) = c("transmadv","transmadv_asymp.LCL","transmadv_asymp.UCL")
 transmadv_sgtf
 #   transmadv transmadv_asymp.LCL transmadv_asymp.UCL
-# 1  4.65411            4.242098            5.106139
+# 1  4.675112            4.264554            5.125195
 transmadv_sgtf_char = sapply(transmadv_sgtf, function (x) sprintf(as.character(round(x,1)), 1) )
 transmadv_sgtf_char = paste0(transmadv_sgtf_char[1], " [", transmadv_sgtf_char[2], "-", transmadv_sgtf_char[3],"] 95% CLs")
 
@@ -180,11 +180,12 @@ colnames(emmeans_sgtf) = c("date_num", "country", "prob", "SE", "df", "asymp.LCL
 emmeans_sgtf$date = as.Date(emmeans_sgtf$date_num, origin="1970-01-01")
 
 # plot of share of Omicron among confirmed infections (on logit scale)
-qplot(data=sgtf, x=date, y=prop, geom="point", colour=country, fill=country, size=I(1.8)) + 
-  geom_ribbon(data=emmeans_sgtf, aes(y=prob, ymin=asymp.LCL, ymax=asymp.UCL, colour=NULL), alpha=I(0.5)) +
+qplot(data=sgtf, x=date, y=prop, geom="point", colour=country, fill=country, size=pos_tests) + 
+  geom_ribbon(data=emmeans_sgtf, aes(y=prob, ymin=asymp.LCL, ymax=asymp.UCL, colour=NULL, size=NULL), alpha=I(0.5)) +
   geom_line(data=emmeans_sgtf, aes(y=prob), alpha=I(0.5), size=1) +
   scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
                       labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
+  scale_size_continuous("nr. of positive tests", range=c(1,4), breaks=c(100, 1000, 10000)) +
   xlim(date.from, date.to) +
   coord_cartesian(xlim=c(as.Date("2021-10-14"),NA), ylim=c(0.001,0.99)) +
   # scale_size_continuous(range=c()) +
@@ -203,11 +204,10 @@ qplot(data=sgtf, x=date, y=prop, geom="point", colour=country, fill=country, siz
 ggsave(file=paste0(".\\plots\\",plotdir,"\\spread omicron logistic fit sgtf data.png"), width=8, height=6)
 
 # plot of share of Omicron among confirmed infections (on linear scale)
-qplot(data=sgtf, x=date, y=100*prop, geom="point", colour=country, fill=country, size=I(1.8)) + 
-  geom_ribbon(data=emmeans_sgtf, aes(y=prob*100, ymin=100*asymp.LCL, ymax=100*asymp.UCL, colour=NULL), alpha=I(0.5)) +
+qplot(data=sgtf, x=date, y=100*prop, geom="point", colour=country, fill=country, size=pos_tests) + 
+  geom_ribbon(data=emmeans_sgtf, aes(y=prob*100, ymin=100*asymp.LCL, ymax=100*asymp.UCL, colour=NULL, size=NULL), alpha=I(0.5)) +
   geom_line(data=emmeans_sgtf, aes(y=prob*100), alpha=I(0.5), size=1) +
-  # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
-  #                    labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
+  scale_size_continuous("nr. of positive tests", range=c(1,4), breaks=c(100, 1000, 10000)) +
   xlim(date.from, date.to) +
   coord_cartesian(xlim=c(as.Date("2021-10-14"),NA), ylim=c(0,100)) +
   # scale_size_continuous(range=c()) +
