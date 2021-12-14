@@ -123,13 +123,12 @@ head(sgtf)[,c("country","date","omicron","prop_omicron")]
 # # fit_sgtf1 10 799.4065 # fits best
 # summary(fit_sgtf1)
 
-# fit using a separate-slope logistic regression that allows for lag-1 temporal autocorrelation in the results and 
-# also takes into account overdispersion via the inclusion of an observation-level random effect
+# fit using a separate-slope logistic regression that allows for overdispersion via the inclusion of an observation-level random effect
 
-fit_sgtf0 = glmmPQL(cbind(omicron, non_omicron) ~ date_num + country, family=binomial(logit), correlation=corAR1(), random=~1|obs, data=sgtf) # taking into account lag-1 autocorrelation in residuals
-fit_sgtf1 = glmmPQL(cbind(omicron, non_omicron) ~ date_num * country, family=binomial(logit), correlation=corAR1(), random=~1|obs, data=sgtf) # taking into account lag-1 autocorrelation in residuals
-# AIC(fit_sgtf0, fit_sgtf1)
-# summary(fit_sgtf)
+fit_sgtf0 = glmmPQL(cbind(omicron, non_omicron) ~ date_num + country, family=binomial(logit), random=~1|obs, data=sgtf) # to take into account lag-1 autocorrelation in residuals correlation=corAR1(), 
+fit_sgtf1 = glmmPQL(cbind(omicron, non_omicron) ~ date_num * country, family=binomial(logit), random=~1|obs, data=sgtf) # to take into account lag-1 autocorrelation in residuals correlation=corAR1(), 
+AIC(fit_sgtf0, fit_sgtf1)
+summary(fit_sgtf1)
 
 plot(allEffects(fit_sgtf1, residuals=T))
 
