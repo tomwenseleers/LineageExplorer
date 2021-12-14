@@ -1,11 +1,7 @@
-# ANALYSIS OF GROWTH ADVANTAGE OF OMICRON (B.1.1.529) IN SOUTH AFRICA 
-# (GISAID RECORDS & 
-# SGTF data (now proxy for Omicron / B.1.1.529), traced from graph by Alex Selby from briefing by Tulio de Oliveira & Richard Lessells,
-# original data courtesy of Lesley Scott & NHLS team
-# https://www.youtube.com/watch?v=Vh4XMueP1zQ, https://twitter.com/chrischirp/status/1463885565221384202/photo/1)
+# ANALYSIS OF GROWTH ADVANTAGE OF OMICRON (B.1.1.529) IN SOUTH AFRICA BASED ON GISAID SEQUENCE DATA
 
 # T. Wenseleers
-# last update 13 DECEMBER 2021
+# last update 14 DECEMBER 2021
     
   library(nnet)
   # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
@@ -28,22 +24,22 @@
   library(lme4)
     
   today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-  # today = as.Date("2021-12-11")
+  # today = as.Date("2021-12-14")
   today_num = as.numeric(today)
   plotdir = "South Africa_GISAID"
   suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
   levels_PROVINCES = c("Gauteng", "North West", "Mpumalanga", "Limpopo", "Western Cape", "Free State", "KwaZulu Natal", "Eastern Cape", "Northern Cape")
   sel_target_VOC = "Omicron"
   sel_reference_VOC = "Delta"
-  levels_VARIANTS = c(sel_reference_VOC, "Beta", "Alpha", "C.1.2", "Other", sel_target_VOC)
-  n = length(levels_VARIANTS)
-  # lineage_cols = hcl(h = seq(0, 180, length = n2), l = 60, c = 180)
-  lineage_cols[which(levels_VARIANTS=="Alpha")] = "#0085FF"
-  lineage_cols[which(levels_VARIANTS=="Beta")] = "green4"
-  lineage_cols[which(levels_VARIANTS=="Delta")] = "mediumorchid"
-  lineage_cols[which(levels_VARIANTS=="C.1.2")] = "darkorange"
-  lineage_cols[which(levels_VARIANTS==sel_target_VOC)] = "red2" # "magenta"
-  lineage_cols[which(levels_VARIANTS=="Other")] = "grey65"
+  levels_VARIANTSS = c(sel_reference_VOC, "Beta", "Alpha", "C.1.2", "Other", sel_target_VOC)
+  n = length(levels_VARIANTSS)
+  lineage_cols = hcl(h = seq(0, 180, length = n), l = 60, c = 180)
+  lineage_cols[which(levels_VARIANTSS=="Alpha")] = "#0085FF"
+  lineage_cols[which(levels_VARIANTSS=="Beta")] = "green4"
+  lineage_cols[which(levels_VARIANTSS=="Delta")] = "mediumorchid"
+  lineage_cols[which(levels_VARIANTSS=="C.1.2")] = "darkorange"
+  lineage_cols[which(levels_VARIANTSS==sel_target_VOC)] = "red2" # "magenta"
+  lineage_cols[which(levels_VARIANTSS=="Other")] = "grey65"
   
   # X axis for plots
   firststofmonth = seq(as.Date("2020-01-01"), as.Date("2022-12-01"), by="month")
@@ -52,83 +48,11 @@
                              expand=c(0,0))
   
   
-  
-
-# import GISAID records for South Africa
+  # import GISAID records for South Africa
 d1 = read_tsv(file(".//data//GISAID//South Africa//gisaid_hcov-19_2021_11_25_20_subm_2020.tsv"), col_types = cols(.default = "c")) 
 d2 = read_tsv(file(".//data//GISAID//South Africa//gisaid_hcov-19_2021_11_25_20_subm_jan_may_2021.tsv"), col_types = cols(.default = "c")) 
 d3 = read_tsv(file(".//data//GISAID//South Africa//gisaid_hcov-19_2021_11_25_20_subm_june_aug_2021.tsv"), col_types = cols(.default = "c")) 
 d4 = read_tsv(file(".//data//GISAID//South Africa//gisaid_hcov-19_2021_12_12_10_subm_sept_dec_2021.tsv"), col_types = cols(.default = "c")) 
-
-
-
-# import SGTF data (now proxy for B.1.1.529 / Omicron)
-# sgtf = read.csv(".//data//GISAID//South Africa//South Africa SGTF.csv") # SGTF data, from graph shown at press conference, now proxy for B.1.1.529 (traced by John Burn Murdoch)
-sgtf = read.csv(".//data//GISAID//South Africa//SA_sgtf_Alex Selby.csv") # SGTF data, from graph shown at press conference, now proxy for B.1.1.529 (traced by Alex Selby, https://github.com/alex1770/Covid-19/blob/master/VOCgrowth/EarlyOmicronEstimate/SA_sgtf)
-# note : technically, columns sgtf and non_sgtf should be counts and they are not - this is due to rounding errors caused by tracing the data from the graph
-# this should not affect estimates much though
-sgtf$date = as.Date(sgtf$date)
-sgtf$date_num = as.numeric(sgtf$date)
-sgtf$prop = sgtf$sgtf/sgtf$tests
-# sgtf$baseline = 0.02 # 2% baseline subtracted
-sgtf$prop = sgtf$prop # - sgtf$baseline
-sgtf$prop[sgtf$prop<0] = 0
-sgtf$sgtf = sgtf$prop*sgtf$tests
-sgtf$non_sgtf = (1-sgtf$prop)*sgtf$tests
-sgtf$obs = as.factor(1:nrow(sgtf)) # for observation-level random effect to take into account overdispersion
-sgtf$random = factor(1) # fake random effect to be able to run glmmPQL
-names(sgtf)
-
-
-# 1. ESTIMATE OF GROWTH RATE & TRANSMISSION ADVANTAGE OF OMICRON OVER DELTA BASED ON LOGISTIC REGRESSION TO SGTF DATA ####
-
-sgtf_subs = sgtf[sgtf$date>=as.Date("2021-11-01"),] # SGTF data sinc Nov 1
-# B_1_1_529_nov = data.frame(variant="B.1.1.529", date=sgtf_nov$date, "count"=sgtf_nov$SGTF-2) # we subtract a 2% baseline, "count" is actually a percentage here
-
-# fit binomial GLM to SGTF data
-fit_sgtf = glm(cbind(sgtf, non_sgtf) ~ date_num, family=binomial(logit), data=sgtf_subs)
-summary(fit_sgtf)
-
-# fit_sgtf = glmer(cbind(sgtf, non_sgtf) ~ (1|obs)+date_num, family=binomial(logit), data=sgtf_nov) # taking into account overdispersion via random effect
-# summary(fit_sgtf)
-
-# fit_sgtf = glmmPQL(cbind(sgtf, non_sgtf) ~ date_num, family=binomial(logit), correlation=corAR1(), random=~1|obs, data=sgtf_nov) # taking into account lag-1 autocorrelation in residuals
-# summary(fit_sgtf)
-
-# plot(allEffects(fit_sgtf))
-
-dateseq = seq(as.Date("2021-10-24"), today, by=1)
-emmeans_sgtf = as.data.frame(emmeans(fit_sgtf, ~ date_num, at=list(date_num=dateseq)), type="response")
-colnames(emmeans_sgtf) = c("date_num","prob","SE","df","asymp.LCL","asymp.UCL")
-emmeans_sgtf$date = as.Date(emmeans_sgtf$date_num, origin="1970-01-01")
-
-deltar_sgtf = as.data.frame(emtrends(fit_sgtf, ~ date_num, var="date_num", at=list(date_num=max(dateseq))))[,c(2,5,6)] # growth rate advantage of Omicron over Delta
-deltar_sgtf # growth rate advantage of Omicron over Delta of 0.29 [0.22-0.36] 95% CLs per day 
-deltar_sgtf_char = sapply(deltar_sgtf, function (x) sprintf(as.character(round(x,2)), 2) )
-deltar_sgtf_char = paste0(deltar_sgtf_char[1], " [", deltar_sgtf_char[2], "-", deltar_sgtf_char[3],"] 95% CLs")
-transmadv_sgtf = exp(deltar_sgtf*4.7) # transmission advantage with gen time of 4.7 days
-transmadv_sgtf # transmission advantage of Omicron over Delta of 3.9 [2.8-5.4] 95% CLs (ie effective R value 3.9x higher than that of Delta)
-transmadv_sgtf_char = sapply(transmadv_sgtf, function (x) sprintf(as.character(round(x,1)), 1) )
-transmadv_sgtf_char = paste0(transmadv_sgtf_char[1], " [", transmadv_sgtf_char[2], "-", transmadv_sgtf_char[3],"] 95% CLs")
-
-qplot(data=sgtf_subs, x=date, y=prop, geom="point", colour=I("steelblue"), size=I(2)) + 
-  geom_ribbon(data=emmeans_sgtf, aes(y=prob, ymin=asymp.LCL, ymax=asymp.UCL, colour=NULL), alpha=I(0.5), fill=I("steelblue")) +
-  geom_line(data=emmeans_sgtf, aes(y=prob), colour=I("steelblue"), alpha=I(0.5), size=1) +
-  scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
-                      labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
-  xlim(as.Date("2021-10-14"), today) +
-  coord_cartesian(ylim=c(0.001,0.99)) +
-  ggtitle("Spread of Omicron in South Africa inferred from SGTF data", "Data courtesy of Lesley Scott & NHLS team\ntraced from original graph by Alex Selby\n\nLogistic fit by Tom Wenseleers") +
-  ylab("Share of Omicron among confirmed cases (%)") +
-  annotate("text", x = c(as.Date("2021-10-14")), y = c(0.94), 
-                      label = paste0("Growth rate advantage of Omicron over Delta:\n", deltar_sgtf_char,
-                                     " per day\n\nTransmission advantage Omicron over Delta\n(with generation time of 4.7 days):\n", transmadv_sgtf_char),
-                      color="black", hjust=0, size=3) +
-  theme_hc() +
-  xlab("")
-
-ggsave(file=paste0(".\\plots\\",plotdir,"\\sgtf data_spread omicron logistic fit.png"), width=8, height=6)
-
 
 # parse GISAID & SGTF data
 GISAID = as.data.frame(rbind(d1,d2,d3,d4))
@@ -171,8 +95,8 @@ GISAID$province = factor(GISAID$province, levels=levels_PROVINCES)
 
 GISAID$variant = case_when(
   # grepl("N679K", aa_substitutions) & grepl("H655Y", aa_substitutions) & grepl("P681H", aa_substitutions) ~ "B.1.1.529",
-  grepl("B.1.1.529|BA.1|BA.2", GISAID$pango_lineage) ~ "Omicron",
-  grepl("B.1.617.2", GISAID$pango_lineage, fixed=T) | grepl("AY", pango_lineage)  ~ "Delta",
+  grepl("B.1.1.529|BA.1", GISAID$pango_lineage) ~ "Omicron",
+  grepl("B.1.617.2", GISAID$pango_lineage, fixed=T) | grepl("AY", GISAID$pango_lineage)  ~ "Delta",
   grepl("B.1.1.7", GISAID$pango_lineage, fixed=T) ~ "Alpha",
   grepl("B.1.351", GISAID$pango_lineage, fixed=T) ~ "Beta",
   grepl("C.1.2", GISAID$pango_lineage, fixed=T) ~ "C.1.2",
@@ -212,7 +136,7 @@ range(GISAID_sel$date) # "2020-03-06" "2021-12-06"
 GISAID_sel$variant = factor(GISAID_sel$variant)
 GISAID_sel$variant = relevel(GISAID_sel$variant, ref=sel_reference_VOC) # we code Delta as the reference
 
-GISAID_sel$variant = factor(GISAID_sel$variant, levels=levels_VARIANTS)
+GISAID_sel$variant = factor(GISAID_sel$variant, levels=levels_VARIANTSS)
 table(GISAID_sel$variant, GISAID_sel$sampling_strategy)
 
 # age distribution of patients infected with Delta or Omicron (GISAID data)
@@ -237,7 +161,7 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\age distribution GISAID by variant.pn
 
 ggplot(data=GISAID_sel2, aes(x=age, fill=variant)) + 
   facet_wrap(~ Year_Month+variant, scale="free_y", ncol=2,drop=FALSE) + geom_histogram() +
-  scale_fill_manual(values=lineage_cols[which(levels_VARIANTS %in% c("Omicron","Delta"))]) + theme(legend.position="none") + 
+  scale_fill_manual(values=lineage_cols[which(levels_VARIANTSS %in% c("Omicron","Delta"))]) + theme(legend.position="none") + 
   ggtitle("Age distribution of individuals with sequenced\nOmicron & Delta infections in South Africa","(GISAID data)") +
   theme(strip.text = element_text(size=8),
         strip.background = element_rect(fill="white", colour="white",size=1)) +
@@ -248,8 +172,8 @@ ggplot(data=GISAID_sel2, aes(x=date, y=age, fill=variant, colour=variant, group=
   # facet_wrap(~ Year_Month+variant, scale="free_y", ncol=2,drop=FALSE) + 
   geom_point(aes(alpha=I(0.1)), pch=I(16)) +
   geom_smooth(method="gam") +
-  scale_fill_manual(values=lineage_cols[which(levels_VARIANTS %in% c("Omicron","Delta"))]) + 
-  scale_colour_manual(values=lineage_cols[which(levels_VARIANTS %in% c("Omicron","Delta"))]) + 
+  scale_fill_manual(values=lineage_cols[which(levels_VARIANTSS %in% c("Omicron","Delta"))]) + 
+  scale_colour_manual(values=lineage_cols[which(levels_VARIANTSS %in% c("Omicron","Delta"))]) + 
   theme_hc() +
   xlab("") +
   theme(legend.position="none") + 
@@ -267,8 +191,8 @@ ggplot(data=GISAID_sel2, aes(x=date, y=over60, fill=variant, colour=variant, gro
   geom_smooth(method="glm", 
               method.args=list(family="binomial"),
               formula = y ~ ns(x, df=2)) +
-  scale_fill_manual(values=lineage_cols[which(levels_VARIANTS %in% c("Omicron","Delta"))]) + 
-  scale_colour_manual(values=lineage_cols[which(levels_VARIANTS %in% c("Omicron","Delta"))]) + 
+  scale_fill_manual(values=lineage_cols[which(levels_VARIANTSS %in% c("Omicron","Delta"))]) + 
+  scale_colour_manual(values=lineage_cols[which(levels_VARIANTSS %in% c("Omicron","Delta"))]) + 
   ylab("Proportion over 60") +
   xlab("") +
   theme_hc() +
@@ -291,7 +215,7 @@ data_agbyday_sum = aggregate(count ~ date, data=data_agbyday, sum)
 data_agbyday$total = data_agbyday_sum$count[match(data_agbyday$date, data_agbyday_sum$date)]
 data_agbyday$date = as.Date(as.character(data_agbyday$date))
 # data_agbyday = rbind(data_agbyday, data_nov) # merge with SGTF+extrapolated GISAID for november
-data_agbyday$variant = factor(data_agbyday$variant, levels=levels_variant)
+data_agbyday$variant = factor(data_agbyday$variant, levels=levels_VARIANTS)
 data_agbyday$date_num = as.numeric(data_agbyday$date)
 data_agbyday$prop = data_agbyday$count/data_agbyday$total
 data_agbyday$floor_date = NULL
@@ -303,7 +227,7 @@ data_agbyweek_sum = aggregate(count ~ floor_date, data=data_agbyweek, sum)
 data_agbyweek$total = data_agbyweek_sum$count[match(data_agbyweek$floor_date, data_agbyweek_sum$floor_date)]
 sum(data_agbyweek[data_agbyweek$variant=="Beta","total"]) == nrow(GISAID_sel) # TRUE
 data_agbyweek$date = as.Date(as.character(data_agbyweek$floor_date))
-data_agbyweek$variant = factor(data_agbyweek$variant, levels=levels_variant)
+data_agbyweek$variant = factor(data_agbyweek$variant, levels=levels_VARIANTS)
 data_agbyweek$date_num = as.numeric(data_agbyweek$date)
 data_agbyweek$prop = data_agbyweek$count/data_agbyweek$total
 data_agbyweek$floor_date = NULL
@@ -318,7 +242,7 @@ data_agbyday_province$total = data_agbyday_province_sum$count[match(interaction(
                                                   interaction(data_agbyday_province_sum$date, data_agbyday_province_sum$province))]
 data_agbyday_province$date = as.Date(as.character(data_agbyday_province$date))
 # data_agbyday = rbind(data_agbyday, data_nov) # merge with SGTF+extrapolated GISAID for november
-data_agbyday_province$variant = factor(data_agbyday_province$variant, levels=levels_VARIANTS)
+data_agbyday_province$variant = factor(data_agbyday_province$variant, levels=levels_VARIANTSS)
 data_agbyday_province$date_num = as.numeric(data_agbyday_province$date)
 data_agbyday_province$prop = data_agbyday_province$count/data_agbyday_province$total
 data_agbyday_province$floor_date = NULL
@@ -330,7 +254,7 @@ data_agbyweek_province_sum = aggregate(count ~ floor_date, data=data_agbyweek_pr
 data_agbyweek_province$total = data_agbyweek_province_sum$count[match(interaction(data_agbyweek_province$floor_date, data_agbyweek_province$province),
                                                                       interaction(data_agbyweek_province_sum$floor_date, data_agbyweek_province_sum$province))]
 data_agbyweek_province$date = as.Date(as.character(data_agbyweek_province$floor_date))
-data_agbyweek_province$variant = factor(data_agbyweek_province$variant, levels=levels_variant)
+data_agbyweek_province$variant = factor(data_agbyweek_province$variant, levels=levels_VARIANTS)
 data_agbyweek_province$date_num = as.numeric(data_agbyweek_province$date)
 data_agbyweek_province$prop = data_agbyweek_province$count/data_agbyweek_province$total
 data_agbyweek_province$floor_date = NULL
@@ -400,6 +324,30 @@ BIC(fit1_southafrica_multi, fit2_southafrica_multi)
 #                        df      BIC
 # fit1_southafrica_multi 10 23449.25
 # fit2_southafrica_multi 15 19922.14 # best
+
+# avg growth rate advantage of Omicron over Delta (difference in growth rate per day) (from Nov 1 to today)
+# based on multinomial model fit2_southafrica_multi without province included as factor
+emtrsouthafrica_avg = emtrends(fit2_southafrica_multi, trt.vs.ctrl ~ variant,  
+                                        var="date_num",  mode="latent",
+                                        at=list(date_num=seq(as.numeric(as.Date("2021-11-01")), today_num, by=1)),
+                                        adjust="none", df=NA)
+delta_r_southafrica_avg = data.frame(confint(emtrsouthafrica_avg, 
+                                                      adjust="none", df=NA)$contrasts, 
+                                              p.value=as.data.frame(emtrsouthafrica_avg$contrasts,
+                                                                    adjust="none", df=NA)$p.value)
+delta_r_southafrica_avg
+#         contrast      estimate          SE df   asymp.LCL    asymp.UCL      p.value
+# 1    Beta - Delta -0.0208719188 0.003195933 NA -0.02713583 -0.014608006 6.543003e-11
+# 2   Alpha - Delta -0.0366907301 0.007347282 NA -0.05109114 -0.022290322 5.920797e-07
+# 3   C.1.2 - Delta -0.0004111633 0.004737310 NA -0.00969612  0.008873793 9.308364e-01
+# 4   Other - Delta  0.0247017587 0.002691618 NA  0.01942628  0.029977234 4.420813e-20
+# 5 Omicron - Delta  0.2445317962 0.016150394 NA  0.21287761  0.276185987 8.699055e-52
+
+# corresponding transmission advantage of Omicron over Delta (ie how much higher effective reproduction number is at any timepoint) 
+# 4.8x [3.7-6.2]x transmission advantage of Omicron over Delta, i.e. Omicron has 4.8x higher effective R value than Delta
+exp(delta_r_southafrica_avg[5,5]*4.7) # 2.7x
+exp(delta_r_southafrica_avg[5,2]*4.7) # Omicron 3.1x transmission advantage over Delta
+exp(delta_r_southafrica_avg[5,6]*4.7) # 3.7x
 
 
 # avg growth rate advantage of Omicron over Delta (difference in growth rate per day) (on average over all provinces from Nov 1 to today)
@@ -517,17 +465,17 @@ date.to = max(GISAID_sel$date_num)+extrapolate
 predgrid = expand.grid(list(date_num=seq(date.from, date.to),
                             province=levels_PROVINCES))
 fit_southafrica_multi_preds_byprovince = data.frame(predgrid, as.data.frame(predict(fit1_southafrica_province_multi, newdata=predgrid, type="prob")),check.names=F)
-fit_southafrica_multi_preds_byprovince = gather(fit_southafrica_multi_preds_byprovince, variant, prob, all_of(levels_VARIANTS), factor_key=TRUE)
+fit_southafrica_multi_preds_byprovince = gather(fit_southafrica_multi_preds_byprovince, variant, prob, all_of(levels_VARIANTSS), factor_key=TRUE)
 fit_southafrica_multi_preds_byprovince$date = as.Date(fit_southafrica_multi_preds_byprovince$date_num, origin="1970-01-01")
-fit_southafrica_multi_preds_byprovince$variant = factor(fit_southafrica_multi_preds_byprovince$variant, levels=levels_VARIANTS)
+fit_southafrica_multi_preds_byprovince$variant = factor(fit_southafrica_multi_preds_byprovince$variant, levels=levels_VARIANTSS)
 fit_southafrica_multi_preds_byprovince$province = factor(fit_southafrica_multi_preds_byprovince$province, levels=levels_PROVINCES)
 
 # multinomial model predictions overall for South Africa (with model without province) (fastest, but no confidence intervals)
 predgrid = expand.grid(list(date_num=seq(date.from, date.to)))
 fit_southafrica_multi_preds = data.frame(predgrid, as.data.frame(predict(fit2_southafrica_multi, newdata=predgrid, type="prob")),check.names=F)
-fit_southafrica_multi_preds = gather(fit_southafrica_multi_preds, variant, prob, all_of(levels_VARIANTS), factor_key=TRUE)
+fit_southafrica_multi_preds = gather(fit_southafrica_multi_preds, variant, prob, all_of(levels_VARIANTSS), factor_key=TRUE)
 fit_southafrica_multi_preds$date = as.Date(fit_southafrica_multi_preds$date_num, origin="1970-01-01")
-fit_southafrica_multi_preds$variant = factor(fit_southafrica_multi_preds$variant, levels=levels_VARIANTS)
+fit_southafrica_multi_preds$variant = factor(fit_southafrica_multi_preds$variant, levels=levels_VARIANTSS)
 
 
 # Muller plot for South Africa by province
@@ -570,7 +518,7 @@ fit_southafrica_multi_preds_withCI = data.frame(emmeans(fit2_southafrica_multi,
                                                         at=list(date_num=seq(date.from, date.to, by=3)),  # by=XX to speed up things a bit
                                                         mode="prob", df=NA))
 fit_southafrica_multi_preds_withCI$date = as.Date(fit_southafrica_multi_preds_withCI$date_num, origin="1970-01-01")
-fit_southafrica_multi_preds_withCI$variant = factor(fit_southafrica_multi_preds_withCI$variant, levels=levels_variant)
+fit_southafrica_multi_preds_withCI$variant = factor(fit_southafrica_multi_preds_withCI$variant, levels=levels_VARIANTS)
 
 # multinomial model predictions with confidence intervals by province (slower)
 fit_southafrica_multi_preds_byprovince_withCI = data.frame(emmeans(fit1_southafrica_multi,
@@ -579,7 +527,7 @@ fit_southafrica_multi_preds_byprovince_withCI = data.frame(emmeans(fit1_southafr
                                                         at=list(date_num=seq(date.from, date.to, by=3)),  # by=XX to speed up things a bit
                                                         mode="prob", df=NA))
 fit_southafrica_multi_preds_byprovince_withCI$date = as.Date(fit_southafrica_multi_preds_byprovince_withCI$date_num, origin="1970-01-01")
-fit_southafrica_multi_preds_byprovince_withCI$variant = factor(fit_southafrica_multi_preds_byprovince_withCI$variant, levels=levels_variant)
+fit_southafrica_multi_preds_byprovince_withCI$variant = factor(fit_southafrica_multi_preds_byprovince_withCI$variant, levels=levels_VARIANTS)
 
 # Muller plot overall for South Africa
 muller_southafrica_mfit = ggplot(data=fit_southafrica_multi_preds_withCI, 
@@ -703,7 +651,7 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\southafrica_multinom fit_byprovince_r
 
 fit_southafrica_multi_preds2 = fit_southafrica_multi_preds_withCI
 ymin = 0.001
-ymax = 0.999
+ymax = 0.9995
 fit_southafrica_multi_preds2$asymp.LCL[fit_southafrica_multi_preds2$asymp.LCL<ymin] = ymin
 fit_southafrica_multi_preds2$asymp.UCL[fit_southafrica_multi_preds2$asymp.UCL<ymin] = ymin
 fit_southafrica_multi_preds2$asymp.UCL[fit_southafrica_multi_preds2$asymp.UCL>ymax] = ymax
@@ -735,7 +683,7 @@ plot_southafrica_mfit_logit = qplot(data=fit_southafrica_multi_preds2, x=date, y
   # guides(colour=FALSE) +
   theme(legend.position = "right") +
   xlab("Collection date")+
-  coord_cartesian(xlim=c(as.Date("2021-01-01"),as.Date(date.to, origin="1970-01-01")), ylim=c(0.001, 0.9901), expand=c(0,0))
+  coord_cartesian(xlim=c(as.Date("2021-01-01"),as.Date(date.to, origin="1970-01-01")), ylim=c(0.001, 0.9995), expand=c(0,0))
 plot_southafrica_mfit_logit
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\southafrica_multinom fit_logit scale.png"), width=10, height=6)
@@ -1061,7 +1009,7 @@ cases_emmeans = as.data.frame(emmeans(fit_cases, ~ date_num, at=list(date_num=se
 fit_southafrica_multi_preds$smoothed_totcases = cases_emmeans$response[match(fit_southafrica_multi_preds$date_num,cases_emmeans$date_num)]
 fit_southafrica_multi_preds$smoothed_cases = fit_southafrica_multi_preds$smoothed_totcases * fit_southafrica_multi_preds$prob
 fit_southafrica_multi_preds$smoothed_cases[fit_southafrica_multi_preds$smoothed_cases<=0.001] = NA
-fit_southafrica_multi_preds$variant = factor(fit_southafrica_multi_preds$variant, levels=levels_variant)
+fit_southafrica_multi_preds$variant = factor(fit_southafrica_multi_preds$variant, levels=levels_VARIANTS)
 
 fit_southafrica_multi_preds[fit_southafrica_multi_preds$date==as.Date("2021-12-03"),] # this date is not plotted in plot below FIX
 
@@ -1116,7 +1064,7 @@ above_avg_r_variants0 = do.call(rbind, lapply(seq(date.from+16,
                                                   date.to-extrapolate), 
                                               function (d) { 
                                                 wt = as.data.frame(emmeans(fit1_southafrica_multi, ~ variant , at=list(date_num=d), type="response"))$prob   # important: these should sum to 1
-                                                # wt = rep(1/length(levels_VARIANTS), length(levels_VARIANTS)) # this would give equal weights, equivalent to emmeans:::eff.emmc(levs=levels_variant)
+                                                # wt = rep(1/length(levels_VARIANTSS), length(levels_VARIANTSS)) # this would give equal weights, equivalent to emmeans:::eff.emmc(levs=levels_VARIANTS)
                                                 cons = lapply(seq_along(wt), function (i) { con = -wt; con[i] = 1 + con[i]; con })
                                                 names(cons) = seq_along(cons)
                                                 EMT = emtrends(fit1_southafrica_multi,  ~ variant , by=c("date_num"),
@@ -1127,8 +1075,8 @@ above_avg_r_variants0 = do.call(rbind, lapply(seq(date.from+16,
                                                 return(out) } ))
 above_avg_r_variants = above_avg_r_variants0
 above_avg_r_variants$contrast = factor(above_avg_r_variants$contrast, 
-                                       levels=1:length(levels_variant), 
-                                       labels=levels_variant)
+                                       levels=1:length(levels_VARIANTS), 
+                                       labels=levels_VARIANTS)
 above_avg_r_variants$variant = above_avg_r_variants$contrast # gsub(" effect|\\(|\\)","",above_avg_r_variants$contrast)
 above_avg_r_variants$date = as.Date(above_avg_r_variants$date_num, origin="1970-01-01")
 range(above_avg_r_variants$date) # "2021-01-04" "2021-07-30"
@@ -1160,7 +1108,7 @@ df = data.frame(contrast=NA,
                 Re_UPPER=avg_r_cases$Re_UPPER)
 # df = df[df$date_num<=max(above_avg_r_variants$date_num)&df$date_num>=(min(above_avg_r_variants$date_num)+7),]
 above_avg_r_variants = rbind(above_avg_r_variants, df)
-above_avg_r_variants$variant = factor(above_avg_r_variants$variant, levels=c(levels_variant,"avg"))
+above_avg_r_variants$variant = factor(above_avg_r_variants$variant, levels=c(levels_VARIANTS,"avg"))
 above_avg_r_variants$prob = fit_southafrica_multi_preds_withCI$prob[match(interaction(above_avg_r_variants$date_num,
                                                                       above_avg_r_variants$variant),
                                                           interaction(fit_southafrica_multi_preds_withCI$date_num,
