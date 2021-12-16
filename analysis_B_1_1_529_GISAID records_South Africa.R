@@ -370,9 +370,9 @@ delta_r_southafrica_province_avg
 
 # corresponding transmission advantage of Omicron over Delta (ie how much higher effective reproduction number is at any timepoint) 
 # 4.8x [3.7-6.2]x transmission advantage of Omicron over Delta, i.e. Omicron has 4.8x higher effective R value than Delta
-exp(delta_r_southafrica[5,5]*4.7) # 3.7x
-exp(delta_r_southafrica[5,2]*4.7) # Omicron 4.8x transmission advantage over Delta
-exp(delta_r_southafrica[5,6]*4.7) # 6.2x
+exp(delta_r_southafrica_province_avg[5,5]*4.7) # 3.7x
+exp(delta_r_southafrica_province_avg[5,2]*4.7) # Omicron 4.8x transmission advantage over Delta
+exp(delta_r_southafrica_province_avg[5,6]*4.7) # 6.2x
 
 # fitted prop of different variantS today (on average across provinces)
 # based on model with province included as a factor
