@@ -123,27 +123,33 @@ sgtf$country = factor(sgtf$country, levels=levels_country)
 sgtf$prop = sgtf$prop_omicron <- sgtf$omicron/sgtf$pos_tests
 sgtf$non_omicron = sgtf$pos_tests-sgtf$omicron
 sgtf = sgtf[sgtf$date >= as.Date("2021-11-01"),]
-sgtf$obs = as.factor(1:nrow(sgtf)) # for observation-level random effect to take into account overdispersion in binomial GLMM
-sgtf$random = factor(1) # fake random effect to be able to run glmmPQL
+sgtf$obs = as.factor(1:nrow(sgtf)) # for observation-level random effect to take into account overdispersion in binomial GLMM (this would be a quasibinomial GLM)
+# sgtf$random = factor(1) # fake random effect to be able to run glmmPQL
 names(sgtf)
 head(sgtf)[,c("country","date","omicron","prop_omicron")]
 
 
 # ANALYSIS OF SGTF DATA USING LOGISTIC REGRESSION ####
 
-# # fit using regular binomial GLM (not taking into account temporal autocorrelation or overdispersion)
+# fit using regular binomial GLM (not taking into account temporal autocorrelation or overdispersion)
 # 
-# fit_sgtf0 = glm(cbind(omicron, non_omicron) ~ date_num + country, family=binomial(logit), data=sgtf) 
-# fit_sgtf1 = glm(cbind(omicron, non_omicron) ~ date_num * country, family=binomial(logit), data=sgtf) 
+# fit_sgtf0 = glm(cbind(omicron, non_omicron) ~ scale(date_num) + country, family=binomial(logit), data=sgtf) 
+# fit_sgtf1 = glm(cbind(omicron, non_omicron) ~ scale(date_num) * country, family=binomial(logit), data=sgtf) 
 # AIC(fit_sgtf0, fit_sgtf1)
 # summary(fit_sgtf1)
 
 # fit using a separate-slope logistic regression that allows for overdispersion via the inclusion of an observation-level random effect
 
-fit_sgtf0 = glmmPQL(cbind(omicron, non_omicron) ~ date_num + country, family=binomial(logit), random=~1|obs, data=sgtf) # to take into account lag-1 autocorrelation in residuals correlation=corAR1(), 
-fit_sgtf1 = glmmPQL(cbind(omicron, non_omicron) ~ date_num * country, family=binomial(logit), random=~1|obs, data=sgtf) # to take into account lag-1 autocorrelation in residuals correlation=corAR1(), 
-AIC(fit_sgtf0, fit_sgtf1)
+fit_sgtf0 = glmmPQL(cbind(omicron, non_omicron) ~ scale(date_num) + country, family=binomial(logit), random=~1|obs, data=sgtf) 
+fit_sgtf1 = glmmPQL(cbind(omicron, non_omicron) ~ scale(date_num) * country, family=binomial(logit), random=~1|obs, data=sgtf) 
+# AIC(fit_sgtf0, fit_sgtf1)
 summary(fit_sgtf1)
+
+# note allowing lag-1 temporally autocorrelated residuals would be possible using
+# fit_sgtf0 = glmmPQL(cbind(omicron, non_omicron) ~ scale(date_num) + country, family=binomial(logit), random=~1|obs, correlation=corAR1(), data=sgtf) 
+# fit_sgtf1 = glmmPQL(cbind(omicron, non_omicron) ~ scale(date_num) * country, family=binomial(logit), random=~1|obs, correlation=corAR1(), data=sgtf) 
+# AIC(fit_sgtf0, fit_sgtf1)
+# summary(fit_sgtf1)
 
 plot(allEffects(fit_sgtf1, residuals=T))
 
