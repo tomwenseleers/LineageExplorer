@@ -7,7 +7,7 @@
 # GISAID data to infer the proportion of S dropout (with spike Spike_H69del/Spike_V70del) that are Omicron (https://www.gisaid.org/)
 
 # T. Wenseleers
-# last update 16 DECEMBER 2021
+# last update 17 DECEMBER 2021
 
 library(nnet)
 # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
@@ -83,10 +83,10 @@ varpcr_dk = read.csv(".//data//omicron_sgtf//variantpcr_denmark.csv") # variant-
 sgtf_sa = read.csv(".//data//omicron_sgtf//sgtf_south africa.csv") # data traced from graph (data not open at the moment)
 sgtf_sa$date = as.Date(sgtf_sa$date)
 sgtf_sa = sgtf_sa[sgtf_sa$date>=as.Date("2021-11-05"),] # data limited to >= Nov 1 when from sequencing data nearly all S dropout was Omicron
-sgtf_eng = read.csv("https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1041217/sgtf_regionepicurve_2021-12-14.csv")
+sgtf_eng = read.csv("https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1041666/sgtf_regionepicurve_2021-12-15.csv")
 sgtf_eng$sgtf = factor(sgtf_eng$sgtf, levels=c("Cases with confirmed S-gene","Cases with confirmed SGTF"), labels=c("no_sgtf","sgtf"))
 # data for England by LTLA are here 
-# https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1041221/sgtf_totalepicurve_2021-12-14.csv
+# https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1041668/sgtf_LAdaily_2021-12-15__1_.csv
 # see https://www.gov.uk/government/publications/covid-19-omicron-daily-overview
 sgtf_eng = spread(sgtf_eng, sgtf, n)
 sgtf_eng[is.na(sgtf_eng)] = 0
