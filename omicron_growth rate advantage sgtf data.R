@@ -1,9 +1,10 @@
 # ANALYSIS OF GROWTH RATE ADVANTAGE OF OMICRON (B.1.1.529) IN South Africa, England, Denmark & Belgium BASED ON SGTF (S gene target failure / S dropout) DATA
 # data: 
 # Belgium: Federal Test Platform, provided by Emmanuel André
-# Denmark: Statens Serum Institut
-# England: UK Health Security Agency (traced off graph by Alex Selby)
+# Denmark: Statens Serum Institut (https://covid19.ssi.dk/virusvarianter/delta-pcr)
+# England: UK Health Security Agency (https://www.gov.uk/government/publications/covid-19-omicron-daily-overview)
 # South Africa: Lesley Scott & NHLS team (traced off graph by Alex Selby)
+# GISAID data to infer the proportion of S dropout (with spike Spike_H69del/Spike_V70del) that are Omicron (https://www.gisaid.org/)
 
 # T. Wenseleers
 # last update 16 DECEMBER 2021
