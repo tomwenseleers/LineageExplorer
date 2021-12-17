@@ -46,7 +46,7 @@ xaxis = scale_x_continuous(breaks=firststofmonth,
                            labels=substring(months(firststofmonth),1,1),
                            expand=c(0,0))
 
-# import GISAID data to check prop of sgtf samples that are Omicron in function of time (GISAID_sgtf_isomicron)
+# 1. Import GISAID data to check prop of sgtf samples that are Omicron in function of time (GISAID_sgtf_isomicron)
 # source(".//parse_GISAID.R") # load GISAID data
 GISAID_sgtf_isomicron = readRDS(".//data//GISAID//GISAID_sgtf_isomicron.rds")
 GISAID_sgtf_isomicron$prop_omicron = GISAID_sgtf_isomicron$Omicron/(GISAID_sgtf_isomicron$Omicron+GISAID_sgtf_isomicron$Other)
@@ -55,7 +55,7 @@ selcountries = c("South Africa", "Scotland", "Belgium", "England")
 GISAID_sgtf_isomicron_subs = GISAID_sgtf_isomicron[GISAID_sgtf_isomicron$country %in% selcountries &
                                                      GISAID_sgtf_isomicron$date>as.Date("2021-07-01"),]
 
-# logistic fit of proportion of sgtf sequences (with Spike_H69del/Spike_V70del) that are Omicron
+# 2. Logistic fit of proportion of sgtf sequences (with Spike_H69del/Spike_V70del) that are Omicron
 fit_sgtf_isomicron = glm(cbind(Omicron,Other) ~ country*DATE_NUM, family=binomial, data=GISAID_sgtf_isomicron_subs)
 # plot(allEffects(fit_sgtf_isomicron))
 
@@ -77,7 +77,7 @@ qplot(data=fit_sgtf_isomicron_preds, x=date, y=prob, ymin=asymp.LCL, ymax=asymp.
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\estimated prop sgtf seqs that are Omicron from GISAID data.png"), width=8, height=6)
 
-# import variant-specific PCR data or SGTF data (now proxy for B.1.1.529 / Omicron)
+# 3. Import variant-specific PCR data or SGTF data (now proxy for B.1.1.529 / Omicron)
 varpcr_dk = read.csv(".//data//omicron_sgtf//variantpcr_denmark.csv") # variant-specfc PCR data for DK
 # sgtf_dk = read.csv(".//data//omicron_sgtf//sgtf_denmark.csv") 
 sgtf_sa = read.csv(".//data//omicron_sgtf//sgtf_south africa.csv") # data traced from graph (data not open at the moment)
@@ -129,7 +129,7 @@ names(sgtf)
 head(sgtf)[,c("country","date","omicron","prop_omicron")]
 
 
-# ANALYSIS OF SGTF DATA USING LOGISTIC REGRESSION ####
+# 4. ANALYSIS OF SGTF DATA USING LOGISTIC REGRESSION ####
 
 # fit using regular binomial GLM (not taking into account temporal autocorrelation or overdispersion)
 # 
