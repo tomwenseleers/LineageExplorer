@@ -108,6 +108,9 @@ sgtf_be = read.csv(".//data//omicron_sgtf//sgtf_belgium.csv")
 # https://raw.githubusercontent.com/andersen-lab/SARS-CoV-2_SGTF_San-Diego/main/SGTF_San_Diego.csv
 # https://github.com/andersen-lab/SARS-CoV-2_SGTF_San-Diego
 
+# add data from Geneva
+# https://www.hug.ch/laboratoire-virologie
+
 sgtf = rbind(sgtf_sa, sgtf_eng, sgtf_scot, sgtf_be)
 sgtf$DATE_NUM = as.numeric(sgtf$date)
 # Omicron count is sgtf count * prop sgtf samples inferred to be Omicron (from logistic fit on GISAID data)
@@ -256,7 +259,7 @@ qplot(data=sgtf, x=date, y=100*prop, geom="point", colour=country, fill=country,
 ggsave(file=paste0(".\\plots\\",plotdir,"\\spread omicron logistic fit sgtf data_linear scale.png"), width=8, height=6)
 
 
-emmeans_sgtf[emmeans_sgtf$date==today,] 
+emmeans_sgtf[emmeans_sgtf$date==today,] # estimated prop Omicron among confirmed cases today
 # date_num      country      prob          SE  df asymp.LCL asymp.UCL       date
 # 111    18981 South Africa 0.9986184 0.001280663 118 0.9913798 0.9997799 2021-12-20
 # 252    18981      England 0.8965660 0.012397567 118 0.8693132 0.9186673 2021-12-20
@@ -271,6 +274,11 @@ emmeans_sgtf[emmeans_sgtf$date==(today+7),] # estimated prop Omicron among new i
 # 400    18988     Scotland 0.9306492 0.0176612217 118 0.8864336 0.9584568 2021-12-27
 # 541    18988      Denmark 0.9782745 0.0059481703 118 0.9627839 0.9874017 2021-12-27
 # 682    18988      Belgium 0.6693478 0.0568622235 118 0.5489581 0.7710079 2021-12-27
+
+emmeans_sgtf[emmeans_sgtf$date==as.Date("2022-01-01"),]
+
+
+# PART BELOW NOT FINISHED YET
 
 # 5. PLOTS OF NEW CASES PER DAY BY VARIANT & EFFECTIVE REPRODUCTION NUMBER BY VARIANT THROUGH TIME ####
 
