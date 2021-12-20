@@ -7,7 +7,7 @@
 # GISAID data to infer the proportion of S dropout (with spike Spike_H69del/Spike_V70del) that are Omicron (https://www.gisaid.org/)
 
 # T. Wenseleers
-# last update 19 DECEMBER 2021
+# last update 20 DECEMBER 2021
 
 library(nnet)
 # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
@@ -36,7 +36,7 @@ plotdir = "omicron_sgtf"
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 
 extrapolate = 30
-date.from = as.Date("2021-09-14")
+date.from = as.Date("2021-09-01")
 date.to = today+extrapolate
 dateseq = as.numeric(seq(date.from, date.to, by=1))
 
@@ -79,14 +79,12 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\estimated prop sgtf seqs that are Omi
 
 # 3. Import variant-specific PCR data or SGTF data (now proxy for Omicron)
 varpcr_dk = read.csv(".//data//omicron_sgtf//variantpcr_denmark.csv") # variant-specfc PCR data for DK
-# sgtf_dk = read.csv(".//data//omicron_sgtf//sgtf_denmark.csv") 
 sgtf_sa = read.csv(".//data//omicron_sgtf//sgtf_south africa.csv") # data traced from graph (data not open at the moment)
 sgtf_sa$date = as.Date(sgtf_sa$date)
-sgtf_sa = sgtf_sa[sgtf_sa$date>=as.Date("2021-11-05"),] # data limited to >= Nov 1 when from sequencing data nearly all S dropout was Omicron
-sgtf_eng = read.csv("https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1042224/sgtf_regionepicurve_2021-12-17.csv")
+sgtf_sa = sgtf_sa[sgtf_sa$date>=as.Date("2021-11-05"),] # data limited to >= Nov 5 when from sequencing data nearly all S dropout was Omicron
+sgtf_eng = read.csv("https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1042233/sgtf_regionepicurve_2021-12-18.csv")
 sgtf_eng$sgtf = factor(sgtf_eng$sgtf, levels=c("Cases with confirmed S-gene","Cases with confirmed SGTF"), labels=c("no_sgtf","sgtf"))
-# data for England by LTLA are here 
-# https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1041668/sgtf_LAdaily_2021-12-15__1_.csv
+# data for England by LTLA also at 
 # see https://www.gov.uk/government/publications/covid-19-omicron-daily-overview
 sgtf_eng = spread(sgtf_eng, sgtf, n)
 sgtf_eng[is.na(sgtf_eng)] = 0
@@ -164,18 +162,18 @@ deltar_sgtf_bycountry$country = NULL
 colnames(deltar_sgtf_bycountry) = c("delta_r","delta_r_asymp.LCL","delta_r_asymp.UCL")
 deltar_sgtf_bycountry
 #                delta_r delta_r_asymp.LCL delta_r_asymp.UCL
-# South Africa 0.2546775         0.2000379         0.3093170
-# England      0.3605907         0.3450973         0.3760841
-# Scotland     0.2838093         0.2580729         0.3095457
-# Denmark      0.3710232         0.3372933         0.4047530
-# Belgium      0.2758321         0.2442708         0.3073934
+# South Africa 0.2401880         0.1921252         0.2882509
+# England      0.3647254         0.3557935         0.3736573
+# Scotland     0.2783929         0.2557750         0.3010108
+# Denmark      0.3334194         0.3063927         0.3604462
+# Belgium      0.2876100         0.2623288         0.3128912
 
 # mean growth rate advantage of Omicron over Delta across countries (mean difference in growth rate per day)
 deltar_sgtf = as.data.frame(emtrends(fit_sgtf1, ~ date_num, var="date_num", at=list(date_num=max(dateseq))))[,c(2,5,6)] # growth rate advantage of Omicron over Delta
 colnames(deltar_sgtf) = c("delta_r","delta_r_asymp.LCL","delta_r_asymp.UCL")
 deltar_sgtf
 #     delta_r delta_r_asymp.LCL delta_r_asymp.UCL
-# 1 0.3091865         0.2936666         0.3247065
+# 1 0.3008671         0.2877966         0.3139377
 deltar_sgtf_char = sapply(deltar_sgtf, function (x) sprintf(as.character(round(x,2)), 2) )
 deltar_sgtf_char = paste0(deltar_sgtf_char[1], " [", deltar_sgtf_char[2], "-", deltar_sgtf_char[3],"] 95% CLs")
 
@@ -188,11 +186,11 @@ transmadv_sgtf_by_country = exp(deltar_sgtf_bycountry*4.7)
 colnames(transmadv_sgtf_by_country) = c("transmadv","transmadv_asymp.LCL","transmadv_asymp.UCL")
 transmadv_sgtf_by_country
 #              transmadv transmadv_asymp.LCL transmadv_asymp.UCL
-# South Africa  3.310119            2.560438            4.279302
-# England       5.445428            5.062991            5.856752
-# Scotland      3.795832            3.363367            4.283903
-# Denmark       5.719085            4.880652            6.701551
-# Belgium       3.656151            3.152113            4.240787
+# South Africa  3.092203            2.466965            3.875904
+# England       5.552284            5.324024            5.790331
+# Scotland      3.700420            3.327237            4.115460
+# Denmark       4.792592            4.220888            5.441730
+# Belgium       3.864247            3.431320            4.351796
 
 # mean transmission advantage of Omicron over Delta across countries (using generation time of 4.7 days)
 # i.e. mean fold difference in the effective reproduction number Re of Omicron compared to that of Delta
@@ -200,7 +198,7 @@ transmadv_sgtf = exp(deltar_sgtf*4.7)
 colnames(transmadv_sgtf) = c("transmadv","transmadv_asymp.LCL","transmadv_asymp.UCL")
 transmadv_sgtf
 #   transmadv transmadv_asymp.LCL transmadv_asymp.UCL
-# 1  4.276679            3.975828            4.600295
+# 1  4.112683            3.867638            4.373253
 transmadv_sgtf_char = sapply(transmadv_sgtf, function (x) sprintf(as.character(round(x,1)), 1) )
 transmadv_sgtf_char = paste0(transmadv_sgtf_char[1], " [", transmadv_sgtf_char[2], "-", transmadv_sgtf_char[3],"] 95% CLs")
 
@@ -258,5 +256,345 @@ qplot(data=sgtf, x=date, y=100*prop, geom="point", colour=country, fill=country,
 ggsave(file=paste0(".\\plots\\",plotdir,"\\spread omicron logistic fit sgtf data_linear scale.png"), width=8, height=6)
 
 
-# 5.  
+emmeans_sgtf[emmeans_sgtf$date==today,] 
+# date_num      country      prob          SE  df asymp.LCL asymp.UCL       date
+# 111    18981 South Africa 0.9986184 0.001280663 118 0.9913798 0.9997799 2021-12-20
+# 252    18981      England 0.8965660 0.012397567 118 0.8693132 0.9186673 2021-12-20
+# 393    18981     Scotland 0.6565494 0.044965500 118 0.5629315 0.7393979 2021-12-20
+# 534    18981      Denmark 0.8135684 0.029017762 118 0.7492298 0.8643878 2021-12-20
+# 675    18981      Belgium 0.2128162 0.029324645 118 0.1604786 0.2765991 2021-12-20
+
+emmeans_sgtf[emmeans_sgtf$date==(today+7),] # estimated prop Omicron among new infections today (1 week before diagnosis)
+# date_num      country      prob          SE  df asymp.LCL asymp.UCL       date
+# 118    18988 South Africa 0.9997426 0.0002823956 118 0.9977435 0.9999707 2021-12-27
+# 259    18988      England 0.9910996 0.0014337354 118 0.9877615 0.9935331 2021-12-27
+# 400    18988     Scotland 0.9306492 0.0176612217 118 0.8864336 0.9584568 2021-12-27
+# 541    18988      Denmark 0.9782745 0.0059481703 118 0.9627839 0.9874017 2021-12-27
+# 682    18988      Belgium 0.6693478 0.0568622235 118 0.5489581 0.7710079 2021-12-27
+
+# 5. PLOTS OF NEW CASES PER DAY BY VARIANT & EFFECTIVE REPRODUCTION NUMBER BY VARIANT THROUGH TIME ####
+
+# load case data
+install.packages("covidregionaldata",
+                 repos = "https://epiforecasts.r-universe.dev"
+)
+library(covidregionaldata)
+library(dplyr)
+library(ggplot2)
+library(scales) 
+
+# cases_tot = as.data.frame(get_national_data(countries = levels_country, source="WHO"))
+# cases_tot = cases_tot[,c("date","country","cases_new","hosp_new","deaths_new","tested_new")]
+# get_available_datasets("national")
+cases_tot_level2 = as.data.frame(get_national_data(countries = c("United Kingdom"), level="2", source="Google")) # get data England & Scotland
+cases_tot_eng_scot = cases_tot_level2[cases_tot_level2$subregion %in% c("England","Scotland"),c("date","subregion","cases_new","hosp_new","deaths_new","tested_new")]
+colnames(cases_tot_eng_scot)[2] = "country"
+
+cases_tot_sa = read.csv("https://mediahack.co.za/datastories/coronavirus/data/csv.php?table=cumulative")
+cases_tot_sa = cases_tot_sa[cases_tot_sa$date!="",]
+cases_tot_sa$tests_daily = abs(cases_tot_sa$tests_daily)
+cases_tot_sa$country="South Africa"
+cases_tot_sa$cases_new = cases_tot_sa$cases_daily
+cases_tot_sa$hosp_new = NA
+cases_tot_sa$deaths_new = cases_tot_sa$deaths_daily
+cases_tot_sa$tested_new = cases_tot_sa$new_public_tests+cases_tot_sa$new_private_tests
+cases_tot_sa = cases_tot_sa[,c("date","country","cases_new","hosp_new","deaths_new","tested_new")]
+cases_tot_sa$date = dmy(cases_tot_sa$date)
+
+cases_tot = as.data.frame(get_national_data(countries = levels_country[!levels_country %in% c("England","Scotland","South Africa")], source="WHO"))
+cases_tot = cases_tot[,c("date","country","cases_new","hosp_new","deaths_new","tested_new")]
+
+cases_tot = rbind(cases_tot_eng_scot, cases_tot_sa, cases_tot)
+
+cases_tot = cases_tot[cases_tot$date>=as.Date("2021-09-01"),]
+cases_tot$date_num = as.numeric(cases_tot$date)
+cases_tot$WEEKDAY = weekdays(cases_tot$date)
+# cases_tot = cases_tot[cases_tot$date<=(max(cases_tot$date)-3),] # cut off data from last 3 days (incomplete)
+cases_tot$country = factor(cases_tot$country, levels=levels_country)
+
+# smooth out weekday effects in case nrs using GAM (& potentially correct for unequal testing intensity)
+library(mgcv)
+k=7
+fit_cases = gam(cases_new ~ s(date_num, bs="cs", k=k, m=c(2), fx=F, by=country) + country +
+                  WEEKDAY, # + 
+                # s(TESTS_ALL, bs="cs", k=8, fx=F),
+                family=poisson(log), data=cases_tot,
+                method = "REML",
+                knots = list(date_num = c(min(cases_tot$date_num)-14,
+                                          seq(min(cases_tot$date_num)+0.5*diff(range(cases_tot$date_num))/(k-2), 
+                                              max(cases_tot$date_num)-0.5*diff(range(cases_tot$date_num))/(k-2), length.out=k-2),
+                                          max(cases_tot$date_num)+14))
+) 
+BIC(fit_cases)
+
+
+# STACKED AREA CHART OF NEW CASES BY VARIANT (LOGISTIC OR MULTINOMIAL FIT MAPPED ONTO CASE DATA) ####
+emmeans_sgtf2 = emmeans_sgtf
+emmeans_sgtf2$prob = 1-emmeans_sgtf2$prob
+emmeans_sgtf2$asymp.LCL = 1-emmeans_sgtf2$asymp.LCL
+emmeans_sgtf2$asymp.UCL = 1-emmeans_sgtf2$asymp.UCL
+
+emmeans_lineages = rbind(data.frame(LINEAGE="Omicron", emmeans_sgtf),
+                         data.frame(LINEAGE="Other", emmeans_sgtf2))
+emmeans_lineages$totcases = cases_tot$cases_new[match(interaction(emmeans_lineages$date_num,emmeans_lineages$country),
+                                                            interaction(cases_tot$date_num,cases_tot$country))]
+emmeans_lineages$cases = emmeans_lineages$totcases * emmeans_lineages$prob
+emmeans_lineages$cases[emmeans_lineages$cases<=0.001] = NA
+cases_emmeans = as.data.frame(emmeans(fit_cases, ~ date_num|country, at=list(date_num=seq(as.numeric(date.from), as.numeric(date.to), by=1)
+), type="response"))
+emmeans_lineages$smoothed_totcases = cases_emmeans$rate[match(interaction(emmeans_lineages$date_num,emmeans_lineages$country),
+                                                                    interaction(cases_emmeans$date_num,cases_emmeans$country))]
+emmeans_lineages$smoothed_cases = emmeans_lineages$smoothed_totcases * emmeans_lineages$prob
+emmeans_lineages$smoothed_cases[emmeans_lineages$smoothed_cases<=0.001] = NA
+lineage_cols = c("red2","grey50")
+
+ggplot(data=emmeans_lineages, 
+       aes(x=date, y=cases, group=LINEAGE)) + 
+  facet_wrap(~ country, scale="free") +
+  geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE, group=LINEAGE), position="stack") +
+  xaxis +
+  # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
+  theme_hc() + theme(legend.position="right") + 
+  ylab("New confirmed cases per day") + xlab("Date of diagnosis") +
+  ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT\nIN SELECTED AFRICAN COUNTRIES\n(case data WHO & Google & multinomial fit to GISAID data)") +
+  scale_fill_manual("variant", values=lineage_cols) +
+  scale_colour_manual("variant", values=lineage_cols) +
+  coord_cartesian(xlim=c(as.Date("2021-09-01"),NA))
+
+ggsave(file=paste0(".\\plots\\",plotdir,"\\cases per day by variant_stacked area chart_raw case data.png"), width=8, height=6)
+
+ggplot(data=emmeans_lineages, 
+       aes(x=date, y=cases+1, group=LINEAGE)) + 
+  facet_wrap(~ country) +
+  geom_col(data=emmeans_lineages[emmeans_lineages$LINEAGE=="Other",], aes(lwd=I(1.2), colour=NULL), fill=lineage_cols[2], position="identity", alpha=I(0.4), width=I(2)) +
+  geom_col(data=emmeans_lineages[emmeans_lineages$LINEAGE=="Omicron",], aes(lwd=I(1.2), colour=NULL), fill=lineage_cols[1], position="identity", alpha=I(0.4), width=I(2)) +
+  xaxis +
+  scale_y_log10() +
+  # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
+  theme_hc() + theme(legend.position="right", 
+                     axis.title.x=element_blank()) + 
+  ylab("New confirmed cases per day") +
+  ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT\nIN SELECTED AFRICAN COUNTRIES\n(case data WHO & Google & multinomial fit to GISAID data)") +
+  scale_fill_manual("variant", values=lineage_cols) +
+  scale_colour_manual("variant", values=lineage_cols) +
+  coord_cartesian(xlim=c(as.Date("2021-09-01"),NA))
+
+ggsave(file=paste0(".\\plots\\",plotdir,"\\cases per day by variant_stacked area chart_raw case data_log10 Y scale.png"), width=8, height=6)
+
+
+ggplot(data=emmeans_lineages,
+       aes(x=date-7, y=smoothed_cases, group=LINEAGE)) +
+  facet_wrap(~ country, scale="free") +
+  geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE, group=LINEAGE), position="stack") +
+  xaxis +
+  # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
+  theme_hc() + theme(legend.position="right") +
+  ylab("New confirmed cases per day (smoothed)") + xlab("Date of infection") +
+  ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT\nIN SELECTED AFRICAN COUNTRIES\n(case data WHO & Google & multinomial fit to GISAID data)") +
+  scale_fill_manual("variant", values=lineage_cols) +
+  scale_colour_manual("variant", values=lineage_cols) +
+  coord_cartesian(xlim=c(as.Date("2021-09-01"),today)) # as.Date("2022-01-01")
+
+ggsave(file=paste0(".\\plots\\",plotdir,"\\cases per day by variant_stacked area chart_smoothed.png"), width=8, height=6)
+
+ggplot(data=emmeans_lineages, 
+       aes(x=date, y=smoothed_cases+1, group=LINEAGE)) + 
+  facet_wrap(~ country, scale="free") +
+  geom_area(data=emmeans_lineages[emmeans_lineages$LINEAGE=="Other",], aes(lwd=I(1.2), colour=NULL), fill=lineage_cols[2], position="identity", alpha=I(0.4), width=I(2)) +
+  geom_area(data=emmeans_lineages[emmeans_lineages$LINEAGE=="Omicron",], aes(lwd=I(1.2), colour=NULL), fill=lineage_cols[1], position="identity", alpha=I(0.4), width=I(2)) +
+  xaxis +
+  scale_y_log10() +
+  # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
+  theme_hc() + theme(legend.position="right", 
+                     axis.title.x=element_blank()) + 
+  ylab("New confirmed cases per day") +
+  ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT\nIN SELECTED AFRICAN COUNTRIES\n(case data WHO & Google & multinomial fit to GISAID data)") +
+  scale_fill_manual("variant", values=lineage_cols) +
+  scale_colour_manual("variant", values=lineage_cols) +
+  coord_cartesian(xlim=c(as.Date("2021-09-01"),today)) # as.Date("2022-01-01")
+
+ggsave(file=paste0(".\\plots\\",plotdir,"\\cases per day_smoothed_stacked area multinomial fit raw case data_log10 Y scale.png"), width=8, height=6)
+
+
+ggplot(data=emmeans_lineages, 
+       aes(x=collection_date, y=cases, group=LINEAGE)) + 
+  facet_wrap(~ country, scale="free") +
+  geom_line(aes(lwd=I(1.2), colour=LINEAGE, group=LINEAGE)) +
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
+                     limits=c(as.Date("2021-01-01"),max(cases_tot$date)), expand=c(0,0)) +
+  # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
+  theme_hc() + theme(legend.position="right") + 
+  ylab("New confirmed cases per day") + xlab("Date of diagnosis") +
+  ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT\nIN SELECTED AFRICAN COUNTRIES\n(case data WHO & Google & multinomial fit to GISAID data)") +
+  scale_fill_manual("variant", values=lineage_cols2) +
+  scale_colour_manual("variant", values=lineage_cols2) +
+  coord_cartesian(xlim=c(as.Date("2021-01-01"),NA)) +
+  scale_y_log10()
+
+# ggsave(file=paste0(".\\plots\\",plotdir,"\\cases per day_log10 y scale_multinomial fit raw case data.png"), width=8, height=6)
+
+ggplot(data=emmeans_lineages,
+       aes(x=collection_date-7, y=smoothed_cases, group=LINEAGE)) +
+  facet_wrap(~ country, scale="free") +
+  geom_line(aes(lwd=I(1.2), colour=LINEAGE, group=LINEAGE)) +
+  scale_x_continuous(breaks=as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
+                     labels=substring(months(as.Date(c("2020-01-01","2020-02-01","2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01"))),1,1),
+                     limits=c(as.Date("2021-01-01"),today), expand=c(0,0)) +
+  # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
+  theme_hc() + theme(legend.position="right") +
+  ylab("New confirmed cases per day (smoothed)") + xlab("Date of infection") +
+  ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT\nIN SELECTED AFRICAN COUNTRIES\n(case data WHO & Google & multinomial fit to GISAID data)") +
+  scale_fill_manual("variant", values=lineage_cols2) +
+  scale_colour_manual("variant", values=lineage_cols2) +
+  coord_cartesian(xlim=c(as.Date("2021-01-01"),today)) +
+  scale_y_log10()
+
+ggsave(file=paste0(".\\plots\\",plotdir,"\\cases per day_log10 y scale_multinomial fit smoothed case data.png"), width=8, height=6)
+
+
+
+
+
+
+# EFFECTIVE REPRODUCTION NUMBER BY VARIANT THROUGH TIME ####
+# TO DO : need to finish this part
+
+# Function to calculate Re values from intrinsic growth rate
+# cf. https://github.com/epiforecasts/EpiNow2/blob/5015e75f7048c2580b2ebe83e46d63124d014861/R/utilities.R#L109
+# https://royalsocietypublishing.org/doi/10.1098/rsif.2020.0144
+# (assuming gamma distributed gen time)
+Re.from.r <- function(r, gamma_mean=4.7, gamma_sd=2.9) { # Nishiura et al. 2020, or use values from Ferretti et al. 2020 (gamma_mean=5.5, gamma_sd=1.8)
+  k <- (gamma_sd / gamma_mean)^2
+  R <- (1 + k * r * gamma_mean)^(1 / k)
+  return(R)
+}
+
+
+# calculate average instantaneous growth rates & 95% CLs using emtrends ####
+# based on the slope of the GAM fit on a log link scale
+avg_r_cases = as.data.frame(emtrends(fit_cases, ~ DATE_NUM, by="country", var="DATE_NUM", 
+                                     at=list(DATE_NUM=seq(date.from,
+                                                          date.to, by=3)
+                                     ), # weekday="Wednesday",
+                                     type="link"))
+colnames(avg_r_cases)[3] = "r"
+colnames(avg_r_cases)[6] = "r_LOWER"
+colnames(avg_r_cases)[7] = "r_UPPER"
+avg_r_cases$DATE = as.Date(avg_r_cases$DATE_NUM, origin="1970-01-01") # -7 TO CALCULATE BACK TO INFECTION DATE
+avg_r_cases$Re = Re.from.r(avg_r_cases$r)
+avg_r_cases$Re_LOWER = Re.from.r(avg_r_cases$r_LOWER)
+avg_r_cases$Re_UPPER = Re.from.r(avg_r_cases$r_UPPER)
+avg_r_cases = avg_r_cases[complete.cases(avg_r_cases),]
+qplot(data=avg_r_cases, x=DATE-7, y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribbon", alpha=I(0.5), fill=I("steelblue")) +
+  facet_wrap(~ country) +
+  geom_line() + theme_hc() + xlab("Date of infection") +
+  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
+                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A","M","J","J")) +
+  # scale_y_continuous(limits=c(1/2, 2), trans="log2") +
+  geom_hline(yintercept=1, colour=I("red")) +
+  ggtitle("Re VALUES IN SELECTED AFRICAN COUNTRIES\n(case data WHO & Google)") +
+  # labs(tag = tag) +
+  # theme(plot.margin = margin(t = 20, r = 10, b = 20, l = 0)) +
+  theme(plot.tag.position = "bottomright",
+        plot.tag = element_text(vjust = 1, hjust = 1, size=8)) # +
+# coord_cartesian(xlim=c(as.Date("2020-01-01"),NA))
+
+# calculate above-average intrinsic growth rates per day of each variant over time based on multinomial fit using emtrends weighted effect contrasts ####
+# for best model fit3_sanger_multi
+above_avg_r_variants1 = do.call(rbind, lapply(levels_countries, function(country) { do.call(rbind, 
+                                                                                            lapply(seq(date.from,
+                                                                                                       date.to, by=3), 
+                                                                                                   function (d) { 
+                                                                                                     wt = as.data.frame(emmeans(fit1_africa_multi, ~ LINEAGE , by="country", 
+                                                                                                                                at=list(DATE_NUM=d, country=country), type="response"))$prob   # important: these should sum to 1
+                                                                                                     # wt = rep(1/length(levels_VARIANTS), length(levels_VARIANTS)) 
+                                                                                                     # this would give equal weights, equivalent to emmeans:::eff.emmc(levs=levels_LINEAGE)
+                                                                                                     cons = lapply(seq_along(wt), function (i) { con = -wt; con[i] = 1 + con[i]; con })
+                                                                                                     names(cons) = seq_along(cons)
+                                                                                                     EMT = emtrends(fit1_africa_multi,  ~ LINEAGE , by=c("DATE_NUM", "country"),
+                                                                                                                    var="DATE_NUM", mode="latent",
+                                                                                                                    at=list(DATE_NUM=d, country=country))
+                                                                                                     out = as.data.frame(confint(contrast(EMT, cons), adjust="none", df=NA))
+                                                                                                     # sum(out$estimate*wt) # should sum to zero
+                                                                                                     return(out) } )) } ))
+above_avg_r_variants = above_avg_r_variants1
+above_avg_r_variants$contrast = factor(above_avg_r_variants$contrast, 
+                                       levels=1:length(levels_LINEAGE), 
+                                       labels=levels_LINEAGE)
+above_avg_r_variants$LINEAGE = above_avg_r_variants$contrast # gsub(" effect|\\(|\\)","",above_avg_r_variants$contrast)
+above_avg_r_variants$collection_date = as.Date(above_avg_r_variants$DATE_NUM, origin="1970-01-01")
+range(above_avg_r_variants$collection_date) # "2021-01-01" "2021-07-30"
+# average growth rate of all lineages calculated from case nrs
+above_avg_r_variants$avg_r = avg_r_cases$r[match(interaction(above_avg_r_variants$collection_date,above_avg_r_variants$country),
+                                                 interaction(avg_r_cases$DATE,avg_r_cases$country))]  
+above_avg_r_variants$r = above_avg_r_variants$avg_r+above_avg_r_variants$estimate
+above_avg_r_variants$r_LOWER = above_avg_r_variants$avg_r+above_avg_r_variants$asymp.LCL
+above_avg_r_variants$r_UPPER = above_avg_r_variants$avg_r+above_avg_r_variants$asymp.UCL
+above_avg_r_variants$Re = Re.from.r(above_avg_r_variants$r)
+above_avg_r_variants$Re_LOWER = Re.from.r(above_avg_r_variants$r_LOWER)
+above_avg_r_variants$Re_UPPER = Re.from.r(above_avg_r_variants$r_UPPER)
+df = data.frame(contrast=NA,
+                DATE_NUM=avg_r_cases$DATE_NUM, # -7 to calculate back to time of infection
+                country=avg_r_cases$country,
+                estimate=NA,
+                SE=NA,
+                df=NA,
+                asymp.LCL=NA,
+                asymp.UCL=NA,
+                # p.value=NA,
+                collection_date=avg_r_cases$DATE,
+                LINEAGE="avg",
+                avg_r=avg_r_cases$r,
+                r=avg_r_cases$r,
+                r_LOWER=avg_r_cases$r_LOWER,
+                r_UPPER=avg_r_cases$r_UPPER,
+                Re=avg_r_cases$Re,
+                Re_LOWER=avg_r_cases$Re_LOWER,
+                Re_UPPER=avg_r_cases$Re_UPPER)
+# df = df[df$DATE_NUM<=max(above_avg_r_variants$DATE_NUM)&df$DATE_NUM>=(min(above_avg_r_variants$DATE_NUM)+7),]
+above_avg_r_variants = rbind(above_avg_r_variants, df)
+above_avg_r_variants$LINEAGE = factor(above_avg_r_variants$LINEAGE, levels=c(levels_LINEAGE,"avg"))
+above_avg_r_variants$prob = emmeans_lineages$prob[match(interaction(round(above_avg_r_variants$DATE_NUM),
+                                                                          as.character(above_avg_r_variants$LINEAGE),
+                                                                          as.character(above_avg_r_variants$country)),
+                                                              interaction(round(emmeans_lineages$DATE_NUM),
+                                                                          as.character(emmeans_lineages$LINEAGE),
+                                                                          as.character(emmeans_lineages$country)))]
+above_avg_r_variants2 = above_avg_r_variants
+ymax = 2
+ymin = 1/2
+above_avg_r_variants2$Re[above_avg_r_variants2$Re>=ymax] = NA
+above_avg_r_variants2$Re[above_avg_r_variants2$Re<=ymin] = NA
+above_avg_r_variants2$Re_LOWER[above_avg_r_variants2$Re_LOWER>=ymax] = ymax
+above_avg_r_variants2$Re_LOWER[above_avg_r_variants2$Re_LOWER<=ymin] = ymin
+above_avg_r_variants2$Re_UPPER[above_avg_r_variants2$Re_UPPER>=ymax] = ymax
+above_avg_r_variants2$Re_UPPER[above_avg_r_variants2$Re_UPPER<=ymin] = ymin
+above_avg_r_variants2$Re[above_avg_r_variants2$prob<0.01] = NA
+above_avg_r_variants2$Re_LOWER[above_avg_r_variants2$prob<0.01] = NA
+above_avg_r_variants2$Re_UPPER[above_avg_r_variants2$prob<0.01] = NA
+qplot(data=above_avg_r_variants2[!((above_avg_r_variants2$LINEAGE %in% c("other"))|(above_avg_r_variants2$collection_date>=max(cases_tot$date))),], # |above_avg_r_variants2$collection_date>max(cases_tot$DATE)
+      x=collection_date-7, # -7 to calculate back to date of infection
+      y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribbon", colour=LINEAGE, fill=LINEAGE, alpha=I(0.5),
+      group=LINEAGE, linetype=I(0)) +
+  facet_wrap(~ country) +
+  # geom_ribbon(aes(fill=variant, colour=variant), alpha=I(0.5))
+  geom_line(aes(colour=LINEAGE), lwd=I(0.72)) + theme_hc() + xlab("Date of infection") +
+  scale_x_continuous(breaks=as.Date(c("2020-03-01","2020-04-01","2020-05-01","2020-06-01","2020-07-01","2020-08-01","2020-09-01","2020-10-01","2020-11-01","2020-12-01","2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01","2021-07-01")),
+                     labels=c("M","A","M","J","J","A","S","O","N","D","J","F","M","A","M","J","J")) +
+  # scale_y_continuous(limits=c(1/ymax,ymax), trans="log2") +
+  geom_hline(yintercept=1, colour=I("red")) +
+  ggtitle("Re VALUES BY VARIANT IN SELECTED AFRICAN COUNTRIES\n(case data WHO & Google)") +
+  # labs(tag = tag) +
+  # theme(plot.margin = margin(t = 20, r = 10, b = 20, l = 0)) +
+  theme(plot.tag.position = "bottomright",
+        plot.tag = element_text(vjust = 1, hjust = 1, size=8)) +
+  coord_cartesian(xlim=c(as.Date("2020-11-01"),max(cases_tot$date))) +
+  scale_fill_manual("variant", values=c(head(lineage_cols2,-1),"black")) +
+  scale_colour_manual("variant", values=c(head(lineage_cols2,-1),"black")) +
+  theme(legend.position="right") 
+
+ggsave(file=paste0(".\\plots\\",plotdir,"\\Re values per variant_avgRe_from_cases_with clipping.png"), width=8, height=6)
+
+
 
