@@ -8,7 +8,7 @@
 # GISAID data to infer the proportion of S dropout (with spike Spike_H69del/Spike_V70del) that are Omicron (https://www.gisaid.org/)
 
 # T. Wenseleers
-# last update 21 DECEMBER 2021
+# last update 22 DECEMBER 2021
 
 library(nnet)
 # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
@@ -83,13 +83,13 @@ varpcr_dk = read.csv(".//data//omicron_sgtf//variantpcr_denmark.csv") # variant-
 sgtf_sa = read.csv(".//data//omicron_sgtf//sgtf_south africa.csv") # data traced from graph (data not open at the moment)
 sgtf_sa$date = as.Date(sgtf_sa$date)
 sgtf_sa = sgtf_sa[sgtf_sa$date>=as.Date("2021-11-05"),] # data limited to >= Nov 5 when from sequencing data nearly all S dropout was Omicron
-sgtf_eng = read.csv("https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1042545/sgtf_regionepicurve_2021-12-19.csv")
+sgtf_eng = read.csv("https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1042751/sgtf_regionepicurve_2021-12-20-1.csv")
 sgtf_eng$sgtf = factor(sgtf_eng$sgtf, levels=c("Cases with confirmed S-gene","Cases with confirmed SGTF"), labels=c("no_sgtf","sgtf"))
 # data for England by LTLA also at 
 # see https://www.gov.uk/government/publications/covid-19-omicron-daily-overview
 sgtf_eng = spread(sgtf_eng, sgtf, n)
 sgtf_eng[is.na(sgtf_eng)] = 0
-sgtf_eng$date = as.Date(sgtf_eng$specimen_date)
+sgtf_eng$date = dmy(sgtf_eng$specimen_date) # as.Date(sgtf_eng$specimen_date)
 sgtf_eng = sgtf_eng %>%  # sum counts over ONS regions
   group_by(date) %>% 
   summarise(across(c(no_sgtf,sgtf), list(sum = sum)))
@@ -151,6 +151,7 @@ write.csv(sgtf, ".//data//omicron_sgtf//raw_data_share_omicron_SA_ENG_SCOT_DK_BE
 # fit using a separate-slope logistic regression that allows for overdispersion via the inclusion of an observation-level random effect
 
 fit_sgtf1 = glmmPQL(cbind(omicron, non_omicron) ~ scale(date_num) * country, family=binomial(logit), random=~1|obs, data=sgtf) 
+fit_sgtf2 = glmmPQL(cbind(omicron, non_omicron) ~ ns(date_num, df=4) * country, family=binomial(logit), random=~1|obs, data=sgtf[sgtf$country!="South Africa",]) 
 # AIC(fit_sgtf0, fit_sgtf1)
 summary(fit_sgtf1)
 
@@ -161,26 +162,26 @@ summary(fit_sgtf1)
 # summary(fit_sgtf1)
 
 plot(allEffects(fit_sgtf1, residuals=T))
+plot(allEffects(fit_sgtf2, residuals=T))
 
 # growth rate advantage delta_r of Omicron over Delta (difference in growth rate per day)
-deltar_sgtf_bycountry = as.data.frame(emtrends(fit_sgtf1, ~ date_num, by="country", var="date_num", at=list(date_num=max(dateseq))))[,c(2,3,6,7)] # growth rate advantage of Omicron over Delta
+deltar_sgtf_bycountry = as.data.frame(emtrends(fit_sgtf2, ~ date_num, by="country", var="date_num", at=list(date_num=max(dateseq))))[,c(2,3,6,7)] # growth rate advantage of Omicron over Delta
 rownames(deltar_sgtf_bycountry) = deltar_sgtf_bycountry$country
 deltar_sgtf_bycountry$country = NULL
 colnames(deltar_sgtf_bycountry) = c("delta_r","delta_r_asymp.LCL","delta_r_asymp.UCL")
 deltar_sgtf_bycountry
 #                delta_r delta_r_asymp.LCL delta_r_asymp.UCL
-# South Africa 0.2556820         0.2018698         0.3094942
-# England      0.3601148         0.3462101         0.3740196
-# Scotland     0.2737670         0.2534736         0.2940604
-# Denmark      0.3063431         0.2817211         0.3309651
-# Belgium      0.2766234         0.2515970         0.3016498
+# England  0.13581810       -0.03773964         0.3093758
+# Scotland 0.09834247       -0.03170326         0.2283882
+# Denmark  0.04670254       -0.11814590         0.2115510
+# Belgium  0.23873533        0.14675509         0.3307156
 
 # mean growth rate advantage of Omicron over Delta across countries (mean difference in growth rate per day)
-deltar_sgtf = as.data.frame(emtrends(fit_sgtf1, ~ date_num, var="date_num", at=list(date_num=max(dateseq))))[,c(2,5,6)] # growth rate advantage of Omicron over Delta
+deltar_sgtf = as.data.frame(emtrends(fit_sgtf2, ~ date_num, var="date_num", at=list(date_num=max(dateseq))))[,c(2,5,6)] # growth rate advantage of Omicron over Delta
 colnames(deltar_sgtf) = c("delta_r","delta_r_asymp.LCL","delta_r_asymp.UCL")
 deltar_sgtf
 #     delta_r delta_r_asymp.LCL delta_r_asymp.UCL
-# 1 0.2945061          0.280746         0.3082661
+# 1 0.1298996        0.05801883         0.2017804
 deltar_sgtf_char = sapply(deltar_sgtf, function (x) sprintf(as.character(round(x,2)), 2) )
 deltar_sgtf_char = paste0(deltar_sgtf_char[1], " [", deltar_sgtf_char[2], "-", deltar_sgtf_char[3],"] 95% CLs")
 
@@ -193,11 +194,10 @@ transmadv_sgtf_by_country = exp(deltar_sgtf_bycountry*4.7)
 colnames(transmadv_sgtf_by_country) = c("transmadv","transmadv_asymp.LCL","transmadv_asymp.UCL")
 transmadv_sgtf_by_country
 #              transmadv transmadv_asymp.LCL transmadv_asymp.UCL
-# South Africa  3.325783            2.582577            4.282866
-# England       5.433262            5.089539            5.800199
-# Scotland      3.620836            3.291443            3.983193
-# Denmark       4.219905            3.758760            4.737625
-# Belgium       3.669774            3.262540            4.127840
+# England   1.893345           0.8374646            4.280486
+# Scotland  1.587578           0.8615645            2.925380
+# Denmark   1.245456           0.5739082            2.702804
+# Belgium   3.071162           1.9932151            4.732072
 
 # mean transmission advantage of Omicron over Delta across countries (using generation time of 4.7 days)
 # i.e. mean fold difference in the effective reproduction number Re of Omicron compared to that of Delta
@@ -205,19 +205,19 @@ transmadv_sgtf = exp(deltar_sgtf*4.7)
 colnames(transmadv_sgtf) = c("transmadv","transmadv_asymp.LCL","transmadv_asymp.UCL")
 transmadv_sgtf
 #   transmadv transmadv_asymp.LCL transmadv_asymp.UCL
-# 1  3.991545            3.741573            4.258218
+# 1  1.841404            1.313491            2.581493
 transmadv_sgtf_char = sapply(transmadv_sgtf, function (x) sprintf(as.character(round(x,1)), 1) )
 transmadv_sgtf_char = paste0(transmadv_sgtf_char[1], " [", transmadv_sgtf_char[2], "-", transmadv_sgtf_char[3],"] 95% CLs")
 
 # plot model predictions
-emmeans_sgtf = as.data.frame(emmeans(fit_sgtf1, ~ date_num+country, at=list(date_num=dateseq, country=levels_country)), type="response")
+emmeans_sgtf = as.data.frame(emmeans(fit_sgtf2, ~ date_num+country, at=list(date_num=dateseq, country=levels_country[!levels_country=="South Africa"])), type="response")
 colnames(emmeans_sgtf) = c("date_num", "country", "prob", "SE", "df", "asymp.LCL", "asymp.UCL")
 emmeans_sgtf$date = as.Date(emmeans_sgtf$date_num, origin="1970-01-01")
 
 write.csv(emmeans_sgtf, ".//data//omicron_sgtf//fit_logistic_mixed_model_share_omicron_SA_ENG_SCOT_DK_BE.csv", row.names=F)
 
 # plot of share of Omicron among confirmed infections (on logit scale)
-qplot(data=sgtf, x=date, y=prop, geom="point", colour=country, fill=country, size=pos_tests, alpha=(1/pos_tests), shape=I(16)) + 
+qplot(data=sgtf[sgtf$country!="South Africa",], x=date, y=prop, geom="point", colour=country, fill=country, size=pos_tests, alpha=(1/pos_tests), shape=I(16)) + 
   geom_ribbon(data=emmeans_sgtf, aes(y=prob, ymin=asymp.LCL, ymax=asymp.UCL, colour=NULL, size=NULL), alpha=I(0.5)) +
   geom_line(data=emmeans_sgtf, aes(y=prob), alpha=I(0.5), size=1) +
   scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
@@ -225,60 +225,59 @@ qplot(data=sgtf, x=date, y=prop, geom="point", colour=country, fill=country, siz
   scale_size_continuous("nr. of positive tests", range=c(2,7), breaks=c(100, 1000, 10000)) +
   scale_alpha_continuous("", range=c(0.5,1), guide=FALSE) +
   xlim(date.from, date.to) +
-  coord_cartesian(xlim=c(as.Date("2021-10-14"),NA), ylim=c(0.001,0.99)) +
   # scale_size_continuous(range=c()) +
-  ggtitle("Spread of Omicron variant inferred from\nS gene target failure (SGTF) data (SA, UK, BE)\n& variant PCR data (DK)",
-          "(SGTF counts adjusted by proportion that was estimated to be Omicron\nbased on GISAID data, data Lesley Scott & NHLS team, UKHSA,\nPublic Health Scotland, Statens Serum Institut, Federal Test Platform Belgium)") +
+  ggtitle("Spread of Omicron variant inferred from\nS gene target failure (SGTF) data (UK, BE)\n& variant PCR data (DK)",
+          "(SGTF counts adjusted by proportion that was estimated to be Omicron\nbased on GISAID data, data UKHSA, Public Health Scotland,\nStatens Serum Institut, Federal Test Platform Belgium)") + # Lesley Scott & NHLS team, 
   ylab("Share of Omicron among confirmed cases (%)") +
-  annotate("text", x = c(as.Date("2021-10-16")), y = c(0.94),
+  annotate("text", x = c(as.Date("2021-12-01")), y = c(0.94),
            label = paste0("Avg. growth rate advantage of Omicron over Delta:\n", deltar_sgtf_char,
                           " per day\n\nAvg. transmission advantage Omicron over Delta\n(with generation time of 4.7 days):\n", transmadv_sgtf_char),
            color="black", hjust=0, size=3) +
   theme_hc() +
   theme(legend.position="right") +
   xlab("") + xaxis +
-  theme(plot.subtitle=element_text(size=8))
+  theme(plot.subtitle=element_text(size=8)) +
+  coord_cartesian(xlim=c(as.Date("2021-12-01"),as.Date("2022-01-01")), ylim=c(0.001,0.99)) 
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\spread omicron logistic fit sgtf data.png"), width=8, height=6)
 
 # plot of share of Omicron among confirmed infections (on linear scale)
-qplot(data=sgtf, x=date, y=100*prop, geom="point", colour=country, fill=country, size=pos_tests, alpha=(1/pos_tests), shape=I(16)) + 
+qplot(data=sgtf[sgtf$country!="South Africa",], x=date, y=100*prop, geom="point", colour=country, fill=country, size=pos_tests, alpha=(1/pos_tests), shape=I(16)) + 
   geom_ribbon(data=emmeans_sgtf, aes(y=prob*100, ymin=100*asymp.LCL, ymax=100*asymp.UCL, colour=NULL, size=NULL), alpha=I(0.5)) +
   geom_line(data=emmeans_sgtf, aes(y=prob*100), alpha=I(0.5), size=1) +
   scale_size_continuous("nr. of positive tests", range=c(2,7), breaks=c(100, 1000, 10000)) +
   scale_alpha_continuous("", range=c(0.5,1), guide=FALSE) +
   xlim(date.from, date.to) +
-  coord_cartesian(xlim=c(as.Date("2021-10-14"),NA), ylim=c(0,100)) +
-  # scale_size_continuous(range=c()) +
-  ggtitle("Spread of Omicron variant inferred from\nS gene target failure (SGTF) data (SA, UK, BE)\n& variant PCR data (DK)",
-          "(SGTF counts adjusted by proportion that was estimated to be Omicron\nbased on GISAID data, data Lesley Scott & NHLS team, UKHSA,\nPublic Health Scotland, Statens Serum Institut, Federal Test Platform Belgium)") +
+# scale_size_continuous(range=c()) +
+  ggtitle("Spread of Omicron variant inferred from\nS gene target failure (SGTF) data (UK, BE)\n& variant PCR data (DK)",
+          "(SGTF counts adjusted by proportion that was estimated to be Omicron\nbased on GISAID data, data UKHSA, Public Health Scotland,\nStatens Serum Institut, Federal Test Platform Belgium)") + # Lesley Scott & NHLS team, 
   ylab("Share of Omicron among confirmed cases (%)") +
-  annotate("text", x = c(as.Date("2021-10-16")), y = c(80),
+  annotate("text", x = c(as.Date("2021-12-01")), y = c(80),
            label = paste0("Avg. growth rate advantage of Omicron over Delta:\n", deltar_sgtf_char,
                           " per day\n\nAvg. transmission advantage Omicron over Delta\n(with generation time of 4.7 days):\n", transmadv_sgtf_char),
            color="black", hjust=0, size=3) +
   theme_hc() +
   theme(legend.position="right") +
   xlab("") + xaxis +
-  theme(plot.subtitle=element_text(size=8))
+  theme(plot.subtitle=element_text(size=8)) +
+  coord_cartesian(xlim=c(as.Date("2021-12-01"),as.Date("2022-01-01")), ylim=c(0,100)) 
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\spread omicron logistic fit sgtf data_linear scale.png"), width=8, height=6)
 
 
 emmeans_sgtf[emmeans_sgtf$date==today,] # estimated prop Omicron among confirmed cases today
 # date_num      country      prob          SE  df asymp.LCL asymp.UCL       date
-# 112    18982 South Africa 0.9993930 0.0006341043 122 0.9952134 0.9999233 2021-12-21
-# 254    18982      England 0.9197586 0.0114891556 122 0.8938703 0.9397575 2021-12-21
-# 396    18982     Scotland 0.6988785 0.0379661054 122 0.6188878 0.7683640 2021-12-21
-# 538    18982      Denmark 0.7926962 0.0295727400 122 0.7281001 0.8452086 2021-12-21
-# 680    18982      Belgium 0.2481560 0.0316749985 122 0.1908416 0.3159618 2021-12-21
+# 113    18983  England 0.8349714 0.07589908 100 0.6291279 0.9378523 2021-12-22
+# 256    18983 Scotland 0.6358294 0.07195534 100 0.4851992 0.7638377 2021-12-22
+# 399    18983  Denmark 0.5219695 0.11491024 100 0.3045457 0.7313756 2021-12-22
+# 542    18983  Belgium 0.2831061 0.04349007 100 0.2051787 0.3766066 2021-12-22
+
 emmeans_sgtf[emmeans_sgtf$date==(today+7),] # estimated prop Omicron among new infections today (1 week before diagnosis)
 # date_num      country      prob          SE  df asymp.LCL asymp.UCL       date
-# 119    18989 South Africa 0.9998986 0.0001251971 122 0.9988330 0.9999912 2021-12-28
-# 261    18989      England 0.9930350 0.0013899134 122 0.9896673 0.9953103 2021-12-28
-# 403    18989     Scotland 0.9403822 0.0138088262 122 0.9064248 0.9625263 2021-12-28
-# 545    18989      Denmark 0.9702769 0.0075136427 122 0.9511960 0.9820386 2021-12-28
-# 687    18989      Belgium 0.6959091 0.0530642418 122 0.5821248 0.7898934 2021-12-28
+# 120    18990  England 0.9290380 0.07606145 100 0.5702894 0.9923166 2021-12-29
+# 263    18990 Scotland 0.7765555 0.12894023 100 0.4431023 0.9381960 2021-12-29
+# 406    18990  Denmark 0.6022508 0.24675451 100 0.1639904 0.9211835 2021-12-29
+# 549    18990  Belgium 0.6774420 0.11327122 100 0.4288879 0.8545164 2021-12-29
 
 emmeans_sgtf[emmeans_sgtf$date==as.Date("2022-01-02"),]
 emmeans_sgtf[emmeans_sgtf$date==as.Date("2021-12-24"),]
@@ -483,6 +482,15 @@ Re.from.r <- function(r, gamma_mean=4.7, gamma_sd=2.9) { # Nishiura et al. 2020,
   R <- (1 + k * r * gamma_mean)^(1 / k)
   return(R)
 }
+
+# calculate r from Re
+# cf. https://github.com/epiforecasts/EpiNow2/blob/5015e75f7048c2580b2ebe83e46d63124d014861/R/utilities.R#L127
+r.from.Re <- function(Re, gamma_mean=4.7, gamma_sd=2.9) { # Nishiura et al. 2020, or use values from Ferretti et al. 2020 (gamma_mean=5.5, gamma_sd=1.8)
+  k <- (gamma_sd / gamma_mean)^2
+  r <- (Re^k - 1) / (k * gamma_mean)
+  return(r)
+}
+
 
 
 # calculate average instantaneous growth rates & 95% CLs using emtrends ####
