@@ -180,17 +180,17 @@ deltar_sgtf_bycountry$country = NULL
 colnames(deltar_sgtf_bycountry) = c("delta_r","delta_r_asymp.LCL","delta_r_asymp.UCL")
 deltar_sgtf_bycountry
 #                delta_r delta_r_asymp.LCL delta_r_asymp.UCL
-# England  0.12348319     -0.0002171986         0.2471836
-# Scotland 0.09926885      0.0059980611         0.1925396
-# Denmark  0.10838029     -0.0350994382         0.2518600
-# Belgium  0.26176346      0.1807994911         0.3427274
+# England  0.09916877       -0.05331095         0.2516485
+# Scotland 0.08243055       -0.03190518         0.1967663
+# Denmark  0.08776057       -0.09350776         0.2690289
+# Belgium  0.26821394        0.18457918         0.3518487
 
 # mean growth rate advantage of Omicron over Delta across countries (mean difference in growth rate per day)
 deltar_sgtf = as.data.frame(emtrends(fit_sgtf2, ~ date_num, var="date_num", at=list(date_num=max(dateseq))))[,c(2,5,6)] # growth rate advantage of Omicron over Delta
 colnames(deltar_sgtf) = c("delta_r","delta_r_asymp.LCL","delta_r_asymp.UCL")
 deltar_sgtf
 #     delta_r delta_r_asymp.LCL delta_r_asymp.UCL
-# 1 0.1482239          0.091687         0.2047609
+# 1 0.1343935        0.06539359         0.2033933
 deltar_sgtf_char = sapply(deltar_sgtf, function (x) sprintf(as.character(round(x,2)), 2) )
 deltar_sgtf_char = paste0(deltar_sgtf_char[1], " [", deltar_sgtf_char[2], "-", deltar_sgtf_char[3],"] 95% CLs")
 
@@ -203,10 +203,10 @@ transmadv_sgtf_by_country = exp(deltar_sgtf_bycountry*4.7)
 colnames(transmadv_sgtf_by_country) = c("transmadv","transmadv_asymp.LCL","transmadv_asymp.UCL")
 transmadv_sgtf_by_country
 #          transmadv transmadv_asymp.LCL transmadv_asymp.UCL
-# England   1.786701           0.9989797            3.195561
-# Scotland  1.594505           1.0285920            2.471774
-# Denmark   1.664271           0.8479214            3.266575
-# Belgium   3.422216           2.3390798            5.006910
+# England   1.593756           0.7783637            3.263329
+# Scotland  1.473180           0.8607473            2.521368
+# Denmark   1.510551           0.6443672            3.541094
+# Belgium   3.527557           2.3810037            5.226223
 
 # mean transmission advantage of Omicron over Delta across countries (using generation time of 4.7 days)
 # i.e. mean fold difference in the effective reproduction number Re of Omicron compared to that of Delta
@@ -214,7 +214,7 @@ transmadv_sgtf = exp(deltar_sgtf*4.7)
 colnames(transmadv_sgtf) = c("transmadv","transmadv_asymp.LCL","transmadv_asymp.UCL")
 transmadv_sgtf
 #   transmadv transmadv_asymp.LCL transmadv_asymp.UCL
-# 1  2.007023            1.538686             2.61791
+# 1  1.88071            1.359817            2.601137
 transmadv_sgtf_char = sapply(transmadv_sgtf, function (x) sprintf(as.character(round(x,1)), 1) )
 transmadv_sgtf_char = paste0(transmadv_sgtf_char[1], " [", transmadv_sgtf_char[2], "-", transmadv_sgtf_char[3],"] 95% CLs")
 
@@ -276,17 +276,17 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\spread omicron logistic fit sgtf data
 
 emmeans_sgtf[emmeans_sgtf$date==today,] # estimated prop Omicron among confirmed cases today
 # date_num      country      prob          SE  df asymp.LCL asymp.UCL       date
-# 114    18984  England 0.8434393 0.05654853 102 0.6973345 0.9264538 2021-12-23
-# 258    18984 Scotland 0.6595841 0.05412781 102 0.5456929 0.7576061 2021-12-23
-# 402    18984  Denmark 0.6403415 0.10830969 102 0.4119353 0.8190114 2021-12-23
-# 546    18984  Belgium 0.3514506 0.05073117 102 0.2584316 0.4573038 2021-12-23
+# 114    18984  England 0.8329506 0.06982790 103 0.6482611 0.9309879 2021-12-23
+# 258    18984 Scotland 0.6527957 0.06269164 103 0.5206847 0.7649326 2021-12-23
+# 402    18984  Denmark 0.6224656 0.13153942 103 0.3520410 0.8334299 2021-12-23
+# 546    18984  Belgium 0.3821397 0.04832693 103 0.2918508 0.4813735 2021-12-23
 
 emmeans_sgtf[emmeans_sgtf$date==(today+7),] # estimated prop Omicron among new infections today (1 week before diagnosis)
 # date_num      country      prob          SE  df asymp.LCL asymp.UCL       date
-# 121    18991  England 0.9274677 0.05765291 102 0.7002588 0.9859131 2021-12-30
-# 265    18991 Scotland 0.7951615 0.08947411 102 0.5662917 0.9202618 2021-12-30
-# 409    18991  Denmark 0.7917504 0.15967243 102 0.3577094 0.9629002 2021-12-30
-# 553    18991  Belgium 0.7720064 0.08707292 102 0.5593305 0.9003307 2021-12-30
+# 121    18991  England 0.9089487 0.08532312 103 0.5637025 0.9872013 2021-12-30
+# 265    18991 Scotland 0.7700095 0.11612498 103 0.4769900 0.9247588 2021-12-30
+# 409    18991  Denmark 0.7529394 0.22132426 103 0.2235164 0.9699386 2021-12-30
+# 553    18991  Belgium 0.8017108 0.07644408 103 0.6090523 0.9129908 2021-12-30
 
 emmeans_sgtf[emmeans_sgtf$date==as.Date("2022-01-02"),]
 emmeans_sgtf[emmeans_sgtf$date==as.Date("2021-12-24"),]
