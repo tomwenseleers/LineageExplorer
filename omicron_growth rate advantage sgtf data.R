@@ -123,6 +123,7 @@ sgtf_be = read.csv(".//data//omicron_sgtf//sgtf_belgium.csv")
 
 # add data from Amsterdam
 # https://twitter.com/ARGOSamsterdam/status/1473047414235967495
+# data reported to RIVM: https://www.rivm.nl/coronavirus-covid-19/virus/varianten/omikronvariant?s=09
 
 sgtf = rbind(sgtf_sa, sgtf_eng, sgtf_scot, sgtf_be)
 sgtf$DATE_NUM = as.numeric(sgtf$date)
