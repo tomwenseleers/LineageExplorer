@@ -1,6 +1,6 @@
 library(readr)
 
-# import GISAID metadata (file version metadata_tsv_2021_12_11.tar.xz)
+# import GISAID metadata (file version metadata_tsv_2021_12_27.tar.xz)
 message("Parsing GISAID metadata...")
 GISAID = read_tsv(".//data//GISAID//metadata.tsv", col_types = cols(.default = "c"))
 GISAID = as.data.frame(GISAID)
@@ -28,14 +28,14 @@ date_isvalid = sapply(GISAID$"Collection date", function (s) str_count(s, patter
 GISAID = GISAID[date_isvalid,]
 GISAID$date = as.Date(GISAID$"Collection date") 
 GISAID = GISAID[!is.na(GISAID$date),]
-nrow(GISAID) # 5803521
+nrow(GISAID) # 6230709
 
 # only keep complete genomes
 GISAID = GISAID[GISAID$"Is complete?"=="True",]
-nrow(GISAID) # 5721143
+nrow(GISAID) # 6230709
 
 # add numeric version of date, week midpoint & week & year
-range(GISAID$date) # "2019-12-24" "2021-12-09"
+range(GISAID$date) # "2019-12-24" "2021-12-23"
 # GISAID[GISAID$date==min(GISAID$date),] # first available Wuhan genome
 GISAID$Week = lubridate::week(GISAID$date)
 GISAID$Year = lubridate::year(GISAID$date)
@@ -68,17 +68,17 @@ levels_locations = levels(GISAID$location)
 
 # recode pango lineages as desired
 GISAID = GISAID[!(GISAID$"Pango lineage"=="None"|GISAID$"Pango lineage"==""|is.na(GISAID$"Pango lineage")),]
-nrow(GISAID) # 5672058
+nrow(GISAID) # 6178953
 unique(GISAID$"Pango lineage")
-length(unique(GISAID$"Pango lineage")) # 1529 pango lineages
+length(unique(GISAID$"Pango lineage")) # 1542 pango lineages
 
 # code Omicron lineage
 GISAID$Omicron = "Other"
-GISAID$Omicron[GISAID$Variant=="VOC Omicron GR/484A (BA.1) first detected in Botswana/Hong Kong/South Africa"] = "Omicron"
+GISAID$Omicron[grepl("Omicron",GISAID$Variant)] = "Omicron"
 
 # code Delta lineage
 GISAID$Delta = "Other"
-GISAID$Delta[GISAID$Variant=="VOC Delta GK/478K.V1 (B.1.617.2+AY.x) first detected in India"] = "Delta"
+GISAID$Delta[grepl("Delta",GISAID$Variant)] = "Delta"
 
 # code sgtf (S gene target failure) based on presence of Spike_H69del / Spike_V70del
 GISAID$sgtf = grepl("Spike_H69del",GISAID$"AA Substitutions", fixed=T)|grepl("Spike_V70del",GISAID$"AA Substitutions", fixed=T)
@@ -93,7 +93,7 @@ library(tidyr)
 GISAID_sgtf_isomicron = spread(GISAID_sgtf_isomicron, Omicron, Freq) 
 GISAID_sgtf_isomicron$date = as.Date(GISAID_sgtf_isomicron$date)
 GISAID_sgtf_isomicron$DATE_NUM = as.numeric(GISAID_sgtf_isomicron$date)
-
+saveRDS(GISAID_sgtf_isomicron, file=".//data//GISAID//GISAID_sgtf_isomicron.rds")
 
 # # code main clades & VOCs only # TO DO: FINISH THIS PART
 # unique(GISAID$Clade)
