@@ -454,8 +454,8 @@ qplot(data=sgtf_eng_byregion[sgtf_eng_byregion$date>=as.Date("2021-12-01"),], x=
           "(data UKHSA, mixed logistic 2 df spline fit with observation-level random effect to take into account overdispersion)") +  
   ylab("Share of tests with S dropout (% Omicron)") +
   annotate("text", x = c(as.Date("2021-12-01")), y = c(80),
-           label = paste0("Avg. growth rate advantage of Omicron over Delta:\n", deltar_sgtf_char,
-                          " per day\n\nAvg. transmission advantage Omicron over Delta\n(with generation time of 4.7 days):\n", transmadv_sgtf_char),
+           label = paste0("Avg. growth rate advantage of Omicron over Delta:\n", deltar_sgtf_eng_avgoverregions_char,
+                          " per day\n\nAvg. transmission advantage Omicron over Delta\n(with generation time of 4.7 days):\n", transmadv_sgtf_eng_avgoverregions_char),
            color="black", hjust=0, size=3) +
   theme_hc() +
   theme(legend.position="right") +
