@@ -57,6 +57,17 @@ loc[,2][loc[,2]=="United Kingdom"] = "England"
 sort(unique(loc[,2])) # country
 
 sort(unique(loc[,3])) # city or province
+# unique(loc[,4][loc[,2]=="England"])
+unique(GISAID$'Additional location information'[loc[,2]=="England"]) # sometimes has ZIP code, can maybe be converted to ONS region?
+unique(loc[,3][loc[,2]=="Belgium"]) # usually city
+unique(loc[,3][loc[,2]=="Netherlands"]) # province, incl Amsterdam
+unique(loc[,4][loc[,2]=="Netherlands"]) # city, incl Amsterdam
+unique(GISAID$'Additional location information'[loc[,2]=="Netherlands"]) # ZIP code
+sum(grepl("1012|1011|1015|1016|1017|1052|1018|1013|1051|1031|1021|1053|1072|1074|1073|1071|1054|1091|1093|1056", GISAID$'Additional location information'[loc[,2]=="Netherlands"]), na.rm=T)
+sum((loc[,4][loc[,2]=="Netherlands"]=="Amsterdam")|(loc[,3][loc[,2]=="Netherlands"]=="Amsterdam"),na.rm=T) # 167
+unique(loc[,3][loc[,2]=="Switzerland"]) # city, incl Geneva / Genève
+sum((loc[,4][loc[,2]=="Switzerland"]=="Geneva")|(loc[,3][loc[,2]=="Switzerland"]=="Geneva"),na.rm=T) # 10459
+sum((loc[,4][loc[,2]=="Switzerland"]=="Genève")|(loc[,3][loc[,2]=="Switzerland"]=="Genève"),na.rm=T) # 8
 
 levels_continents = c("Asia","North America","Europe","Africa","South America","Oceania")
 GISAID$continent = factor(loc[,1], levels=levels_continents)
@@ -94,6 +105,8 @@ GISAID_sgtf_isomicron = spread(GISAID_sgtf_isomicron, Omicron, Freq)
 GISAID_sgtf_isomicron$date = as.Date(GISAID_sgtf_isomicron$date)
 GISAID_sgtf_isomicron$DATE_NUM = as.numeric(GISAID_sgtf_isomicron$date)
 saveRDS(GISAID_sgtf_isomicron, file=".//data//GISAID//GISAID_sgtf_isomicron.rds")
+
+
 
 # # code main clades & VOCs only # TO DO: FINISH THIS PART
 # unique(GISAID$Clade)
