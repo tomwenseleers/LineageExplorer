@@ -181,7 +181,10 @@ sgtf$obs = as.factor(1:nrow(sgtf)) # for observation-level random effect to take
 names(sgtf)
 head(sgtf)[,c("country","date","omicron","non_omicron","prop_omicron")]
 # sgtf = sgtf[sgtf$prop_omicron>=0.01,] # only include data where omicron made up >1% of all cases
-write.csv(sgtf, ".//data//omicron_sgtf//raw_data_share_omicron_SA_ENG_SCOT_DK_BE.csv", row.names=F)
+
+sgtf2=sgtf
+sgtf2$region = NULL
+write.csv(sgtf2, ".//data//omicron_sgtf//raw_data_share_omicron_SA_ENG_SCOT_DK_BE.csv", row.names=F)
 
 # 4. ANALYSIS OF SGTF DATA USING LOGISTIC REGRESSION ####
 
