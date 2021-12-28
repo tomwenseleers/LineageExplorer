@@ -490,11 +490,11 @@ qplot(data=sgtf_eng_byregion[sgtf_eng_byregion$date>=as.Date("2021-12-01"),], x=
   scale_fill_hue(h=c(10, 310), c=100)
 
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\spread omicron logistic fit sgtf data_linear scale.png"), width=8, height=6)
+ggsave(file=paste0(".\\plots\\",plotdir,"\\spread omicron logistic fit sgtf data england by region_linear scale.png"), width=8, height=6)
 
 
 
-
+ 
 
 
 
