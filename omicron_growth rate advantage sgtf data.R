@@ -279,7 +279,7 @@ emmeans_sgtf = as.data.frame(emmeans(fit_sgtf2, ~ date_num+country, at=list(date
 colnames(emmeans_sgtf) = c("date_num", "country", "prob", "SE", "df", "asymp.LCL", "asymp.UCL")
 emmeans_sgtf$date = as.Date(emmeans_sgtf$date_num, origin="1970-01-01")
 
-write.csv(emmeans_sgtf, ".//data//omicron_sgtf//fit_logistic_mixed_model_share_omicron_SA_ENG_SCOT_DK_BE2.csv", row.names=F)
+write.csv(emmeans_sgtf, ".//data//omicron_sgtf//fit_logistic_mixed_model_share_omicron_SA_ENG_SCOT_DK_BE.csv", row.names=F)
 
 # plot of share of Omicron among confirmed infections (on logit scale)
 qplot(data=sgtf[sgtf$country!="South Africa",], x=date, y=prop, geom="point", colour=country, fill=country, size=pos_tests, alpha=(1/pos_tests), shape=I(16)) + 
