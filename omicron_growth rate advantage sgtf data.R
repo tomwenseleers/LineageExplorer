@@ -8,7 +8,7 @@
 # GISAID data to infer the proportion of S dropout (with spike Spike_H69del/Spike_V70del) that are Omicron (https://www.gisaid.org/)
 
 # T. Wenseleers
-# last update 28 DECEMBER 2021
+# last update 29 DECEMBER 2021
 
 library(nnet)
 # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
@@ -195,7 +195,7 @@ write.csv(sgtf2, ".//data//omicron_sgtf//raw_data_share_omicron_SA_ENG_SCOT_DK_B
 # summary(fit_sgtf1)
 
 # fit using a separate-slope logistic regression that allows for overdispersion via the inclusion of an observation-level random effect
-fit_sgtf2 = glmmPQL(cbind(omicron, non_omicron) ~ ns(date_num, df=4, Boundary.knots = c(min(date_num),
+fit_sgtf2 = glmmPQL(cbind(omicron, non_omicron) ~ ns(date_num, df=3, Boundary.knots = c(min(date_num),
                                                                                         max(date_num)+1)) * country, family=binomial(logit), 
                                                   random=~1|obs, 
                                                   data=sgtf[sgtf$country!="South Africa",])
@@ -238,17 +238,17 @@ deltar_sgtf_bycountry$country = NULL
 colnames(deltar_sgtf_bycountry) = c("delta_r","delta_r_asymp.LCL","delta_r_asymp.UCL")
 deltar_sgtf_bycountry
 #            delta_r delta_r_asymp.LCL delta_r_asymp.UCL
-# England  0.08745641        0.01830126         0.1566116
-# Scotland 0.10361799        0.01540440         0.1918316
-# Denmark  0.09694017        0.03424470         0.1596356
-# Belgium  0.27189352        0.22218812         0.3215989
+# England  0.1629949        0.12255381         0.2034359
+# Scotland 0.1130581        0.05306925         0.1730470
+# Denmark  0.1525675        0.10390195         0.2012330
+# Belgium  0.3083774        0.25971187         0.3570429
 
 # mean growth rate advantage of Omicron over Delta across countries (mean difference in growth rate per day)
 deltar_sgtf = as.data.frame(emtrends(fit_sgtf2, ~ date_num, var="date_num", at=list(date_num=max(dateseq))))[,c(2,5,6)] # growth rate advantage of Omicron over Delta
 colnames(deltar_sgtf) = c("delta_r","delta_r_asymp.LCL","delta_r_asymp.UCL")
 deltar_sgtf
 #     delta_r delta_r_asymp.LCL delta_r_asymp.UCL
-# 1 0.139977         0.1055483         0.1744058
+# 1 0.1842495          0.159286          0.209213
 deltar_sgtf_char = sapply(deltar_sgtf, function (x) sprintf(as.character(round(x,2)), 2) )
 deltar_sgtf_char = paste0(deltar_sgtf_char[1], " [", deltar_sgtf_char[2], "-", deltar_sgtf_char[3],"] 95% CLs")
 
@@ -261,10 +261,10 @@ transmadv_sgtf_by_country = exp(deltar_sgtf_bycountry*4.7)
 colnames(transmadv_sgtf_by_country) = c("transmadv","transmadv_asymp.LCL","transmadv_asymp.UCL")
 transmadv_sgtf_by_country
 #          transmadv transmadv_asymp.LCL transmadv_asymp.UCL
-# England   1.508393            1.089824            2.087724
-# Scotland  1.627434            1.075086            2.463562
-# Denmark   1.577149            1.174626            2.117609
-# Belgium   3.589093            2.841364            4.533594
+# England   2.151308            1.778914            2.601658
+# Scotland  1.701267            1.283288            2.255386
+# Denmark   2.048417            1.629607            2.574860
+# Belgium   4.260446            3.389376            5.355381
 
 # mean transmission advantage of Omicron over Delta across countries (using generation time of 4.7 days)
 # i.e. mean fold difference in the effective reproduction number Re of Omicron compared to that of Delta
@@ -272,7 +272,7 @@ transmadv_sgtf = exp(deltar_sgtf*4.7)
 colnames(transmadv_sgtf) = c("transmadv","transmadv_asymp.LCL","transmadv_asymp.UCL")
 transmadv_sgtf
 #   transmadv transmadv_asymp.LCL transmadv_asymp.UCL
-# 1  1.930718            1.642266            2.269835
+# 1 2.377317            2.114132            2.673266
 transmadv_sgtf_char = sapply(transmadv_sgtf, function (x) sprintf(as.character(round(x,1)), 1) )
 transmadv_sgtf_char = paste0(transmadv_sgtf_char[1], " [", transmadv_sgtf_char[2], "-", transmadv_sgtf_char[3],"] 95% CLs")
 
@@ -297,10 +297,10 @@ qplot(data=sgtf[sgtf$country!="South Africa",], x=date, y=prop, geom="point", co
   ggtitle("Spread of Omicron variant inferred from\nS gene target failure (SGTF) data (UK, BE)\n& variant PCR data (DK)",
           "(SGTF counts adjusted by proportion that was estimated to be Omicron\nbased on GISAID data, data UKHSA, Public Health Scotland,\nStatens Serum Institut, Federal Test Platform Belgium)") + # Lesley Scott & NHLS team, 
   ylab("Share of Omicron among confirmed cases (%)") +
-  annotate("text", x = c(as.Date("2021-12-01")), y = c(0.94),
-           label = paste0("Avg. growth rate advantage of Omicron over Delta:\n", deltar_sgtf_char,
-                          " per day\n\nAvg. transmission advantage Omicron over Delta\n(with generation time of 4.7 days):\n", transmadv_sgtf_char),
-           color="black", hjust=0, size=3) +
+#   annotate("text", x = c(as.Date("2021-12-01")), y = c(0.94),
+#            label = paste0("Avg. growth rate advantage of Omicron over Delta:\n", deltar_sgtf_char), #,
+# #                          " per day\n\nAvg. transmission advantage Omicron over Delta\n(with generation time of 4.7 days):\n", transmadv_sgtf_char),
+#            color="black", hjust=0, size=3) +
   theme_hc() +
   theme(legend.position="right") +
   xlab("") + xaxis +
@@ -320,10 +320,10 @@ qplot(data=sgtf[sgtf$country!="South Africa",], x=date, y=100*prop, geom="point"
   ggtitle("Spread of Omicron variant inferred from\nS gene target failure (SGTF) data (UK, BE)\n& variant PCR data (DK)",
           "(SGTF counts adjusted by proportion that was estimated to be Omicron\nbased on GISAID data, data UKHSA, Public Health Scotland,\nStatens Serum Institut, Federal Test Platform Belgium)") + # Lesley Scott & NHLS team, 
   ylab("Share of Omicron among confirmed cases (%)") +
-  annotate("text", x = c(as.Date("2021-12-01")), y = c(80),
-           label = paste0("Avg. growth rate advantage of Omicron over Delta:\n", deltar_sgtf_char,
-                          " per day\n\nAvg. transmission advantage Omicron over Delta\n(with generation time of 4.7 days):\n", transmadv_sgtf_char),
-           color="black", hjust=0, size=3) +
+  # annotate("text", x = c(as.Date("2021-12-01")), y = c(80),
+  #          label = paste0("Avg. growth rate advantage of Omicron over Delta:\n", deltar_sgtf_char,
+  #                         " per day\n\nAvg. transmission advantage Omicron over Delta\n(with generation time of 4.7 days):\n", transmadv_sgtf_char),
+  #          color="black", hjust=0, size=3) +
   theme_hc() +
   theme(legend.position="right") +
   xlab("") + xaxis +
@@ -335,20 +335,20 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\spread omicron logistic fit sgtf data
 
 emmeans_sgtf[emmeans_sgtf$date==today,] # estimated prop Omicron among confirmed cases today
 # date_num  country      prob         SE  df asymp.LCL asymp.UCL       date
-# 119    18989  England 0.9282939 0.01648573 121 0.8879980 0.9548297 2021-12-28
-# 268    18989 Scotland 0.8165585 0.04277918 121 0.7166279 0.8868146 2021-12-28
-# 417    18989  Denmark 0.8260095 0.02961355 121 0.7594504 0.8771316 2021-12-28
-# 566    18989  Belgium 0.7077434 0.02895789 121 0.6473209 0.7616262 2021-12-28
+# 120    18990  England 0.9591400 0.007727449 129 0.9407976 0.9719688 2021-12-29
+# 270    18990 Scotland 0.8353980 0.033733941 129 0.7574960 0.8918478 2021-12-29
+# 420    18990  Denmark 0.8822706 0.020069141 129 0.8364200 0.9165517 2021-12-29
+# 570    18990  Belgium 0.7923098 0.031794585 129 0.7224452 0.8482816 2021-12-29
 
 emmeans_sgtf[emmeans_sgtf$date==(today+7),] # estimated prop Omicron among new infections today (1 week before diagnosis)
-# date_num  country      prob         SE  df asymp.LCL asymp.UCL       date
-# 126    18996  England 0.9598042 0.01879639 121 0.9010029 0.9842884 2022-01-04
-# 275    18996 Scotland 0.9019011 0.05230661 121 0.7404089 0.9673578 2022-01-04
-# 424    18996  Denmark 0.9034524 0.03672942 121 0.8025871 0.9556310 2022-01-04
-# 573    18996  Belgium 0.9420078 0.01676886 121 0.8984390 0.9675607 2022-01-04
+# date_num  country      prob          SE  df asymp.LCL asymp.UCL       date
+# 127    18997  England 0.9865714 0.004431744 129 0.9742944 0.9930269 2022-01-05
+# 277    18997 Scotland 0.9180231 0.033732308 129 0.8218528 0.9645186 2022-01-05
+# 427    18997  Denmark 0.9561476 0.014983200 129 0.9149063 0.9778841 2022-01-05
+# 577    18997  Belgium 0.9706179 0.010191017 129 0.9421621 0.9852922 2022-01-05
 
-emmeans_sgtf[emmeans_sgtf$date==as.Date("2022-01-02"),]
-emmeans_sgtf[emmeans_sgtf$date==as.Date("2021-12-24"),]
+emmeans_sgtf[emmeans_sgtf$date==as.Date("2022-01-03"),]
+emmeans_sgtf[emmeans_sgtf$date==as.Date("2021-12-25"),]
 
 
 
@@ -374,23 +374,23 @@ rownames(deltar_sgtf_eng_byregion) = deltar_sgtf_eng_byregion$region
 deltar_sgtf_eng_byregion$region = NULL
 colnames(deltar_sgtf_eng_byregion) = c("delta_r","delta_r_asymp.LCL","delta_r_asymp.UCL")
 deltar_sgtf_eng_byregion
-#                        delta_r delta_r_asymp.LCL delta_r_asymp.UCL
-# East Midlands        0.2176089         0.1852156         0.2500022
-# East of England      0.1826824         0.1494241         0.2159408
-# London               0.1159380         0.0843118         0.1475643
-# North East           0.2462634         0.2032960         0.2892307
-# North West           0.2437777         0.2142626         0.2732928
-# South East           0.1774946         0.1447059         0.2102832
-# South West           0.2171830         0.1733679         0.2609982
-# West Midlands        0.2185575         0.1812853         0.2558297
-# Yorkshire and Humber 0.2269047         0.1908844         0.2629251
+#                         delta_r delta_r_asymp.LCL delta_r_asymp.UCL
+# East Midlands        0.18871317        0.15792268         0.2195037
+# East of England      0.14383948        0.11651181         0.1711672
+# London               0.09568817        0.06908749         0.1222888
+# North East           0.23295765        0.19625042         0.2696649
+# North West           0.21554181        0.19083698         0.2402466
+# South East           0.14893751        0.12068861         0.1771864
+# South West           0.19111430        0.14909037         0.2331382
+# West Midlands        0.18255703        0.15221431         0.2128998
+# Yorkshire and Humber 0.18846194        0.15915587         0.2177680
 
 # mean growth rate advantage of Omicron over Delta across ONS regions (mean difference in growth rate per day)
 deltar_sgtf_eng_avgoverregions = as.data.frame(emtrends(fit_sgtf_eng_byregion1, ~ date_num, var="date_num", at=list(date_num=max(dateseq))))[,c(2,5,6)] # growth rate advantage of Omicron over Delta
 colnames(deltar_sgtf_eng_avgoverregions) = c("delta_r","delta_r_asymp.LCL","delta_r_asymp.UCL")
 deltar_sgtf_eng_avgoverregions
 #     delta_r delta_r_asymp.LCL delta_r_asymp.UCL
-# 1 0.2051567         0.1932131         0.2171003
+# 1 0.1764235         0.1660575         0.1867894
 deltar_sgtf_eng_avgoverregions_char = sapply(deltar_sgtf_eng_avgoverregions, function (x) sprintf(as.character(round(x,2)), 2) )
 deltar_sgtf_eng_avgoverregions_char = paste0(deltar_sgtf_eng_avgoverregions_char[1], " [", deltar_sgtf_eng_avgoverregions_char[2], "-", deltar_sgtf_eng_avgoverregions_char[3],"] 95% CLs")
 
@@ -403,15 +403,15 @@ transmadv_sgtf_eng_byregion = exp(deltar_sgtf_eng_byregion*4.7)
 colnames(transmadv_sgtf_eng_byregion) = c("transmadv","transmadv_asymp.LCL","transmadv_asymp.UCL")
 transmadv_sgtf_eng_byregion
 #                      transmadv transmadv_asymp.LCL transmadv_asymp.UCL
-# East Midlands         2.780864            2.388136            3.238177
-# East of England       2.359872            2.018376            2.759147
-# London                1.724451            1.486264            2.000810
-# North East            3.181771            2.599947            3.893795
-# North West            3.144815            2.737470            3.612775
-# South East            2.303027            1.974110            2.686747
-# South West            2.775304            2.258789            3.409930
-# West Midlands         2.793290            2.344427            3.328093
-# Yorkshire and Humber  2.905055            2.452619            3.440951
+# East Midlands         2.427718            2.100629            2.805740
+# East of England       1.966088            1.729108            2.235546
+# London                1.567896            1.383631            1.776700
+# North East            2.988887            2.515262            3.551695
+# North West            2.753978            2.452073            3.093055
+# South East            2.013765            1.763387            2.299694
+# South West            2.455271            2.015213            2.991424
+# West Midlands         2.358482            2.045019            2.719992
+# Yorkshire and Humber  2.424854            2.112839            2.782945
 
 # mean transmission advantage of Omicron over Delta across countries (using generation time of 4.7 days)
 # i.e. mean fold difference in the effective reproduction number Re of Omicron compared to that of Delta
@@ -419,7 +419,7 @@ transmadv_sgtf_eng_avgoverregions = exp(deltar_sgtf_eng_avgoverregions*4.7)
 colnames(transmadv_sgtf_eng_avgoverregions) = c("transmadv","transmadv_asymp.LCL","transmadv_asymp.UCL")
 transmadv_sgtf_eng_avgoverregions
 #   transmadv transmadv_asymp.LCL transmadv_asymp.UCL
-# 1  2.622784            2.479611            2.774224
+# 1  2.291462            2.182498            2.405867
 transmadv_sgtf_eng_avgoverregions_char = sapply(transmadv_sgtf_eng_avgoverregions, function (x) sprintf(as.character(round(x,1)), 1) )
 transmadv_sgtf_eng_avgoverregions_char = paste0(transmadv_sgtf_eng_avgoverregions_char[1], " [", transmadv_sgtf_eng_avgoverregions_char[2], "-", transmadv_sgtf_eng_avgoverregions_char[3],"] 95% CLs")
 
@@ -451,10 +451,10 @@ qplot(data=sgtf_eng_byregion[sgtf_eng_byregion$date>=as.Date("2021-12-01"),],
   ggtitle("Spread of the Omicron variant in England,\nusing S gene target failure (SGTF) data as a proxy",
           "(data UKHSA, mixed logistic 2 df spline fit with observation-level random effect to take into account overdispersion)") +  
   ylab("Share of tests with S dropout (% Omicron)") +
-  annotate("text", x = c(as.Date("2021-12-01")), y = c(0.94),
-           label = paste0("Avg. growth rate advantage of Omicron over Delta:\n", deltar_sgtf_eng_avgoverregions_char,
-                          " per day\n\nAvg. transmission advantage Omicron over Delta\n(with generation time of 4.7 days):\n", transmadv_sgtf_eng_avgoverregions_char),
-           color="black", hjust=0, size=3) +
+  # annotate("text", x = c(as.Date("2021-12-01")), y = c(0.94),
+  #          label = paste0("Avg. growth rate advantage of Omicron over Delta:\n", deltar_sgtf_eng_avgoverregions_char,
+  #                         " per day\n\nAvg. transmission advantage Omicron over Delta\n(with generation time of 4.7 days):\n", transmadv_sgtf_eng_avgoverregions_char),
+  #          color="black", hjust=0, size=3) +
   theme_hc() +
   theme(legend.position="right") +
   xlab("") + xaxis +
@@ -477,10 +477,10 @@ qplot(data=sgtf_eng_byregion[sgtf_eng_byregion$date>=as.Date("2021-12-01"),], x=
   ggtitle("Spread of the Omicron variant in England,\nusing S gene target failure (SGTF) data as a proxy",
           "(data UKHSA, mixed logistic 2 df spline fit with observation-level random effect to take into account overdispersion)") +  
   ylab("Share of tests with S dropout (% Omicron)") +
-  annotate("text", x = c(as.Date("2021-12-01")), y = c(80),
-           label = paste0("Avg. growth rate advantage of Omicron over Delta:\n", deltar_sgtf_eng_avgoverregions_char,
-                          " per day\n\nAvg. transmission advantage Omicron over Delta\n(with generation time of 4.7 days):\n", transmadv_sgtf_eng_avgoverregions_char),
-           color="black", hjust=0, size=3) +
+  # annotate("text", x = c(as.Date("2021-12-01")), y = c(80),
+  #          label = paste0("Avg. growth rate advantage of Omicron over Delta:\n", deltar_sgtf_eng_avgoverregions_char,
+  #                         " per day\n\nAvg. transmission advantage Omicron over Delta\n(with generation time of 4.7 days):\n", transmadv_sgtf_eng_avgoverregions_char),
+  #          color="black", hjust=0, size=3) +
   theme_hc() +
   theme(legend.position="right") +
   xlab("") + xaxis +
