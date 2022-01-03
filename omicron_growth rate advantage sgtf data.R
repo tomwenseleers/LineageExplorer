@@ -8,7 +8,7 @@
 # GISAID data to infer the proportion of S dropout (with spike Spike_H69del/Spike_V70del) that are Omicron (https://www.gisaid.org/)
 
 # T. Wenseleers
-# last update 29 DECEMBER 2021
+# last update 3 JANUARY 2021
 
 library(nnet)
 # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
@@ -142,6 +142,7 @@ write.csv(sgtf_eng,".//data//omicron_sgtf//sgtf_england.csv",row.names=F)
 
 sgtf_scot = read.csv(".//data//omicron_sgtf//sgtf_scotland.csv") # SGTF data Scotland from https://www.gov.scot/publications/coronavirus-covid-19-additional-data-and-information/
 sgtf_scot$region = sgtf_scot$country
+sgtf_scot = sgtf_scot[complete.cases(sgtf_scot),]
 sgtf_be = read.csv(".//data//omicron_sgtf//sgtf_belgium.csv") # SGTF data Belgium from Federal Test Platform (contact: Emmanuel André)
 sgtf_be$region = sgtf_be$country
 # sgtf_be = sgtf_be[sgtf_be$date>=as.Date("2021-12-11"),] # we include data from 11 dec onwards
@@ -202,10 +203,13 @@ fit_sgtf2 = glmmPQL(cbind(omicron, non_omicron) ~ ns(date_num, df=3, Boundary.kn
 # AIC(fit_sgtf0, fit_sgtf1)
 summary(fit_sgtf2)
 
-# # fit using a binomial GAM 
-# fit_sgtf2 = gam(cbind(omicron, non_omicron) ~ # s(date_num, k=5, bs="cs", fx=T) + 
-#                                               s(date_num, k=5, bs="ps", by=country, fx=T), 
-#                 family=quasibinomial(logit), 
+# # # fit using a binomial GAM 
+# fit_sgtf2 = gam(cbind(omicron, non_omicron) ~ 
+#                                               s(date_num, k=5, bs="cs") +
+#                                               # s(date_num, k=4, bs="cs", by=country, fx=F)+
+#                                               country+
+#                                               country*date_num,
+#                 family=quasibinomial(logit),
 #                 data=sgtf[sgtf$country!="South Africa",]) # using quasibinomial to take into account overdispersion
 # fit_sgtf2 = gamm(cbind(omicron, non_omicron) ~ s(date_num, bs="cs") + s(date_num, bs="cs", by=country), family=binomial(logit), 
 #                  random=list(obs=~1), # observation level random effect to take into account overdispersion 
@@ -238,17 +242,17 @@ deltar_sgtf_bycountry$country = NULL
 colnames(deltar_sgtf_bycountry) = c("delta_r","delta_r_asymp.LCL","delta_r_asymp.UCL")
 deltar_sgtf_bycountry
 #            delta_r delta_r_asymp.LCL delta_r_asymp.UCL
-# England  0.1629949        0.12255381         0.2034359
-# Scotland 0.1130581        0.05306925         0.1730470
-# Denmark  0.1525675        0.10390195         0.2012330
-# Belgium  0.3083774        0.25971187         0.3570429
+# England  0.1149977        0.07205993         0.1579356
+# Scotland 0.1046464        0.05538480         0.1539079
+# Denmark  0.1500951        0.11307531         0.1871149
+# Belgium  0.3181478        0.25041654         0.3858790
 
 # mean growth rate advantage of Omicron over Delta across countries (mean difference in growth rate per day)
 deltar_sgtf = as.data.frame(emtrends(fit_sgtf2, ~ date_num, var="date_num", at=list(date_num=max(dateseq))))[,c(2,5,6)] # growth rate advantage of Omicron over Delta
 colnames(deltar_sgtf) = c("delta_r","delta_r_asymp.LCL","delta_r_asymp.UCL")
 deltar_sgtf
 #     delta_r delta_r_asymp.LCL delta_r_asymp.UCL
-# 1 0.1842495          0.159286          0.209213
+# 1 0.1719717         0.1466879         0.1972556
 deltar_sgtf_char = sapply(deltar_sgtf, function (x) sprintf(as.character(round(x,2)), 2) )
 deltar_sgtf_char = paste0(deltar_sgtf_char[1], " [", deltar_sgtf_char[2], "-", deltar_sgtf_char[3],"] 95% CLs")
 
@@ -261,10 +265,10 @@ transmadv_sgtf_by_country = exp(deltar_sgtf_bycountry*4.7)
 colnames(transmadv_sgtf_by_country) = c("transmadv","transmadv_asymp.LCL","transmadv_asymp.UCL")
 transmadv_sgtf_by_country
 #          transmadv transmadv_asymp.LCL transmadv_asymp.UCL
-# England   2.151308            1.778914            2.601658
-# Scotland  1.701267            1.283288            2.255386
-# Denmark   2.048417            1.629607            2.574860
-# Belgium   4.260446            3.389376            5.355381
+# England   1.716847            1.403097            2.100756
+# Scotland  1.635319            1.297330            2.061363
+# Denmark   2.024752            1.701404            2.409550
+# Belgium   4.460650            3.244489            6.132676
 
 # mean transmission advantage of Omicron over Delta across countries (using generation time of 4.7 days)
 # i.e. mean fold difference in the effective reproduction number Re of Omicron compared to that of Delta
@@ -272,7 +276,7 @@ transmadv_sgtf = exp(deltar_sgtf*4.7)
 colnames(transmadv_sgtf) = c("transmadv","transmadv_asymp.LCL","transmadv_asymp.UCL")
 transmadv_sgtf
 #   transmadv transmadv_asymp.LCL transmadv_asymp.UCL
-# 1 2.377317            2.114132            2.673266
+# 1 2.244016            1.992586            2.527173
 transmadv_sgtf_char = sapply(transmadv_sgtf, function (x) sprintf(as.character(round(x,1)), 1) )
 transmadv_sgtf_char = paste0(transmadv_sgtf_char[1], " [", transmadv_sgtf_char[2], "-", transmadv_sgtf_char[3],"] 95% CLs")
 
@@ -297,10 +301,10 @@ qplot(data=sgtf[sgtf$country!="South Africa",], x=date, y=prop, geom="point", co
   ggtitle("Spread of Omicron variant inferred from\nS gene target failure (SGTF) data (UK, BE)\n& variant PCR data (DK)",
           "(SGTF counts adjusted by proportion that was estimated to be Omicron\nbased on GISAID data, data UKHSA, Public Health Scotland,\nStatens Serum Institut, Federal Test Platform Belgium)") + # Lesley Scott & NHLS team, 
   ylab("Share of Omicron among confirmed cases (%)") +
-#   annotate("text", x = c(as.Date("2021-12-01")), y = c(0.94),
-#            label = paste0("Avg. growth rate advantage of Omicron over Delta:\n", deltar_sgtf_char), #,
-# #                          " per day\n\nAvg. transmission advantage Omicron over Delta\n(with generation time of 4.7 days):\n", transmadv_sgtf_char),
-#            color="black", hjust=0, size=3) +
+  annotate("text", x = c(as.Date("2021-12-01")), y = c(0.98),
+           label = paste0("Avg. growth rate advantage of Omicron over Delta:\n", deltar_sgtf_char, " per day"), #,
+#                          " per day\n\nAvg. transmission advantage Omicron over Delta\n(with generation time of 4.7 days):\n", transmadv_sgtf_char),
+           color="black", hjust=0, size=3) +
   theme_hc() +
   theme(legend.position="right") +
   xlab("") + xaxis +
@@ -320,10 +324,10 @@ qplot(data=sgtf[sgtf$country!="South Africa",], x=date, y=100*prop, geom="point"
   ggtitle("Spread of Omicron variant inferred from\nS gene target failure (SGTF) data (UK, BE)\n& variant PCR data (DK)",
           "(SGTF counts adjusted by proportion that was estimated to be Omicron\nbased on GISAID data, data UKHSA, Public Health Scotland,\nStatens Serum Institut, Federal Test Platform Belgium)") + # Lesley Scott & NHLS team, 
   ylab("Share of Omicron among confirmed cases (%)") +
-  # annotate("text", x = c(as.Date("2021-12-01")), y = c(80),
-  #          label = paste0("Avg. growth rate advantage of Omicron over Delta:\n", deltar_sgtf_char,
+  annotate("text", x = c(as.Date("2021-12-01")), y = c(90),
+           label = paste0("Avg. growth rate advantage of Omicron over Delta:\n", deltar_sgtf_char," per day"),
   #                         " per day\n\nAvg. transmission advantage Omicron over Delta\n(with generation time of 4.7 days):\n", transmadv_sgtf_char),
-  #          color="black", hjust=0, size=3) +
+          color="black", hjust=0, size=3) +
   theme_hc() +
   theme(legend.position="right") +
   xlab("") + xaxis +
@@ -334,18 +338,18 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\spread omicron logistic fit sgtf data
 
 
 emmeans_sgtf[emmeans_sgtf$date==today,] # estimated prop Omicron among confirmed cases today
-# date_num  country      prob         SE  df asymp.LCL asymp.UCL       date
-# 120    18990  England 0.9591400 0.007727449 129 0.9407976 0.9719688 2021-12-29
-# 270    18990 Scotland 0.8353980 0.033733941 129 0.7574960 0.8918478 2021-12-29
-# 420    18990  Denmark 0.8822706 0.020069141 129 0.8364200 0.9165517 2021-12-29
-# 570    18990  Belgium 0.7923098 0.031794585 129 0.7224452 0.8482816 2021-12-29
+# date_num  country      prob          SE  df asymp.LCL asymp.UCL       date
+# 125    18995  England 0.9744838 0.006480172 137 0.9580029 0.9846010 2022-01-03
+# 280    18995 Scotland 0.9116875 0.020822301 137 0.8609274 0.9451021 2022-01-03
+# 435    18995  Denmark 0.9475746 0.008555652 137 0.9278384 0.9621332 2022-01-03
+# 590    18995  Belgium 0.9497015 0.017858613 137 0.9001503 0.9753363 2022-01-03
 
 emmeans_sgtf[emmeans_sgtf$date==(today+7),] # estimated prop Omicron among new infections today (1 week before diagnosis)
 # date_num  country      prob          SE  df asymp.LCL asymp.UCL       date
-# 127    18997  England 0.9865714 0.004431744 129 0.9742944 0.9930269 2022-01-05
-# 277    18997 Scotland 0.9180231 0.033732308 129 0.8218528 0.9645186 2022-01-05
-# 427    18997  Denmark 0.9561476 0.014983200 129 0.9149063 0.9778841 2022-01-05
-# 577    18997  Belgium 0.9706179 0.010191017 129 0.9421621 0.9852922 2022-01-05
+# 132    19002  England 0.9884286 0.004674107 137 0.9744061 0.9948093 2022-01-10
+# 287    19002 Scotland 0.9555083 0.018059921 137 0.9026387 0.9802951 2022-01-10
+# 442    19002  Denmark 0.9810195 0.005515647 137 0.9664123 0.9893441 2022-01-10
+# 597    19002  Belgium 0.9943206 0.003441172 137 0.9812979 0.9982911 2022-01-10
 
 emmeans_sgtf[emmeans_sgtf$date==as.Date("2022-01-03"),]
 emmeans_sgtf[emmeans_sgtf$date==as.Date("2021-12-25"),]
@@ -375,22 +379,22 @@ deltar_sgtf_eng_byregion$region = NULL
 colnames(deltar_sgtf_eng_byregion) = c("delta_r","delta_r_asymp.LCL","delta_r_asymp.UCL")
 deltar_sgtf_eng_byregion
 #                         delta_r delta_r_asymp.LCL delta_r_asymp.UCL
-# East Midlands        0.18871317        0.15792268         0.2195037
-# East of England      0.14383948        0.11651181         0.1711672
-# London               0.09568817        0.06908749         0.1222888
-# North East           0.23295765        0.19625042         0.2696649
-# North West           0.21554181        0.19083698         0.2402466
-# South East           0.14893751        0.12068861         0.1771864
-# South West           0.19111430        0.14909037         0.2331382
-# West Midlands        0.18255703        0.15221431         0.2128998
-# Yorkshire and Humber 0.18846194        0.15915587         0.2177680
+# East Midlands        0.16946270        0.14331997        0.19560544
+# East of England      0.13273580        0.10829683        0.15717477
+# London               0.07473066        0.05143671        0.09802461
+# North East           0.21363132        0.18249578        0.24476686
+# North West           0.18935559        0.16731697        0.21139422
+# South East           0.14023181        0.11583304        0.16463058
+# South West           0.16988625        0.13610648        0.20366603
+# West Midlands        0.17279490        0.14573667        0.19985313
+# Yorkshire and Humber 0.17357283        0.14817758        0.19896808
 
 # mean growth rate advantage of Omicron over Delta across ONS regions (mean difference in growth rate per day)
 deltar_sgtf_eng_avgoverregions = as.data.frame(emtrends(fit_sgtf_eng_byregion1, ~ date_num, var="date_num", at=list(date_num=max(dateseq))))[,c(2,5,6)] # growth rate advantage of Omicron over Delta
 colnames(deltar_sgtf_eng_avgoverregions) = c("delta_r","delta_r_asymp.LCL","delta_r_asymp.UCL")
 deltar_sgtf_eng_avgoverregions
 #     delta_r delta_r_asymp.LCL delta_r_asymp.UCL
-# 1 0.1764235         0.1660575         0.1867894
+# 1 0.1596002          0.150717         0.1684835
 deltar_sgtf_eng_avgoverregions_char = sapply(deltar_sgtf_eng_avgoverregions, function (x) sprintf(as.character(round(x,2)), 2) )
 deltar_sgtf_eng_avgoverregions_char = paste0(deltar_sgtf_eng_avgoverregions_char[1], " [", deltar_sgtf_eng_avgoverregions_char[2], "-", deltar_sgtf_eng_avgoverregions_char[3],"] 95% CLs")
 
@@ -403,15 +407,15 @@ transmadv_sgtf_eng_byregion = exp(deltar_sgtf_eng_byregion*4.7)
 colnames(transmadv_sgtf_eng_byregion) = c("transmadv","transmadv_asymp.LCL","transmadv_asymp.UCL")
 transmadv_sgtf_eng_byregion
 #                      transmadv transmadv_asymp.LCL transmadv_asymp.UCL
-# East Midlands         2.427718            2.100629            2.805740
-# East of England       1.966088            1.729108            2.235546
-# London                1.567896            1.383631            1.776700
-# North East            2.988887            2.515262            3.551695
-# North West            2.753978            2.452073            3.093055
-# South East            2.013765            1.763387            2.299694
-# South West            2.455271            2.015213            2.991424
-# West Midlands         2.358482            2.045019            2.719992
-# Yorkshire and Humber  2.424854            2.112839            2.782945
+# East Midlands         2.217709            1.961293            2.507649
+# East of England       1.866114            1.663619            2.093257
+# London                1.420820            1.273479            1.585208
+# North East            2.729360            2.357803            3.159470
+# North West            2.435060            2.195456            2.700813
+# South East            1.933032            1.723600            2.167910
+# South West            2.222128            1.895913            2.604473
+# West Midlands         2.252715            1.983697            2.558215
+# Yorkshire and Humber  2.260966            2.006586            2.547595
 
 # mean transmission advantage of Omicron over Delta across countries (using generation time of 4.7 days)
 # i.e. mean fold difference in the effective reproduction number Re of Omicron compared to that of Delta
@@ -419,7 +423,7 @@ transmadv_sgtf_eng_avgoverregions = exp(deltar_sgtf_eng_avgoverregions*4.7)
 colnames(transmadv_sgtf_eng_avgoverregions) = c("transmadv","transmadv_asymp.LCL","transmadv_asymp.UCL")
 transmadv_sgtf_eng_avgoverregions
 #   transmadv transmadv_asymp.LCL transmadv_asymp.UCL
-# 1  2.291462            2.182498            2.405867
+# 1  2.117256            2.030678            2.207526
 transmadv_sgtf_eng_avgoverregions_char = sapply(transmadv_sgtf_eng_avgoverregions, function (x) sprintf(as.character(round(x,1)), 1) )
 transmadv_sgtf_eng_avgoverregions_char = paste0(transmadv_sgtf_eng_avgoverregions_char[1], " [", transmadv_sgtf_eng_avgoverregions_char[2], "-", transmadv_sgtf_eng_avgoverregions_char[3],"] 95% CLs")
 
@@ -451,10 +455,10 @@ qplot(data=sgtf_eng_byregion[sgtf_eng_byregion$date>=as.Date("2021-12-01"),],
   ggtitle("Spread of the Omicron variant in England,\nusing S gene target failure (SGTF) data as a proxy",
           "(data UKHSA, mixed logistic 2 df spline fit with observation-level random effect to take into account overdispersion)") +  
   ylab("Share of tests with S dropout (% Omicron)") +
-  # annotate("text", x = c(as.Date("2021-12-01")), y = c(0.94),
-  #          label = paste0("Avg. growth rate advantage of Omicron over Delta:\n", deltar_sgtf_eng_avgoverregions_char,
+  annotate("text", x = c(as.Date("2021-12-01")), y = c(0.98),
+            label = paste0("Avg. growth rate advantage of Omicron over Delta:\n", deltar_sgtf_eng_avgoverregions_char, " per day"),
   #                         " per day\n\nAvg. transmission advantage Omicron over Delta\n(with generation time of 4.7 days):\n", transmadv_sgtf_eng_avgoverregions_char),
-  #          color="black", hjust=0, size=3) +
+            color="black", hjust=0, size=3) +
   theme_hc() +
   theme(legend.position="right") +
   xlab("") + xaxis +
@@ -477,10 +481,10 @@ qplot(data=sgtf_eng_byregion[sgtf_eng_byregion$date>=as.Date("2021-12-01"),], x=
   ggtitle("Spread of the Omicron variant in England,\nusing S gene target failure (SGTF) data as a proxy",
           "(data UKHSA, mixed logistic 2 df spline fit with observation-level random effect to take into account overdispersion)") +  
   ylab("Share of tests with S dropout (% Omicron)") +
-  # annotate("text", x = c(as.Date("2021-12-01")), y = c(80),
-  #          label = paste0("Avg. growth rate advantage of Omicron over Delta:\n", deltar_sgtf_eng_avgoverregions_char,
+  annotate("text", x = c(as.Date("2021-12-01")), y = c(90),
+            label = paste0("Avg. growth rate advantage of Omicron over Delta:\n", deltar_sgtf_eng_avgoverregions_char," per day"),
   #                         " per day\n\nAvg. transmission advantage Omicron over Delta\n(with generation time of 4.7 days):\n", transmadv_sgtf_eng_avgoverregions_char),
-  #          color="black", hjust=0, size=3) +
+            color="black", hjust=0, size=3) +
   theme_hc() +
   theme(legend.position="right") +
   xlab("") + xaxis +
@@ -494,7 +498,135 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\spread omicron logistic fit sgtf data
 
 
 
- 
+# PLOTS OF NEW CASES PER DAY BY VARIANT ####
+
+source(".//scripts//downloadData.R") # download Belgian case data
+head(sgtf)
+sgtf_long = gather(sgtf, variant, count, all_of(c("omicron","non_omicron")), factor_key=TRUE)
+sgtf_long$country
+sgtf_long$date_num = as.numeric(sgtf_long$date)
+sgtf_long$WEEKDAY = weekdays(sgtf_long$date)
+sgtf_long$BANKHOLIDAY = bankholiday(sgtf_long$date)
+sgtf_long$variant = factor(sgtf_long$variant, levels=c("omicron", "non_omicron"), labels=c("Omicron","Delta"))
+
+# smooth out weekday effects in variant case nrs using negative binomial GAM
+library(mgcv)
+k=6
+fit_cases = gam(count ~ s(date_num, bs="cs", k=k, m=c(2), fx=F, by=variant) + variant + WEEKDAY + BANKHOLIDAY,
+                family=nb(), 
+                data=sgtf_long[sgtf_long$country=="Belgium",],
+                method = "REML",
+                knots = list(date_num = c(min(sgtf_long$date_num)-14,
+                                          seq(min(sgtf_long$date_num)+0.5*diff(range(sgtf_long$date_num))/(k-2), 
+                                              max(sgtf_long$date_num)-0.5*diff(range(sgtf_long$date_num))/(k-2), length.out=k-2),
+                                          max(sgtf_long$date_num)+14))
+) 
+BIC(fit_cases)
+
+emmeans_casesbyvariant = as.data.frame(emmeans(fit_cases, ~ date_num+variant, at=list(date_num=as.numeric(seq(as.Date("2021-11-27"),
+                                                                                                   as.Date("2022-01-07"),
+                                                                                                   by=1)),
+                                                                                      BANKHOLIDAY=factor("no")), type="response"))
+emmeans_casesbyvariant$date = as.Date(emmeans_casesbyvariant$date_num, origin="1970-01-01")
+emmeans_casesbyvariant$count= emmeans_casesbyvariant$response
+lineage_cols = c("red2","grey50")
+
+ggplot(data=sgtf_long[sgtf_long$country=="Belgium",], 
+       aes(x=date, y=count, colour=variant, group=variant)) + 
+  geom_point() +
+  geom_ribbon(data=emmeans_casesbyvariant, aes(ymin=lower.CL, ymax=upper.CL, fill=variant, colour=NULL), alpha=I(0.4)) +
+  # facet_wrap(~ country, scale="free") +
+  geom_line(data=emmeans_casesbyvariant, aes(lwd=I(1.2))) +
+  xaxis +
+  # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
+  theme_hc() + theme(legend.position="right") + 
+  ylab("New confirmed cases per day") + xlab("") +
+  ggtitle("RISE OF OMICRON AMONG TaqPath DIAGNOSED\nPOSITIVE SAMPLES IN BELGIUM","data Federal Test Platform Belgium,\nbased on negative binomial GAM fit to S dropout\n& S positive counts, adjusted for proportion\nof S dropouts that were Omicron (GISAID data)") +
+  scale_fill_manual("", values=lineage_cols ) +
+  scale_colour_manual("", values=lineage_cols ) +
+  # coord_cartesian(xlim=c(as.Date("2021-01-01"),NA)) +
+  scale_y_log10() +
+  theme(axis.title.x=element_blank()) 
+
+ggsave(file=paste0(".\\plots\\",plotdir,"\\cases per day by variant_belgium_log10 y scale.png"), width=8, height=6)
+
+ggplot(data=sgtf_long[sgtf_long$country=="Belgium",], 
+       aes(x=date, y=count, colour=variant, group=variant)) + 
+  geom_point() +
+  geom_ribbon(data=emmeans_casesbyvariant, aes(ymin=lower.CL, ymax=upper.CL, fill=variant, colour=NULL), alpha=I(0.4)) +
+  # facet_wrap(~ country, scale="free") +
+  geom_line(data=emmeans_casesbyvariant, aes(lwd=I(1.2))) +
+  xaxis +
+  # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
+  theme_hc() + theme(legend.position="right") + 
+  ylab("New confirmed cases per day") + xlab("") +
+  ggtitle("RISE OF OMICRON AMONG TaqPath DIAGNOSED\nPOSITIVE SAMPLES IN BELGIUM","data Federal Test Platform Belgium,\nbased on negative binomial GAM fit to S dropout\n& S positive counts, adjusted for proportion\nof S dropouts that were Omicron (GISAID data)") +
+  scale_fill_manual("", values=lineage_cols ) +
+  scale_colour_manual("", values=lineage_cols ) +
+  # coord_cartesian(xlim=c(as.Date("2021-01-01"),NA)) +
+  # scale_y_log10() +
+  theme(axis.title.x=element_blank()) 
+
+ggsave(file=paste0(".\\plots\\",plotdir,"\\cases per day by variant_belgium_linear y scale.png"), width=8, height=6)
+
+ggplot(data=sgtf_long[sgtf_long$country=="Belgium",], 
+       aes(x=date, y=count, colour=variant, group=variant)) + 
+  # geom_point() +
+  geom_area(data=emmeans_casesbyvariant, aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), position="stack") +
+  geom_rect() +
+  # geom_ribbon(data=emmeans_casesbyvariant, aes(ymin=lower.CL, ymax=upper.CL, fill=variant, colour=NULL), alpha=I(0.4)) +
+  # facet_wrap(~ country, scale="free") +
+  # geom_line(data=emmeans_casesbyvariant, aes(lwd=I(1.2))) +
+  xaxis +
+  # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
+  theme_hc() + theme(legend.position="right") + 
+  ylab("New confirmed cases per day") + xlab("") +
+  ggtitle("RISE OF OMICRON AMONG TaqPath DIAGNOSED\nPOSITIVE SAMPLES IN BELGIUM","data Federal Test Platform Belgium,\nbased on negative binomial GAM fit to S dropout\n& S positive counts, adjusted for proportion\nof S dropouts that were Omicron (GISAID data)") +
+  scale_fill_manual("", values=lineage_cols ) +
+  scale_colour_manual("", values=lineage_cols ) +
+  # coord_cartesian(xlim=c(as.Date("2021-01-01"),NA)) +
+  # scale_y_log10() +
+  theme(axis.title.x=element_blank()) 
+
+ggsave(file=paste0(".\\plots\\",plotdir,"\\cases per day by variant_belgium_stacked area chart.png"), width=8, height=6)
+
+ggplot(data=sgtf_long[sgtf_long$country=="Belgium",], 
+       aes(x=date, y=count+1, colour=variant, group=variant)) + 
+  # geom_point() +
+  geom_area(data=emmeans_casesbyvariant[emmeans_casesbyvariant$variant=="Omicron",], aes(lwd=I(1.2), colour=NULL, fill=lineage_cols[2], group=variant, alpha=I(0.3)), position="stack") +
+  geom_area(data=emmeans_casesbyvariant[emmeans_casesbyvariant$variant=="Delta",], aes(lwd=I(1.2), colour=NULL, fill=lineage_cols[1], group=variant, alpha=I(0.3)), position="stack") +
+  # geom_ribbon(data=emmeans_casesbyvariant, aes(ymin=lower.CL, ymax=upper.CL, fill=variant, colour=NULL), alpha=I(0.4)) +
+  # facet_wrap(~ country, scale="free") +
+  # geom_line(data=emmeans_casesbyvariant, aes(lwd=I(1.2))) +
+  xaxis +
+  # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
+  theme_hc() + theme(legend.position="right") + 
+  ylab("New confirmed cases per day") + xlab("") +
+  ggtitle("RISE OF OMICRON AMONG TaqPath DIAGNOSED\nPOSITIVE SAMPLES IN BELGIUM","data Federal Test Platform Belgium,\nbased on negative binomial GAM fit to S dropout\n& S positive counts, adjusted for proportion\nof S dropouts that were Omicron (GISAID data)") +
+  scale_fill_manual("", values=lineage_cols, labels=c("Omicron", "Delta")) +
+  scale_colour_manual("", values=lineage_cols, labels=c("Omicron", "Delta")) +
+  # coord_cartesian(xlim=c(as.Date("2021-01-01"),NA)) +
+  # scale_y_log10() +
+  theme(axis.title.x=element_blank()) 
+
+ggsave(file=paste0(".\\plots\\",plotdir,"\\cases per day by variant_belgium_overlaid area chart.png"), width=8, height=6)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

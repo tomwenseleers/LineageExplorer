@@ -1,7 +1,7 @@
 # ANALYSIS OF GROWTH ADVANTAGE OF DIFFERENT VOCs IN ENGLAND BASED ON SANGER INSTITUTE BASELINE SURVEILLANCE SEQUENCING DATA ####
 # (this excludes data from individuals with known travel history & most surge testing/active surveillance)
 
-# last update 22 NOVEMBER 2021
+# last update 3 JANUARY 2022
 
 library(nnet)
 # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
@@ -14,7 +14,7 @@ library(ggthemes)
 
 today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
 # today = as.Date("2021-08-26")
-today # "2021-11-22"
+# today # "2022-01-03"
 today_num = as.numeric(today)
 plotdir = "UK_SANGER"
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
@@ -46,14 +46,14 @@ head(sanger)
 
 # sanger = sanger[grepl("2021-", sanger[,"WeekEndDate"]),]
 sanger = sanger[!(sanger$Lineage=="None"|sanger$Lineage=="Lineage data suppressed"),]
-range(sanger$WeekEndDate) # "2020-09-05" "2021-10-09"
+range(sanger$WeekEndDate) # "2020-09-05" "2021-12-25"
 # sanger$Week = lubridate::week(sanger$WeekEndDate)
 sanger$DATE_NUM = as.numeric(sanger$WeekEndDate)-3.5 # using week midpoint
 colnames(sanger)
 
 sanger = sanger[rep(seq_len(nrow(sanger)), sanger$Count),] # convert to long format
 sanger$Count = NULL
-nrow(sanger) # 743063
+nrow(sanger) # 990745
 
 nrow(sanger[sanger$WeekEndDate>=(max(sanger$WeekEndDate)-14),]) # 77504 (last 2 weeks)
 nrow(sanger[grepl("B.1.617",sanger$Lineage, fixed=TRUE)&sanger$WeekEndDate>=(max(sanger$WeekEndDate)-14),]) # 11186 (last 2 weeks)
@@ -74,6 +74,8 @@ table(sanger$Lineage[grepl("AY.",sanger$Lineage, fixed=TRUE)])
 
 unique(sanger$Lineage[grepl("B.1.617",sanger$Lineage, fixed=TRUE)])
 # "B.1.617.1" "B.1.617.3" "B.1.617.2"
+
+
 sanger$LINEAGE = sanger$Lineage
 sanger[grepl("B.1.177", sanger$LINEAGE, fixed=T),"LINEAGE"] = "B.1.177+"
 sanger[grepl("AY", sanger$LINEAGE, fixed=T)|grepl("B.1.617.2", sanger$LINEAGE, fixed=T),"LINEAGE"] = "Delta"
@@ -81,6 +83,7 @@ sanger[grepl("B.1.1.7", sanger$LINEAGE, fixed=T),"LINEAGE"] = "Alpha"
 sanger[grepl("P.1", sanger$LINEAGE, fixed=T),"LINEAGE"] = "Gamma"
 sanger[grepl("B.1.351", sanger$LINEAGE, fixed=T),"LINEAGE"] = "Beta"
 sanger[grepl("C.37", sanger$LINEAGE, fixed=T),"LINEAGE"] = "Mu"
+sanger[grepl("BA", sanger$LINEAGE),"LINEAGE"] = "Omicron"
 
 table_lineage = as.data.frame(table(sanger$LINEAGE))
 table_lineage$Freq = table_lineage$Freq / sum(table(sanger$LINEAGE))
@@ -93,27 +96,7 @@ colnames(table_lineage) = c("Lineage","Prop")
 tbl = table_lineage[table_lineage$Prop>0.00001,]
 tbl = tbl[order(tbl$Prop, decreasing=T),]
 tbl
-#      Lineage         Prop
-# 7       AY.4 6.768393e-01
-# 20 B.1.617.2 1.475225e-01
-# 9     AY.4.2 9.241742e-02
-# 14      AY.5 3.460961e-02
-# 15      AY.6 2.271021e-02
-# 19      AY.9 7.732733e-03
-# 4      AY.34 5.442943e-03
-# 5      AY.36 4.354354e-03
-# 16      AY.7 3.078078e-03
-# 2       AY.3 1.238739e-03
-# 1      AY.25 9.384384e-04
-# 8     AY.4.1 8.258258e-04
-# 10    AY.4.3 7.882883e-04
-# 12    AY.4.5 5.630631e-04
-# 3      AY.33 4.129129e-04
-# 11    AY.4.4 1.876877e-04
-# 13     AY.41 1.501502e-04
-# 17    AY.7.1 1.126126e-04
-# 6      AY.39 3.753754e-05
-# 18    AY.7.2 3.753754e-05
+
 
 table(sanger$Lineage)[order(table(sanger$Lineage), decreasing=T)]
 
@@ -122,7 +105,7 @@ sel_ref_lineage = "Delta"
 
 # sel_lineages = as.character(table_lineage[table_lineage$Prop>0.01,"Lineage"][order(table_lineage[table_lineage$Prop>0.01,"Prop"], decreasing=TRUE)])
 # sel_lineages = unique(c(sel_lineages, sel_target_VOC, sel_ref_lineage))
-sel_lineages = c("B.1.177+","Alpha","Beta","Gamma","Delta") # "B.1.351", "B.1.525","P.1","B.1.621","C.37")
+sel_lineages = c("B.1.177+","Alpha","Beta","Gamma","Delta","Omicron") # "B.1.351", "B.1.525","P.1","B.1.621","C.37")
 
 sanger$LINEAGE[!(sanger$LINEAGE %in% sel_lineages)] = "other"
 # sanger = sanger[sanger$LINEAGE1 %in% sel_lineages, ]
@@ -191,7 +174,7 @@ data_agbyweeknhsregion1[data_agbyweeknhsregion1$collection_date==max(data_agbywe
 
 # MULLER PLOT (RAW DATA)
 unique(sanger$LINEAGE)
-levels_LINEAGE_plot = levels_LINEAGE # c("other","B.1.177+","B.1.525","B.1.351","P.1","B.1.1.7","B.1.617.1","B.1.617.2","AY.3","B.1.621")
+levels_LINEAGE_plot = levels_LINEAGE 
 
 library(scales)
 n1 = length(levels_LINEAGE_plot)
@@ -200,16 +183,17 @@ lineage_cols1 = c(hcl(h = seq(0, 260, length = n1-1), l = 60, c = 200), muted("d
 # lineage_cols1[which(levels_LINEAGE_plot=="B.1.617+")] = "magenta" # muted("magenta",l=50,c=100)
 lineage_cols1[which(levels_LINEAGE_plot=="B.1.617.1")] = muted("magenta") # muted("magenta",l=50,c=100)
 lineage_cols1[which(levels_LINEAGE_plot=="B.1.617.2")] = "magenta" # muted("magenta",l=50,c=100)
-lineage_cols1[which(levels_LINEAGE_plot=="Delta")] = "magenta" # muted("magenta",l=50,c=100)
+lineage_cols1[which(levels_LINEAGE_plot=="Delta")] = "mediumorchid" # "magenta" # muted("magenta",l=50,c=100)
 lineage_cols1[which(levels_LINEAGE_plot=="B.1.621")] = "limegreen" # muted("magenta",l=50,c=100)
 lineage_cols1[which(levels_LINEAGE_plot=="B.1.1.7")] = "#0085FF"  
-lineage_cols1[which(levels_LINEAGE_plot=="Alpha")] = "#0085FF"  
-lineage_cols1[which(levels_LINEAGE_plot=="other")] = "grey70"  
+lineage_cols1[which(levels_LINEAGE_plot=="Alpha")] = "#0085FF" 
+lineage_cols1[which(levels_LINEAGE_plot=="other")] = "grey65"  
 lineage_cols1[which(levels_LINEAGE_plot=="B.1.177+")] = "grey55"  
 lineage_cols1[which(levels_LINEAGE_plot=="B.1.351")] = muted("cyan")  
-lineage_cols1[which(levels_LINEAGE_plot=="Beta")] = muted("cyan")  
+lineage_cols1[which(levels_LINEAGE_plot=="Beta")] = "green4" # muted("cyan")  
 lineage_cols1[which(levels_LINEAGE_plot=="P.1")] = "cyan3"  
-lineage_cols1[which(levels_LINEAGE_plot=="Gamma")] = "cyan3"  
+lineage_cols1[which(levels_LINEAGE_plot=="Gamma")] = "darkorange" # "cyan3"  
+lineage_cols1[which(levels_LINEAGE_plot=="Omicron")] = "red2"
 library(colorspace)
 AY_cols = colorRampPalette(c("blue", "orange", "red3"))(9) # rainbow_hcl(n=11, c=200, l=45) # 
 lineage_cols1[which(levels_LINEAGE_plot=="AY.3")] = AY_cols[1]
@@ -236,9 +220,7 @@ muller_sanger_raw1 = ggplot(data=data_agbyweek1, aes(x=collection_date, y=count,
   # geom_col(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE1), width=1, position="fill") +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE, group=LINEAGE), position="fill") +
   scale_fill_manual("", values=lineage_cols1) +
-  scale_x_continuous(breaks=seq(as.Date("2019-12-01"), today, by="month"),
-                     labels=substring(months(seq(as.Date("2019-12-01"), today, by="month")),1,1),
-                     limits=as.Date(c("2020-09-01",NA)), expand=c(0,0)) +  # guides(color = guide_legend(reverse=F, nrow=2, byrow=T), fill = guide_legend(reverse=F, nrow=2, byrow=T)) +
+  xaxis +
   theme_hc() +
   # labs(title = "MAIN SARS-CoV2 VARIANT LINEAGES IN ENGLAND") +
   ylab("Share") + 
@@ -255,9 +237,7 @@ muller_sangerbyregion_raw1 = ggplot(data=data_agbyweekregion1, aes(x=collection_
   # geom_col(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE1), width=1, position="fill") +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=LINEAGE, group=LINEAGE), position="fill") +
   scale_fill_manual("", values=lineage_cols1) +
-  scale_x_continuous(breaks=seq(as.Date("2019-12-01"), today, by="month"),
-                     labels=substring(months(seq(as.Date("2019-12-01"), today, by="month")),1,1),
-                     limits=as.Date(c("2020-09-01",NA)), expand=c(0,0)) +  # guides(color = guide_legend(reverse=F, nrow=2, byrow=T), fill = guide_legend(reverse=F, nrow=2, byrow=T)) +
+  xaxis +
   # guides(color = guide_legend(reverse=F, nrow=2, byrow=T), fill = guide_legend(reverse=F, nrow=2, byrow=T)) +
   theme_hc() +
   # labs(title = "MAIN SARS-CoV2 VARIANT LINEAGES IN ENGLAND") +
@@ -306,9 +286,9 @@ sanger$LINEAGE = relevel(sanger$LINEAGE, ref="Delta")
 # sanger$DATE_NUM_WEEK = sanger$DATE_NUM/7
 
 data_agbyweekregion1$DATE_NUM = data_agbyweekregion1$collection_date_num
-data_agbyweekregion1$LINEAGE = relevel(data_agbyweekregion1$LINEAGE, ref="B.1.617.2")
+data_agbyweekregion1$LINEAGE = relevel(data_agbyweekregion1$LINEAGE, ref="Delta")
 data_agbyweeknhsregion1$DATE_NUM = data_agbyweeknhsregion1$collection_date_num
-data_agbyweeknhsregion1$LINEAGE = relevel(data_agbyweeknhsregion1$LINEAGE, ref="B.1.617.2")
+data_agbyweeknhsregion1$LINEAGE = relevel(data_agbyweeknhsregion1$LINEAGE, ref="Delta")
 
 # by ONS region
 set.seed(1)
@@ -318,7 +298,9 @@ fit3_sanger_multi = nnet::multinom(LINEAGE ~ REGION + ns(DATE_NUM, df=2), data=d
 fit4_sanger_multi = nnet::multinom(LINEAGE ~ REGION * ns(DATE_NUM, df=2), data=data_agbyweekregion1, weights=count, maxit=1000)
 fit5_sanger_multi = nnet::multinom(LINEAGE ~ REGION + ns(DATE_NUM, df=3), data=data_agbyweekregion1, weights=count, maxit=1000)
 fit6_sanger_multi = nnet::multinom(LINEAGE ~ REGION * ns(DATE_NUM, df=3), data=data_agbyweekregion1, weights=count, maxit=1000)
-BIC(fit1_sanger_multi, fit2_sanger_multi, fit3_sanger_multi, fit4_sanger_multi, fit5_sanger_multi, fit6_sanger_multi) 
+fit7_sanger_multi = nnet::multinom(LINEAGE ~ REGION + ns(DATE_NUM, df=4), data=data_agbyweekregion1, weights=count, maxit=1000)
+fit8_sanger_multi = nnet::multinom(LINEAGE ~ REGION * ns(DATE_NUM, df=4), data=data_agbyweekregion1, weights=count, maxit=1000)
+BIC(fit1_sanger_multi, fit2_sanger_multi, fit3_sanger_multi, fit4_sanger_multi, fit5_sanger_multi, fit6_sanger_multi, fit7_sanger_multi, fit8_sanger_multi) 
 # fit6_sanger_multi fits best (lowest BIC)
 
 # by NHS region
@@ -332,7 +314,7 @@ fit6_sanger_nhs_multi = nnet::multinom(LINEAGE ~ NHSREGION * ns(DATE_NUM, df=3),
 BIC(fit1_sanger_nhs_multi, fit2_sanger_nhs_multi, fit3_sanger_nhs_multi, fit4_sanger_nhs_multi, fit5_sanger_nhs_multi, fit6_sanger_nhs_multi) 
 # fit6_sanger_multi fits best (lowest BIC)
 
-# growth rate advantage of different lineages over B.1.617.2 based on model fit6_sanger_multi
+# growth rate advantage of different lineages over Delta based on model fit6_sanger_multi
 emtrsanger6 = emtrends(fit6_sanger_multi, trt.vs.ctrl1 ~ LINEAGE,  
                       var="DATE_NUM",  mode="latent",
                       at=list(DATE_NUM=max(sanger$DATE_NUM)))
@@ -340,19 +322,13 @@ delta_r_sanger6 = data.frame(confint(emtrsanger6,
                                     adjust="none", df=NA)$contrasts, 
                             p.value=as.data.frame(emtrsanger6$contrasts)$p.value)
 delta_r_sanger6
-#                  contrast      estimate           SE df    asymp.LCL    asymp.UCL      p.value
-# 1       other - B.1.617.2 -0.0057820585 0.0010565826 NA -0.007852922 -0.003711195 8.994271e-07
-# 2  (B.1.177+) - B.1.617.2 -1.0421383337 0.0537443058 NA -1.147475238 -0.936801430 0.000000e+00
-# 3     B.1.1.7 - B.1.617.2 -0.0976570294 0.0038168732 NA -0.105137963 -0.090176095 0.000000e+00
-# 4        AY.3 - B.1.617.2 -0.1691843193 0.0148133316 NA -0.198217916 -0.140150723 0.000000e+00
-# 5        AY.7 - B.1.617.2 -0.0393355084 0.0018962777 NA -0.043052144 -0.035618873 0.000000e+00
-# 6       AY.36 - B.1.617.2 -0.0267934139 0.0072477481 NA -0.040998739 -0.012588089 2.731606e-03
-# 7       AY.34 - B.1.617.2 -0.0365927216 0.0078062399 NA -0.051892671 -0.021292773 4.367935e-05
-# 8        AY.9 - B.1.617.2 -0.0371259913 0.0014329111 NA -0.039934445 -0.034317537 0.000000e+00
-# 9        AY.6 - B.1.617.2 -0.0312333548 0.0010349504 NA -0.033261820 -0.029204889 0.000000e+00
-# 10       AY.5 - B.1.617.2 -0.0209473437 0.0007740163 NA -0.022464388 -0.019430300 0.000000e+00
-# 11       AY.4 - B.1.617.2 -0.0213013040 0.0003148839 NA -0.021918465 -0.020684143 0.000000e+00
-# 12     AY.4.2 - B.1.617.2  0.0006794459 0.0009690568 NA -0.001219871  0.002578762 9.722237e-01
+# contrast   estimate          SE df  asymp.LCL   asymp.UCL      p.value
+# 1      other - Delta -0.1314358 0.021564483 NA -0.1737014 -0.08917019 2.977024e-08
+# 2 (B.1.177+) - Delta -1.6564763 0.025240149 NA -1.7059460 -1.60700647 0.000000e+00
+# 3      Alpha - Delta -0.1059779 0.014520829 NA -0.1344382 -0.07751757 3.288425e-11
+# 4       Beta - Delta -0.8043196 0.025145670 NA -0.8536042 -0.75503496 0.000000e+00
+# 5      Gamma - Delta -0.6943814 0.040310542 NA -0.7733886 -0.61537415 0.000000e+00
+# 6    Omicron - Delta  0.2363481 0.002666635 NA  0.2311215  0.24157456 0.000000e+00
 
 # pairwise growth rate advantages for all strain comparisons (i.e. pairwise differences in growth rate per day among the different lineages)
 emtrsanger_pairw6 = emtrends(fit6_sanger_multi, pairwise ~ LINEAGE,  
@@ -362,378 +338,245 @@ delta_r_sanger_pairw6 = data.frame(confint(emtrsanger_pairw6,
                                           adjust="none", df=NA)$contrasts, 
                                   p.value=as.data.frame(emtrsanger_pairw6$contrasts)$p.value)
 delta_r_sanger_pairw6
-
-delta_r_sanger_pairw6[delta_r_sanger_pairw6$contrast %in% c("AY.4.2 - B.1.617.2",
-                                                            "AY.4 - B.1.617.2")]
-#                  contrast      estimate           SE df    asymp.LCL     asymp.UCL      p.value
-# 1       B.1.617.2 - other  0.0057820585 0.0010565826 NA  0.003711195  7.852922e-03 5.772407e-06
-# 2  B.1.617.2 - (B.1.177+)  1.0421383337 0.0537443058 NA  0.936801430  1.147475e+00 0.000000e+00
-# 3     B.1.617.2 - B.1.1.7  0.0976570294 0.0038168732 NA  0.090176095  1.051380e-01 0.000000e+00
-# 4        B.1.617.2 - AY.3  0.1691843193 0.0148133316 NA  0.140150723  1.982179e-01 0.000000e+00
-# 5        B.1.617.2 - AY.7  0.0393355084 0.0018962777 NA  0.035618873  4.305214e-02 0.000000e+00
-# 6       B.1.617.2 - AY.36  0.0267934139 0.0072477481 NA  0.012588089  4.099874e-02 1.508839e-02
-# 7       B.1.617.2 - AY.34  0.0365927216 0.0078062399 NA  0.021292773  5.189267e-02 2.720425e-04
-# 8        B.1.617.2 - AY.9  0.0371259913 0.0014329111 NA  0.034317537  3.993445e-02 0.000000e+00
-# 9        B.1.617.2 - AY.6  0.0312333548 0.0010349504 NA  0.029204889  3.326182e-02 0.000000e+00
-# 10       B.1.617.2 - AY.5  0.0209473437 0.0007740163 NA  0.019430300  2.246439e-02 0.000000e+00
-# 11       B.1.617.2 - AY.4  0.0213013040 0.0003148839 NA  0.020684143  2.191847e-02 0.000000e+00
-# 12     B.1.617.2 - AY.4.2 -0.0006794459 0.0009690568 NA -0.002578762  1.219871e-03 9.999680e-01
-# 13     other - (B.1.177+)  1.0363562752 0.0537475271 NA  0.931013058  1.141699e+00 0.000000e+00
-# 14        other - B.1.1.7  0.0918749709 0.0033401328 NA  0.085328431  9.842151e-02 0.000000e+00
-# 15           other - AY.3  0.1634022608 0.0148487134 NA  0.134299317  1.925052e-01 0.000000e+00
-# 16           other - AY.7  0.0335534499 0.0021508405 NA  0.029337880  3.776902e-02 0.000000e+00
-# 17          other - AY.36  0.0210113554 0.0073198915 NA  0.006664632  3.535808e-02 1.749716e-01
-# 18          other - AY.34  0.0308106631 0.0078732287 NA  0.015379418  4.624191e-02 6.867266e-03
-# 19           other - AY.9  0.0313439328 0.0017558380 NA  0.027902554  3.478531e-02 0.000000e+00
-# 20           other - AY.6  0.0254512963 0.0014549950 NA  0.022599558  2.830303e-02 0.000000e+00
-# 21           other - AY.5  0.0151652852 0.0012801492 NA  0.012656239  1.767433e-02 0.000000e+00
-# 22           other - AY.4  0.0155192455 0.0010689795 NA  0.013424084  1.761441e-02 0.000000e+00
-# 23         other - AY.4.2 -0.0064615044 0.0014087103 NA -0.009222526 -3.700483e-03 4.285390e-04
-# 24   (B.1.177+) - B.1.1.7 -0.9444813043 0.0543773728 NA -1.051058997 -8.379036e-01 0.000000e+00
-# 25      (B.1.177+) - AY.3 -0.8729540144 0.0557478223 NA -0.982217738 -7.636903e-01 0.000000e+00
-# 26      (B.1.177+) - AY.7 -1.0028028253 0.0537764528 NA -1.108202736 -8.974029e-01 0.000000e+00
-# 27     (B.1.177+) - AY.36 -1.0153449198 0.0542297818 NA -1.121633339 -9.090565e-01 0.000000e+00
-# 28     (B.1.177+) - AY.34 -1.0055456122 0.0543071626 NA -1.111985695 -8.991055e-01 0.000000e+00
-# 29      (B.1.177+) - AY.9 -1.0050123424 0.0537622853 NA -1.110384485 -8.996402e-01 0.000000e+00
-# 30      (B.1.177+) - AY.6 -1.0109049790 0.0537530915 NA -1.116259102 -9.055509e-01 0.000000e+00
-# 31      (B.1.177+) - AY.5 -1.0211909900 0.0537485603 NA -1.126536232 -9.158457e-01 0.000000e+00
-# 32      (B.1.177+) - AY.4 -1.0208370297 0.0537439432 NA -1.126173223 -9.155008e-01 0.000000e+00
-# 33    (B.1.177+) - AY.4.2 -1.0428177796 0.0537519309 NA -1.148169628 -9.374659e-01 0.000000e+00
-# 34         B.1.1.7 - AY.3  0.0715272899 0.0152967607 NA  0.041546190  1.015084e-01 2.868510e-04
-# 35         B.1.1.7 - AY.7 -0.0583215210 0.0042621727 NA -0.066675226 -4.996782e-02 0.000000e+00
-# 36        B.1.1.7 - AY.36 -0.0708636155 0.0081900775 NA -0.086915872 -5.481136e-02 0.000000e+00
-# 37        B.1.1.7 - AY.34 -0.0610643078 0.0086885930 NA -0.078093637 -4.403498e-02 6.140310e-10
-# 38         B.1.1.7 - AY.9 -0.0605310381 0.0040781837 NA -0.068524131 -5.253794e-02 0.000000e+00
-# 39         B.1.1.7 - AY.6 -0.0664236746 0.0039534148 NA -0.074172225 -5.867512e-02 0.000000e+00
-# 40         B.1.1.7 - AY.5 -0.0767096856 0.0038937681 NA -0.084341331 -6.907804e-02 0.000000e+00
-# 41         B.1.1.7 - AY.4 -0.0763557254 0.0038301867 NA -0.083862753 -6.884870e-02 0.000000e+00
-# 42       B.1.1.7 - AY.4.2 -0.0983364753 0.0039353097 NA -0.106049541 -9.062341e-02 0.000000e+00
-# 43            AY.3 - AY.7 -0.1298488109 0.0149293858 NA -0.159109869 -1.005878e-01 0.000000e+00
-# 44           AY.3 - AY.36 -0.1423909054 0.0164866577 NA -0.174704161 -1.100777e-01 0.000000e+00
-# 45           AY.3 - AY.34 -0.1325915978 0.0167386386 NA -0.165398727 -9.978447e-02 0.000000e+00
-# 46            AY.3 - AY.9 -0.1320583280 0.0148779509 NA -0.161218576 -1.028981e-01 0.000000e+00
-# 47            AY.3 - AY.6 -0.1379509646 0.0148439566 NA -0.167044585 -1.088573e-01 0.000000e+00
-# 48            AY.3 - AY.5 -0.1482369756 0.0148283535 NA -0.177300014 -1.191739e-01 0.000000e+00
-# 49            AY.3 - AY.4 -0.1478830153 0.0148114074 NA -0.176912840 -1.188532e-01 0.000000e+00
-# 50          AY.3 - AY.4.2 -0.1698637652 0.0148394476 NA -0.198948548 -1.407790e-01 0.000000e+00
-# 51           AY.7 - AY.36 -0.0125420945 0.0074831910 NA -0.027208879  2.124690e-03 9.033021e-01
-# 52           AY.7 - AY.34 -0.0027427869 0.0080246919 NA -0.018470894  1.298532e-02 1.000000e+00
-# 53            AY.7 - AY.9 -0.0022095171 0.0023422739 NA -0.006800290  2.381255e-03 9.992825e-01
-# 54            AY.7 - AY.6 -0.0081021537 0.0021228082 NA -0.012262781 -3.941526e-03 9.823218e-03
-# 55            AY.7 - AY.5 -0.0183881647 0.0020093159 NA -0.022326351 -1.444998e-02 0.000000e+00
-# 56            AY.7 - AY.4 -0.0180342044 0.0018809675 NA -0.021720833 -1.434758e-02 0.000000e+00
-# 57          AY.7 - AY.4.2 -0.0400149543 0.0020961252 NA -0.044123284 -3.590662e-02 0.000000e+00
-# 58          AY.36 - AY.34  0.0097993077 0.0106431372 NA -0.011060858  3.065947e-02 9.994379e-01
-# 59           AY.36 - AY.9  0.0103325774 0.0073794200 NA -0.004130820  2.479597e-02 9.739243e-01
-# 60           AY.36 - AY.6  0.0044399409 0.0073112931 NA -0.009889930  1.876981e-02 9.999934e-01
-# 61           AY.36 - AY.5 -0.0058460702 0.0072794203 NA -0.020113472  8.421331e-03 9.998631e-01
-# 62           AY.36 - AY.4 -0.0054921099 0.0072445620 NA -0.019691191  8.706971e-03 9.999258e-01
-# 63         AY.36 - AY.4.2 -0.0274728598 0.0073002410 NA -0.041781069 -1.316465e-02 1.191824e-02
-# 64           AY.34 - AY.9  0.0005332698 0.0079280748 NA -0.015005471  1.607201e-02 1.000000e+00
-# 65           AY.34 - AY.6 -0.0053593668 0.0078644875 NA -0.020773479  1.005475e-02 9.999766e-01
-# 66           AY.34 - AY.5 -0.0156453778 0.0078348466 NA -0.031001395 -2.893606e-04 7.345376e-01
-# 67           AY.34 - AY.4 -0.0152914176 0.0078026107 NA -0.030584253  1.418325e-06 7.584076e-01
-# 68         AY.34 - AY.4.2 -0.0372721674 0.0078536779 NA -0.052665093 -2.187924e-02 2.083492e-04
-# 69            AY.9 - AY.6 -0.0058926366 0.0017225663 NA -0.009268804 -2.516469e-03 3.789442e-02
-# 70            AY.9 - AY.5 -0.0161786476 0.0015801027 NA -0.019275592 -1.308170e-02 0.000000e+00
-# 71            AY.9 - AY.4 -0.0158246873 0.0014133654 NA -0.018594833 -1.305454e-02 0.000000e+00
-# 72          AY.9 - AY.4.2 -0.0378054372 0.0016896983 NA -0.041117185 -3.449369e-02 0.000000e+00
-# 73            AY.6 - AY.5 -0.0102860110 0.0012262821 NA -0.012689480 -7.882542e-03 0.000000e+00
-# 74            AY.6 - AY.4 -0.0099320508 0.0010022506 NA -0.011896426 -7.967676e-03 0.000000e+00
-# 75          AY.6 - AY.4.2 -0.0319128006 0.0013593580 NA -0.034577093 -2.924851e-02 0.000000e+00
-# 76            AY.5 - AY.4  0.0003539603 0.0007329955 NA -0.001082685  1.790605e-03 9.999995e-01
-# 77          AY.5 - AY.4.2 -0.0216267896 0.0011739813 NA -0.023927751 -1.932583e-02 0.000000e+00
-# 78          AY.4 - AY.4.2 -0.0219807499 0.0009380731 NA -0.023819339 -2.014216e-02 0.000000e+00
+# contrast    estimate          SE df   asymp.LCL   asymp.UCL      p.value
+# 1         Delta - other  0.13143581 0.021564483 NA  0.08917019  0.17370142 1.038571e-07
+# 2    Delta - (B.1.177+)  1.65647626 0.025240149 NA  1.60700647  1.70594604 0.000000e+00
+# 3         Delta - Alpha  0.10597787 0.014520829 NA  0.07751757  0.13443817 1.152013e-10
+# 4          Delta - Beta  0.80431957 0.025145670 NA  0.75503496  0.85360418 0.000000e+00
+# 5         Delta - Gamma  0.69438136 0.040310542 NA  0.61537415  0.77338857 0.000000e+00
+# 6       Delta - Omicron -0.23634806 0.002666635 NA -0.24157456 -0.23112155 0.000000e+00
+# 7    other - (B.1.177+)  1.52504045 0.032257174 NA  1.46181755  1.58826335 0.000000e+00
+# 8         other - Alpha -0.02545793 0.020340701 NA -0.06532497  0.01440911 8.728342e-01
+# 9          other - Beta  0.67288377 0.031640158 NA  0.61087020  0.73489733 0.000000e+00
+# 10        other - Gamma  0.56294555 0.045179793 NA  0.47439479  0.65149632 0.000000e+00
+# 11      other - Omicron -0.36778386 0.021728718 NA -0.41037137 -0.32519636 0.000000e+00
+# 12   (B.1.177+) - Alpha -1.55049838 0.027154349 NA -1.60371993 -1.49727684 0.000000e+00
+# 13    (B.1.177+) - Beta -0.85215669 0.035585801 NA -0.92190357 -0.78240980 0.000000e+00
+# 14   (B.1.177+) - Gamma -0.96209490 0.054137124 NA -1.06820171 -0.85598808 0.000000e+00
+# 15 (B.1.177+) - Omicron -1.89282431 0.025380582 NA -1.94256934 -1.84307929 0.000000e+00
+# 16         Alpha - Beta  0.69834170 0.028145169 NA  0.64317818  0.75350522 0.000000e+00
+# 17        Alpha - Gamma  0.58840349 0.042146719 NA  0.50579744  0.67100954 0.000000e+00
+# 18      Alpha - Omicron -0.34232593 0.014763631 NA -0.37126211 -0.31338974 0.000000e+00
+# 19         Beta - Gamma -0.10993821 0.050338496 NA -0.20859985 -0.01127657 3.085473e-01
+# 20       Beta - Omicron -1.04066763 0.025286642 NA -1.09022853 -0.99110672 0.000000e+00
+# 21      Gamma - Omicron -0.93072942 0.040398636 NA -1.00990929 -0.85154954 0.000000e+00
 
 
-# growth rate advantages of different VOCs compared to B.1.617.2 (difference in growth rate per day) 
-# PS p values are not Tukey corrected, you can do that with argument adjust="tukey"
-emtrsanger = emtrends(fit4_sanger_multi, trt.vs.ctrl1 ~ LINEAGE,  
-                     var="DATE_NUM",  mode="latent",
-                     at=list(DATE_NUM=max(sanger$DATE_NUM)))
-delta_r_sanger = data.frame(confint(emtrsanger, 
-                                   adjust="none", df=NA)$contrasts, 
-                            p.value=as.data.frame(emtrsanger$contrasts)$p.value)
-delta_r_sanger
-#                  contrast      estimate           SE df     asymp.LCL    asymp.UCL      p.value
-# 1       other - B.1.617.2  0.0001912504 0.0007388665 NA -0.0012569014  0.001639402 9.995818e-01
-# 2  (B.1.177+) - B.1.617.2 -0.1945106995 0.0048361343 NA -0.2039893485 -0.185032051 7.169820e-13
-# 3     B.1.1.7 - B.1.617.2 -0.1361957569 0.0015829803 NA -0.1392983413 -0.133093172 7.169820e-13
-# 4        AY.3 - B.1.617.2 -0.0292885882 0.0060468603 NA -0.0411402167 -0.017436960 2.335912e-05
-# 5        AY.7 - B.1.617.2 -0.0388530323 0.0015351588 NA -0.0418618882 -0.035844176 7.169820e-13
-# 6       AY.36 - B.1.617.2 -0.0023610228 0.0049589784 NA -0.0120804419  0.007358396 9.942810e-01
-# 7       AY.34 - B.1.617.2  0.0016676927 0.0036592347 NA -0.0055042754  0.008839661 9.952415e-01
-# 8        AY.9 - B.1.617.2 -0.0368181517 0.0010563291 NA -0.0388885188 -0.034747785 7.169820e-13
-# 9        AY.6 - B.1.617.2 -0.0307251749 0.0007964834 NA -0.0322862537 -0.029164096 7.169820e-13
-# 10       AY.5 - B.1.617.2 -0.0200640261 0.0006155078 NA -0.0212703992 -0.018857653 7.169820e-13
-# 11       AY.4 - B.1.617.2 -0.0203320179 0.0003070369 NA -0.0209337992 -0.019730237 7.169820e-13
-# 12     AY.4.2 - B.1.617.2  0.0019324240 0.0008503946 NA  0.0002656812  0.003599167 1.844430e-01
 
-# If we take the exponent of the product of these growth rate advantages/disadvantages 
-# and the generation time (e.g. 4.7 days, Nishiura et al 2020)
-# we get the transmission advantage/disadvantage (here expressed in percent) :
+# transm advantage over Delta with fixed generation time of 4.7 days (Nishiura et al. 2020)
+transmadv_sanger6 =  sign(delta_r_sanger6[,c(2,5,6)])*100*(exp(abs(delta_r_sanger6[,c(2,5,6)])*4.7)-1)
+transmadv_sanger6 =  data.frame(contrast=delta_r_sanger6$contrast, transmadv_sanger6)
+transmadv_sanger6
+# contrast      estimate     asymp.LCL     asymp.UCL
+# 1      other - Delta     -85.47470    -126.23332     -52.05923
+# 2 (B.1.177+) - Delta -240432.04138 -303393.83354 -190532.08717
+# 3      Alpha - Delta     -64.55851     -88.11051     -43.95529
+# 4       Beta - Delta   -4282.92754   -5425.39391   -3376.68494
+# 5      Gamma - Delta   -2514.32856   -3689.90590   -1703.39934
+# 6    Omicron - Delta     203.68958     196.32044     211.24197
 
-transmadv_sanger =  sign(delta_r_sanger[,c(2,5,6)])*100*(exp(abs(delta_r_sanger[,c(2,5,6)])*5.5)-1)
-transmadv_sanger =  data.frame(contrast=delta_r_sanger$contrast, transmadv_sanger)
-transmadv_sanger
-#                  contrast     estimate    asymp.LCL    asymp.UCL
-# 1       other - B.1.617.2    0.1052430   -0.6936907    0.9057485
-# 2  (B.1.177+) - B.1.617.2 -191.4822271 -207.0810143 -176.6758111
-# 3     B.1.1.7 - B.1.617.2 -111.5046214 -115.1447512 -107.9260806
-# 4        AY.3 - B.1.617.2  -17.4787447  -25.3915671  -10.0652602
-# 5        AY.7 - B.1.617.2  -23.8240818  -25.8902595  -21.7918154
-# 6       AY.36 - B.1.617.2   -1.3070305   -6.8699438    4.1301298
-# 7       AY.34 - B.1.617.2    0.9214504   -3.0736417    4.9819385
-# 8        AY.9 - B.1.617.2  -22.4459882  -23.8482517  -21.0596018
-# 9        AY.6 - B.1.617.2  -18.4106476  -19.4316906  -17.3983338
-# 10       AY.5 - B.1.617.2  -11.6671230  -12.4105036  -10.9286583
-# 11       AY.4 - B.1.617.2  -11.8318367  -12.2025906  -11.4623078
-# 12     AY.4.2 - B.1.617.2    1.0685013    0.1462315    1.9992646
-
-
-# or with generation time of 4.7 days (Nishiura et al. 2020)
-transmadv_sanger =  sign(delta_r_sanger[,c(2,5,6)])*100*(exp(abs(delta_r_sanger[,c(2,5,6)])*4.7)-1)
-transmadv_sanger =  data.frame(contrast=delta_r_sanger$contrast, transmadv_sanger)
-transmadv_sanger
-#                  contrast      estimate    asymp.LCL    asymp.UCL
-# 1       other - B.1.617.2    0.08992808   -0.5924920    0.7734951
-# 2  (B.1.177+) - B.1.617.2 -149.47793484 -160.8433731 -138.6077102
-# 3     B.1.1.7 - B.1.617.2  -89.67085793  -92.4569303  -86.9251177
-# 4        AY.3 - B.1.617.2  -14.75811332  -21.3318319   -8.5405566
-# 5        AY.7 - B.1.617.2  -20.03452835  -21.7440707  -18.3489915
-# 6       AY.36 - B.1.617.2   -1.11586053   -5.8420896    3.5189459
-# 7       AY.34 - B.1.617.2    0.78689545   -2.6207630    4.2421535
-# 8        AY.9 - B.1.617.2  -18.89199775  -20.0545502  -17.7407029
-# 9        AY.6 - B.1.617.2  -15.53557694  -16.3863870  -14.6909865
-# 10       AY.5 - B.1.617.2   -9.88903770  -10.5138732   -9.2677350
-# 11       AY.4 - B.1.617.2  -10.02753693  -10.3391762   -9.7167778
-# 12     AY.4.2 - B.1.617.2    0.91237627    0.1249481    1.7059971
-
-emtrsanger_byregion = emtrends(fit4_sanger_multi, trt.vs.ctrl1 ~ LINEAGE|REGION,  
+emtrsanger_byregion6 = emtrends(fit6_sanger_multi, trt.vs.ctrl1 ~ LINEAGE|REGION,  
                       var="DATE_NUM",  mode="latent",
                       at=list(DATE_NUM=max(sanger$DATE_NUM)))
-delta_r_sanger_byregion = data.frame(confint(emtrsanger_byregion, 
+delta_r_sanger_byregion6 = data.frame(confint(emtrsanger_byregion6, 
                                     adjust="none", df=NA)$contrasts, 
-                            p.value=as.data.frame(emtrsanger_byregion$contrasts)$p.value)
-delta_r_sanger_byregion
-# contrast                   REGION      estimate           SE df     asymp.LCL     asymp.UCL      p.value
-# 1        other - B.1.617.2                   London -0.0079562470 0.0013334977 NA -1.056985e-02 -0.0053426395 7.601798e-08
-# 2   (B.1.177+) - B.1.617.2                   London -0.2810692187 0.0162661534 NA -3.129503e-01 -0.2491881438 7.169820e-13
-# 3      B.1.1.7 - B.1.617.2                   London -0.1416040969 0.0027971714 NA -1.470865e-01 -0.1361217417 7.169820e-13
-# 4         AY.3 - B.1.617.2                   London -0.0201752719 0.0090597114 NA -3.793198e-02 -0.0024185638 2.027544e-01
-# 5         AY.7 - B.1.617.2                   London -0.0613832418 0.0021065919 NA -6.551209e-02 -0.0572543975 7.169820e-13
-# 6        AY.36 - B.1.617.2                   London -0.0135626485 0.0058242170 NA -2.497790e-02 -0.0021473929 1.634446e-01
-# 7        AY.34 - B.1.617.2                   London -0.0305173265 0.0041601477 NA -3.867107e-02 -0.0223635869 2.216149e-11
-# 8         AY.9 - B.1.617.2                   London -0.0540887092 0.0017924024 NA -5.760175e-02 -0.0505756650 7.169820e-13
-# 9         AY.6 - B.1.617.2                   London -0.0281531932 0.0012069926 NA -3.051886e-02 -0.0257875313 7.169820e-13
-# 10        AY.5 - B.1.617.2                   London -0.0310999508 0.0011172376 NA -3.328970e-02 -0.0289102053 7.169820e-13
-# 11        AY.4 - B.1.617.2                   London -0.0265147492 0.0006876756 NA -2.786257e-02 -0.0251669298 7.169820e-13
-# 12      AY.4.2 - B.1.617.2                   London -0.0146976164 0.0012884037 NA -1.722284e-02 -0.0121723915 7.288614e-13
-# 13       other - B.1.617.2               North West  0.0283981526 0.0017203319 NA  2.502636e-02  0.0317699411 7.169820e-13
-# 14  (B.1.177+) - B.1.617.2               North West -0.1533670766 0.0081663716 NA -1.693729e-01 -0.1373612824 7.169820e-13
-# 15     B.1.1.7 - B.1.617.2               North West -0.0773594411 0.0039232598 NA -8.504889e-02 -0.0696699931 7.169820e-13
-# 16        AY.3 - B.1.617.2               North West -0.0143637772 0.0117775812 NA -3.744741e-02  0.0087198577 7.952507e-01
-# 17        AY.7 - B.1.617.2               North West -0.0411298136 0.0030331894 NA -4.707476e-02 -0.0351848715 7.169820e-13
-# 18       AY.36 - B.1.617.2               North West -0.0100317509 0.0068846112 NA -2.352534e-02  0.0034618390 6.545798e-01
-# 19       AY.34 - B.1.617.2               North West  0.0025143544 0.0082097352 NA -1.357643e-02  0.0186051396 9.991317e-01
-# 20        AY.9 - B.1.617.2               North West -0.0490831474 0.0033495845 NA -5.564821e-02 -0.0425180824 7.169820e-13
-# 21        AY.6 - B.1.617.2               North West -0.0418021156 0.0021155974 NA -4.594861e-02 -0.0376556209 7.169820e-13
-# 22        AY.5 - B.1.617.2               North West -0.0387221904 0.0020004256 NA -4.264295e-02 -0.0348014283 7.169820e-13
-# 23        AY.4 - B.1.617.2               North West -0.0393400430 0.0006299745 NA -4.057477e-02 -0.0381053157 7.169820e-13
-# 24      AY.4.2 - B.1.617.2               North West -0.0112755008 0.0019282432 NA -1.505479e-02 -0.0074962135 1.457023e-07
-# 25       other - B.1.617.2               South West -0.0295667053 0.0021979835 NA -3.387467e-02 -0.0252587367 7.169820e-13
-# 26  (B.1.177+) - B.1.617.2               South West -0.2328378143 0.0220798755 NA -2.761136e-01 -0.1895620535 7.586154e-13
-# 27     B.1.1.7 - B.1.617.2               South West -0.1705004137 0.0049509144 NA -1.802040e-01 -0.1607967998 7.169820e-13
-# 28        AY.3 - B.1.617.2               South West -0.0338195331 0.0074840958 NA -4.848809e-02 -0.0191509749 1.019483e-04
-# 29        AY.7 - B.1.617.2               South West -0.0305476613 0.0031759019 NA -3.677231e-02 -0.0243230079 7.650547e-13
-# 30       AY.36 - B.1.617.2               South West -0.0053243847 0.0234215922 NA -5.122986e-02  0.0405810925 9.997627e-01
-# 31       AY.34 - B.1.617.2               South West  0.0160702841 0.0082404841 NA -8.076802e-05  0.0322213363 3.399593e-01
-# 32        AY.9 - B.1.617.2               South West -0.0636745546 0.0033960185 NA -7.033063e-02 -0.0570184807 7.169820e-13
-# 33        AY.6 - B.1.617.2               South West -0.0245140255 0.0019494625 NA -2.833490e-02 -0.0206931493 7.170931e-13
-# 34        AY.5 - B.1.617.2               South West -0.0200347289 0.0016219546 NA -2.321370e-02 -0.0168557563 7.172041e-13
-# 35        AY.4 - B.1.617.2               South West -0.0115340633 0.0008881847 NA -1.327487e-02 -0.0097932534 7.169820e-13
-# 36      AY.4.2 - B.1.617.2               South West  0.0305717649 0.0014633916 NA  2.770357e-02  0.0334399598 7.169820e-13
-# 37       other - B.1.617.2               South East -0.0016642287 0.0023027743 NA -6.177583e-03  0.0028491260 9.686688e-01
-# 38  (B.1.177+) - B.1.617.2               South East -0.1920228066 0.0169100279 NA -2.251659e-01 -0.1588797609 7.310819e-13
-# 39     B.1.1.7 - B.1.617.2               South East -0.1253026398 0.0041746525 NA -1.334848e-01 -0.1171204712 7.169820e-13
-# 40        AY.3 - B.1.617.2               South East -0.0247985632 0.0090537580 NA -4.254360e-02 -0.0070535237 6.016675e-02
-# 41        AY.7 - B.1.617.2               South East -0.0373510073 0.0025014565 NA -4.225377e-02 -0.0324482427 7.169820e-13
-# 42       AY.36 - B.1.617.2               South East  0.0168416078 0.0063619064 NA  4.372500e-03  0.0293107153 7.655929e-02
-# 43       AY.34 - B.1.617.2               South East -0.0263884299 0.0053349075 NA -3.684466e-02 -0.0159322032 1.439484e-05
-# 44        AY.9 - B.1.617.2               South East -0.0454166384 0.0018428138 NA -4.902849e-02 -0.0418047898 7.169820e-13
-# 45        AY.6 - B.1.617.2               South East -0.0357498361 0.0011732276 NA -3.804932e-02 -0.0334503522 7.169820e-13
-# 46        AY.5 - B.1.617.2               South East -0.0265023508 0.0011949492 NA -2.884441e-02 -0.0241602935 7.169820e-13
-# 47        AY.4 - B.1.617.2               South East -0.0208630307 0.0007227855 NA -2.227966e-02 -0.0194463971 7.169820e-13
-# 48      AY.4.2 - B.1.617.2               South East  0.0092744304 0.0012349849 NA  6.853904e-03  0.0116949563 7.714940e-12
-# 49       other - B.1.617.2          East of England  0.0031886615 0.0016970351 NA -1.374661e-04  0.0065147891 3.817560e-01
-# 50  (B.1.177+) - B.1.617.2          East of England -0.1931807070 0.0169856741 NA -2.264720e-01 -0.1598893974 7.309708e-13
-# 51     B.1.1.7 - B.1.617.2          East of England -0.1313533277 0.0040287358 NA -1.392495e-01 -0.1234571506 7.169820e-13
-# 52        AY.3 - B.1.617.2          East of England -0.0415279160 0.0224320833 NA -8.549399e-02  0.0024381593 3.985945e-01
-# 53        AY.7 - B.1.617.2          East of England -0.0648558795 0.0033677841 NA -7.145662e-02 -0.0582551440 7.169820e-13
-# 54       AY.36 - B.1.617.2          East of England -0.0057995766 0.0059026645 NA -1.736859e-02  0.0057694332 9.009509e-01
-# 55       AY.34 - B.1.617.2          East of England  0.0164666627 0.0068822004 NA  2.977798e-03  0.0299555276 1.417666e-01
-# 56        AY.9 - B.1.617.2          East of England -0.0287316486 0.0017026901 NA -3.206886e-02 -0.0253944374 7.169820e-13
-# 57        AY.6 - B.1.617.2          East of England -0.0469873347 0.0017511326 NA -5.041949e-02 -0.0435551780 7.169820e-13
-# 58        AY.5 - B.1.617.2          East of England -0.0241567747 0.0011257134 NA -2.636313e-02 -0.0219504170 7.169820e-13
-# 59        AY.4 - B.1.617.2          East of England -0.0296087977 0.0007863647 NA -3.115004e-02 -0.0280675513 7.169820e-13
-# 60      AY.4.2 - B.1.617.2          East of England -0.0063689573 0.0015549207 NA -9.416546e-03 -0.0033213687 6.078001e-04
-# 61       other - B.1.617.2            East Midlands -0.0321045317 0.0014547154 NA -3.495572e-02 -0.0292533419 7.169820e-13
-# 62  (B.1.177+) - B.1.617.2            East Midlands -0.2463194461 0.0109509428 NA -2.677829e-01 -0.2248559926 7.169820e-13
-# 63     B.1.1.7 - B.1.617.2            East Midlands -0.1820829571 0.0031527452 NA -1.882622e-01 -0.1759036900 7.169820e-13
-# 64        AY.3 - B.1.617.2            East Midlands -0.0978488517 0.0272925186 NA -1.513412e-01 -0.0443564982 4.243533e-03
-# 65        AY.7 - B.1.617.2            East Midlands -0.0503619797 0.0035523941 NA -5.732454e-02 -0.0433994152 7.169820e-13
-# 66       AY.36 - B.1.617.2            East Midlands  0.0449776812 0.0106873404 NA  2.403088e-02  0.0659244835 3.837510e-04
-# 67       AY.34 - B.1.617.2            East Midlands  0.0384437996 0.0104496170 NA  1.796293e-02  0.0589246727 3.024973e-03
-# 68        AY.9 - B.1.617.2            East Midlands -0.0292133004 0.0040834986 NA -3.721681e-02 -0.0212097902 6.858147e-11
-# 69        AY.6 - B.1.617.2            East Midlands -0.0493320895 0.0028315674 NA -5.488186e-02 -0.0437823193 7.169820e-13
-# 70        AY.5 - B.1.617.2            East Midlands -0.0221915789 0.0017786886 NA -2.567774e-02 -0.0187054133 7.172041e-13
-# 71        AY.4 - B.1.617.2            East Midlands -0.0232872950 0.0009665654 NA -2.518173e-02 -0.0213928617 7.169820e-13
-# 72      AY.4.2 - B.1.617.2            East Midlands  0.0046204318 0.0023575981 NA -3.756412e-07  0.0092412392 3.344804e-01
-# 73       other - B.1.617.2            West Midlands  0.0003263261 0.0022342522 NA -4.052728e-03  0.0047053799 9.999660e-01
-# 74  (B.1.177+) - B.1.617.2            West Midlands -0.2223721247 0.0127396260 NA -2.473413e-01 -0.1974029166 7.169820e-13
-# 75     B.1.1.7 - B.1.617.2            West Midlands -0.1520270266 0.0045436509 NA -1.609324e-01 -0.1431216344 7.169820e-13
-# 76        AY.3 - B.1.617.2            West Midlands -0.0541810351 0.0204622108 NA -9.428623e-02 -0.0140758388 7.644116e-02
-# 77        AY.7 - B.1.617.2            West Midlands -0.0299665172 0.0052256308 NA -4.020857e-02 -0.0197244691 2.679163e-07
-# 78       AY.36 - B.1.617.2            West Midlands  0.0430039873 0.0132327493 NA  1.706828e-02  0.0689396993 1.326923e-02
-# 79       AY.34 - B.1.617.2            West Midlands  0.0616155313 0.0075875178 NA  4.674427e-02  0.0764867928 8.885115e-13
-# 80        AY.9 - B.1.617.2            West Midlands -0.0131572892 0.0029219412 NA -1.888419e-02 -0.0074303897 1.093422e-04
-# 81        AY.6 - B.1.617.2            West Midlands -0.0163947731 0.0024356981 NA -2.116865e-02 -0.0116208925 9.196803e-10
-# 82        AY.5 - B.1.617.2            West Midlands -0.0127778164 0.0018639955 NA -1.643118e-02 -0.0091244524 4.336832e-10
-# 83        AY.4 - B.1.617.2            West Midlands -0.0078180833 0.0007504209 NA -9.288881e-03 -0.0063472853 7.619461e-13
-# 84      AY.4.2 - B.1.617.2            West Midlands  0.0034972522 0.0014150007 NA  7.239019e-04  0.0062706026 1.181138e-01
-# 85       other - B.1.617.2               North East  0.0373906529 0.0032194331 NA  3.108068e-02  0.0437006258 7.237544e-13
-# 86  (B.1.177+) - B.1.617.2               North East -0.0646697290 0.0127015307 NA -8.956427e-02 -0.0397751863 7.163430e-06
-# 87     B.1.1.7 - B.1.617.2               North East -0.1050547674 0.0076105525 NA -1.199712e-01 -0.0901383585 7.169820e-13
-# 88        AY.3 - B.1.617.2               North East -0.0253139182 0.0277910279 NA -7.978333e-02  0.0291554956 9.245983e-01
-# 89        AY.7 - B.1.617.2               North East -0.0215367189 0.0048917837 NA -3.112444e-02 -0.0119489991 1.691023e-04
-# 90       AY.36 - B.1.617.2               North East -0.0596249217 0.0299634157 NA -1.183521e-01 -0.0008977062 3.176636e-01
-# 91       AY.34 - B.1.617.2               North East -0.0342159608 0.0256526953 NA -8.449432e-02  0.0160623980 7.309680e-01
-# 92        AY.9 - B.1.617.2               North East -0.0362411647 0.0047731575 NA -4.559638e-02 -0.0268859478 4.803491e-12
-# 93        AY.6 - B.1.617.2               North East -0.0228177343 0.0039395371 NA -3.053909e-02 -0.0150963835 1.967971e-07
-# 94        AY.5 - B.1.617.2               North East  0.0084543236 0.0028429740 NA  2.882197e-03  0.0140264503 3.110964e-02
-# 95        AY.4 - B.1.617.2               North East -0.0117391301 0.0015262859 NA -1.473060e-02 -0.0087476646 2.873146e-12
-# 96      AY.4.2 - B.1.617.2               North East  0.0057247809 0.0044876392 NA -3.070830e-03  0.0145203921 7.646085e-01
-# 97       other - B.1.617.2 Yorkshire and The Humber  0.0037091726 0.0029949349 NA -2.160792e-03  0.0095791371 7.851415e-01
-# 98  (B.1.177+) - B.1.617.2 Yorkshire and The Humber -0.1647573728 0.0080852539 NA -1.806042e-01 -0.1489105663 7.169820e-13
-# 99     B.1.1.7 - B.1.617.2 Yorkshire and The Humber -0.1404771416 0.0056987956 NA -1.516466e-01 -0.1293077074 7.169820e-13
-# 100       AY.3 - B.1.617.2 Yorkshire and The Humber  0.0484315723 0.0128210827 NA  2.330271e-02  0.0735604326 2.100681e-03
-# 101       AY.7 - B.1.617.2 Yorkshire and The Humber -0.0125444711 0.0037333812 NA -1.986176e-02 -0.0052271783 9.234974e-03
-# 102      AY.36 - B.1.617.2 Yorkshire and The Humber -0.0317291995 0.0099861749 NA -5.130174e-02 -0.0121566565 1.672627e-02
-# 103      AY.34 - B.1.617.2 Yorkshire and The Humber -0.0289796806 0.0055828559 NA -3.992188e-02 -0.0180374842 4.400699e-06
-# 104       AY.9 - B.1.617.2 Yorkshire and The Humber -0.0117569130 0.0025562291 NA -1.676703e-02 -0.0067467960 7.134077e-05
-# 105       AY.6 - B.1.617.2 Yorkshire and The Humber -0.0107754720 0.0017355694 NA -1.417713e-02 -0.0073738185 1.959586e-08
-# 106       AY.5 - B.1.617.2 Yorkshire and The Humber -0.0135451671 0.0017135122 NA -1.690359e-02 -0.0101867450 1.275979e-12
-# 107       AY.4 - B.1.617.2 Yorkshire and The Humber -0.0122829689 0.0008807864 NA -1.400928e-02 -0.0105566592 7.169820e-13
-# 108     AY.4.2 - B.1.617.2 Yorkshire and The Humber -0.0039547701 0.0017794471 NA -7.442422e-03 -0.0004671179 2.046124e-01
+                            p.value=as.data.frame(emtrsanger_byregion6$contrasts)$p.value)
+delta_r_sanger_byregion6
+#              contrast                   REGION      estimate          SE df    asymp.LCL     asymp.UCL      p.value
+# 1       other - Delta                   London -0.2030419074 0.029561692 NA -0.260981759 -0.1451020555 4.085211e-10
+# 2  (B.1.177+) - Delta                   London -1.6165483490 0.024751074 NA -1.665059562 -1.5680371361 0.000000e+00
+# 3       Alpha - Delta                   London -0.0117891309 0.010973291 NA -0.033296385  0.0097181234 7.321369e-01
+# 4        Beta - Delta                   London  0.0094558538 0.017639544 NA -0.025117018  0.0440287252 9.577026e-01
+# 5       Gamma - Delta                   London -0.0024804661 0.023099385 NA -0.047754429  0.0427934970 9.996297e-01
+# 6     Omicron - Delta                   London  0.2329669016 0.003280587 NA  0.226537070  0.2393967334 0.000000e+00
+# 7       other - Delta               North West -0.0003647597 0.008440503 NA -0.016907841  0.0161783218 9.999758e-01
+# 8  (B.1.177+) - Delta               North West  0.0496731780 0.045513507 NA -0.039531656  0.1388780120 7.220419e-01
+# 9       Alpha - Delta               North West -0.0287183883 0.014829389 NA -0.057783457  0.0003466802 2.271950e-01
+# 10       Beta - Delta               North West -1.1603813115 0.069541044 NA -1.296679253 -1.0240833701 0.000000e+00
+# 11      Gamma - Delta               North West -1.9622415488 0.033298833 NA -2.027506062 -1.8969770356 0.000000e+00
+# 12    Omicron - Delta               North West  0.2673371037 0.004946273 NA  0.257642588  0.2770316199 0.000000e+00
+# 13      other - Delta               South West -0.0812938367 0.076716774 NA -0.231655950  0.0690682769 7.407321e-01
+# 14 (B.1.177+) - Delta               South West -1.9910109107 0.034429014 NA -2.058490539 -1.9235312824 0.000000e+00
+# 15      Alpha - Delta               South West -0.0927497376 0.045784860 NA -0.182486415 -0.0030130603 1.908832e-01
+# 16       Beta - Delta               South West -0.4140407623 0.082035196 NA -0.574826792 -0.2532547322 5.661955e-06
+# 17      Gamma - Delta               South West -1.0680725583 0.074372838 NA -1.213840642 -0.9223044743 0.000000e+00
+# 18    Omicron - Delta               South West  0.2462318474 0.004950658 NA  0.236528737  0.2559349578 0.000000e+00
+# 19      other - Delta               South East  0.0237536826 0.005969352 NA  0.012053968  0.0354533973 5.475680e-04
+# 20 (B.1.177+) - Delta               South East -2.0306624179 0.043621441 NA -2.116158872 -1.9451659641 0.000000e+00
+# 21      Alpha - Delta               South East  0.0174068211 0.011489407 NA -0.005112002  0.0399256447 4.535568e-01
+# 22       Beta - Delta               South East  0.0412514279 0.017044649 NA  0.007844530  0.0746583259 7.927311e-02
+# 23      Gamma - Delta               South East -0.9566399167 0.092262906 NA -1.137471890 -0.7758079434 0.000000e+00
+# 24    Omicron - Delta               South East  0.2131750254 0.003688099 NA  0.205946484  0.2204035670 0.000000e+00
+# 25      other - Delta          East of England  0.0014299630 0.007191517 NA -0.012665151  0.0155250771 9.976714e-01
+# 26 (B.1.177+) - Delta          East of England -2.5776091937 0.058285476 NA -2.691846628 -2.4633717593 0.000000e+00
+# 27      Alpha - Delta          East of England -0.0137096415 0.014121574 NA -0.041387418  0.0139681355 7.904439e-01
+# 28       Beta - Delta          East of England -1.4935008074 0.072276314 NA -1.635159780 -1.3518418349 0.000000e+00
+# 29      Gamma - Delta          East of England -0.2808708744 0.196701096 NA -0.666397939  0.1046561900 5.086685e-01
+# 30    Omicron - Delta          East of England  0.1998047563 0.003947408 NA  0.192067979  0.2075415339 0.000000e+00
+# 31      other - Delta            East Midlands -0.2402797584 0.061384299 NA -0.360590775 -0.1199687423 7.029407e-04
+# 32 (B.1.177+) - Delta            East Midlands -0.5775604887 0.029260530 NA -0.634910074 -0.5202109037 0.000000e+00
+# 33      Alpha - Delta            East Midlands -0.1714308751 0.031632366 NA -0.233429174 -0.1094325766 9.503416e-07
+# 34       Beta - Delta            East Midlands -2.0561361501 0.034708234 NA -2.124163039 -1.9881092608 0.000000e+00
+# 35      Gamma - Delta            East Midlands -1.6107157294 0.080338898 NA -1.768177076 -1.4532543828 0.000000e+00
+# 36    Omicron - Delta            East Midlands  0.2270992781 0.005045595 NA  0.217210093  0.2369884629 0.000000e+00
+# 37      other - Delta            West Midlands -0.4624217349 0.073879806 NA -0.607223494 -0.3176199758 1.231836e-08
+# 38 (B.1.177+) - Delta            West Midlands -3.1933515549 0.027340415 NA -3.246937784 -3.1397653262 0.000000e+00
+# 39      Alpha - Delta            West Midlands -0.0190703932 0.027747161 NA -0.073453830  0.0353130439 9.153804e-01
+# 40       Beta - Delta            West Midlands -0.6340701665 0.040569430 NA -0.713584788 -0.5545555449 0.000000e+00
+# 41      Gamma - Delta            West Midlands -1.5366163741 0.088235439 NA -1.709554657 -1.3636780913 0.000000e+00
+# 42    Omicron - Delta            West Midlands  0.2426045180 0.005366932 NA  0.232085525  0.2531235110 0.000000e+00
+# 43      other - Delta               North East -0.0828759407 0.127266919 NA -0.332314519  0.1665626373 9.270499e-01
+# 44 (B.1.177+) - Delta               North East -0.0170235293 0.032091433 NA -0.079921582  0.0458745233 9.589418e-01
+# 45      Alpha - Delta               North East -0.3829959004 0.080184831 NA -0.540155281 -0.2258365200 1.952772e-05
+# 46       Beta - Delta               North East -0.8104033916 0.047629729 NA -0.903755944 -0.7170508390 0.000000e+00
+# 47      Gamma - Delta               North East  0.5046758650 0.023099385 NA  0.459401902  0.5499498281 0.000000e+00
+# 48    Omicron - Delta               North East  0.2403503493 0.019867960 NA  0.201409863  0.2792908358 0.000000e+00
+# 49      other - Delta Yorkshire and The Humber -0.1378279584 0.059782109 NA -0.254998739 -0.0206571782 1.041826e-01
+# 50 (B.1.177+) - Delta Yorkshire and The Humber -2.9541930353 0.032387201 NA -3.017670783 -2.8907152878 0.000000e+00
+# 51      Alpha - Delta Yorkshire and The Humber -0.2507436069 0.061792242 NA -0.371854175 -0.1296330386 4.028764e-04
+# 52       Beta - Delta Yorkshire and The Humber -0.7210508284 0.035502403 NA -0.790634260 -0.6514673968 0.000000e+00
+# 53      Gamma - Delta Yorkshire and The Humber  0.6635293623 0.023099385 NA  0.618255399  0.7088033254 0.000000e+00
+# 54    Omicron - Delta Yorkshire and The Humber  0.2575627200 0.006168628 NA  0.245472431  0.2696530091 0.000000e+00
 
 
-
-
-# results using simpler model fit2_sanger_multi
-emtrsanger2 = emtrends(fit2_sanger_multi, trt.vs.ctrl1 ~ LINEAGE,  
-                      var="DATE_NUM",  mode="latent",
-                      at=list(DATE_NUM=max(sanger$DATE_NUM)))
-delta_r_sanger2 = data.frame(confint(emtrsanger2, 
-                                    adjust="none", df=NA)$contrasts, 
-                            p.value=as.data.frame(emtrsanger2$contrasts)$p.value)
-delta_r_sanger2
-#                  contrast     estimate           SE df    asymp.LCL    asymp.UCL p.value
-# 1       other - B.1.617.2 -0.117463378 8.212644e-07 NA -0.117464988 -0.117461768       0
-# 2  (B.1.177+) - B.1.617.2 -0.126114580 8.324083e-07 NA -0.126116212 -0.126112949       0
-# 3     B.1.1.7 - B.1.617.2 -0.084749905 6.697615e-07 NA -0.084751218 -0.084748592       0
-# 4        AY.3 - B.1.617.2  0.027924500 6.227197e-06 NA  0.027912294  0.027936705       0
-# 5        AY.7 - B.1.617.2 -0.011485677 1.508384e-06 NA -0.011488634 -0.011482721       0
-# 6       AY.36 - B.1.617.2  0.041237519 4.985606e-06 NA  0.041227747  0.041247290       0
-# 7       AY.34 - B.1.617.2  0.040621623 3.709901e-06 NA  0.040614352  0.040628895       0
-# 8        AY.9 - B.1.617.2 -0.012533279 1.138186e-06 NA -0.012535510 -0.012531048       0
-# 9        AY.6 - B.1.617.2  0.003686990 7.974531e-07 NA  0.003685427  0.003688553       0
-# 10       AY.5 - B.1.617.2  0.002183768 6.527144e-07 NA  0.002182489  0.002185047       0
-# 11       AY.4 - B.1.617.2  0.002230561 2.963084e-07 NA  0.002229980  0.002231142       0
-# 12     AY.4.2 - B.1.617.2  0.036269047 6.519412e-07 NA  0.036267769  0.036270325       0
-
-# results using simpler model fit1_sanger_multi
-emtrsanger1 = emtrends(fit1_sanger_multi, trt.vs.ctrl1 ~ LINEAGE,  
-                       var="DATE_NUM",  mode="latent",
-                       at=list(DATE_NUM=max(sanger$DATE_NUM)))
-delta_r_sanger1 = data.frame(confint(emtrsanger1, 
-                                     adjust="none", df=NA)$contrasts, 
-                             p.value=as.data.frame(emtrsanger2$contrasts)$p.value)
-delta_r_sanger1
-#                  contrast      estimate           SE df     asymp.LCL     asymp.UCL p.value
-# 1       other - B.1.617.2 -0.1160508461 6.969309e-07 NA -0.1160522121 -0.1160494802       0
-# 2  (B.1.177+) - B.1.617.2 -0.1243448479 6.947756e-07 NA -0.1243462096 -0.1243434861       0
-# 3     B.1.1.7 - B.1.617.2 -0.0844836053 5.526911e-07 NA -0.0844846886 -0.0844825221       0
-# 4        AY.3 - B.1.617.2  0.0291081670 3.799426e-06 NA  0.0291007203  0.0291156138       0
-# 5        AY.7 - B.1.617.2 -0.0160410526 9.904481e-07 NA -0.0160429939 -0.0160391114       0
-# 6       AY.36 - B.1.617.2  0.0445657644 2.438578e-06 NA  0.0445609848  0.0445705439       0
-# 7       AY.34 - B.1.617.2  0.0366963869 2.103749e-06 NA  0.0366922637  0.0367005102       0
-# 8        AY.9 - B.1.617.2 -0.0195890602 6.468192e-07 NA -0.0195903279 -0.0195877924       0
-# 9        AY.6 - B.1.617.2 -0.0005600488 5.262820e-07 NA -0.0005610803 -0.0005590173       0
-# 10       AY.5 - B.1.617.2 -0.0030056426 4.697117e-07 NA -0.0030065632 -0.0030047220       0
-# 11       AY.4 - B.1.617.2  0.0023933945 2.670646e-07 NA  0.0023928710  0.0023939179       0
-# 12     AY.4.2 - B.1.617.2  0.0336399137 5.406211e-07 NA  0.0336388541  0.0336409733       0
 
 
 # predicted incidences on average over all ONS regions from multinomial fit
 # fitted prop of different LINEAGES in England today
-multinom_preds_today_avg = data.frame(emmeans(fit4_sanger_multi, ~ LINEAGE|1,
+multinom_preds_today_avg6 = data.frame(emmeans(fit6_sanger_multi, ~ LINEAGE|1,
                                               at=list(DATE_NUM=today_num), 
                                               mode="prob", df=NA))
-multinom_preds_today_avg
-#      LINEAGE         prob           SE df     asymp.LCL    asymp.UCL
-# 1  B.1.617.2 2.078192e-01 2.244213e-03 NA  2.034206e-01 2.122178e-01
-# 2      other 1.084557e-02 6.960358e-04 NA  9.481365e-03 1.220978e-02
-# 3   B.1.177+ 3.272671e-10 7.340559e-10 NA -1.111456e-09 1.765990e-09
-# 4    B.1.1.7 2.000803e-07 8.775228e-08 NA  2.808903e-08 3.720716e-07
-# 5       AY.3 1.288851e-03 2.819744e-04 NA  7.361911e-04 1.841510e-03
-# 6       AY.7 1.473056e-03 1.466811e-04 NA  1.185566e-03 1.760546e-03
-# 7      AY.36 5.613567e-03 6.841538e-04 NA  4.272650e-03 6.954483e-03
-# 8      AY.34 7.950355e-03 8.672091e-04 NA  6.250657e-03 9.650054e-03
-# 9       AY.9 3.874581e-03 2.118446e-04 NA  3.459373e-03 4.289789e-03
-# 10      AY.6 1.642100e-02 5.161566e-04 NA  1.540935e-02 1.743265e-02
-# 11      AY.5 3.144465e-02 8.984985e-04 NA  2.968363e-02 3.320567e-02
-# 12      AY.4 6.045102e-01 2.943547e-03 NA  5.987409e-01 6.102794e-01
-# 13    AY.4.2 1.087588e-01 2.351650e-03 NA  1.041497e-01 1.133680e-01
+multinom_preds_today_avg6
+# LINEAGE         prob           SE df     asymp.LCL    asymp.UCL
+# 1    Delta 2.717537e-02 4.987916e-03 NA  1.739923e-02 3.695150e-02
+# 2    other 3.053303e-07 1.620503e-07 NA -1.228242e-08 6.229431e-07
+# 3 B.1.177+ 6.457009e-08 2.488948e-07 NA -4.232547e-07 5.523949e-07
+# 4    Alpha 3.427218e-08 4.118860e-08 NA -4.645599e-08 1.150004e-07
+# 5     Beta 3.643311e-08 7.608304e-08 NA -1.126869e-07 1.855531e-07
+# 6    Gamma 1.237640e-09 3.803893e-09 NA -6.217854e-09 8.693134e-09
+# 7  Omicron 9.728242e-01 4.987935e-03 NA  9.630480e-01 9.826004e-01
 
-# % non-B.1.1.7
-colSums(multinom_preds_today_avg[-1, c("prob","asymp.LCL","asymp.UCL")])
-#      prob asymp.LCL asymp.UCL 
-# 0.7921808 0.7733694 0.8109922 
 
 # here given by region:
-multinom_preds_today_byregion = data.frame(emmeans(fit3_sanger_multi, ~ LINEAGE|DATE_NUM, by=c("REGION"),
+multinom_preds_today_byregion6 = data.frame(emmeans(fit6_sanger_multi, ~ LINEAGE|DATE_NUM, by=c("REGION"),
                                                    at=list(DATE_NUM=today_num), 
                                                    mode="prob", df=NA))
-multinom_preds_today_byregion
-
-multinom_preds_delta_today_byregion = multinom_preds_today_byregion[multinom_preds_today_byregion$LINEAGE=="AY.4.2",]
-multinom_preds_delta_today_byregion
-#     LINEAGE DATE_NUM                   REGION       prob          SE df  asymp.LCL  asymp.UCL
-# 13   AY.4.2    18918                   London 0.15118941 0.004255598 NA 0.14284859 0.15953023
-# 26   AY.4.2    18918               North West 0.09420867 0.002796490 NA 0.08872765 0.09968969
-# 39   AY.4.2    18918               South West 0.13807667 0.004206891 NA 0.12983131 0.14632202
-# 52   AY.4.2    18918               South East 0.15441578 0.003792914 NA 0.14698181 0.16184976
-# 65   AY.4.2    18918          East of England 0.09752246 0.003197061 NA 0.09125634 0.10378859
-# 78   AY.4.2    18918            East Midlands 0.09456926 0.003606529 NA 0.08750059 0.10163793
-# 91   AY.4.2    18918            West Midlands 0.14088294 0.003626969 NA 0.13377422 0.14799167
-# 104  AY.4.2    18918               North East 0.06838891 0.004302484 NA 0.05995619 0.07682162
-# 117  AY.4.2    18918 Yorkshire and The Humber 0.09552138 0.003110142 NA 0.08942562 0.10161715
+multinom_preds_today_byregion6
+# LINEAGE DATE_NUM                   REGION          prob            SE df      asymp.LCL     asymp.UCL
+# 1     Delta    18995                   London  2.676098e-03  2.025275e-04 NA   2.279151e-03  3.073044e-03
+# 2     other    18995                   London  2.732980e-20  1.240113e-19 NA  -2.157279e-19  2.703875e-19
+# 3  B.1.177+    18995                   London 1.256917e-131 4.780791e-131 NA -8.113261e-131 1.062710e-130
+# 4     Alpha    18995                   London  2.110154e-08  3.199519e-08 NA  -4.160787e-08  8.381096e-08
+# 5      Beta    18995                   London  2.603604e-08  6.542315e-08 NA  -1.021910e-07  1.542631e-07
+# 6     Gamma    18995                   London  1.113876e-08  3.423504e-08 NA  -5.596069e-08  7.823820e-08
+# 7   Omicron    18995                   London  9.973238e-01  2.025319e-04 NA   9.969269e-01  9.977208e-01
+# 8     Delta    18995               North West  4.706646e-03  4.827694e-04 NA   3.760436e-03  5.652857e-03
+# 9     other    18995               North West  1.816530e-07  1.965149e-07 NA  -2.035090e-07  5.668151e-07
+# 10 B.1.177+    18995               North West  2.346483e-08  1.794132e-07 NA  -3.281785e-07  3.751082e-07
+# 11    Alpha    18995               North West  5.554701e-09  1.111600e-08 NA  -1.623227e-08  2.734167e-08
+# 12     Beta    18995               North West  1.783651e-90  2.100273e-89 NA  -3.938094e-89  4.294824e-89
+# 13    Gamma    18995               North West 3.008837e-133 9.356385e-133 NA -1.532934e-132 2.134701e-132
+# 14  Omicron    18995               North West  9.952931e-01  4.827910e-04 NA   9.943469e-01  9.962394e-01
+# 15    Delta    18995               South West  1.234432e-02  1.181594e-03 NA   1.002844e-02  1.466020e-02
+# 16    other    18995               South West  4.006909e-13  4.549369e-12 NA  -8.515908e-12  9.317289e-12
+# 17 B.1.177+    18995               South West 2.970175e-159 1.360960e-158 NA -2.370415e-158 2.964450e-158
+# 18    Alpha    18995               South West  3.072914e-13  1.948750e-12 NA  -3.512189e-12  4.126771e-12
+# 19     Beta    18995               South West  7.264691e-37  1.018009e-35 NA  -1.922613e-35  2.067907e-35
+# 20    Gamma    18995               South West  1.394700e-87  1.306400e-86 NA  -2.421028e-86  2.699968e-86
+# 21  Omicron    18995               South West  9.876557e-01  1.181594e-03 NA   9.853398e-01  9.899716e-01
+# 22    Delta    18995               South East  1.156430e-02  9.005571e-04 NA   9.799241e-03  1.332936e-02
+# 23    other    18995               South East  1.564852e-06  1.157185e-06 NA  -7.031879e-07  3.832892e-06
+# 24 B.1.177+    18995               South East 4.566457e-165  0.000000e+00 NA  4.566457e-165 4.566457e-165
+# 25    Alpha    18995               South East  2.172712e-07  3.490339e-07 NA  -4.668227e-07  9.013652e-07
+# 26     Beta    18995               South East  3.018619e-07  6.815664e-07 NA  -1.033984e-06  1.637708e-06
+# 27    Gamma    18995               South East  1.118100e-73  1.618703e-72 NA  -3.060789e-72  3.284409e-72
+# 28  Omicron    18995               South East  9.884336e-01  9.007186e-04 NA   9.866682e-01  9.901990e-01
+# 29    Delta    18995          East of England  1.759752e-02  1.434858e-03 NA   1.478525e-02  2.040979e-02
+# 30    other    18995          East of England  1.001447e-06  8.624976e-07 NA  -6.890170e-07  2.691912e-06
+# 31 B.1.177+    18995          East of England 4.918001e-203  0.000000e+00 NA  4.918001e-203 4.918001e-203
+# 32    Alpha    18995          East of England  5.993042e-08  1.146840e-07 NA  -1.648462e-07  2.847070e-07
+# 33     Beta    18995          East of England 4.156135e-110 4.872183e-109 NA -9.133690e-109 9.964917e-109
+# 34    Gamma    18995          East of England  1.378003e-28  4.393603e-27 NA  -8.473504e-27  8.749105e-27
+# 35  Omicron    18995          East of England  9.824014e-01  1.434944e-03 NA   9.795890e-01  9.852139e-01
+# 36    Delta    18995            East Midlands  1.916293e-02  1.894923e-03 NA   1.544894e-02  2.287691e-02
+# 37    other    18995            East Midlands  5.959631e-22  5.684293e-21 NA  -1.054505e-20  1.173697e-20
+# 38 B.1.177+    18995            East Midlands  6.247988e-51  2.849839e-50 NA  -4.960784e-50  6.210381e-50
+# 39    Alpha    18995            East Midlands  9.329635e-17  4.220381e-16 NA  -7.338832e-16  9.204759e-16
+# 40     Beta    18995            East Midlands 1.439183e-144 7.282246e-144 NA -1.283376e-143 1.571212e-143
+# 41    Gamma    18995            East Midlands 3.259080e-123 1.083517e-122 NA -1.797746e-122 2.449562e-122
+# 42  Omicron    18995            East Midlands  9.808371e-01  1.894923e-03 NA   9.771231e-01  9.845511e-01
+# 43    Delta    18995            West Midlands  1.133280e-02  1.207883e-03 NA   8.965392e-03  1.370020e-02
+# 44    other    18995            West Midlands  4.797827e-39  5.621459e-38 NA  -1.053807e-37  1.149764e-37
+# 45 B.1.177+    18995            West Midlands 1.389470e-246  0.000000e+00 NA  1.389470e-246 1.389470e-246
+# 46    Alpha    18995            West Midlands  4.591456e-09  1.811992e-08 NA  -3.092294e-08  4.010585e-08
+# 47     Beta    18995            West Midlands  9.661073e-52  6.553906e-51 NA  -1.187931e-50  1.381153e-50
+# 48    Gamma    18995            West Midlands 2.800818e-126 9.616116e-126 NA -1.604642e-125 2.164806e-125
+# 49  Omicron    18995            West Midlands  9.886672e-01  1.207883e-03 NA   9.862998e-01  9.910346e-01
+# 50    Delta    18995               North East  1.546132e-01  4.476671e-02 NA   6.687207e-02  2.423544e-01
+# 51    other    18995               North East  2.017164e-11  4.151787e-10 NA  -7.935637e-10  8.339070e-10
+# 52 B.1.177+    18995               North East  5.576659e-07  2.232254e-06 NA  -3.817472e-06  4.932804e-06
+# 53    Alpha    18995               North East  6.829151e-29  7.867790e-28 NA  -1.473767e-27  1.610350e-27
+# 54     Beta    18995               North East  3.266089e-57  2.374494e-56 NA  -4.327315e-56  4.980533e-56
+# 55    Gamma    18995               North East  6.231460e-69  1.923153e-68 NA  -3.146164e-68  4.392456e-68
+# 56  Omicron    18995               North East  8.453862e-01  4.476687e-02 NA   7.576448e-01  9.331277e-01
+# 57    Delta    18995 Yorkshire and The Humber  1.058051e-02  1.253081e-03 NA   8.124511e-03  1.303650e-02
+# 58    other    18995 Yorkshire and The Humber  3.149033e-16  2.775081e-15 NA  -5.124156e-15  5.753963e-15
+# 59 B.1.177+    18995 Yorkshire and The Humber 1.325970e-228  0.000000e+00 NA  1.325970e-228 1.325970e-228
+# 60    Alpha    18995 Yorkshire and The Humber  6.025821e-24  5.419757e-23 NA  -1.001995e-22  1.122511e-22
+# 61     Beta    18995 Yorkshire and The Humber  1.510827e-59  8.001277e-59 NA  -1.417139e-58  1.719304e-58
+# 62    Gamma    18995 Yorkshire and The Humber 5.570002e-104 1.712703e-103 NA -2.799836e-103 3.913836e-103
+# 63  Omicron    18995 Yorkshire and The Humber  9.894195e-01  1.253081e-03 NA   9.869635e-01  9.918755e-01
 
 
 # CALCULATION OF TRANSMISSION ADVANTAGE THROUGH TIME ####
 
 gentime = 4.7 # put the generation time here that you would like to use (e.g. the one typically used to report Re values in the UK)
 
-# growth rate advantages of B.1.617.2 compared to UK type B.1.1.7 through time (difference in growth rate per day) 
+# growth rate advantage of B.1.617.2 compared to UK type B.1.1.7 through time (difference in growth rate per day) 
 # as we would like to get a region & time-varying estimate here we will use model 
-# fit4_sanger_multi = nnet::multinom(LINEAGE ~ REGION * ns(DATE_NUM, df=2), data=sanger, maxit=1000) here
-emtrsanger4 = emtrends(fit4_sanger_multi, trt.vs.ctrl1 ~ LINEAGE, by=c("DATE_NUM","REGION"), 
+# fit6_sanger_multi = nnet::multinom(LINEAGE ~ REGION * ns(DATE_NUM, df=3), data=sanger, maxit=1000) here
+emtrsanger6 = emtrends(fit6_sanger_multi, trt.vs.ctrl1 ~ LINEAGE, by=c("DATE_NUM","REGION"), 
                       var="DATE_NUM",  mode="latent",
-                      at=list(DATE_NUM=seq(as.numeric(as.Date("2021-04-01")),as.numeric(as.Date("2021-07-01")))))
-delta_r_sanger4 = data.frame(confint(emtrsanger4, 
+                      at=list(DATE_NUM=seq(as.numeric(as.Date("2021-12-01")),as.numeric(as.Date("2022-01-03")))))
+delta_r_sanger6 = data.frame(confint(emtrsanger6, 
                                     adjust="none", df=NA)$contrasts)
-delta_r_sanger4 = delta_r_sanger4[delta_r_sanger4$contrast=="B.1.617.2 - B.1.1.7",]
-delta_r_sanger4
+delta_r_sanger6 = delta_r_sanger6[delta_r_sanger6$contrast=="Omicron - Delta",]
+delta_r_sanger6
+
+delta_r_sanger6$collection_date = as.Date(delta_r_sanger6$DATE_NUM, origin="1970-01-01")
+delta_r_sanger6$REGION = factor(delta_r_sanger6$REGION, levels=levels_REGION)
+
+plot_sanger_mfit6_growthadv = qplot(data=delta_r_sanger6, 
+      x=collection_date, y=estimate, ymin=asymp.LCL, ymax=asymp.UCL, colour=REGION, fill=REGION, group=REGION,
+      geom="blank") +
+  facet_wrap(~ REGION) +
+  xaxis +
+  scale_y_continuous(limits=c(0,max(delta_r_sanger6$asymp.UCL))) +
+  geom_ribbon(aes(colour=NULL), alpha=I(0.6)) + # fill=I("steelblue"), 
+  geom_line(aes(fill=NULL)) + # colour=I("steelblue"), 
+  ylab("Growth rate advantage of Omicron over Delta per day") +
+  theme_hc() + xlab("") +
+  ggtitle("GROWTH RATE ADVANTAGE OF OMICRON OVER DELTA\n(Sanger Institute baseline surveillance data, multinomial spline fit)") +
+  #  scale_x_continuous(breaks=as.Date(c("2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01")),
+  #                     labels=substring(months(as.Date(c("2021-01-01","2021-02-01","2021-03-01","2021-04-01","2021-05-01","2021-06-01"))),1,1),
+  #                     limits=as.Date(c("2021-01-01","2021-05-31")), 
+  #                     expand=c(0,0)) +
+  # scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
+  #                     labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
+  # scale_fill_manual("variant", values=c(lineage_cols1,"darkgreen")) +
+  # scale_colour_manual("variant", values=c(lineage_cols1,"darkgreen")) +
+  # guides(fill=FALSE) +
+  # guides(colour=FALSE) +
+  theme(legend.position = "none") +
+  xlab("") +
+  scale_colour_hue(h=c(10, 310), c=100) +
+  scale_fill_hue(h=c(10, 310), c=100)
+# theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1)) # +
+# coord_cartesian(xlim=c(as.Date("2021-05-01"),as.Date("2021-05-31")), ylim=c(0.001, 0.998), expand=c(0,0))
+plot_sanger_mfit6_growthadv
+
+ggsave(file=paste0(".\\plots\\",plotdir,"\\sanger_multinom fit6_growth rate advantage Omicron.png"), width=8, height=6)
+
 
 # If we take the exponent of the product of these growth rate advantages/disadvantages and the generation time (e.g. 4.7 days, Nishiura et al. 2020)
 # we get the transmission advantage/disadvantage (here expressed in percent) :
@@ -837,10 +680,10 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\sanger_muller plots by ONS region_mul
 
 # predictions by ONS region (with CIs) ####
 
-fit_sanger_multi_predsbyregion = data.frame(emmeans(fit4_sanger_multi, 
+fit_sanger_multi_predsbyregion = data.frame(emmeans(fit8_sanger_multi, 
                                                     ~ LINEAGE,
                                                     by=c("DATE_NUM", "REGION"),
-                                                    at=list(DATE_NUM=seq(date.from, date.to, by=1)), 
+                                                    at=list(DATE_NUM=seq(as.numeric(as.Date("2021-12-01")), date.to, by=1)), 
                                                     mode="prob", df=NA))
 fit_sanger_multi_predsbyregion$collection_date = as.Date(fit_sanger_multi_predsbyregion$DATE_NUM, origin="1970-01-01")
 fit_sanger_multi_predsbyregion$LINEAGE = factor(fit_sanger_multi_predsbyregion$LINEAGE, levels=levels_LINEAGE_plot) 
@@ -854,9 +697,9 @@ muller_sangerbyregion_mfit = ggplot(data=fit_sanger_multi_predsbyregion,
   scale_fill_manual("", values=lineage_cols1) +
   annotate("rect", xmin=max(sanger$DATE_NUM)+1, 
            xmax=as.Date(date.to, origin="1970-01-01"), ymin=0, ymax=1, alpha=0.3, fill="white") + # extrapolated part
-  scale_x_continuous(breaks=seq(as.Date("2019-12-01"), today, by="month"),
-                     labels=substring(months(seq(as.Date("2019-12-01"), today, by="month")),1,1),
-                     limits=as.Date(c("2020-09-01",NA)), expand=c(0,0)) +  # guides(color = guide_legend(reverse=F, nrow=2, byrow=T), fill = guide_legend(reverse=F, nrow=2, byrow=T)) +
+  scale_x_continuous(breaks=seq(as.Date("2021-12-01"), today, by="month"),
+                     labels=substring(months(seq(as.Date("2021-12-01"), today, by="month")),1,1),
+                     limits=as.Date(c("2021-12-01",NA)), expand=c(0,0)) +  # guides(color = guide_legend(reverse=F, nrow=2, byrow=T), fill = guide_legend(reverse=F, nrow=2, byrow=T)) +
   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
   theme_hc() + theme(legend.position="right", 
                      axis.title.x=element_blank()) + 
@@ -876,7 +719,7 @@ ggarrange(muller_sangerbyregion_raw1+coord_cartesian(xlim=c(as.Date("2020-09-01"
                    fill = guide_legend(override.aes = list(alpha = 0))), 
           muller_sangerbyregion_mfit+ggtitle("Multinomial fit"), ncol=1)
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\sanger_muller plots by ONS region_multinom fit multipanel.png"), width=8, height=10)
+# ggsave(file=paste0(".\\plots\\",plotdir,"\\sanger_muller plots by ONS region_multinom fit multipanel.png"), width=8, height=10)
 # ggsave(file=paste0(".\\plots\\",plotdir,"\\sanger_muller plots by ONS region_multinom fit multipanel.pdf"), width=8, height=6)
 
 
@@ -1076,7 +919,7 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\sanger_muller plots by NHS region_mul
 # plot predictions multinomial fit by ONS region
 # on logit scale:
 
-fit_sanger_multi_preds2 = fit_multi_preds # fit_sanger_multi_preds
+fit_sanger_multi_preds2 = fit_sanger_multi_predsbyregion # fit_sanger_multi_preds
 ymin = 0.001
 ymax = 0.9998
 fit_sanger_multi_preds2$asymp.LCL[fit_sanger_multi_preds2$asymp.LCL<ymin] = ymin
@@ -1084,7 +927,7 @@ fit_sanger_multi_preds2$asymp.UCL[fit_sanger_multi_preds2$asymp.UCL<ymin] = ymin
 fit_sanger_multi_preds2$asymp.UCL[fit_sanger_multi_preds2$asymp.UCL>ymax] = ymax
 fit_sanger_multi_preds2$prob[fit_sanger_multi_preds2$prob<ymin] = ymin
 
-fit_sanger_multi_predsbyregion2 = fit_multi_preds # fit_sanger_multi_predsbyregion
+fit_sanger_multi_predsbyregion2 = fit_sanger_multi_predsbyregion # fit_sanger_multi_predsbyregion
 fit_sanger_multi_predsbyregion2$asymp.LCL[fit_sanger_multi_predsbyregion2$asymp.LCL<ymin] = ymin
 fit_sanger_multi_predsbyregion2$asymp.UCL[fit_sanger_multi_predsbyregion2$asymp.UCL<ymin] = ymin
 fit_sanger_multi_predsbyregion2$asymp.UCL[fit_sanger_multi_predsbyregion2$asymp.UCL>ymax] = ymax
@@ -1103,9 +946,9 @@ plot_sanger_mfit_logit = qplot(data=fit_sanger_multi_predsbyregion2,
   ylab("Share (%)") +
   theme_hc() + xlab("") +
   ggtitle("SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN ENGLAND\n(Sanger Institute baseline surveillance data,\nmultinomial fit LINEAGE~REGION*ns(DATE,df=3))") +
-  scale_x_continuous(breaks=seq(as.Date("2019-12-01"), today, by="month"),
-                     labels=substring(months(seq(as.Date("2019-12-01"), today, by="month")),1,1),
-                     limits=as.Date(c("2020-09-01",NA)), expand=c(0,0)) +  # guides(color = guide_legend(reverse=F, nrow=2, byrow=T), fill = guide_legend(reverse=F, nrow=2, byrow=T)) +
+  scale_x_continuous(breaks=seq(as.Date("2021-12-01"), today, by="month"),
+                     labels=substring(months(seq(as.Date("2021-12-01"), today, by="month")),1,1),
+                     limits=as.Date(c("2021-12-01",NA)), expand=c(0,0)) +  # guides(color = guide_legend(reverse=F, nrow=2, byrow=T), fill = guide_legend(reverse=F, nrow=2, byrow=T)) +
   scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
                       labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
   scale_fill_manual("variant", values=c(lineage_cols1,"darkgreen")) +
@@ -1121,7 +964,7 @@ plot_sanger_mfit_logit = qplot(data=fit_sanger_multi_predsbyregion2,
   # guides(colour=FALSE) +
   theme(legend.position = "right") +
   xlab("Collection date")+
-  coord_cartesian(xlim=c(as.Date("2020-09-01"),NA), ylim=c(0.001, 0.9991), expand=c(0,0))
+  coord_cartesian(xlim=c(as.Date("2021-12-01"),NA), ylim=c(0.001, 0.9991), expand=c(0,0))
 plot_sanger_mfit_logit
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\sanger_multinom fit by ONS region_logit scale.png"), width=8, height=6)

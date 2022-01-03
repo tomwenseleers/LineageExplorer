@@ -3,7 +3,7 @@
 
 # PLUS CALCULATION OF CUMULATIVE TOTAL OF PREVIOUSLY INFECTED PEOPLE
 
-# T. Wenseleers, 9 Nov. 2021
+# T. Wenseleers, 30 Dec. 2021
 
 fit_economist = read.csv("https://raw.githubusercontent.com/TheEconomist/covid-19-the-economist-global-excess-deaths-model/main/output-data/output-for-interactive/second_map.csv")
 # check "export_regions.csv", and "export_country.csv"
@@ -39,8 +39,8 @@ names(OWID)
 unique(OWID$continent)
 library(ggplot2)
 library(ggthemes)
-(as.Date(max(OWID$date))-4) # "2021-11-04"
-(as.Date(max(fit_economist$date))) # 2021-11-08
+(as.Date(max(OWID$date))-4) # "2021-12-25"
+(as.Date(max(fit_economist$date))) # "2021-12-29"
 
 ggplot(OWID[(OWID$continent=="Europe")&(OWID$date==(as.Date(max(OWID$date))-7)),], aes(x=people_vaccinated_per_hundred, y=new_cases_per_million))+geom_point()+geom_text(aes(label=location, vjust=-0.7))  
 ggplot(OWID[(OWID$continent=="Europe")&(OWID$date==(as.Date(max(OWID$date))-7)),], aes(x=people_vaccinated_per_hundred, y=hosp_patients_per_million))+geom_point()+geom_text(aes(label=location, vjust=-0.7))
@@ -322,9 +322,9 @@ fit_economist$implied_infections_per_100_persons_bot_95_clipped = fit_economist$
 fit_economist$implied_infections_per_100_persons_bot_95_clipped[fit_economist$implied_infections_per_100_persons_bot_95_clipped<0] = 0
 fit_economist$implied_infections_per_100_persons_bot_95_clipped[fit_economist$implied_infections_per_100_persons_bot_95_clipped>100] = 100
 
-# estimated global % that was already infected by the virus on 8 Nov 2021
-max(fit_economist$date) # "2021-11-08"
-# 61% [28-70%]
+# estimated global % that was already infected by the virus on 29 Dec 2021
+max(fit_economist$date) # "2021-12-29"
+# 63% [29-72%]
 weighted.mean(fit_economist$implied_infections_per_100_persons_clipped,
               w=fit_economist$population, na.rm=T)
 weighted.mean(fit_economist$implied_infections_per_100_persons_bot_95_clipped,
@@ -332,7 +332,7 @@ weighted.mean(fit_economist$implied_infections_per_100_persons_bot_95_clipped,
 weighted.mean(fit_economist$implied_infections_per_100_persons_top_95_clipped,
               w=fit_economist$population, na.rm=T)
 
-# estimated % already infected by the virus on 20 Sept 2021
+# estimated % already infected by the virus on 29 Dec 2021
 # 
 do.call(rbind, lapply(unique(fit_economist$continent), function (cont) { 
     list(continent = cont,
