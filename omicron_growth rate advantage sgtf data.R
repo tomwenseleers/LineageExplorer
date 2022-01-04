@@ -500,7 +500,50 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\spread omicron logistic fit sgtf data
 
 
 
-# PLOTS OF NEW CASES PER DAY BY VARIANT ####
+# PLOTS OF NEW CASES PER DAY & Re VALUES BY VARIANT FOR BELGIUM (here for TaqPath tests only) ####
+
+# FUNCTION TO CALCULATE EFFECTIVE REPRODUCTION NUMBER R FROM
+# THE INSTANTANEOUS GROWTH RATE r, ASSUMING GAMMA DISTRIBUTED GENERATION TIME
+# from epiforecasts package growth_to_R
+# https://github.com/epiforecasts/EpiNow2/blob/5015e75f7048c2580b2ebe83e46d63124d014861/R/utilities.R#L109
+# https://royalsocietypublishing.org/doi/10.1098/rsif.2020.0144
+Re.from.r <- function(r, gamma_mean=4.7, gamma_sd=2.9) {
+  k <- (gamma_sd / gamma_mean)^2
+  R <- (1 + k * r * gamma_mean)^(1 / k)
+  return(R)
+}
+
+# for Alpha variant: mean & SD of generation time taken as the mean
+# of the intrinsic generation time (mean 5.5 days, SD 3.8 days, k=(3.8/5.5)^2=0.48) & 
+# the household generation time (mean 4.5 days, SD 3.3 days, k=(3.3/4.5)^2=0.54), i.e.
+# mean GT = mean(c(5.5, 4.5)) = 5.0 days and SD = mean(c(3.8, 3.3)) = 3.55 days (k=0.50)
+# given in suppl Table S3 of Hart et al. 2022, https://www.medrxiv.org/content/10.1101/2021.10.21.21265216v1)
+Re_Alpha.from.r <- function(r, gamma_mean=5.0, gamma_sd=3.55) {
+  k <- (gamma_sd / gamma_mean)^2
+  R <- (1 + k * r * gamma_mean)^(1 / k)
+  return(R)
+}
+
+# for Delta variant: mean & SD of generation time taken as the mean
+# of the intrinsic generation time (mean 4.6 days, SD 3.1 days, k=(3.1/4.6)^2=0.45) & 
+# the household generation time (mean 3.2 days, SD 2.4 days, k=(2.4/3.2)^2=0.56), i.e.
+# mean GT = mean(c(4.6, 3.2)) = 3.9 days and SD = mean(c(3.1, 2.4)) = 2.75 days (k=0.50)
+# given in suppl Table S3 of Hart et al. 2022, https://www.medrxiv.org/content/10.1101/2021.10.21.21265216v1)
+Re_Delta.from.r <- function(r, gamma_mean=3.9, gamma_sd=2.75) {
+  k <- (gamma_sd / gamma_mean)^2
+  R <- (1 + k * r * gamma_mean)^(1 / k)
+  return(R)
+}
+
+# for Omicron variant: mean & SD of generation time taken as given in
+# Kim et al/ 2022, https://www.medrxiv.org/content/10.1101/2021.12.25.21268301v1
+# also see https://www.jkms.org/DOIx.php?id=10.3346/jkms.2021.36.e346
+Re_Omicron.from.r <- function(r, gamma_mean=2.22, gamma_sd=1.62) {
+  k <- (gamma_sd / gamma_mean)^2
+  R <- (1 + k * r * gamma_mean)^(1 / k)
+  return(R)
+}
+
 
 source(".//scripts//downloadData.R") # download Belgian case data
 head(sgtf)
@@ -526,12 +569,56 @@ fit_cases = gam(count ~ s(date_num, bs="cs", k=k, m=c(2), fx=F, by=variant) + va
 BIC(fit_cases)
 
 emmeans_casesbyvariant = as.data.frame(emmeans(fit_cases, ~ date_num+variant, at=list(date_num=as.numeric(seq(as.Date("2021-11-27"),
-                                                                                                   as.Date("2022-01-07"),
+                                                                                                   as.Date("2022-01-18"),
                                                                                                    by=1)),
                                                                                       BANKHOLIDAY=factor("no")), type="response"))
 emmeans_casesbyvariant$date = as.Date(emmeans_casesbyvariant$date_num, origin="1970-01-01")
 emmeans_casesbyvariant$count= emmeans_casesbyvariant$response
 lineage_cols = c("red2","grey50")
+
+# growth rates per variant
+growth_rates_variants = as.data.frame(emtrends(fit_cases, ~ date_num, var="date_num", by="variant",
+                              at=list(date_num=seq(as.numeric(as.Date("2021-11-27")),
+                                                   as.numeric(as.Date("2022-01-18")),
+                                                   by=1),
+                                      BANKHOLIDAY=factor("no")
+                                      # TESTS_ALL=max(cases_tot$TESTS_ALL)
+                                      ),
+                              type="link"))
+colnames(growth_rates_variants)[3] = "r"
+colnames(growth_rates_variants)[6] = "r_LOWER"
+colnames(growth_rates_variants)[7] = "r_UPPER"
+growth_rates_variants$date = as.Date(growth_rates_variants$date_num, origin="1970-01-01") - 7 # -7 to get time of infection
+growth_rates_variants$Re[growth_rates_variants$variant=="Omicron"] = Re_Omicron.from.r(growth_rates_variants$r[growth_rates_variants$variant=="Omicron"])
+growth_rates_variants$Re_LOWER[growth_rates_variants$variant=="Omicron"] = Re_Omicron.from.r(growth_rates_variants$r_LOWER[growth_rates_variants$variant=="Omicron"])
+growth_rates_variants$Re_UPPER[growth_rates_variants$variant=="Omicron"] = Re_Omicron.from.r(growth_rates_variants$r_UPPER[growth_rates_variants$variant=="Omicron"])
+growth_rates_variants$Re[growth_rates_variants$variant=="Delta"] = Re_Delta.from.r(growth_rates_variants$r[growth_rates_variants$variant=="Delta"])
+growth_rates_variants$Re_LOWER[growth_rates_variants$variant=="Delta"] = Re_Delta.from.r(growth_rates_variants$r_LOWER[growth_rates_variants$variant=="Delta"])
+growth_rates_variants$Re_UPPER[growth_rates_variants$variant=="Delta"] = Re_Delta.from.r(growth_rates_variants$r_UPPER[growth_rates_variants$variant=="Delta"])
+
+# plot of Re values per variant
+ggplot(data=growth_rates_variants, 
+       aes(x=date, y=Re, ymin=Re_LOWER, ymax=Re_UPPER, colour=variant, fill=variant, group=variant)) + 
+  geom_ribbon(aes(colour=NULL), alpha=I(0.4)) +
+  # facet_wrap(~ country, scale="free") +
+  geom_line(aes(lwd=I(1.2))) +
+  xaxis + 
+  # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
+  theme_hc() + theme(legend.position="right") + 
+  ylab("Re value") + xlab("Estimated date of infection") +
+  ggtitle("Re VALUES OF OMICRON & DELTA IN BELGIUM","data Federal Test Platform Belgium,\nbased on negative binomial GAM fit to S dropout\n& S positive counts, adjusted for proportion\nof S dropouts that were Omicron (GISAID data)\nusing gamma distributed generation time with mean and SD of\n2.2 and 1.6 days for Omicron (Kim et al. 2022) &\n3.9 and 2.8 days for Delta (Hart et al. 2022) ") +
+  scale_fill_manual("", values=lineage_cols ) +
+  scale_colour_manual("", values=lineage_cols ) +
+  geom_hline(yintercept=1, colour=I("red")) +
+  coord_cartesian(ylim=c(0.6, 1.8)) +
+  scale_y_continuous(breaks=seq(0.4,1.8,by=0.2)) +
+  # coord_cartesian(xlim=c(as.Date("2021-01-01"),NA)) +
+  # scale_y_log10() +
+  # theme(axis.title.x=element_blank()) +
+  theme(plot.subtitle=element_text(size=10))
+
+ggsave(file=paste0(".\\plots\\",plotdir,"\\Re by variant_belgium.png"), width=8, height=6)
+
 
 ggplot(data=sgtf_long[sgtf_long$country=="Belgium",], 
        aes(x=date, y=count, colour=variant, group=variant)) + 
@@ -546,6 +633,8 @@ ggplot(data=sgtf_long[sgtf_long$country=="Belgium",],
   ggtitle("RISE OF OMICRON AMONG TaqPath DIAGNOSED\nPOSITIVE SAMPLES IN BELGIUM","data Federal Test Platform Belgium,\nbased on negative binomial GAM fit to S dropout\n& S positive counts, adjusted for proportion\nof S dropouts that were Omicron (GISAID data)") +
   scale_fill_manual("", values=lineage_cols ) +
   scale_colour_manual("", values=lineage_cols ) +
+  annotate("rect", xmin=max(sgtf_long[sgtf_long$country=="Belgium","date"])+1, 
+           xmax=I(as.Date("2022-01-18")), ymin=0, ymax=50000, alpha=0.4, fill="white") + # extrapolated part
   # coord_cartesian(xlim=c(as.Date("2021-01-01"),NA)) +
   scale_y_log10() +
   theme(axis.title.x=element_blank()) 
@@ -565,6 +654,8 @@ ggplot(data=sgtf_long[sgtf_long$country=="Belgium",],
   ggtitle("RISE OF OMICRON AMONG TaqPath DIAGNOSED\nPOSITIVE SAMPLES IN BELGIUM","data Federal Test Platform Belgium,\nbased on negative binomial GAM fit to S dropout\n& S positive counts, adjusted for proportion\nof S dropouts that were Omicron (GISAID data)") +
   scale_fill_manual("", values=lineage_cols ) +
   scale_colour_manual("", values=lineage_cols ) +
+  annotate("rect", xmin=max(sgtf_long[sgtf_long$country=="Belgium","date"])+1, 
+           xmax=I(as.Date("2022-01-18")), ymin=0, ymax=50000, alpha=0.4, fill="white") + # extrapolated part
   # coord_cartesian(xlim=c(as.Date("2021-01-01"),NA)) +
   # scale_y_log10() +
   theme(axis.title.x=element_blank()) 
@@ -575,7 +666,6 @@ ggplot(data=sgtf_long[sgtf_long$country=="Belgium",],
        aes(x=date, y=count, colour=variant, group=variant)) + 
   # geom_point() +
   geom_area(data=emmeans_casesbyvariant, aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), position="stack") +
-  geom_rect() +
   # geom_ribbon(data=emmeans_casesbyvariant, aes(ymin=lower.CL, ymax=upper.CL, fill=variant, colour=NULL), alpha=I(0.4)) +
   # facet_wrap(~ country, scale="free") +
   # geom_line(data=emmeans_casesbyvariant, aes(lwd=I(1.2))) +
@@ -586,6 +676,8 @@ ggplot(data=sgtf_long[sgtf_long$country=="Belgium",],
   ggtitle("RISE OF OMICRON AMONG TaqPath DIAGNOSED\nPOSITIVE SAMPLES IN BELGIUM","data Federal Test Platform Belgium,\nbased on negative binomial GAM fit to S dropout\n& S positive counts, adjusted for proportion\nof S dropouts that were Omicron (GISAID data)") +
   scale_fill_manual("", values=lineage_cols ) +
   scale_colour_manual("", values=lineage_cols ) +
+  annotate("rect", xmin=max(sgtf_long[sgtf_long$country=="Belgium","date"])+1, 
+                   xmax=I(as.Date("2022-01-18")), ymin=0, ymax=25000, alpha=0.4, fill="white") + # extrapolated part
   # coord_cartesian(xlim=c(as.Date("2021-01-01"),NA)) +
   # scale_y_log10() +
   theme(axis.title.x=element_blank()) 
@@ -607,11 +699,14 @@ ggplot(data=sgtf_long[sgtf_long$country=="Belgium",],
   ggtitle("RISE OF OMICRON AMONG TaqPath DIAGNOSED\nPOSITIVE SAMPLES IN BELGIUM","data Federal Test Platform Belgium,\nbased on negative binomial GAM fit to S dropout\n& S positive counts, adjusted for proportion\nof S dropouts that were Omicron (GISAID data)") +
   scale_fill_manual("", values=lineage_cols, labels=c("Omicron", "Delta")) +
   scale_colour_manual("", values=lineage_cols, labels=c("Omicron", "Delta")) +
+  annotate("rect", xmin=max(sgtf_long[sgtf_long$country=="Belgium","date"])+1, 
+           xmax=I(as.Date("2022-01-18")), ymin=0, ymax=25000, alpha=0.4, fill="white") + # extrapolated part
   # coord_cartesian(xlim=c(as.Date("2021-01-01"),NA)) +
   # scale_y_log10() +
   theme(axis.title.x=element_blank()) 
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\cases per day by variant_belgium_overlaid area chart.png"), width=8, height=6)
+
 
 
 
