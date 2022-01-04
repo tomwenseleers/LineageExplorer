@@ -38,7 +38,8 @@ bankholidays = as.Date(c("2020-04-13", # public holidays (excluding the ones tha
                          "2021-11-11",
                          "2021-12-24",
                          "2021-12-25",
-                         "2022-01-01"))
+                         "2022-01-01",
+                         "2022-01-02")) # technically not a bank holiday, but in practice it is
 bankholiday = function(date) { date=as.Date(date)
                                as.factor(c("no","yes")[(date %in% bankholidays)*1+1]) }
 
