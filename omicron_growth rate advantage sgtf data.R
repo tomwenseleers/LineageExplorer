@@ -196,8 +196,8 @@ write.csv(sgtf2, ".//data//omicron_sgtf//raw_data_share_omicron_SA_ENG_SCOT_DK_B
 # summary(fit_sgtf1)
 
 # fit using a separate-slope logistic regression that allows for overdispersion via the inclusion of an observation-level random effect
-fit_sgtf2 = glmmPQL(cbind(omicron, non_omicron) ~ ns(date_num, df=4, Boundary.knots = c(min(date_num),
-                                                                                        max(date_num)+1)) * country, family=binomial(logit), 
+fit_sgtf2 = glmmPQL(cbind(omicron, non_omicron) ~ ns(date_num, df=5, Boundary.knots = c(min(date_num)-0.75,
+                                                                                        max(date_num)+0.75)) * country, family=binomial(logit), 
                                                   random=~1|obs, 
                                                   data=sgtf[sgtf$country!="South Africa",])
 # AIC(fit_sgtf0, fit_sgtf1)
@@ -365,7 +365,8 @@ emmeans_sgtf[emmeans_sgtf$date==as.Date("2021-12-25"),]
 sgtf_eng_byregion$no_sgtf = sgtf_eng_byregion$pos_tests-sgtf_eng_byregion$sgtf
 sgtf_eng_byregion$obs = factor(1:nrow(sgtf_eng_byregion))
 sgtf_eng_byregion$date_num = as.numeric(sgtf_eng_byregion$date)
-fit_sgtf_eng_byregion1 = glmmPQL(cbind(sgtf, no_sgtf) ~ ns(date_num, df=2) * region, family=binomial(logit), random=~1|obs, 
+fit_sgtf_eng_byregion1 = glmmPQL(cbind(sgtf, no_sgtf) ~ ns(date_num, df=2, Boundary.knots = c(min(date_num)-0.75,
+                                                                                              max(date_num)+0.75)) * region, family=binomial(logit), random=~1|obs, 
                                  data=sgtf_eng_byregion[sgtf_eng_byregion$date>=as.Date("2021-12-01"),]) 
 # AIC(fit_sgtf_eng_byregion1)
 summary(fit_sgtf_eng_byregion1)
@@ -379,22 +380,22 @@ deltar_sgtf_eng_byregion$region = NULL
 colnames(deltar_sgtf_eng_byregion) = c("delta_r","delta_r_asymp.LCL","delta_r_asymp.UCL")
 deltar_sgtf_eng_byregion
 #                         delta_r delta_r_asymp.LCL delta_r_asymp.UCL
-# East Midlands        0.16946270        0.14331997        0.19560544
-# East of England      0.13273580        0.10829683        0.15717477
-# London               0.07473066        0.05143671        0.09802461
-# North East           0.21363132        0.18249578        0.24476686
-# North West           0.18935559        0.16731697        0.21139422
-# South East           0.14023181        0.11583304        0.16463058
-# South West           0.16988625        0.13610648        0.20366603
-# West Midlands        0.17279490        0.14573667        0.19985313
-# Yorkshire and Humber 0.17357283        0.14817758        0.19896808
+# London               0.06859292         0.0444971        0.09268874
+# East of England      0.12729800         0.1019584        0.15263760
+# South East           0.13560509         0.1103240        0.16088617
+# North West           0.18515796         0.1622892        0.20802673
+# East Midlands        0.16516529         0.1380261        0.19230445
+# South West           0.16510925         0.1300734        0.20014509
+# West Midlands        0.16724048         0.1390742        0.19540675
+# Yorkshire and Humber 0.16742928         0.1409524        0.19390618
+# North East           0.20842761         0.1758435        0.24101176
 
 # mean growth rate advantage of Omicron over Delta across ONS regions (mean difference in growth rate per day)
 deltar_sgtf_eng_avgoverregions = as.data.frame(emtrends(fit_sgtf_eng_byregion1, ~ date_num, var="date_num", at=list(date_num=max(dateseq))))[,c(2,5,6)] # growth rate advantage of Omicron over Delta
 colnames(deltar_sgtf_eng_avgoverregions) = c("delta_r","delta_r_asymp.LCL","delta_r_asymp.UCL")
 deltar_sgtf_eng_avgoverregions
 #     delta_r delta_r_asymp.LCL delta_r_asymp.UCL
-# 1 0.1596002          0.150717         0.1684835
+# 1 0.1544473         0.1452144         0.1636802
 deltar_sgtf_eng_avgoverregions_char = sapply(deltar_sgtf_eng_avgoverregions, function (x) sprintf(as.character(round(x,2)), 2) )
 deltar_sgtf_eng_avgoverregions_char = paste0(deltar_sgtf_eng_avgoverregions_char[1], " [", deltar_sgtf_eng_avgoverregions_char[2], "-", deltar_sgtf_eng_avgoverregions_char[3],"] 95% CLs")
 
@@ -407,15 +408,15 @@ transmadv_sgtf_eng_byregion = exp(deltar_sgtf_eng_byregion*4.7)
 colnames(transmadv_sgtf_eng_byregion) = c("transmadv","transmadv_asymp.LCL","transmadv_asymp.UCL")
 transmadv_sgtf_eng_byregion
 #                      transmadv transmadv_asymp.LCL transmadv_asymp.UCL
-# East Midlands         2.217709            1.961293            2.507649
-# East of England       1.866114            1.663619            2.093257
-# London                1.420820            1.273479            1.585208
-# North East            2.729360            2.357803            3.159470
-# North West            2.435060            2.195456            2.700813
-# South East            1.933032            1.723600            2.167910
-# South West            2.222128            1.895913            2.604473
-# West Midlands         2.252715            1.983697            2.558215
-# Yorkshire and Humber  2.260966            2.006586            2.547595
+# London                1.380419            1.232613            1.545948
+# East of England       1.819025            1.614789            2.049092
+# South East            1.891450            1.679545            2.130092
+# North West            2.387490            2.144184            2.658403
+# East Midlands         2.173365            1.913096            2.469044
+# South West            2.172793            1.842908            2.561728
+# West Midlands         2.194667            1.922543            2.505308
+# Yorkshire and Humber  2.196615            1.939589            2.487701
+# North East            2.663417            2.285224            3.104198
 
 # mean transmission advantage of Omicron over Delta across countries (using generation time of 4.7 days)
 # i.e. mean fold difference in the effective reproduction number Re of Omicron compared to that of Delta
@@ -423,7 +424,7 @@ transmadv_sgtf_eng_avgoverregions = exp(deltar_sgtf_eng_avgoverregions*4.7)
 colnames(transmadv_sgtf_eng_avgoverregions) = c("transmadv","transmadv_asymp.LCL","transmadv_asymp.UCL")
 transmadv_sgtf_eng_avgoverregions
 #   transmadv transmadv_asymp.LCL transmadv_asymp.UCL
-# 1  2.117256            2.030678            2.207526
+# 1  2.066595            1.978834            2.158248
 transmadv_sgtf_eng_avgoverregions_char = sapply(transmadv_sgtf_eng_avgoverregions, function (x) sprintf(as.character(round(x,1)), 1) )
 transmadv_sgtf_eng_avgoverregions_char = paste0(transmadv_sgtf_eng_avgoverregions_char[1], " [", transmadv_sgtf_eng_avgoverregions_char[2], "-", transmadv_sgtf_eng_avgoverregions_char[3],"] 95% CLs")
 
@@ -495,6 +496,7 @@ qplot(data=sgtf_eng_byregion[sgtf_eng_byregion$date>=as.Date("2021-12-01"),], x=
 
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\spread omicron logistic fit sgtf data england by region_linear scale.png"), width=8, height=6)
+
 
 
 
