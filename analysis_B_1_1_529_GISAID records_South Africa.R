@@ -1,7 +1,7 @@
 # ANALYSIS OF GROWTH ADVANTAGE OF OMICRON (B.1.1.529) IN SOUTH AFRICA BASED ON GISAID SEQUENCE DATA
 
 # T. Wenseleers
-# last update 14 DECEMBER 2021
+# last update 6 JANUARY 2022
     
   library(nnet)
   # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
@@ -26,6 +26,7 @@
   today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
   # today = as.Date("2021-12-14")
   today_num = as.numeric(today)
+  tag = paste("@TWenseleers\n",today)
   plotdir = "South Africa_GISAID"
   suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
   levels_PROVINCES = c("Gauteng", "North West", "Mpumalanga", "Limpopo", "Western Cape", "Free State", "KwaZulu Natal", "Eastern Cape", "Northern Cape")
@@ -52,7 +53,7 @@
 d1 = read_tsv(file(".//data//GISAID//South Africa//gisaid_hcov-19_2021_11_25_20_subm_2020.tsv"), col_types = cols(.default = "c")) 
 d2 = read_tsv(file(".//data//GISAID//South Africa//gisaid_hcov-19_2021_11_25_20_subm_jan_may_2021.tsv"), col_types = cols(.default = "c")) 
 d3 = read_tsv(file(".//data//GISAID//South Africa//gisaid_hcov-19_2021_11_25_20_subm_june_aug_2021.tsv"), col_types = cols(.default = "c")) 
-d4 = read_tsv(file(".//data//GISAID//South Africa//gisaid_hcov-19_2021_12_12_10_subm_sept_dec_2021.tsv"), col_types = cols(.default = "c")) 
+d4 = read_tsv(file(".//data//GISAID//South Africa//gisaid_hcov-19_2022_01_04_17_subm_sept_2021_jan_2022.tsv"), col_types = cols(.default = "c")) 
 
 # parse GISAID & SGTF data
 GISAID = as.data.frame(rbind(d1,d2,d3,d4))
@@ -66,7 +67,7 @@ GISAID$date = as.Date(GISAID$date)
 GISAID = GISAID[!is.na(GISAID$date),]
 GISAID = GISAID[GISAID$host=="Human",]
 GISAID = GISAID[GISAID$date>=as.Date("2020-01-01"),]
-range(GISAID$date) # "2020-03-06" "2021-12-06"
+range(GISAID$date) # "2020-03-06" "2021-12-20"
 GISAID$Week = lubridate::week(GISAID$date)
 GISAID$Month = lubridate::month(GISAID$date)
 GISAID$Year = lubridate::year(GISAID$date)
@@ -95,7 +96,7 @@ GISAID$province = factor(GISAID$province, levels=levels_PROVINCES)
 
 GISAID$variant = case_when(
   # grepl("N679K", aa_substitutions) & grepl("H655Y", aa_substitutions) & grepl("P681H", aa_substitutions) ~ "B.1.1.529",
-  grepl("B.1.1.529|BA.1", GISAID$pango_lineage) ~ "Omicron",
+  grepl("B.1.1.529|BA", GISAID$pango_lineage) ~ "Omicron",
   grepl("B.1.617.2", GISAID$pango_lineage, fixed=T) | grepl("AY", GISAID$pango_lineage)  ~ "Delta",
   grepl("B.1.1.7", GISAID$pango_lineage, fixed=T) ~ "Alpha",
   grepl("B.1.351", GISAID$pango_lineage, fixed=T) ~ "Beta",
@@ -126,12 +127,12 @@ table(GISAID$variant)
 
 # ANALYSIS OF VOCs IN SOUTH AFRICA ####
 GISAID_sel = GISAID
-nrow(GISAID_sel) # 23716
+nrow(GISAID_sel) # 25026
 sum(GISAID_sel$variant==sel_target_VOC) # 779
 table(GISAID_sel$variant)
 # Alpha    Beta   C.1.2   Delta Omicron   Other 
-# 226    6918     273   11098     772    4428 
-range(GISAID_sel$date) # "2020-03-06" "2021-12-06"
+# 228    6926     278   11237    1890    4467  
+range(GISAID_sel$date) # "2020-03-06" "2021-12-20"
 
 GISAID_sel$variant = factor(GISAID_sel$variant)
 GISAID_sel$variant = relevel(GISAID_sel$variant, ref=sel_reference_VOC) # we code Delta as the reference
@@ -336,18 +337,18 @@ delta_r_southafrica_avg = data.frame(confint(emtrsouthafrica_avg,
                                               p.value=as.data.frame(emtrsouthafrica_avg$contrasts,
                                                                     adjust="none", df=NA)$p.value)
 delta_r_southafrica_avg
-#         contrast      estimate          SE df   asymp.LCL    asymp.UCL      p.value
-# 1    Beta - Delta -0.0208719188 0.003195933 NA -0.02713583 -0.014608006 6.543003e-11
-# 2   Alpha - Delta -0.0366907301 0.007347282 NA -0.05109114 -0.022290322 5.920797e-07
-# 3   C.1.2 - Delta -0.0004111633 0.004737310 NA -0.00969612  0.008873793 9.308364e-01
-# 4   Other - Delta  0.0247017587 0.002691618 NA  0.01942628  0.029977234 4.420813e-20
-# 5 Omicron - Delta  0.2445317962 0.016150394 NA  0.21287761  0.276185987 8.699055e-52
+#          contrast     estimate          SE df   asymp.LCL    asymp.UCL      p.value
+# 1    Beta - Delta -0.017151275 0.003102697 NA -0.02323245 -0.011070101 3.241594e-08
+# 2   Alpha - Delta -0.035574880 0.007681750 NA -0.05063083 -0.020518926 3.637451e-06
+# 3   C.1.2 - Delta -0.001208102 0.004773263 NA -0.01056353  0.008147321 8.001927e-01
+# 4   Other - Delta  0.030454792 0.002527046 NA  0.02550187  0.035407711 1.903623e-33
+# 5 Omicron - Delta  0.220856279 0.010855548 NA  0.19957980  0.242132762 5.139677e-92
 
 # corresponding transmission advantage of Omicron over Delta (ie how much higher effective reproduction number is at any timepoint) 
-# 4.8x [3.7-6.2]x transmission advantage of Omicron over Delta, i.e. Omicron has 4.8x higher effective R value than Delta
-exp(delta_r_southafrica_avg[5,5]*4.7) # 2.7x
-exp(delta_r_southafrica_avg[5,2]*4.7) # Omicron 3.1x transmission advantage over Delta
-exp(delta_r_southafrica_avg[5,6]*4.7) # 3.7x
+# 2.8x [2.6-3.1]x transmission advantage of Omicron over Delta, i.e. Omicron has 4.8x higher effective R value than Delta
+exp(delta_r_southafrica_avg[5,5]*4.7) # 2.55x
+exp(delta_r_southafrica_avg[5,2]*4.7) # Omicron 2.82x transmission advantage over Delta
+exp(delta_r_southafrica_avg[5,6]*4.7) # 3.12x
 
 
 # avg growth rate advantage of Omicron over Delta (difference in growth rate per day) (on average over all provinces from Nov 1 to today)
@@ -361,18 +362,18 @@ delta_r_southafrica_province_avg = data.frame(confint(emtrsouthafrica_province_a
                          p.value=as.data.frame(emtrsouthafrica_province_avg$contrasts,
                                                adjust="none", df=NA)$p.value)
 delta_r_southafrica_province_avg
-#         contrast     estimate          SE df   asymp.LCL    asymp.UCL      p.value
-# 1    Beta - Delta -0.058876533 0.001115002 NA -0.061061896 -0.056691169  0.000000e+00
-# 2   Alpha - Delta -0.043309917 0.001533328 NA -0.046315185 -0.040304649 1.607806e-175
-# 3   C.1.2 - Delta  0.005260765 0.001634600 NA  0.002057008  0.008464522  1.289165e-03
-# 4   Other - Delta -0.073949100 0.001159649 NA -0.076221969 -0.071676230  0.000000e+00
-# 5 Omicron - Delta  0.334639412 0.027492716 NA  0.280754679  0.388524146  4.385886e-34
+#     contrast     estimate          SE df    asymp.LCL    asymp.UCL       p.value
+# 1    Beta - Delta -0.057114065 0.001073633 NA -0.059218346 -0.055009783  0.000000e+00
+# 2   Alpha - Delta -0.042027432 0.001488211 NA -0.044944272 -0.039110591 1.876136e-175
+# 3   C.1.2 - Delta  0.006303468 0.001578400 NA  0.003209861  0.009397074  6.508275e-05
+# 4   Other - Delta -0.071957890 0.001118631 NA -0.074150366 -0.069765413  0.000000e+00
+# 5 Omicron - Delta  0.287185831 0.017349904 NA  0.253180644  0.321191019  1.533637e-61
 
 # corresponding transmission advantage of Omicron over Delta (ie how much higher effective reproduction number is at any timepoint) 
-# 4.8x [3.7-6.2]x transmission advantage of Omicron over Delta, i.e. Omicron has 4.8x higher effective R value than Delta
-exp(delta_r_southafrica_province_avg[5,5]*4.7) # 3.7x
-exp(delta_r_southafrica_province_avg[5,2]*4.7) # Omicron 4.8x transmission advantage over Delta
-exp(delta_r_southafrica_province_avg[5,6]*4.7) # 6.2x
+# 3.9x [3.3-4.5]x transmission advantage of Omicron over Delta, i.e. Omicron has 4.8x higher effective R value than Delta
+exp(delta_r_southafrica_province_avg[5,5]*4.7) # 3.3x
+exp(delta_r_southafrica_province_avg[5,2]*4.7) # Omicron 3.9x transmission advantage over Delta
+exp(delta_r_southafrica_province_avg[5,6]*4.7) # 4.5x
 
 # fitted prop of different variantS today (on average across provinces)
 # based on model with province included as a factor
@@ -380,78 +381,76 @@ multinom_preds_today_avg_province = data.frame(emmeans(fit1_southafrica_province
                                               at=list(date_num=today_num), 
                                               mode="prob", df=NA))
 multinom_preds_today_avg_province
-#   variant         prob           SE df     asymp.LCL    asymp.UCL
-# 1   Delta 7.722656e-02 4.599804e-01 NA -8.243184e-01 9.787715e-01
-# 2    Beta 1.377856e-06 8.230612e-06 NA -1.475385e-05 1.750956e-05
-# 3   Alpha 5.348403e-07 3.202442e-06 NA -5.741830e-06 6.811511e-06
-# 4   C.1.2 7.213677e-03 4.311407e-02 NA -7.728834e-02 9.171569e-02
-# 5   Other 2.616789e-09 1.560409e-08 NA -2.796667e-08 3.320025e-08
-# 6 Omicron 9.155579e-01 5.030728e-01 NA -7.044664e-02 1.901562e+00
-# note: lower than expected value mainly due to Northern Cape where no Omicron sample was sequenced yet
+# variant         prob           SE df     asymp.LCL    asymp.UCL
+# 1   Delta 1.409980e-06 1.000787e-06 NA -5.515262e-07 3.371485e-06
+# 2    Beta 7.583299e-12 5.739945e-12 NA -3.666786e-12 1.883338e-11
+# 3   Alpha 5.915380e-12 4.767722e-12 NA -3.429183e-12 1.525994e-11
+# 4   C.1.2 8.081837e-08 5.956585e-08 NA -3.592855e-08 1.975653e-07
+# 5   Other 1.535751e-14 1.183201e-14 NA -7.832803e-15 3.854781e-14
+# 6 Omicron 9.999985e-01 1.056902e-06 NA  9.999964e-01 1.000001e+00
 
 # fitted prop of different variantS today (by province)
 multinom_preds_today_byprovince = data.frame(emmeans(fit1_southafrica_province_multi, ~ variant|province,
                                               at=list(date_num=today_num), 
                                               mode="prob", df=NA))
 multinom_preds_today_byprovince
-# variant      province         prob           SE df     asymp.LCL    asymp.UCL
-# 1    Delta       Gauteng 1.633287e-05 1.291919e-05 NA -8.988266e-06 4.165402e-05
-# 2     Beta       Gauteng 1.795869e-10 1.468425e-10 NA -1.082190e-10 4.673929e-10
-# 3    Alpha       Gauteng 5.302999e-10 4.490988e-10 NA -3.499176e-10 1.410517e-09
-# 4    C.1.2       Gauteng 1.622161e-06 1.331974e-06 NA -9.884593e-07 4.232781e-06
-# 5    Other       Gauteng 3.153638e-13 2.610281e-13 NA -1.962419e-13 8.269696e-13
-# 6  Omicron       Gauteng 9.999820e-01 1.419905e-05 NA  9.999542e-01 1.000010e+00
-# 7    Delta    North West 3.478304e-04 3.853751e-04 NA -4.074910e-04 1.103152e-03
-# 8     Beta    North West 4.627856e-09 5.220117e-09 NA -5.603386e-09 1.485910e-08
-# 9    Alpha    North West 4.472046e-09 5.323491e-09 NA -5.961804e-09 1.490590e-08
-# 10   C.1.2    North West 5.745008e-06 6.828606e-06 NA -7.638814e-06 1.912883e-05
-# 11   Other    North West 4.915787e-11 5.602262e-11 NA -6.064444e-11 1.589602e-10
-# 12 Omicron    North West 9.996464e-01 3.917420e-04 NA  9.988786e-01 1.000414e+00
-# 13   Delta    Mpumalanga 3.235437e-05 5.307940e-05 NA -7.167935e-05 1.363881e-04
-# 14    Beta    Mpumalanga 1.289932e-09 2.134793e-09 NA -2.894186e-09 5.474050e-09
-# 15   Alpha    Mpumalanga 3.009195e-10 5.298380e-10 NA -7.375439e-10 1.339383e-09
-# 16   C.1.2    Mpumalanga 2.068299e-06 3.437999e-06 NA -4.670055e-06 8.806652e-06
-# 17   Other    Mpumalanga 4.451377e-12 7.398109e-12 NA -1.004865e-11 1.895140e-11
-# 18 Omicron    Mpumalanga 9.999656e-01 5.647287e-05 NA  9.998549e-01 1.000076e+00
-# 19   Delta       Limpopo 3.233964e-07 9.115939e-06 NA -1.754352e-05 1.819031e-05
-# 20    Beta       Limpopo 2.500282e-12 7.048044e-11 NA -1.356388e-10 1.406394e-10
-# 21   Alpha       Limpopo 1.083549e-12 3.055097e-11 NA -5.879524e-11 6.096234e-11
-# 22   C.1.2       Limpopo 1.956533e-08 5.515403e-07 NA -1.061434e-06 1.100564e-06
-# 23   Other       Limpopo 9.770455e-15 2.754303e-13 NA -5.300631e-13 5.496040e-13
-# 24 Omicron       Limpopo 9.999997e-01 9.667549e-06 NA  9.999807e-01 1.000019e+00
-# 25   Delta  Western Cape 2.378725e-04 1.497266e-04 NA -5.558628e-05 5.313312e-04
-# 26    Beta  Western Cape 2.585079e-09 1.713541e-09 NA -7.734007e-10 5.943558e-09
-# 27   Alpha  Western Cape 4.884070e-09 3.451974e-09 NA -1.881675e-09 1.164981e-08
-# 28   C.1.2  Western Cape 3.273030e-06 2.281382e-06 NA -1.198396e-06 7.744456e-06
-# 29   Other  Western Cape 3.789794e-12 2.562043e-12 NA -1.231719e-12 8.811306e-12
-# 30 Omicron  Western Cape 9.997588e-01 1.517869e-04 NA  9.994614e-01 1.000056e+00
-# 31   Delta    Free State 3.357092e-05 9.540094e-05 NA -1.534115e-04 2.205533e-04
-# 32    Beta    Free State 1.029984e-09 2.935751e-09 NA -4.723982e-09 6.783951e-09
-# 33   Alpha    Free State 5.436511e-10 1.566151e-09 NA -2.525948e-09 3.613250e-09
-# 34   C.1.2    Free State 1.250377e-06 3.577769e-06 NA -5.761922e-06 8.262677e-06
-# 35   Other    Free State 1.761368e-12 5.028051e-12 NA -8.093430e-12 1.161617e-11
-# 36 Omicron    Free State 9.999652e-01 9.895787e-05 NA  9.997712e-01 1.000159e+00
-# 37   Delta KwaZulu Natal 8.275011e-04 4.359931e-04 NA -2.702961e-05 1.682032e-03
-# 38    Beta KwaZulu Natal 6.073832e-09 3.495959e-09 NA -7.781211e-10 1.292579e-08
-# 39   Alpha KwaZulu Natal 3.281005e-09 2.326051e-09 NA -1.277971e-09 7.839982e-09
-# 40   C.1.2 KwaZulu Natal 2.743333e-05 1.658868e-05 NA -5.079883e-06 5.994654e-05
-# 41   Other KwaZulu Natal 1.973070e-11 1.163127e-11 NA -3.066167e-12 4.252756e-11
-# 42 Omicron KwaZulu Natal 9.991451e-01 4.503739e-04 NA  9.982623e-01 1.000028e+00
-# 43   Delta  Eastern Cape 1.056886e-03 9.919895e-04 NA -8.873779e-04 3.001149e-03
-# 44    Beta  Eastern Cape 6.399772e-09 6.182860e-09 NA -5.718410e-09 1.851795e-08
-# 45   Alpha  Eastern Cape 3.178850e-09 3.403624e-09 NA -3.492131e-09 9.849832e-09
-# 46   C.1.2  Eastern Cape 1.986143e-05 2.005871e-05 NA -1.945292e-05 5.917577e-05
-# 47   Other  Eastern Cape 1.175875e-11 1.147695e-11 NA -1.073565e-11 3.425315e-11
-# 48 Omicron  Eastern Cape 9.989232e-01 1.010611e-03 NA  9.969425e-01 1.000904e+00
-# 49   Delta Northern Cape 6.924863e-01 4.139799e+00 NA -7.421370e+00 8.806343e+00
-# 50    Beta Northern Cape 1.237851e-05 7.407512e-05 NA -1.328061e-04 1.575631e-04
-# 51   Alpha Northern Cape 4.796371e-06 2.882152e-05 NA -5.169278e-05 6.128552e-05
-# 52   C.1.2 Northern Cape 6.486182e-02 3.880257e-01 NA -6.956546e-01 8.253782e-01
-# 53   Other Northern Cape 2.346012e-08 1.404350e-07 NA -2.517875e-07 2.987077e-07
-# 54 Omicron Northern Cape 2.426346e-01 4.527630e+00 NA -8.631357e+00 9.116626e+00
+#    variant      province         prob           SE df     asymp.LCL    asymp.UCL
+# 1    Delta       Gauteng 7.332225e-08 6.535124e-08 NA -5.476383e-08 2.014083e-07
+# 2     Beta       Gauteng 2.993229e-13 2.750469e-13 NA -2.397592e-13 8.384050e-13
+# 3    Alpha       Gauteng 1.123161e-12 1.066502e-12 NA -9.671440e-13 3.213465e-12
+# 4    C.1.2       Gauteng 9.631378e-09 8.890886e-09 NA -7.794438e-09 2.705719e-08
+# 5    Other       Gauteng 4.090149e-16 3.797693e-16 NA -3.353193e-16 1.153349e-15
+# 6  Omicron       Gauteng 9.999999e-01 7.391631e-08 NA  9.999998e-01 1.000000e+00
+# 7    Delta    North West 9.258353e-07 7.730067e-07 NA -5.892300e-07 2.440900e-06
+# 8     Beta    North West 4.367987e-12 3.779302e-12 NA -3.039310e-12 1.177528e-11
+# 9    Alpha    North West 5.539797e-12 5.257505e-12 NA -4.764723e-12 1.584432e-11
+# 10   C.1.2    North West 3.599117e-08 3.265112e-08 NA -2.800385e-08 9.998618e-08
+# 11   Other    North West 3.560465e-14 3.136102e-14 NA -2.586182e-14 9.707113e-14
+# 12 Omicron    North West 9.999990e-01 8.029715e-07 NA  9.999975e-01 1.000001e+00
+# 13   Delta    Mpumalanga 3.489598e-07 3.602936e-07 NA -3.572027e-07 1.055122e-06
+# 14    Beta    Mpumalanga 5.017447e-12 5.308942e-12 NA -5.387889e-12 1.542278e-11
+# 15   Alpha    Mpumalanga 1.494047e-12 1.822698e-12 NA -2.078375e-12 5.066469e-12
+# 16   C.1.2    Mpumalanga 2.748594e-08 2.945055e-08 NA -3.023608e-08 8.520795e-08
+# 17   Other    Mpumalanga 1.331351e-14 1.423916e-14 NA -1.459473e-14 4.122175e-14
+# 18 Omicron    Mpumalanga 9.999996e-01 3.886224e-07 NA  9.999989e-01 1.000000e+00
+# 19   Delta       Limpopo 4.620786e-10 3.283123e-09 NA -5.972724e-09 6.896882e-09
+# 20    Beta       Limpopo 1.266191e-15 9.001418e-15 NA -1.637626e-14 1.890865e-14
+# 21   Alpha       Limpopo 1.200284e-15 8.552116e-15 NA -1.556156e-14 1.796212e-14
+# 22   C.1.2       Limpopo 3.745262e-11 2.663638e-10 NA -4.846109e-10 5.595161e-10
+# 23   Other       Limpopo 3.739980e-18 2.660419e-17 NA -4.840327e-17 5.588323e-17
+# 24 Omicron       Limpopo 1.000000e+00 3.549235e-09 NA  1.000000e+00 1.000000e+00
+# 25   Delta  Western Cape 1.465938e-06 1.111283e-06 NA -7.121364e-07 3.644013e-06
+# 26    Beta  Western Cape 5.951593e-12 4.703931e-12 NA -3.267942e-12 1.517113e-11
+# 27   Alpha  Western Cape 1.414416e-11 1.178090e-11 NA -8.945982e-12 3.723430e-11
+# 28   C.1.2  Western Cape 2.459942e-08 2.022699e-08 NA -1.504476e-08 6.424360e-08
+# 29   Other  Western Cape 6.848512e-15 5.494287e-15 NA -3.920094e-15 1.761712e-14
+# 30 Omicron  Western Cape 9.999985e-01 1.129899e-06 NA  9.999963e-01 1.000001e+00
+# 31   Delta    Free State 1.647606e-06 1.547094e-06 NA -1.384643e-06 4.679855e-06
+# 32    Beta    Free State 1.863106e-11 1.802903e-11 NA -1.670519e-11 5.396731e-11
+# 33   Alpha    Free State 1.244137e-11 1.316438e-11 NA -1.336033e-11 3.824307e-11
+# 34   C.1.2    Free State 7.186725e-08 7.218526e-08 NA -6.961325e-08 2.133478e-07
+# 35   Other    Free State 2.526502e-14 2.478344e-14 NA -2.330962e-14 7.383966e-14
+# 36 Omicron    Free State 9.999983e-01 1.614434e-06 NA  9.999951e-01 1.000001e+00
+# 37   Delta KwaZulu Natal 2.320531e-06 1.671178e-06 NA -9.549183e-07 5.595981e-06
+# 38    Beta KwaZulu Natal 6.401146e-12 4.872312e-12 NA -3.148410e-12 1.595070e-11
+# 39   Alpha KwaZulu Natal 4.318220e-12 3.767136e-12 NA -3.065231e-12 1.170167e-11
+# 40   C.1.2 KwaZulu Natal 1.006645e-07 7.898675e-08 NA -5.414671e-08 2.554757e-07
+# 41   Other KwaZulu Natal 1.620928e-14 1.252302e-14 NA -8.335386e-15 4.075395e-14
+# 42 Omicron KwaZulu Natal 9.999976e-01 1.743409e-06 NA  9.999942e-01 1.000001e+00
+# 43   Delta  Eastern Cape 2.683452e-06 2.290637e-06 NA -1.806115e-06 7.173018e-06
+# 44    Beta  Eastern Cape 6.076126e-12 5.394475e-12 NA -4.496851e-12 1.664910e-11
+# 45   Alpha  Eastern Cape 3.814968e-12 3.836546e-12 NA -3.704524e-12 1.133446e-11
+# 46   C.1.2  Eastern Cape 6.760049e-08 6.284329e-08 NA -5.557009e-08 1.907711e-07
+# 47   Other  Eastern Cape 8.587488e-15 7.722827e-15 NA -6.548975e-15 2.372395e-14
+# 48 Omicron  Eastern Cape 9.999972e-01 2.348206e-06 NA  9.999926e-01 1.000002e+00
+# 49   Delta Northern Cape 3.223709e-06 2.332486e-06 NA -1.347879e-06 7.795298e-06
+# 50    Beta Northern Cape 2.150374e-11 1.666619e-11 NA -1.116139e-11 5.416888e-11
+# 51   Alpha Northern Cape 1.036150e-11 9.879499e-12 NA -9.001960e-12 2.972496e-11
+# 52   C.1.2 Northern Cape 3.894877e-07 2.966076e-07 NA -1.918524e-07 9.708279e-07
+# 53   Other Northern Cape 3.197633e-14 2.527441e-14 NA -1.756059e-14 8.151326e-14
+# 54 Omicron Northern Cape 9.999964e-01 2.613145e-06 NA  9.999913e-01 1.000002e+00
 
-# note: low expected value for Northern Cape linked to there no Omicron sample having been sequenced yet
-# probably sampling artefact
+
 
 
 
@@ -521,7 +520,7 @@ fit_southafrica_multi_preds_withCI$date = as.Date(fit_southafrica_multi_preds_wi
 fit_southafrica_multi_preds_withCI$variant = factor(fit_southafrica_multi_preds_withCI$variant, levels=levels_VARIANTS)
 
 # multinomial model predictions with confidence intervals by province (slower)
-fit_southafrica_multi_preds_byprovince_withCI = data.frame(emmeans(fit1_southafrica_multi,
+fit_southafrica_multi_preds_byprovince_withCI = data.frame(emmeans(fit1_southafrica_province_multi,
                                                         ~ variant,
                                                         by=c("date_num","province"),
                                                         at=list(date_num=seq(date.from, date.to, by=3)),  # by=XX to speed up things a bit
@@ -888,11 +887,11 @@ Re.from.r <- function(r, gamma_mean=4.7, gamma_sd=2.9) { # Nishiura et al. 2020,
 
 # smooth out weekday effects in case nrs using negative binomial GAM (possibility to also correct for variable testing intensity)
 library(mgcv)
-k=40
-fit_cases = gam(cases_new ~ s(date_num, bs="cs", k=k, m=c(2), fx=F) + 
-                  WEEKDAY, # + offset(log(testspercase)),
-                # BANKHOLIDAY,
-                # + s(tests_new, bs="cs", k=8, fx=F),
+k=45
+fit_cases = gam(cases_new ~ s(date_num, bs="cs", k=k, m=c(2), fx=F) +
+                  WEEKDAY + # + offset(log(testspercase)),
+                  # BANKHOLIDAY,
+                + s(tests_new, bs="cs", k=8, fx=F),
                 family=nb(), data=cases_tot,
                 method = "REML",
                 knots = list(date_num = c(min(cases_tot$date_num)-14,
@@ -900,7 +899,7 @@ fit_cases = gam(cases_new ~ s(date_num, bs="cs", k=k, m=c(2), fx=F) +
                                               max(cases_tot$date_num)-1*diff(range(cases_tot$date_num))/(k-2), length.out=k-2),
                                           max(cases_tot$date_num)+14))
 ) 
-BIC(fit_cases)
+BIC(fit_cases) # 9953.436
 
 # calculate average instantaneous growth rates & 95% CLs & Re values using emtrends ####
 # based on the slope of the GAM fit on a log link scale
@@ -924,16 +923,16 @@ avg_r_cases$Re_UPPER = Re.from.r(avg_r_cases$r_UPPER)
 avg_r_cases = avg_r_cases[complete.cases(avg_r_cases),]
 qplot(data=avg_r_cases, x=DATE_OF_INFECTION, y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribbon", alpha=I(0.5), fill=I("steelblue")) + 
   # facet_wrap(~ REGION) +
-  geom_line() + theme_hc() + xlab("Date of infection") +
+  geom_line() + theme_hc() + xlab("Date of infection") + ylab("Rt") +
   # xaxis +
   # scale_y_continuous(limits=c(1/2, 4), trans="log2") +
   geom_hline(yintercept=1, colour=I("red")) +
-  ggtitle("Re VALUES IN SOUTH AFRICA","Based on negative binomial GAM fit to case data NICD,\nassuming gamma distr generation time of 4.7d with SD of 2.9d\nand time from infection to diagnosis of 7d") +
-  labs(tag = "Tom Wenseleers\n4 Dec 2021") +
+  ggtitle("Rt VALUES IN SOUTH AFRICA","Based on negative binomial GAM fit to case data NICD,\ncorrecting for variable testing intensity &\nassuming gamma distr generation time of 4.7d with SD of 2.9d\nand time from infection to diagnosis of 7d") +
+  labs(tag = tag) +
   # theme(plot.margin = margin(t = 20, r = 10, b = 20, l = 0)) +
   theme(plot.tag.position = "bottomright",
         plot.tag = element_text(vjust = 1, hjust = 1, size=8)) +
-  ylim(c(0.25,NA))
+  ylim(c(0.5,NA))
   # +
 # coord_cartesian(xlim=c(as.Date("2020-01-01"),NA))
 
@@ -943,6 +942,31 @@ avg_r_cases[avg_r_cases$DATE_OF_INFECTION==today,"Re"]/avg_r_cases[avg_r_cases$D
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\Re values South Africa.png"), width=8, height=6)
 # PS there were reporting problems/delays lately so not sure about stagnation of Re value
+
+
+qplot(data=avg_r_cases, x=DATE_OF_INFECTION, y=r*700, ymin=r_LOWER*700, ymax=r_UPPER*700, geom="ribbon", alpha=I(0.5), fill=I("steelblue")) + 
+  # facet_wrap(~ REGION) +
+  geom_line() + theme_hc() + xlab("Date of infection") + ylab("Continuous growth in infections per week (%)") + 
+  xaxis +
+  # xaxis +
+  # scale_y_continuous(limits=c(1/2, 4), trans="log2") +
+  geom_hline(yintercept=1, colour=I("red")) +
+  ggtitle("WEEKLY GROWTH/DECLINE IN SARS-CoV2\nINFECTIONS IN SOUTH AFRICA","Based on negative binomial GAM fit to case data NICD,\ncorrecting for variable testing intensity &\nassuming time from infection to diagnosis of 7d") +
+  labs(tag = tag) +
+  # theme(plot.margin = margin(t = 20, r = 10, b = 20, l = 0)) +
+  theme(plot.tag.position = "bottomright",
+        plot.tag = element_text(vjust = 1, hjust = 1, size=8)) +
+  ylim(c(-100,NA))
+# +
+# coord_cartesian(xlim=c(as.Date("2020-01-01"),NA))
+
+head(avg_r_cases,40)
+avg_r_cases[avg_r_cases$DATE_OF_INFECTION==today,"Re"]/avg_r_cases[avg_r_cases$DATE_OF_INFECTION==as.Date("2021-09-23"),"Re"] # Re now = 3.0 / Re on 23 Sept = 0.73 = x4.1
+avg_r_cases[avg_r_cases$DATE_OF_INFECTION==today,"Re"]/avg_r_cases[avg_r_cases$DATE_OF_INFECTION==as.Date("2021-10-07"),"Re"] # Re now (3.02) / Re on 7 Oct (0.81) = x3.7
+
+ggsave(file=paste0(".\\plots\\",plotdir,"\\growth infections cases South Africa.png"), width=8, height=6)
+# PS there were reporting problems/delays lately so not sure about stagnation of Re value
+
 
 # FOR GAUTENG PROVINCE
 k=40
@@ -976,12 +1000,12 @@ avg_r_cases_gauteng$Re_UPPER = Re.from.r(avg_r_cases_gauteng$r_UPPER)
 avg_r_cases_gauteng = avg_r_cases_gauteng[complete.cases(avg_r_cases_gauteng),]
 qplot(data=avg_r_cases_gauteng, x=DATE_OF_INFECTION, y=Re, ymin=Re_LOWER, ymax=Re_UPPER, geom="ribbon", alpha=I(0.5), fill=I("steelblue")) + # -7 TO CALCULATE BACK TO INFECTION DATE
   # facet_wrap(~ REGION) +
-  geom_line() + theme_hc() + xlab("Date of infection") +
+  geom_line() + theme_hc() + xlab("Date of infection") + ylab("Rt") +
   # xaxis +
   scale_y_continuous(limits=c(1/4, 4), trans="log2") +
   geom_hline(yintercept=1, colour=I("red")) +
-  ggtitle("Re VALUES IN GAUTENG PROVINCE, SA","Based on negative binomial GAM fit to case data NICD,\nassuming gamma distr generation time of 4.7d with SD of 2.9d\nand time from infection to diagnosis of 7d") +
-  labs(tag = "Tom Wenseleers\n2 Dec 2021") +
+  ggtitle("Rt VALUES IN GAUTENG PROVINCE, SA","Based on negative binomial GAM fit to case data NICD,\nassuming gamma distr generation time of 4.7d with SD of 2.9d\nand time from infection to diagnosis of 7d") +
+  labs(tag = tag) +
   # theme(plot.margin = margin(t = 20, r = 10, b = 20, l = 0)) +
   theme(plot.tag.position = "bottomright",
         plot.tag = element_text(vjust = 1, hjust = 1, size=8)) # +
@@ -993,6 +1017,26 @@ avg_r_cases_gauteng[avg_r_cases_gauteng$DATE_OF_INFECTION==today,"Re"]/avg_r_cas
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\Re values Gauteng Province.png"), width=8, height=6)
 tail(avg_r_cases_gauteng)
+
+qplot(data=avg_r_cases_gauteng, x=DATE_OF_INFECTION, y=r*700, ymin=r_LOWER*700, ymax=r_UPPER*700, geom="ribbon", alpha=I(0.5), fill=I("steelblue")) + 
+  # facet_wrap(~ REGION) +
+  geom_line() + theme_hc() + xlab("Date of infection") + ylab("Continuous growth in infections per week (%)") + 
+  xaxis +
+  # xaxis +
+  # scale_y_continuous(limits=c(1/2, 4), trans="log2") +
+  geom_hline(yintercept=1, colour=I("red")) +
+  ggtitle("WEEKLY GROWTH/DECLINE IN SARS-CoV2\nINFECTIONS IN GAUTENG PROVINCE, SA","Based on negative binomial GAM fit to case data NICD,\nassuming time from infection to diagnosis of 7d") +
+  labs(tag = tag) +
+  # theme(plot.margin = margin(t = 20, r = 10, b = 20, l = 0)) +
+  theme(plot.tag.position = "bottomright",
+        plot.tag = element_text(vjust = 1, hjust = 1, size=8)) +
+  ylim(c(-100,NA))
+# +
+# coord_cartesian(xlim=c(as.Date("2020-01-01"),NA))
+
+ggsave(file=paste0(".\\plots\\",plotdir,"\\growth infections cases Gauteng Province.png"), width=8, height=6)
+
+
 
 
 
@@ -1017,7 +1061,7 @@ qplot(data=fit_southafrica_multi_preds[fit_southafrica_multi_preds$variant=="Omi
   xlim(c(as.Date("2021-10-01"), today)) + scale_y_log10() + 
   geom_line(aes(y=smoothed_cases), colour=I("red"), lwd=I(2)) +
   ylab("new Omicron cases per day") +
-  ggtitle("Inferred nr. of new Omicron cases per day in SA", "(black=observed,\nred=GAM negative binomial spline smooth,\nwith weekday effect smoothed out)")
+  ggtitle("Inferred nr. of new Omicron cases per day in SA", "(black=observed,\nred=GAM negative binomial spline smooth with correction for\nvariable testing intensity & weekday effects & marginal means\ncalculated at uniform, maximal testing effort)")
 ggsave(file=paste0(".\\plots\\",plotdir,"\\omicron cases observed and fitted.png"), width=8, height=6)
 
 fit_southafrica_multi_preds[fit_southafrica_multi_preds$variant=="Omicron","smoothed_cases"][fit_southafrica_multi_preds$date==today]
@@ -1030,12 +1074,15 @@ ggplot(data=fit_southafrica_multi_preds,
   xaxis +
   theme_hc() + theme(legend.position="right") + 
   ylab("New confirmed cases per day") + xlab("Date of diagnosis") +
-  ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT\nIN SOUTH AFRICA\n(case data NICD & multinomial fit to GISAID data)") +
+  ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT\nIN SOUTH AFRICA","(case data NICD plus multinomial spline fit to GISAID data)") +
   scale_fill_manual("variant", values=lineage_cols) +
-  scale_colour_manual("variant", values=lineage_cols) # +
+  scale_colour_manual("variant", values=lineage_cols) +
+  labs(tag = tag) +
+  theme(plot.tag.position = "bottomright",
+        plot.tag = element_text(vjust = 1, hjust = 1, size=8))
   # coord_cartesian(xlim=c(as.Date("2021-01-01"),NA))
 ggsave(file=paste0(".\\plots\\",plotdir,"\\cases per day_stacked area multinomial fit raw case data.png"), width=8, height=6)
-write.csv(fit_southafrica_multi_preds_withCI, file=paste0(".\\plots\\",plotdir,"\\cases per day by variant South Africa 13 dec 2021.csv"), row.names=F)
+write.csv(fit_southafrica_multi_preds_withCI, file=paste0(".\\plots\\",plotdir,"\\cases per day by variant South Africa 5 Jan 2022.csv"), row.names=F)
 
 ggplot(data=fit_southafrica_multi_preds[fit_southafrica_multi_preds$date<=today,],  # or (today-1) or (today-2) to be on the safe side
        aes(x=date, y=smoothed_cases, group=variant)) + 
@@ -1043,9 +1090,12 @@ ggplot(data=fit_southafrica_multi_preds[fit_southafrica_multi_preds$date<=today,
   xaxis +
   theme_hc() + theme(legend.position="right") + 
   ylab("New confirmed cases per day (smoothed)") + xlab("Date of diagnosis") +
-  ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT\nIN SOUTH AFRICA\n(case data NICD & multinomial fit to GISAID data)") +
+  ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT\nIN SOUTH AFRICA","(negative binomial fit to NICD case data, with correction for weekday effects &\nvariable testing intensity; marginal means calculated at constant, maximal testing effort;\nvariant frequencies based on multinomial spline fit to GISAID data)") +
   scale_fill_manual("variant", values=lineage_cols) +
-  scale_colour_manual("variant", values=lineage_cols)
+  scale_colour_manual("variant", values=lineage_cols) +
+  labs(tag = tag) +
+  theme(plot.tag.position = "bottomright",
+        plot.tag = element_text(vjust = 1, hjust = 1, size=8))
 ggsave(file=paste0(".\\plots\\",plotdir,"\\cases per day_smoothed_stacked area multinomial fit case data.png"), width=8, height=6)
 
 

@@ -243,5 +243,7 @@ cases_tot$TESTS_ALL = round(cases_tot$TESTS_ALL/cases_tot$completeness,0) # appl
 cases_tot$CASESPERTEST = cases_tot$CASES/cases_tot$TESTS_ALL
 cases_tot$TESTSPERCASES = cases_tot$TESTS_ALL/(cases_tot$CASES+1)
 cases_tot = cases_tot[complete.cases(cases_tot),]
-# cases_tot = cases_tot[-tail(1:nrow(cases_tot),1),] # we leave out data from last 1 or 2 days as they are very incomplete
-cases_tot = cases_tot[cases_tot$DATE<(as.Date(Sys.time())-3),] # we leave out last 3 days since they are incomplete
+clip = 2
+if (weekdays(today)=="Sunday") clip = clip+1
+if (weekdays(today)=="Monday") clip = clip+2
+cases_tot = cases_tot[cases_tot$DATE<(as.Date(Sys.time())-clip),] # we leave out last 2-3 days since they are incomplete

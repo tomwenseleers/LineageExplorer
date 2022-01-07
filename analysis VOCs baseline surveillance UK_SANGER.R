@@ -1262,7 +1262,7 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\sanger S dropout_multinom fit_respons
 # cases_uk_ltla = cases_uk_ltla[!is.na(cases_uk_ltla$REGION),]
 # cases_uk_ltla$REGION = factor(cases_uk_ltla$REGION, levels=levels_REGION)
 
-# daily new cases by region :
+# daily new cases by ONS region :
 cases_uk_region = read.csv("https://api.coronavirus.data.gov.uk/v2/data?areaType=region&metric=newCasesBySpecimenDateRollingSum&metric=newCasesBySpecimenDate&format=csv")
 cases_uk_region$date = as.Date(cases_uk_region$date)
 cases_uk_region$DATE_NUM = as.numeric(cases_uk_region$date)
@@ -1272,10 +1272,15 @@ cases_uk_region = cases_uk_region[cases_uk_region$date<=(max(cases_uk_region$dat
 
 ggplot(data=cases_uk_region, 
        aes(x=date, y=newCasesBySpecimenDate, group=REGION, colour=REGION, fill=REGION)) +
-  facet_wrap(~REGION) +
-  geom_point(cex=I(0.2)) +
-  geom_smooth(method="gam", se=TRUE, formula = y ~ s(x, k = 30)) + 
-  scale_y_log10() + ylab("New cases (per day)") + ggtitle("CONFIRMED SARS-CoV2 CASES PER DAY IN ENGLAND BY ONS REGION")
+  facet_wrap(~REGION, scale="free_y") +
+  # geom_point(cex=I(0.2)) +
+  geom_col(aes(alpha=I(0.4), width=I(1), colour=NULL)) +
+  geom_smooth(method="gam", se=F, formula = y ~ s(x, k = 60, fx=T)) + 
+  # scale_y_log10() + 
+  ylab("New cases (per day)") + 
+  ggtitle("CONFIRMED SARS-CoV2 CASES PER DAY IN ENGLAND BY ONS REGION", "data gov.uk, https://coronavirus.data.gov.uk/details/download\n(note: low case ascertainment during 1st wave)") +
+  theme_hc() +
+  theme(legend.position="none")
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\confirmed cases England by ONS region.png"), width=8, height=6)
 
@@ -1285,18 +1290,22 @@ cases_uk_age_region$date = as.Date(cases_uk_age_region$date)
 cases_uk_age_region$DATE_NUM = as.numeric(cases_uk_age_region$date)
 cases_uk_age_region$REGION = factor(cases_uk_age_region$areaName, levels=levels_REGION)
 cases_uk_age_region$areaName = NULL
+cases_uk_age_region=cases_uk_age_region[cases_uk_age_region$age!="unassigned",]
 
-ggplot(data=cases_uk_age_region[cases_uk_age_region$age %in% c("00_59","60+"),], 
-        aes(x=date, y=cases, group=age, colour=age, fill=age)) +
-          geom_point(cex=I(0.2)) +
-          geom_smooth(method="gam", se=TRUE, formula = y ~ s(x, k = 30)) + 
-          facet_wrap(~REGION) + scale_y_log10()
+ggplot(data=cases_uk_age_region[!cases_uk_age_region$age %in% c("00_59","60+"),], 
+       aes(x=date, y=cases, group=age, colour=age, fill=age)) +
+  facet_wrap(~REGION, scale="free_y") +
+  # geom_point(cex=I(0.2)) +
+  # geom_col(aes(alpha=I(0.4), width=I(1), colour=NULL)) +
+  geom_smooth(method="gam", se=F, formula = y ~ s(x, k = 60, fx=T)) + 
+  scale_y_log10() + 
+  ylab("diagnosed cases (per day)") + 
+  ggtitle("DIAGNOSED SARS-CoV2 CASES BY AGE IN ENGLAND BY ONS REGION", "data gov.uk, https://coronavirus.data.gov.uk/details/download") +
+  theme_hc() +
+  theme(legend.position="right")
 
-ggplot(data=cases_uk_age_region[cases_uk_age_region$age %in% c("00_59","60+"),], 
-       aes(x=date, y=rollingSum/7, group=age, colour=age, fill=age)) +
-  geom_point(cex=I(0.2)) +
-  # geom_smooth(method="gam", se=TRUE, formula = y ~ s(x, k = 30)) + 
-  facet_wrap(~REGION) + scale_y_log10()
+ggsave(file=paste0(".\\plots\\",plotdir,"\\diagnosed cases per day by age by ONS region.png"), width=8, height=6)
+
 
 # daily new cases by age group for England :
 cases_ENG_age = read.csv("https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=E92000001&metric=newCasesBySpecimenDateAgeDemographics&format=csv")
@@ -1311,21 +1320,70 @@ ggplot(data=cases_ENG_age[cases_ENG_age$age %in% c("00_59","60+"),],
   scale_y_log10()
 
 # daily hospital admissions by NHS region
-hosps_uk_nhsregion = read.csv("https://api.coronavirus.data.gov.uk/v2/data?areaType=nhsRegion&metric=newAdmissions&format=csv") # &metric=newCasesBySpecimenDate gives NAs
+hosps_uk_nhsregion = read.csv("https://api.coronavirus.data.gov.uk/v2/data?areaType=nhsRegion&metric=newAdmissions&metric=hospitalCases&format=csv") # &metric=newCasesBySpecimenDate gives NAs
 hosps_uk_nhsregion$date = as.Date(hosps_uk_nhsregion$date)
 hosps_uk_nhsregion$DATE_NUM = as.numeric(hosps_uk_nhsregion$date)
 hosps_uk_nhsregion$REGION = factor(hosps_uk_nhsregion$areaName, levels=levels_NHSREGION)
 
 ggplot(data=hosps_uk_nhsregion, 
        aes(x=date, y=newAdmissions, group=REGION, colour=REGION, fill=REGION)) +
-  facet_wrap(~REGION) +
-  geom_point(cex=I(0.2)) +
-  geom_smooth(method="gam", se=TRUE, formula = y ~ s(x, k = 30)) + 
-  scale_y_log10() + 
+  facet_wrap(~REGION, scale="free_y") +
+  # geom_point(cex=I(0.2)) +
+  geom_col(aes(alpha=I(0.4), width=I(1), colour=NULL)) +
+  geom_smooth(method="gam", se=F, formula = y ~ s(x, k = 60, fx=T)) + 
+  # scale_y_log10() + 
   ylab("New hospital admissions (per day)") + 
-  ggtitle("HOSPITAL ADMISSIONS PER DAY IN ENGLAND BY NHS REGION")
+  ggtitle("COVID HOSPITAL ADMISSIONS PER DAY IN ENGLAND BY NHS REGION", "data gov.uk, https://coronavirus.data.gov.uk/details/download") +
+  theme_hc() +
+  theme(legend.position="none")
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\hospital admissions England by NHS region.png"), width=8, height=6)
+
+ggplot(data=hosps_uk_nhsregion, 
+       aes(x=date, y=hospitalCases, group=REGION, colour=REGION, fill=REGION)) +
+  facet_wrap(~REGION, scale="free_y") +
+  # geom_point(cex=I(0.2)) +
+  geom_col(aes(alpha=I(0.4), width=I(1), colour=NULL)) +
+  geom_smooth(method="gam", se=F, formula = y ~ s(x, k = 70, fx=T)) + 
+  # scale_y_log10() + 
+  ylab("Covid patients currently admitted") + 
+  ggtitle("COVID PATIENTS CURRENTLY IN HOSPITAL IN ENGLAND BY NHS REGION", "data gov.uk, https://coronavirus.data.gov.uk/details/download") +
+  theme_hc() +
+  theme(legend.position="none")
+
+ggsave(file=paste0(".\\plots\\",plotdir,"\\covid patients by NHS region.png"), width=8, height=6)
+
+
+# hospitalisations by age :
+hosps_eng_age = read.csv("https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=E92000001&metric=cumAdmissionsByAge&format=csv")
+hosps_eng_age$date = as.Date(hosps_eng_age$date)
+hosps_eng_age$DATE_NUM = as.numeric(hosps_eng_age$date)
+
+hosps_eng_age = data.frame(hosps_eng_age %>% group_by(age) %>% mutate(Diff = value - lag(value,1,order_by=date))) # see https://stackoverflow.com/questions/26291988/how-to-create-a-lag-variable-within-each-group/26292059
+hosps_eng_age$age = factor(hosps_eng_age$age, levels=c("0_to_5", "6_to_17", "18_to_64", "65_to_84", "85+"))
+hosps_eng_age$week = cut(hosps_eng_age$date, breaks="week")
+hosps_eng_age_byweek = hosps_eng_age %>% group_by(week, age) %>% summarise(hosps=sum(Diff))  
+hosps_eng_age_byweek$hosps[is.na(hosps_eng_age_byweek$hosps)] = 0
+
+ggplot(data=hosps_eng_age, 
+       aes(x=date, y=Diff, group=age, colour=age, fill=age)) +
+  facet_wrap(~ age, scale="free_y") +
+  # geom_point(cex=I(0.2)) +
+  geom_col(aes(alpha=I(0.4), width=I(1), colour=NULL), position="identity") +
+  # geom_line() +
+  # geom_area(position="stack") +
+  stat_smooth(se=FALSE, geom="line", lwd=I(1.1),
+              method = 'gam', formula = y ~ s(x, k = 30, fx=T),
+              alpha=1, aes(fill=age, colour=age), position="identity") +
+  # geom_smooth(method="gam", se=F, formula = y ~ s(x, k = 40, fx=T)) + 
+  # scale_y_log10() + 
+  ylab("new hospitalisations (per day)") + 
+  ggtitle("DAILY COVID HOSPITALISATIONS BY AGE IN ENGLAND", "data gov.uk, https://coronavirus.data.gov.uk/details/download") +
+  theme_hc() +
+  theme(legend.position="none") 
+
+ggsave(file=paste0(".\\plots\\",plotdir,"\\hospitalisation in england by age.png"), width=8, height=6)
+
 
 
 # daily hospital admission also see 
