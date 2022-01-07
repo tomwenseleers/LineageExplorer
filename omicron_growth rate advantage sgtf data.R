@@ -401,6 +401,12 @@ qplot(data=sgtf[sgtf$country!="South Africa",], x=date, y=100*prop, geom="point"
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\spread omicron logistic fit sgtf data_linear scale.png"), width=8, height=6)
 
+emmeans_sgtf[emmeans_sgtf$date==as.Date("2022-01-04"),] # 90% Omicron among confirmed infections in BE on 4th of January
+# date_num  country      prob          SE  df asymp.LCL asymp.UCL       date
+# 157    18996  England 0.9909096 0.006132415 136 0.9659439 0.9976187 2022-01-04
+# 346    18996 Scotland 0.9435419 0.019884154 136 0.8887448 0.9721939 2022-01-04
+# 535    18996  Denmark 0.9559244 0.011136926 136 0.9278450 0.9733900 2022-01-04
+# 724    18996  Belgium 0.9090860 0.014465412 136 0.8761436 0.9339274 2022-01-04
 
 emmeans_sgtf[emmeans_sgtf$date==today,] # estimated prop Omicron among confirmed cases today
 # date_num  country      prob          SE  df asymp.LCL asymp.UCL       date
@@ -1251,7 +1257,7 @@ ggplot(data=emmeans_casesbyvariant_all,
   # geom_ribbon(data=emmeans_casesbyvariant, aes(ymin=lower.CL, ymax=upper.CL, fill=variant, colour=NULL), alpha=I(0.4)) +
   # facet_wrap(~ country, scale="free") +
   # geom_line(data=emmeans_casesbyvariant, aes(lwd=I(1.2))) +
-  # xaxis +
+  xaxis +
   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
   theme_hc() + theme(legend.position="right") + 
   ylab("New confirmed cases per day") + xlab("") +
