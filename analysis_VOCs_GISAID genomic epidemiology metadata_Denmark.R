@@ -13,7 +13,7 @@ library(ggthemes)
 library(scales)
 
 today = as.Date(Sys.time()) # we use the file date version as our definition of "today"
-today = as.Date("2021-07-20")
+# today = as.Date("2021-07-20")
 today_num = as.numeric(today)
 plotdir = "Denmark_GISAID"
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))

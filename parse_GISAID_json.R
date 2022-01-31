@@ -1,12 +1,15 @@
 # IMPORT GISAID json METADATA 
-# T. Wenseleers, 11 December 2021
+# T. Wenseleers, 28 January 2022
 
 # to download latest GISAID JSON run
 # source(".//download_GISAID_json.R")
 
+# PS takes ca an hour to load on my laptop, better run this on a workstation with a lot of memory
+
 library(jsonlite)
 message("Parsing JSON GISAID records...")
-GISAID_json = jsonlite::stream_in(gzfile(".//data//GISAID_json//provision.json.xz")) # takes ca half an hour to load on my laptop
+GISAID_json = jsonlite::stream_in(gzfile(".//data//GISAID_json//provision.json.xz")) 
+saveRDS(GISAID_json, ".//data/GISAID_json//GISAID_json.rds")
 nrow(GISAID_json) # data frame with 4425000 rows
 library(inspectdf)
 memcons = data.frame(inspect_mem(GISAID_json))

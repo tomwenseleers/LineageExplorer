@@ -8,7 +8,7 @@
 # GISAID data to infer the proportion of S dropout (with spike Spike_H69del/Spike_V70del) that are Omicron (https://www.gisaid.org/)
 
 # T. Wenseleers
-# last update 6 JANUARY 2021
+# last update 8 JANUARY 2021
 
 library(nnet)
 # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
@@ -748,6 +748,41 @@ ggplot(data=cases_uk_age_region[!cases_uk_age_region$age %in% c("00_59","60+"),]
 ggsave(file=paste0(".\\plots\\",plotdir,"\\confirmed cases England by age and ONS region.png"), width=10, height=6)
 
 
+# daily  new cases by age group :
+cases_eng_age = read.csv("https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=E92000001&metric=newCasesBySpecimenDateAgeDemographics&format=csv")
+cases_eng_age$date = as.Date(cases_eng_age$date)
+cases_eng_age$DATE_NUM = as.numeric(cases_eng_age$date)
+cases_eng_age$areaName = NULL
+cases_eng_age=cases_eng_age[cases_eng_age$age!="unassigned",]
+
+ggplot(data=cases_eng_age, 
+       aes(x=date, y=cases, group=age, colour=age, fill=age)) +
+  xaxis +
+  # facet_wrap(~ age, scale="free_y") +
+  # geom_point(cex=I(0.2)) +
+  # geom_col(aes(alpha=I(0.4), width=I(1), colour=NULL), position="identity") +
+  # geom_line() +
+  # geom_area(position="stack") +
+  stat_smooth(se=FALSE, geom="line", lwd=I(1.1),
+              method = 'gam', formula = y ~ s(x, k = 60, fx=T), method.args=list(family="poisson"), n=1000,
+              alpha=1, aes(fill=age, colour=age), position="identity") +
+  # geom_smooth(method="gam", se=F, formula = y ~ s(x, k = 40, fx=T)) + 
+  scale_y_log10() + 
+  ylab("new hospitalisations (per day)") + 
+  ggtitle("DAILY COVID HOSPITAL ADMISSIONS BY AGE IN ENGLAND", "data gov.uk, https://coronavirus.data.gov.uk/details/download") +
+  theme_hc() +
+  # theme(legend.position="none") +
+  coord_cartesian(xlim=c(as.Date("2021-05-01"), NA)) +
+  labs(tag=tag) +
+  theme(plot.tag.position = "bottomright",
+        plot.tag = element_text(vjust = 1, hjust = 1, size=8))
+
+ggsave(file=paste0(".\\plots\\",plotdir,"\\hospital admissions in England by age_log10 scale.png"), width=10, height=6)
+
+
+
+
+
 # daily hospital admissions by NHS region
 hosps_uk_nhsregion = read.csv("https://api.coronavirus.data.gov.uk/v2/data?areaType=nhsRegion&metric=newAdmissions&metric=hospitalCases&format=csv") # &metric=newCasesBySpecimenDate gives NAs
 hosps_uk_nhsregion$date = as.Date(hosps_uk_nhsregion$date)
@@ -824,6 +859,52 @@ ggplot(data=hosps_eng_age,
 
 ggsave(file=paste0(".\\plots\\",plotdir,"\\hospital admissions in England by age.png"), width=10, height=6)
 
+ggplot(data=hosps_eng_age, 
+       aes(x=date, y=Diff, group=age, colour=age, fill=age)) +
+  xaxis +
+  # facet_wrap(~ age, scale="free_y") +
+  # geom_point(cex=I(0.2)) +
+  # geom_col(aes(alpha=I(0.4), width=I(1), colour=NULL), position="identity") +
+  # geom_line() +
+  # geom_area(position="stack") +
+  stat_smooth(se=FALSE, geom="line", lwd=I(1.1),
+              method = 'gam', formula = y ~ s(x, k = 60, fx=T), method.args=list(family="poisson"), n=1000,
+              alpha=1, aes(fill=age, colour=age), position="identity") +
+  # geom_smooth(method="gam", se=F, formula = y ~ s(x, k = 40, fx=T)) + 
+  scale_y_log10() + 
+  ylab("new hospitalisations (per day)") + 
+  ggtitle("DAILY COVID HOSPITAL ADMISSIONS BY AGE IN ENGLAND", "data gov.uk, https://coronavirus.data.gov.uk/details/download") +
+  theme_hc() +
+  # theme(legend.position="none") +
+  coord_cartesian(xlim=c(as.Date("2021-05-01"), NA)) +
+  labs(tag=tag) +
+  theme(plot.tag.position = "bottomright",
+        plot.tag = element_text(vjust = 1, hjust = 1, size=8))
+
+ggsave(file=paste0(".\\plots\\",plotdir,"\\hospital admissions in England by age_log10 scale.png"), width=10, height=6)
+
+ggplot(data=hosps_eng_age, 
+       aes(x=date, y=Diff, group=age, colour=age, fill=age)) +
+  xaxis +
+  # facet_wrap(~ age) +
+  # geom_point(cex=I(0.2)) +
+  # geom_col(aes(alpha=I(0.4), width=I(1), colour=NULL), position="identity") +
+  # geom_line() +
+  # geom_area(position="stack") +
+  stat_smooth(se=FALSE, geom="line", lwd=I(1.1),
+              method = 'gam', formula = y ~ s(x, k = 60, fx=T), method.args=list(family="poisson"), n=1000,
+              alpha=1, aes(fill=age, colour=age), position="identity") +
+  # geom_smooth(method="gam", se=F, formula = y ~ s(x, k = 40, fx=T)) + 
+  # scale_y_log10() + 
+  ylab("new hospitalisations (per day)") + 
+  ggtitle("DAILY COVID HOSPITAL ADMISSIONS BY AGE IN ENGLAND", "data gov.uk, https://coronavirus.data.gov.uk/details/download") +
+  theme_hc() +
+  # theme(legend.position="none") +
+  labs(tag=tag) +
+  theme(plot.tag.position = "bottomright",
+        plot.tag = element_text(vjust = 1, hjust = 1, size=8))
+
+ggsave(file=paste0(".\\plots\\",plotdir,"\\hospital admissions in England by age3.png"), width=10, height=6)
 
 
 
