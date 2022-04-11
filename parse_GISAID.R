@@ -10,7 +10,7 @@ library(countrycode)
 library(ggmap)
 library(googleway)
 # PS first register your Google Maps API key using
-# register_google(key="AIzaSyADpSYvVxz0FOTF7yVPO6dwYHP6Qrgx2aI", account_type="premium", write=TRUE) 
+# register_google(key="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", account_type="premium", write=TRUE)
 library(futile.logger)
 library(utils)
 library(plyr)
