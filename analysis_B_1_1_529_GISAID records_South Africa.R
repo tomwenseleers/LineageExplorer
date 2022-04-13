@@ -1,7 +1,7 @@
 # ANALYSIS OF GROWTH ADVANTAGE OF OMICRON (B.1.1.529/BA.XX) IN SOUTH AFRICA BASED ON GISAID SEQUENCE DATA
 
 # T. Wenseleers
-# last update 11 APRIL 2022
+# last update 12 APRIL 2022
     
   library(nnet)
   # devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
@@ -42,9 +42,9 @@
   lineage_cols[which(levels_VARIANTS=="Beta")] = "green4"
   lineage_cols[which(levels_VARIANTS=="Delta")] = "mediumorchid"
   # lineage_cols[which(levels_VARIANTS=="C.1.2")] = "darkorange"
-  lineage_cols[which(levels_VARIANTS=="Omicron (BA.1*)")] = "red2" # "magenta"
+  lineage_cols[which(levels_VARIANTS=="Omicron (BA.1*)")] = "red" # "magenta"
   lineage_cols[which(levels_VARIANTS=="Omicron (BA.2)")] = "red3"
-  lineage_cols[which(levels_VARIANTS=="Omicron (BA.3)")] = "green4" 
+  lineage_cols[which(levels_VARIANTS=="Omicron (BA.3)")] = "red4" 
   lineage_cols[which(levels_VARIANTS=="Omicron (BA.4)")] = "darkorange" 
   lineage_cols[which(levels_VARIANTS=="Omicron (BA.5)")] = "darkorange3" 
   lineage_cols[which(levels_VARIANTS=="Other")] = "grey65"
@@ -61,9 +61,9 @@
   # import GISAID records for South Africa
 d1 = read_tsv(file(".//data//GISAID//South Africa//gisaid_hcov-19_2022_04_11_15_subm_2020.tsv"), col_types = cols(.default = "c")) 
 d2 = read_tsv(file(".//data//GISAID//South Africa//gisaid_hcov-19_2022_04_11_16_subm_jan_may_2021.tsv"), col_types = cols(.default = "c")) 
-d3 = read_tsv(file(".//data//GISAID//South Africa//gisaid_hcov-19_2022_01_30_19_subm_june_aug_2021.tsv"), col_types = cols(.default = "c")) 
+d3 = read_tsv(file(".//data//GISAID//South Africa//gisaid_hcov-19_2022_04_12_19_subm_june_aug_2021.tsv"), col_types = cols(.default = "c")) 
 d4 = read_tsv(file(".//data//GISAID//South Africa//gisaid_hcov-19_2022_04_11_16_subm_sept_2021_dec_2021.tsv"), col_types = cols(.default = "c")) 
-d5 = read_tsv(file(".//data//GISAID//South Africa//gisaid_hcov-19_2022_02_04_15_subm_jan_feb_2022.tsv"), col_types = cols(.default = "c")) 
+d5 = read_tsv(file(".//data//GISAID//South Africa//gisaid_hcov-19_2022_04_12_19_subm_jan_feb_2022.tsv"), col_types = cols(.default = "c")) 
 d6 = read_tsv(file(".//data//GISAID//South Africa//gisaid_hcov-19_2022_04_11_16_subm_mar_apr_2022.tsv"), col_types = cols(.default = "c")) 
 
 # parse GISAID & SGTF data
@@ -101,7 +101,7 @@ GISAID$province = factor(GISAID$province, levels=levels(GISAID$province),
                                           labels=c("Western Cape", "Eastern Cape", "Free State",
                                                    "Gauteng", "Western Cape", "KwaZulu Natal", "KwaZulu Natal", "KwaZulu Natal",
                                                    "Limpopo", "Mpumalanga", "North West",
-                                                   "Northern Cape", "Northern Cape", NA,
+                                                   "Northern Cape", "Northern Cape", # NA,
                                                    "Western Cape", "Western Cape"))
 GISAID$province = factor(GISAID$province, levels=levels_PROVINCES)
 
@@ -358,20 +358,20 @@ delta_r_southafrica_avg = data.frame(confint(emtrsouthafrica_avg,
                                               p.value=as.data.frame(emtrsouthafrica_avg$contrasts,
                                                                     adjust="none", df=NA)$p.value)
 delta_r_southafrica_avg
-#                             contrast    estimate          SE df    asymp.LCL    asymp.UCL      p.value
-# 1           Beta - (Omicron (BA.1*)) -0.05935633 0.003020570 NA -0.065276540 -0.053436123 5.701345e-86
-# 2          Alpha - (Omicron (BA.1*)) -0.05977602 0.006650182 NA -0.072810136 -0.046741901 2.503338e-19
-# 3          Other - (Omicron (BA.1*))  0.01468573 0.002448623 NA  0.009886521  0.019484946 2.003183e-09
-# 4          Delta - (Omicron (BA.1*)) -0.05368651 0.002945835 NA -0.059460241 -0.047912780 3.295918e-74
-# 5 Omicron (BA.2) - (Omicron (BA.1*))  0.03244221 0.001675215 NA  0.029158849  0.035725572 1.494430e-83
-# 6 Omicron (BA.3) - (Omicron (BA.1*)) -0.01024168 0.005846031 NA -0.021699691  0.001216329 7.979044e-02
-# 7 Omicron (BA.4) - (Omicron (BA.1*))  0.13203043 0.009435617 NA  0.113536959  0.150523900 1.725567e-44
-# 8 Omicron (BA.5) - (Omicron (BA.1*))  0.21246507 0.020683275 NA  0.171926597  0.253003544 9.392533e-25
+# contrast    estimate          SE df    asymp.LCL     asymp.UCL       p.value
+# 1           Beta - (Omicron (BA.1*))  0.05547020 0.002342672 NA  0.050878649  0.0600617559 6.052717e-124
+# 2          Alpha - (Omicron (BA.1*))  0.01922592 0.009566829 NA  0.000475276  0.0379765546  4.446893e-02
+# 3          Other - (Omicron (BA.1*))  0.12819447 0.001793306 NA  0.124679651  0.1317092816  0.000000e+00
+# 4          Delta - (Omicron (BA.1*))  0.06822738 0.002940012 NA  0.062465061  0.0739896950 3.914732e-119
+# 5 Omicron (BA.2) - (Omicron (BA.1*))  0.06096365 0.001655560 NA  0.057718813  0.0642084888 7.743800e-297
+# 6 Omicron (BA.3) - (Omicron (BA.1*)) -0.01097291 0.005523485 NA -0.021798737 -0.0001470742  4.696773e-02
+# 7 Omicron (BA.4) - (Omicron (BA.1*))  0.16036423 0.009722571 NA  0.141308343  0.1794201200  4.051082e-61
+# 8 Omicron (BA.5) - (Omicron (BA.1*))  0.24383638 0.020866420 NA  0.202938948  0.2847338128  1.510316e-31
 
 # corresponding transmission advantage of Omicron BA.5 over BA.1* (ie how much higher effective reproduction number is at any timepoint) 
-exp(delta_r_southafrica_avg[8,5]*2.2) # 1.45x
-exp(delta_r_southafrica_avg[8,2]*2.2) # Omicron 1.59x transmission advantage over Delta
-exp(delta_r_southafrica_avg[8,6]*2.2) # 1.74x
+exp(delta_r_southafrica_avg[8,5]*2.2) # 1.56x
+exp(delta_r_southafrica_avg[8,2]*2.2) # Omicron 1.71x transmission advantage over BA.1*
+exp(delta_r_southafrica_avg[8,6]*2.2) # 1.87x
 
 
 # avg growth rate advantage of Omicron BA.2 over BA.1* (difference in growth rate per day) (today)
@@ -385,19 +385,19 @@ delta_r_southafrica_province_avg = data.frame(confint(emtrsouthafrica_province_a
                          p.value=as.data.frame(emtrsouthafrica_province_avg$contrasts,
                                                adjust="none", df=NA)$p.value)
 delta_r_southafrica_province_avg
-#                             contrast     estimate          SE df    asymp.LCL   asymp.UCL      p.value
-# 1           Beta - (Omicron (BA.1*)) -0.124401014 0.002201763 NA -0.128716391 -0.12008564 0.000000e+00
-# 2          Alpha - (Omicron (BA.1*)) -0.115591118 0.002329019 NA -0.120155912 -0.11102632 0.000000e+00
-# 3          Other - (Omicron (BA.1*)) -0.131693448 0.002208757 NA -0.136022533 -0.12736436 0.000000e+00
-# 4          Delta - (Omicron (BA.1*)) -0.093057472 0.002139603 NA -0.097251016 -0.08886393 0.000000e+00
-# 5 Omicron (BA.2) - (Omicron (BA.1*))  0.078609315 0.001704293 NA  0.075268962  0.08194967 0.000000e+00
-# 6 Omicron (BA.3) - (Omicron (BA.1*))  0.004984473 0.005246546 NA -0.005298569  0.01526752 3.420877e-01
-# 7 Omicron (BA.4) - (Omicron (BA.1*))  0.189641851 0.012787962 NA  0.164577905  0.21470580 9.413049e-50
-# 8 Omicron (BA.5) - (Omicron (BA.1*))  0.206291742 0.021218861 NA  0.164703540  0.24787995 2.427392e-22
+# contrast     estimate          SE df    asymp.LCL   asymp.UCL      p.value
+# 1           Beta - (Omicron (BA.1*)) -0.122995565 0.002069553 NA -0.127051813 -0.11893932 0.000000e+00
+# 2          Alpha - (Omicron (BA.1*)) -0.113599746 0.002202509 NA -0.117916585 -0.10928291 0.000000e+00
+# 3          Other - (Omicron (BA.1*)) -0.129629272 0.002075849 NA -0.133697861 -0.12556068 0.000000e+00
+# 4          Delta - (Omicron (BA.1*)) -0.092355453 0.002009159 NA -0.096293333 -0.08841757 0.000000e+00
+# 5 Omicron (BA.2) - (Omicron (BA.1*))  0.079367380 0.001578636 NA  0.076273311  0.08246145 0.000000e+00
+# 6 Omicron (BA.3) - (Omicron (BA.1*))  0.003183872 0.004740990 NA -0.006108298  0.01247604 5.018622e-01
+# 7 Omicron (BA.4) - (Omicron (BA.1*))  0.192727698 0.012595247 NA  0.168041467  0.21741393 7.457598e-53
+# 8 Omicron (BA.5) - (Omicron (BA.1*))  0.206645397 0.020869395 NA  0.165742134  0.24754866 4.086879e-23
 
 # corresponding transmission advantage of Omicron BA.5 over BA.1* (ie how much higher effective reproduction number is at any timepoint) 
 exp(delta_r_southafrica_province_avg[8,5]*2.2) # 1.44x
-exp(delta_r_southafrica_province_avg[8,2]*2.2) # Omicron 1.57x transmission advantage over Delta
+exp(delta_r_southafrica_province_avg[8,2]*2.2) # Omicron 1.57x transmission advantage over BA.1*
 exp(delta_r_southafrica_province_avg[8,6]*2.2) # 1.73x
 
 
@@ -411,42 +411,42 @@ delta_r_southafrica_province_avg_pairw = data.frame(confint(emtrsouthafrica_prov
                                                                     adjust="none", df=NA)$p.value)
 delta_r_southafrica_province_avg_pairw
 #                              contrast     estimate           SE df    asymp.LCL    asymp.UCL       p.value
-# 1            (Omicron (BA.1*)) - Beta  0.124401014 0.0022017633 NA  0.120085637  0.128716391  0.000000e+00
-# 2           (Omicron (BA.1*)) - Alpha  0.115591118 0.0023290194 NA  0.111026324  0.120155912  0.000000e+00
-# 3           (Omicron (BA.1*)) - Other  0.131693448 0.0022087574 NA  0.127364363  0.136022533  0.000000e+00
-# 4           (Omicron (BA.1*)) - Delta  0.093057472 0.0021396026 NA  0.088863928  0.097251016  0.000000e+00
-# 5  (Omicron (BA.1*)) - Omicron (BA.2) -0.078609315 0.0017042932 NA -0.081949669 -0.075268962  0.000000e+00
-# 6  (Omicron (BA.1*)) - Omicron (BA.3) -0.004984473 0.0052465465 NA -0.015267515  0.005298569  3.420877e-01
-# 7  (Omicron (BA.1*)) - Omicron (BA.4) -0.189641851 0.0127879625 NA -0.214705797 -0.164577905  9.413049e-50
-# 8  (Omicron (BA.1*)) - Omicron (BA.5) -0.206291742 0.0212188607 NA -0.247879945 -0.164703540  2.427392e-22
-# 9                        Beta - Alpha -0.008809896 0.0008114085 NA -0.010400227 -0.007219565  1.836390e-27
-# 10                       Beta - Other  0.007292434 0.0001854635 NA  0.006928932  0.007655936  0.000000e+00
-# 11                       Beta - Delta -0.031343542 0.0005069229 NA -0.032337093 -0.030349992  0.000000e+00
-# 12              Beta - Omicron (BA.2) -0.203010329 0.0027976617 NA -0.208493646 -0.197527013  0.000000e+00
-# 13              Beta - Omicron (BA.3) -0.129385487 0.0056533838 NA -0.140465916 -0.118305058 6.350015e-116
-# 14              Beta - Omicron (BA.4) -0.314042865 0.0129790514 NA -0.339481338 -0.288604391 2.443289e-129
-# 15              Beta - Omicron (BA.5) -0.330692756 0.0213345647 NA -0.372507735 -0.288877778  3.451243e-54
-# 16                      Alpha - Other  0.016102330 0.0008250100 NA  0.014485340  0.017719320  7.759733e-85
-# 17                      Alpha - Delta -0.022533646 0.0009122135 NA -0.024321552 -0.020745741 1.013737e-134
-# 18             Alpha - Omicron (BA.2) -0.194200434 0.0028988756 NA -0.199882125 -0.188518742  0.000000e+00
-# 19             Alpha - Omicron (BA.3) -0.120575591 0.0057041438 NA -0.131755508 -0.109395675  3.539954e-99
-# 20             Alpha - Omicron (BA.4) -0.305232969 0.0130012440 NA -0.330714939 -0.279750999 6.972664e-122
-# 21             Alpha - Omicron (BA.5) -0.321882860 0.0213480730 NA -0.363724315 -0.280041406  2.265553e-51
-# 22                      Other - Delta -0.038635976 0.0005365544 NA -0.039687603 -0.037584349  0.000000e+00
-# 23             Other - Omicron (BA.2) -0.210302763 0.0028031694 NA -0.215796874 -0.204808652  0.000000e+00
-# 24             Other - Omicron (BA.3) -0.136677921 0.0056561115 NA -0.147763696 -0.125592146 5.238746e-129
-# 25             Other - Omicron (BA.4) -0.321335299 0.0129802397 NA -0.346776101 -0.295894496 2.689757e-135
-# 26             Other - Omicron (BA.5) -0.337985190 0.0213352876 NA -0.379801586 -0.296168795  1.606681e-56
-# 27             Delta - Omicron (BA.2) -0.171666787 0.0027490067 NA -0.177054742 -0.166278833  0.000000e+00
-# 28             Delta - Omicron (BA.3) -0.098041945 0.0056294579 NA -0.109075480 -0.087008410  6.252382e-68
-# 29             Delta - Omicron (BA.4) -0.282699323 0.0129686507 NA -0.308117411 -0.257281234 2.388630e-105
-# 30             Delta - Omicron (BA.5) -0.299349214 0.0213282390 NA -0.341151795 -0.257546634  9.473294e-45
-# 31    Omicron (BA.2) - Omicron (BA.3)  0.073624842 0.0054116753 NA  0.063018154  0.084231531  3.749152e-42
-# 32    Omicron (BA.2) - Omicron (BA.4) -0.111032535 0.0126590615 NA -0.135843840 -0.086221231  1.770980e-18
-# 33    Omicron (BA.2) - Omicron (BA.5) -0.127682427 0.0211400763 NA -0.169116215 -0.086248639  1.542785e-09
-# 34    Omicron (BA.3) - Omicron (BA.4) -0.184657378 0.0137796042 NA -0.211664906 -0.157649849  5.983496e-41
-# 35    Omicron (BA.3) - Omicron (BA.5) -0.201307269 0.0218303009 NA -0.244093873 -0.158520666  2.930792e-20
-# 36    Omicron (BA.4) - Omicron (BA.5) -0.016649892 0.0241058628 NA -0.063896515  0.030596731  4.897548e-01
+# 1            (Omicron (BA.1*)) - Beta  0.122995565 0.0020695525 NA  0.118939316  0.127051813  0.000000e+00
+# 2           (Omicron (BA.1*)) - Alpha  0.113599746 0.0022025089 NA  0.109282908  0.117916585  0.000000e+00
+# 3           (Omicron (BA.1*)) - Other  0.129629272 0.0020758489 NA  0.125560683  0.133697861  0.000000e+00
+# 4           (Omicron (BA.1*)) - Delta  0.092355453 0.0020091595 NA  0.088417573  0.096293333  0.000000e+00
+# 5  (Omicron (BA.1*)) - Omicron (BA.2) -0.079367380 0.0015786357 NA -0.082461449 -0.076273311  0.000000e+00
+# 6  (Omicron (BA.1*)) - Omicron (BA.3) -0.003183872 0.0047409902 NA -0.012476042  0.006108298  5.018622e-01
+# 7  (Omicron (BA.1*)) - Omicron (BA.4) -0.192727698 0.0125952472 NA -0.217413929 -0.168041467  7.457598e-53
+# 8  (Omicron (BA.1*)) - Omicron (BA.5) -0.206645397 0.0208693948 NA -0.247548659 -0.165742134  4.086879e-23
+# 9                        Beta - Alpha -0.009395818 0.0008053043 NA -0.010974186 -0.007817451  1.870243e-31
+# 10                       Beta - Other  0.006633708 0.0001752496 NA  0.006290225  0.006977191  0.000000e+00
+# 11                       Beta - Delta -0.030640112 0.0004838418 NA -0.031588424 -0.029691799  0.000000e+00
+# 12              Beta - Omicron (BA.2) -0.202362945 0.0026151665 NA -0.207488577 -0.197237313  0.000000e+00
+# 13              Beta - Omicron (BA.3) -0.126179437 0.0051351771 NA -0.136244199 -0.116114674 2.543176e-133
+# 14              Beta - Omicron (BA.4) -0.315723262 0.0127667025 NA -0.340745539 -0.290700985 5.062407e-135
+# 15              Beta - Omicron (BA.5) -0.329640961 0.0209733132 NA -0.370747900 -0.288534023  1.153773e-55
+# 16                      Alpha - Other  0.016029526 0.0008171611 NA  0.014427920  0.017631132  1.126411e-85
+# 17                      Alpha - Delta -0.021244293 0.0008948590 NA -0.022998185 -0.019490402 1.381238e-124
+# 18             Alpha - Omicron (BA.2) -0.192967127 0.0027215972 NA -0.198301359 -0.187632894  0.000000e+00
+# 19             Alpha - Omicron (BA.3) -0.116783618 0.0051901820 NA -0.126956188 -0.106611049 4.069862e-112
+# 20             Alpha - Omicron (BA.4) -0.306327444 0.0127889283 NA -0.331393283 -0.281261605 8.691820e-127
+# 21             Alpha - Omicron (BA.5) -0.320245143 0.0209868497 NA -0.361378613 -0.279111673  1.427189e-52
+# 22                      Other - Delta -0.037273819 0.0005101697 NA -0.038273734 -0.036273905  0.000000e+00
+# 23             Other - Omicron (BA.2) -0.208996653 0.0026201520 NA -0.214132056 -0.203861249  0.000000e+00
+# 24             Other - Omicron (BA.3) -0.132813144 0.0051377181 NA -0.142882887 -0.122743402 2.394994e-147
+# 25             Other - Omicron (BA.4) -0.322356970 0.0127677246 NA -0.347381251 -0.297332690 1.197331e-140
+# 26             Other - Omicron (BA.5) -0.336274669 0.0209739354 NA -0.377382827 -0.295166511  7.519002e-58
+# 27             Delta - Omicron (BA.2) -0.171722833 0.0025676373 NA -0.176755310 -0.166690356  0.000000e+00
+# 28             Delta - Omicron (BA.3) -0.095539325 0.0051111279 NA -0.105556952 -0.085521698  5.707016e-78
+# 29             Delta - Omicron (BA.4) -0.285083151 0.0127570513 NA -0.310086512 -0.260079789 1.288339e-110
+# 30             Delta - Omicron (BA.5) -0.299000850 0.0209674399 NA -0.340096277 -0.257905423  3.870878e-46
+# 31    Omicron (BA.2) - Omicron (BA.3)  0.076183508 0.0049147406 NA  0.066550794  0.085816223  3.414109e-54
+# 32    Omicron (BA.2) - Omicron (BA.4) -0.113360317 0.0124832506 NA -0.137827039 -0.088893596  1.075882e-19
+# 33    Omicron (BA.2) - Omicron (BA.5) -0.127278016 0.0208020478 NA -0.168049281 -0.086506752  9.444071e-10
+# 34    Omicron (BA.3) - Omicron (BA.4) -0.189543826 0.0134269440 NA -0.215860152 -0.163227499  2.998001e-45
+# 35    Omicron (BA.3) - Omicron (BA.5) -0.203461525 0.0213813333 NA -0.245368168 -0.161554882  1.802362e-21
+# 36    Omicron (BA.4) - Omicron (BA.5) -0.013917699 0.0237463261 NA -0.060459643  0.032624245  5.578090e-01
 
 
 # fitted prop of different variantS today (on average across provinces)
@@ -456,15 +456,15 @@ multinom_preds_today_avg_province = data.frame(emmeans(fit1_southafrica_province
                                               mode="prob", df=NA))
 multinom_preds_today_avg_province
 #           variant         prob           SE df     asymp.LCL    asymp.UCL
-# 1 Omicron (BA.1*) 1.633749e-03 2.819449e-04 NA  1.081147e-03 2.186350e-03
-# 2            Beta 8.360751e-14 3.437107e-14 NA  1.624146e-14 1.509736e-13
-# 3           Alpha 3.210500e-14 1.526967e-14 NA  2.176995e-15 6.203300e-14
-# 4           Other 1.797550e-15 7.317809e-16 NA  3.632862e-16 3.231815e-15
-# 5           Delta 1.292240e-09 4.737560e-10 NA  3.636951e-10 2.220785e-09
-# 6  Omicron (BA.2) 5.960412e-01 4.802139e-02 NA  5.019210e-01 6.901614e-01
-# 7  Omicron (BA.3) 3.305916e-05 2.083036e-05 NA -7.767591e-06 7.388591e-05
-# 8  Omicron (BA.4) 2.993131e-01 4.520635e-02 NA  2.107103e-01 3.879159e-01
-# 9  Omicron (BA.5) 1.029789e-01 2.572646e-02 NA  5.255596e-02 1.534018e-01
+# 1 Omicron (BA.1*) 1.251600e-03 2.290513e-04 NA  8.026680e-04 1.700532e-03
+# 2            Beta 7.158945e-14 3.096418e-14 NA  1.090077e-14 1.322781e-13
+# 3           Alpha 3.505428e-14 1.619606e-14 NA  3.310591e-15 6.679797e-14
+# 4           Other 2.224430e-15 9.233796e-16 NA  4.146389e-16 4.034220e-15
+# 5           Delta 9.217807e-10 3.389141e-10 NA  2.575213e-10 1.586040e-09
+# 6  Omicron (BA.2) 5.747336e-01 6.792880e-02 NA  4.415956e-01 7.078716e-01
+# 7  Omicron (BA.3) 2.242774e-05 1.285545e-05 NA -2.768475e-06 4.762395e-05
+# 8  Omicron (BA.4) 3.115148e-01 4.691516e-02 NA  2.195628e-01 4.034668e-01
+# 9  Omicron (BA.5) 1.124775e-01 5.613106e-02 NA  2.462644e-03 2.224924e-01
 
 # fitted prop of different variantS today (by province)
 multinom_preds_today_byprovince = data.frame(emmeans(fit1_southafrica_province_multi, ~ variant|province,
@@ -472,87 +472,87 @@ multinom_preds_today_byprovince = data.frame(emmeans(fit1_southafrica_province_m
                                               mode="prob", df=NA))
 multinom_preds_today_byprovince
 #            variant      province         prob           SE df     asymp.LCL    asymp.UCL
-# 1  Omicron (BA.1*)       Gauteng 1.636194e-04 6.076136e-05 NA  4.452927e-05 2.827094e-04
-# 2             Beta       Gauteng 1.670399e-15 8.749728e-16 NA -4.451633e-17 3.385314e-15
-# 3            Alpha       Gauteng 2.772148e-15 1.616915e-15 NA -3.969472e-16 5.941243e-15
-# 4            Other       Gauteng 3.682069e-17 1.953948e-17 NA -1.475986e-18 7.511738e-17
-# 5            Delta       Gauteng 3.776009e-11 1.887654e-11 NA  7.627598e-13 7.475742e-11
-# 6   Omicron (BA.2)       Gauteng 1.359245e-01 4.413317e-02 NA  4.942511e-02 2.224239e-01
-# 7   Omicron (BA.3)       Gauteng 1.813174e-06 1.448734e-06 NA -1.026291e-06 4.652640e-06
-# 8   Omicron (BA.4)       Gauteng 7.626942e-01 8.607558e-02 NA  5.939891e-01 9.313992e-01
-# 9   Omicron (BA.5)       Gauteng 1.012159e-01 6.820190e-02 NA -3.245739e-02 2.348892e-01
-# 10 Omicron (BA.1*)    North West 2.751333e-03 5.796821e-04 NA  1.615177e-03 3.887489e-03
-# 11            Beta    North West 4.095672e-14 1.852950e-14 NA  4.639574e-15 7.727386e-14
-# 12           Alpha    North West 7.224903e-14 3.898096e-14 NA -4.152238e-15 1.486503e-13
-# 13           Other    North West 3.249099e-15 1.493006e-15 NA  3.228615e-16 6.175336e-15
-# 14           Delta    North West 1.235949e-09 5.194105e-10 NA  2.179228e-10 2.253974e-09
-# 15  Omicron (BA.2)    North West 9.971265e-01 6.029765e-04 NA  9.959446e-01 9.983083e-01
-# 16  Omicron (BA.3)    North West 1.094920e-04 7.679216e-05 NA -4.101791e-05 2.600018e-04
-# 17  Omicron (BA.4)    North West 6.822369e-39 3.015233e-39 NA  9.126218e-40 1.273212e-38
-# 18  Omicron (BA.5)    North West 1.271349e-05 9.276201e-06 NA -5.467528e-06 3.089451e-05
-# 19 Omicron (BA.1*)    Mpumalanga 8.648010e-04 2.827582e-04 NA  3.106052e-04 1.418997e-03
-# 20            Beta    Mpumalanga 4.284651e-14 2.179859e-14 NA  1.220661e-16 8.557095e-14
-# 21           Alpha    Mpumalanga 6.113068e-15 4.878583e-15 NA -3.448778e-15 1.567491e-14
-# 22           Other    Mpumalanga 1.472607e-15 7.632525e-16 NA -2.334075e-17 2.968554e-15
-# 23           Delta    Mpumalanga 4.369207e-10 2.104836e-10 NA  2.438040e-11 8.494610e-10
-# 24  Omicron (BA.2)    Mpumalanga 7.548802e-01 2.010522e-01 NA  3.608251e-01 1.148935e+00
-# 25  Omicron (BA.3)    Mpumalanga 1.151975e-04 7.872351e-05 NA -3.909772e-05 2.694928e-04
-# 26  Omicron (BA.4)    Mpumalanga 2.432525e-01 2.010529e-01 NA -1.508039e-01 6.373088e-01
-# 27  Omicron (BA.5)    Mpumalanga 8.873298e-04 1.925981e-02 NA -3.686120e-02 3.863586e-02
-# 28 Omicron (BA.1*)       Limpopo 1.068906e-04 6.854592e-05 NA -2.745695e-05 2.412381e-04
-# 29            Beta       Limpopo 2.577210e-16 2.122575e-16 NA -1.582960e-16 6.737381e-16
-# 30           Alpha       Limpopo 2.230984e-16 2.046117e-16 NA -1.779331e-16 6.241299e-16
-# 31           Other       Limpopo 1.679852e-17 1.393644e-17 NA -1.051640e-17 4.411344e-17
-# 32           Delta       Limpopo 1.259520e-11 1.013286e-11 NA -7.264839e-12 3.245523e-11
-# 33  Omicron (BA.2)       Limpopo 2.106116e-01 1.287045e-01 NA -4.164461e-02 4.628678e-01
-# 34  Omicron (BA.3)       Limpopo 4.055948e-06 3.807149e-06 NA -3.405926e-06 1.151782e-05
-# 35  Omicron (BA.4)       Limpopo 7.878043e-01 1.310753e-01 NA  5.309014e-01 1.044707e+00
-# 36  Omicron (BA.5)       Limpopo 1.473102e-03 2.632738e-02 NA -5.012762e-02 5.307382e-02
-# 37 Omicron (BA.1*)  Western Cape 3.837383e-03 7.247023e-04 NA  2.416992e-03 5.257773e-03
-# 38            Beta  Western Cape 7.891120e-14 3.206733e-14 NA  1.606039e-14 1.417620e-13
-# 39           Alpha  Western Cape 8.538676e-14 4.213327e-14 NA  2.807073e-15 1.679665e-13
-# 40           Other  Western Cape 1.187064e-15 4.957987e-16 NA  2.153169e-16 2.158812e-15
-# 41           Delta  Western Cape 2.458611e-09 9.209336e-10 NA  6.536144e-10 4.263608e-09
-# 42  Omicron (BA.2)  Western Cape 8.649024e-01 8.667422e-02 NA  6.950240e-01 1.034781e+00
-# 43  Omicron (BA.3)  Western Cape 4.653801e-05 3.158851e-05 NA -1.537434e-05 1.084504e-04
-# 44  Omicron (BA.4)  Western Cape 1.310106e-01 8.699664e-02 NA -3.949969e-02 3.015209e-01
-# 45  Omicron (BA.5)  Western Cape 2.031316e-04 4.340877e-03 NA -8.304831e-03 8.711095e-03
-# 46 Omicron (BA.1*)    Free State 1.995033e-03 4.826559e-04 NA  1.049045e-03 2.941022e-03
-# 47            Beta    Free State 1.363611e-13 6.716210e-14 NA  4.725842e-15 2.679964e-13
-# 48           Alpha    Free State 4.208269e-14 2.774649e-14 NA -1.229942e-14 9.646481e-14
-# 49           Other    Free State 2.633660e-15 1.328429e-15 NA  2.998752e-17 5.237332e-15
-# 50           Delta    Free State 1.486969e-09 6.896839e-10 NA  1.352133e-10 2.838725e-09
-# 51  Omicron (BA.2)    Free State 9.977288e-01 5.605296e-04 NA  9.966302e-01 9.988274e-01
-# 52  Omicron (BA.3)    Free State 2.093739e-15 1.572222e-15 NA -9.877591e-16 5.175236e-15
-# 53  Omicron (BA.4)    Free State 4.241672e-21 1.943756e-21 NA  4.319801e-22 8.051363e-21
-# 54  Omicron (BA.5)    Free State 2.761823e-04 2.038370e-04 NA -1.233308e-04 6.756954e-04
-# 55 Omicron (BA.1*) KwaZulu Natal 4.459398e-04 1.959164e-04 NA  6.195079e-05 8.299288e-04
-# 56            Beta KwaZulu Natal 1.293011e-14 7.320988e-15 NA -1.418763e-15 2.727898e-14
-# 57           Alpha KwaZulu Natal 3.444102e-15 2.457649e-15 NA -1.372800e-15 8.261005e-15
-# 58           Other KwaZulu Natal 3.986998e-16 2.285505e-16 NA -4.925088e-17 8.466505e-16
-# 59           Delta KwaZulu Natal 3.803827e-10 2.050095e-10 NA -2.142867e-11 7.821940e-10
-# 60  Omicron (BA.2) KwaZulu Natal 1.706218e-01 6.573051e-02 NA  4.179237e-02 2.994512e-01
-# 61  Omicron (BA.3) KwaZulu Natal 2.984631e-06 2.805743e-06 NA -2.514524e-06 8.483785e-06
-# 62  Omicron (BA.4) KwaZulu Natal 1.618757e-02 1.718437e-02 NA -1.749317e-02 4.986831e-02
-# 63  Omicron (BA.5) KwaZulu Natal 8.127417e-01 7.208353e-02 NA  6.714606e-01 9.540228e-01
-# 64 Omicron (BA.1*)  Eastern Cape 1.500409e-03 7.263464e-04 NA  7.679673e-05 2.924022e-03
-# 65            Beta  Eastern Cape 4.818319e-14 3.040244e-14 NA -1.140450e-14 1.077709e-13
-# 66           Alpha  Eastern Cape 1.298117e-14 1.031765e-14 NA -7.241053e-15 3.320340e-14
-# 67           Other  Eastern Cape 7.713578e-16 4.930630e-16 NA -1.950280e-16 1.737744e-15
-# 68           Delta  Eastern Cape 1.840725e-09 1.116310e-09 NA -3.472019e-10 4.028651e-09
-# 69  Omicron (BA.2)  Eastern Cape 2.455862e-01 1.040513e-01 NA  4.164932e-02 4.495230e-01
-# 70  Omicron (BA.3)  Eastern Cape 2.757704e-27 2.374026e-27 NA -1.895303e-27 7.410710e-27
-# 71  Omicron (BA.4)  Eastern Cape 7.528690e-01 1.047181e-01 NA  5.476253e-01 9.581127e-01
-# 72  Omicron (BA.5)  Eastern Cape 4.441976e-05 2.962563e-03 NA -5.762098e-03 5.850938e-03
-# 73 Omicron (BA.1*) Northern Cape 3.038328e-03 9.397304e-04 NA  1.196490e-03 4.880165e-03
-# 74            Beta Northern Cape 3.903506e-13 1.910538e-13 NA  1.589213e-14 7.648091e-13
-# 75           Alpha Northern Cape 6.369291e-14 4.696351e-14 NA -2.835388e-14 1.557397e-13
-# 76           Other Northern Cape 6.411847e-15 3.215752e-15 NA  1.090881e-16 1.271461e-14
-# 77           Delta Northern Cape 3.740247e-09 1.714349e-09 NA  3.801853e-10 7.100309e-09
-# 78  Omicron (BA.2) Northern Cape 9.869887e-01 1.851015e-01 NA  6.241965e-01 1.349781e+00
-# 79  Omicron (BA.3) Northern Cape 1.745119e-05 2.087796e-05 NA -2.346886e-05 5.837124e-05
-# 80  Omicron (BA.4) Northern Cape 2.354694e-17 1.159249e-17 NA  8.260734e-19 4.626780e-17
-# 81  Omicron (BA.5) Northern Cape 9.955487e-03 1.856728e-01 NA -3.539565e-01 3.738675e-01
+# 1  Omicron (BA.1*)       Gauteng 1.216431e-04 4.564192e-05 NA  3.218653e-05 2.110996e-04
+# 2             Beta       Gauteng 1.732816e-15 8.859440e-16 NA -3.602540e-18 3.469234e-15
+# 3            Alpha       Gauteng 3.496845e-15 1.993762e-15 NA -4.108567e-16 7.404547e-15
+# 4            Other       Gauteng 5.169743e-17 2.674038e-17 NA -7.127509e-19 1.041076e-16
+# 5            Delta       Gauteng 3.174156e-11 1.551479e-11 NA  1.333134e-12 6.214998e-11
+# 6   Omicron (BA.2)       Gauteng 1.169506e-01 3.956095e-02 NA  3.941260e-02 1.944887e-01
+# 7   Omicron (BA.3)       Gauteng 1.408978e-06 1.022589e-06 NA -5.952593e-07 3.413216e-06
+# 8   Omicron (BA.4)       Gauteng 7.855505e-01 8.347460e-02 NA  6.219433e-01 9.491577e-01
+# 9   Omicron (BA.5)       Gauteng 9.737580e-02 6.746438e-02 NA -3.485196e-02 2.296036e-01
+# 10 Omicron (BA.1*)    North West 2.244968e-03 4.522264e-04 NA  1.358620e-03 3.131315e-03
+# 11            Beta    North West 3.735978e-14 1.621558e-14 NA  5.577820e-15 6.914173e-14
+# 12           Alpha    North West 7.750417e-14 4.053937e-14 NA -1.951531e-15 1.569599e-13
+# 13           Other    North West 4.153981e-15 1.826524e-15 NA  5.740602e-16 7.733903e-15
+# 14           Delta    North West 9.909645e-10 3.992702e-10 NA  2.084092e-10 1.773520e-09
+# 15  Omicron (BA.2)    North West 9.959648e-01 6.760506e-02 NA  8.634613e-01 1.128468e+00
+# 16  Omicron (BA.3)    North West 8.353396e-05 5.263321e-05 NA -1.962523e-05 1.866932e-04
+# 17  Omicron (BA.4)    North West 8.617630e-10 3.820170e-10 NA  1.130234e-10 1.610503e-09
+# 18  Omicron (BA.5)    North West 1.706739e-03 6.776162e-02 NA -1.311036e-01 1.345171e-01
+# 19 Omicron (BA.1*)    Mpumalanga 7.819253e-04 2.698220e-04 NA  2.530839e-04 1.310767e-03
+# 20            Beta    Mpumalanga 4.534481e-14 2.292957e-14 NA  4.036802e-16 9.028594e-14
+# 21           Alpha    Mpumalanga 7.455107e-15 5.920733e-15 NA -4.149317e-15 1.905953e-14
+# 22           Other    Mpumalanga 2.132877e-15 1.095583e-15 NA -1.442646e-17 4.280181e-15
+# 23           Delta    Mpumalanga 3.956304e-10 1.900531e-10 NA  2.313320e-11 7.681276e-10
+# 24  Omicron (BA.2)    Mpumalanga 7.288218e-01 2.198012e-01 NA  2.980194e-01 1.159624e+00
+# 25  Omicron (BA.3)    Mpumalanga 7.459760e-05 4.743832e-05 NA -1.837981e-05 1.675750e-04
+# 26  Omicron (BA.4)    Mpumalanga 2.701323e-01 2.200224e-01 NA -1.611037e-01 7.013683e-01
+# 27  Omicron (BA.5)    Mpumalanga 1.893983e-04 9.249534e-03 NA -1.793936e-02 1.831815e-02
+# 28 Omicron (BA.1*)       Limpopo 9.005709e-05 5.932573e-05 NA -2.621921e-05 2.063334e-04
+# 29            Beta       Limpopo 2.009499e-16 1.639633e-16 NA -1.204122e-16 5.223121e-16
+# 30           Alpha       Limpopo 1.911195e-16 1.740481e-16 NA -1.500084e-16 5.322475e-16
+# 31           Other       Limpopo 2.023369e-17 1.658640e-17 NA -1.227506e-17 5.274244e-17
+# 32           Delta       Limpopo 8.083229e-12 6.452332e-12 NA -4.563110e-12 2.072957e-11
+# 33  Omicron (BA.2)       Limpopo 1.766176e-01 1.120666e-01 NA -4.302881e-02 3.962640e-01
+# 34  Omicron (BA.3)       Limpopo 2.412232e-06 2.160396e-06 NA -1.822066e-06 6.646531e-06
+# 35  Omicron (BA.4)       Limpopo 8.039919e-01 1.427340e-01 NA  5.242383e-01 1.083745e+00
+# 36  Omicron (BA.5)       Limpopo 1.929806e-02 9.239354e-02 NA -1.617899e-01 2.003861e-01
+# 37 Omicron (BA.1*)  Western Cape 2.965707e-03 5.510400e-04 NA  1.885688e-03 4.045725e-03
+# 38            Beta  Western Cape 7.379465e-14 2.860903e-14 NA  1.772198e-14 1.298673e-13
+# 39           Alpha  Western Cape 1.003713e-13 4.763487e-14 NA  7.008672e-15 1.937339e-13
+# 40           Other  Western Cape 1.518012e-15 6.039840e-16 NA  3.342251e-16 2.701799e-15
+# 41           Delta  Western Cape 1.967883e-09 7.021829e-10 NA  5.916297e-10 3.344136e-09
+# 42  Omicron (BA.2)  Western Cape 8.483988e-01 9.716175e-02 NA  6.579653e-01 1.038832e+00
+# 43  Omicron (BA.3)  Western Cape 2.552573e-05 1.613324e-05 NA -6.094836e-06 5.714629e-05
+# 44  Omicron (BA.4)  Western Cape 1.479226e-01 9.731406e-02 NA -4.280950e-02 3.386546e-01
+# 45  Omicron (BA.5)  Western Cape 6.874056e-04 8.368261e-03 NA -1.571408e-02 1.708890e-02
+# 46 Omicron (BA.1*)    Free State 1.909955e-03 5.039721e-04 NA  9.221882e-04 2.897722e-03
+# 47            Beta    Free State 1.588340e-13 7.670602e-14 NA  8.492927e-15 3.091750e-13
+# 48           Alpha    Free State 5.740563e-14 3.737156e-14 NA -1.584129e-14 1.306525e-13
+# 49           Other    Free State 3.900540e-15 1.926154e-15 NA  1.253473e-16 7.675733e-15
+# 50           Delta    Free State 1.434629e-09 6.538043e-10 NA  1.531964e-10 2.716062e-09
+# 51  Omicron (BA.2)    Free State 9.894087e-01 1.644862e-01 NA  6.670216e-01 1.311796e+00
+# 52  Omicron (BA.3)    Free State 2.308959e-24 1.564378e-24 NA -7.571652e-25 5.375083e-24
+# 53  Omicron (BA.4)    Free State 9.223718e-09 4.379316e-09 NA  6.404165e-10 1.780702e-08
+# 54  Omicron (BA.5)    Free State 8.681341e-03 1.648032e-01 NA -3.143269e-01 3.316896e-01
+# 55 Omicron (BA.1*) KwaZulu Natal 2.958799e-04 1.312595e-04 NA  3.861608e-05 5.531437e-04
+# 56            Beta KwaZulu Natal 1.073640e-14 5.993276e-15 NA -1.010201e-15 2.248301e-14
+# 57           Alpha KwaZulu Natal 3.331349e-15 2.348940e-15 NA -1.272489e-15 7.935187e-15
+# 58           Other KwaZulu Natal 4.463852e-16 2.518836e-16 NA -4.729754e-17 9.400679e-16
+# 59           Delta KwaZulu Natal 2.490942e-10 1.327137e-10 NA -1.101991e-11 5.092084e-10
+# 60  Omicron (BA.2) KwaZulu Natal 1.546545e-01 6.246007e-02 NA  3.223503e-02 2.770740e-01
+# 61  Omicron (BA.3) KwaZulu Natal 1.833963e-06 1.576585e-06 NA -1.256087e-06 4.924013e-06
+# 62  Omicron (BA.4) KwaZulu Natal 1.703009e-02 1.821619e-02 NA -1.867298e-02 5.273316e-02
+# 63  Omicron (BA.5) KwaZulu Natal 8.280177e-01 6.959247e-02 NA  6.916189e-01 9.644164e-01
+# 64 Omicron (BA.1*)  Eastern Cape 7.322681e-04 3.553831e-04 NA  3.572998e-05 1.428806e-03
+# 65            Beta  Eastern Cape 1.916332e-14 1.166214e-14 NA -3.694067e-15 4.202070e-14
+# 66           Alpha  Eastern Cape 7.422875e-15 5.638768e-15 NA -3.628906e-15 1.847466e-14
+# 67           Other  Eastern Cape 4.286656e-16 2.640735e-16 NA -8.890902e-17 9.462402e-16
+# 68           Delta  Eastern Cape 6.102616e-10 3.569503e-10 NA -8.934821e-11 1.309871e-09
+# 69  Omicron (BA.2)  Eastern Cape 2.183079e-01 9.674792e-02 NA  2.868545e-02 4.079303e-01
+# 70  Omicron (BA.3)  Eastern Cape 3.123864e-06 3.125139e-06 NA -3.001297e-06 9.249025e-06
+# 71  Omicron (BA.4)  Eastern Cape 7.789604e-01 9.892230e-02 NA  5.850763e-01 9.728445e-01
+# 72  Omicron (BA.5)  Eastern Cape 1.996316e-03 1.964476e-02 NA -3.650670e-02 4.049933e-02
+# 73 Omicron (BA.1*) Northern Cape 2.121999e-03 1.074621e-03 NA  1.578083e-05 4.228217e-03
+# 74            Beta Northern Cape 2.971384e-13 1.854045e-13 NA -6.624777e-14 6.605245e-13
+# 75           Alpha Northern Cape 5.831014e-14 4.848215e-14 NA -3.671314e-14 1.533334e-13
+# 76           Other Northern Cape 7.367474e-15 4.654110e-15 NA -1.754414e-15 1.648936e-14
+# 77           Delta Northern Cape 2.607739e-09 1.567370e-09 NA -4.642509e-10 5.679728e-09
+# 78  Omicron (BA.2) Northern Cape 9.434781e-01 4.275574e-01 NA  1.054810e-01 1.781475e+00
+# 79  Omicron (BA.3) Northern Cape 9.413326e-06 1.170306e-05 NA -1.352425e-05 3.235090e-05
+# 80  Omicron (BA.4) Northern Cape 4.572675e-05 2.919140e-05 NA -1.148734e-05 1.029408e-04
+# 81  Omicron (BA.5) Northern Cape 5.434478e-02 4.285434e-01 NA -7.855848e-01 8.942743e-01
 
 
 
