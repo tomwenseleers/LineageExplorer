@@ -2,189 +2,370 @@
 "1","'[Run20210508template bulk upload 20210508.xlsx]intermediaire'!R97",1
 "2","#N/A",2
 "3","#VALUE!",3
-"4","Algemeen Klinisch Labo",198
-"5","Algemeen Klinisch Labo Lier",1
-"6","Algemeen Medisch Labo",877
-"7","ALGEMEEN MEDISCH LABO",6
-"8","Algemeen Medisch Laboratorium",14
-"9","Algemeen Medisch Laboratorium (AML)",52
-"10","Antwerp University Hospital",6
-"11","arlon",28
-"12","Arlon",470
-"13","AZ Delta",9
-"14","AZ Delta Medical Laboratories in Roeselare, Belgium",1
-"15","AZ Jan Portaels",51
-"16","AZ Klina",508
-"17","AZ Monica Deurne",25
-"18","AZ Rivierenland Bornem",7
-"19","AZ Rivierenland Rumst",27
-"20","AZ Rivierenland, Campus Rumst",2
-"21","AZ Sint-Jan",16
-"22","AZ Sint-Jan Brugge",5
-"23","AZ Sint-Jan Brugge-Oostende AV",17
-"24","AZ Sint-Lucas Gent",21
-"25","AZ Sint-Maarten",3
-"26","AZ Sint Blasius",1
-"27","AZ Sint Jan Brugge-Oostende AV",1
-"28","AZ Sint Maarten",44
-"29","AZ St. Jozef",7
-"30","AZ St.Jan",1
-"31","AZ St.jan Brugge",10
-"32","AZ St.Jan Brugge",11
-"33","AZ St.Jan Brugge-Oostende",398
-"34","AZ St.Jan Brugge-Oostende AV",11
-"35","AZ St.Jan campus Brugge",5
-"36","AZ St.Jan campus Oostende",5
-"37","AZ St.Jan, campus Oostende",1
-"38","AZ Turnhout",26
-"39","AZ Vesale (Tongres)",4
-"40","AZ Zeno",53
-"41","AZ Zeno Knokke-Blankenberge",49
-"42","AZDelta",5287
-"43","AZT",6
-"44","AZV",3
-"45","Brussels Academic Hospital Lab (LHUB-ULB)",96
-"46","C.H Peltzer - la Tourelle",98
-"47","C.H.Bois de l'Abbaye",39
-"48","C.H.C MontLégia",291
-"49","Cabinet Priv<U+00E9>",24
-"50","Cabinet Privé",6
-"51","Centre de prélèvements du Heysel",1
-"52","Centre de tri Clinique St Jean - Pacheco",1
-"53","Centre de tri Iris-Sud",1
-"54","Centre de tri IRIS-Sud",1
-"55","Centre Hospitalier de l'Ardenne",13
-"56","Centre Hospitalier de Wallonie picarde (CHwapi)",3
-"57","Centre Hospitalier de Wallonie Picarde (CHWaPi)",12
-"58","Centre Hospitalier Interrégional Edith Cavell",3
-"59","Centrum voor Medische Analyse",1535
-"60","CENTRUM VOOR MEDISCHE ANALYSE",38
-"61","CHC",12
-"62","CHC Liège",2
-"63","CHM - SITE CHR",44
-"64","CHR - HAUTE SENNE (TI)",1
-"65","CHR Citadelle",18
-"66","CHR de la Citadelle",52
-"67","CHR de La Citadelle",150
-"68","CHR de Namur",1
-"69","CHR Namur",1
-"70","CHR Verviers",2
-"71","Chu Tivoli",5
-"72","CHU UCL Namur, Avenue G. Thérasse 1, 5530 Yvoir, Belgium",225
-"73","CHWAPI - SITE NOTRE DAME",505
-"74","CHWAPI - SITE NOTRE DAME"",""AVENUE DELMEE 9 ZIP 7500",1
-"75","Clinical Virology",1
-"76","Clinique André Renard Herstal",11
-"77","CLINIQUE N-D DE GRACE",351
-"78","Clinique N.D de Grâce Gosselies",24
-"79","Clinique Notre Dame à Hermalle",50
-"80","Clinique Notre Dame Waremme",19
-"81","Clinique Saint-Pierre Ottignies",578
-"82","Clinique St Joseph Saint Vith",90
-"83","Cliniques Cud-Luxembourg",15
-"84","Cliniques Saint-Pierre Ottignies",15
-"85","Cliniques Sud-Luxembourg",10
-"86","Cliniques universitaires Saint-Luc",1980
-"87","CUB Hopital Erasme Laboratoire d'Anatomie Pathologique",11
-"88","CUSL/UCLouvain COVID testing federal platform",9
-"89","Department of Clinical Microbiology",3610
-"90","Department of Microbiology, Laboratoire Hospitalier Universitaire de Bruxelles, Université Libre de Bruxelles",119
-"91","Drive in Ohain",1
-"92","Dutch COVID-19 response team",9
-"93","GHDC - SITE ST JOSEPH",72
-"94","GZA Hospital Sint-Augustinus",1
-"95","GZA Sint-Augustinus",1
-"96","GZA Sint-Augustinus Hospital",6
-"97","HCRC",12
-"98","Heilig Hart Hospital",5
-"99","Heilig Hart Hospital Lier",1
-"100","Heilig hart Lier",165
-"101","Heilig Hart Lier",1
-"102","Heilig Hart Mol",1
-"103","Heilig Hartziekenhuis Mol",1
-"104","Hopital Sainte Therese Bastogne",1
-"105","Hôpitaux Iris Sud Etterbeek-Ixelles",7
-"106","Hospital AZ Rivierenland",35
-"107","I.F.A.C. Hopital Princesse Paola",47
-"108","Imeda Hospital",66
-"109","Imelda hospital",7
-"110","Imelda Hospital",35
-"111","Imelda hospital Bonheiden",7
-"112","Imelda Ziekenhuis",213
-"113","Institut de Pathologie et Genetique (IPG)",2
-"114","Institute information KU Leuven, Clinical and Epidemiological Virology",1
-"115","Instituut Tropische Geneeskunde",12
-"116","Jan Yperman Ziekenhuis",1
-"117","jessa",46
-"118","Jessa",2702
-"119","Jessa Ziekenhuis",21
-"120","Klinisch Laboratorium GZA",14
-"121","Klinisch laboratorium regionaal Ziekenhuis Sint-Maria",1
-"122","Klinisch Laboratorium ZNA",1153
-"123","KU Leuven, Clincal and Epidemiological Virology",1
-"124","KU Leuven, Clinical and Epidemiological Virology",183
-"125","KU Leuven, Rega Institute, Clinical and Epidemiological Virology",15802
-"126","Lab voor klinische biologie",7800
-"127","Labo Klinische Biologie, UZA",168
-"128","LABO LKO - LMC",4
-"129","Labo Luc Olivier",79
-"130","Labo Medicom",6
-"131","Labo Somedi",2
-"132","Laboratoire de biologie moléculaire - Plateforme Clinique",1
-"133","Laboratoire Hospitalier Universitaire de Bruxelles (LHUB-ULB)",28
-"134","Laboratoire Vivalia",13
-"135","Laboratoire Vivalia - Cliniques St-Joseph",12
-"136","Laboratoire Vivalia -Cliniques St-Joseph",1
-"137","Laboratoires Réunis",1
-"138","Landstuhl Regional Medical Center",4
-"139","LHUB-ULB",790
-"140","Libramont",57
-"141","LKO",388
-"142","LKOLMC",8
-"143","marche en famenne",13
-"144","Marche en famenne",35
-"145","Marche en Famenne",198
-"146","Microbiology Department - University Hospital Brussel",236
-"147","Microvida",1
-"148","National Plateform bis UMONS/Jolimont",1
-"149","National Platform bis COVID ULB-IBC",2755
-"150","National Platform bis UMONS/hCoV-19/Belgium/UMONS-hCoV-19/Belgium/UMONS-hCoV-19/Belgium/UMONS-Jolimont",43
-"151","National Platform bis UMONS/hCoV-19/Belgium/UMONS-Jolimont",46
-"152","National Platform bis UMONS/Jolimont",2062
-"153","OLVZ Aalst",362
-"154","Plateforme BIS Namur",42
-"155","Plateforme Clinique de testing Namuroise",27
-"156","Plateforme de testing namuroise",22
-"157","Plateforme de testing Namuroise",3091
-"158","Platform BIS UZA/UAntwerpen",5436
-"159","Platform BIS UZA/UAntwerpen (PLBIS)",9
-"160","Platform BIS UZA/UAntwerpen, University Hospital Antwerp, Edegem, Belgium",23
-"161","Queen Astrid Military Hospital",10
-"162","Saint-Luc Bouge",4
-"163","Sainte-Elisabeth",13
-"164","SCIENSANO National Influenza Centre",1
-"165","SEQUENCING AZ TURNHOUT",3
-"166","SFZ",2
-"167","Sint-Dimpna Geel",33
-"168","Somedi",12
-"169","Somedi laboratories",27
-"170","Somedi Laboratories",39
-"171","ST. JOZEFKLINIEK-Campus Willebroek",1
-"172","St. Nikolaus-Hospital Eupen",124
-"173","STZ",3
-"174","Synlab",143
-"175","SYNLAB",4876
-"176","SYNLAB - Laboratoire J. Collard",248
-"177","The Institute of Tropical Medicine in Antwerp, Belgium",1
-"178","Trudo",4
-"179","Univeritair Ziekenhuis Antwerpen (UZA)",6
-"180","Universitair Ziekemhuis Antwerpen (UZA)",1
-"181","University Hospital Antwerp (UZA), Drie Eikenstraat 655, 2650 Edegem, Belgium",4
-"182","University Hospital Laboratory of Brussels Universitair Laboratorium van Brussel (LHUB-ULB)",1
-"183","University of Liège COVID-19 testing center",2420
-"184","US Air Force School of Aerospace Medicine",38
-"185","UZ Leuven, National Reference Laboratory for Coronaviruses, Laboratory Medicine, Leuven, Belgium",951
-"186","UZA/UAntwerpen (BIS lab), University Hospital Antwerp, Edegem, Belgium",7
-"187","Vivalia - Clinique Saint-Joseph",27
-"188","ZNA Middelheim",1
-"189","ZOL",1012
+"4","1 RUE DE COURCELLES",1
+"5","1 RUE SAINT REMY",1
+"6","100 RUE SART LES MOULINS",1
+"7","111 CHEE DE BRUXELLES",1
+"8","111 RUE DU CRAMPON CABINET MEDICAL DU MOULIN",4
+"9","111 RUE PROVINCIALE",11
+"10","113 RUE DE MARCHIENNE",1
+"11","113/A RUE DE MARCHIENNE",1
+"12","12 RUE DES BERGERIES",1
+"13","127 GRAND CHEMIN",4
+"14","13 R FRANCOIS WACHEL",1
+"15","140 CHAUSSEE DE BRUXELLES|HOPITAL CIVIL MARIE CURIE|SERVICE DE CHIRURGIE",1
+"16","16 R JANSON",1
+"17","19 RUE DE LA PECHERIE",1
+"18","2 RUE DES DEPORTES DE FROYENNES",1
+"19","20 RUE DE ROCROI",6
+"20","212 CHAUSSEE DE NIVELLES",6
+"21","212 CHAUSSEE DE NIVELLES|CLINIQUE N-D DE GRACE",8
+"22","212 CHAUSSEE DE NIVELLES|CLINIQUE N-D DE GRACE|ANESTHESISTE",2
+"23","212 CHAUSSEE DE NIVELLES|CLINIQUE N-D DE GRACE|GERIATRIE",3
+"24","212 CHAUSSEE DE NIVELLES|CLINIQUE N-D DE GRACE|LABORATOIRE",11
+"25","212 CHAUSSEE DE NIVELLES|CLINIQUE N-D DE GRACE|SERVICE DE MEDECINE INTERNE",1
+"26","212 CHAUSSEE DE NIVELLES|CLINIQUE N-D DE GRACE|SERVICE DE PEDIATRIE",2
+"27","212 CHAUSSEE DE NIVELLES|CLINIQUE N-D DE GRACE|SERVICE DES URGENCES",3
+"28","212 CHAUSSEE DE NIVELLES|CLINIQUE N-D DE GRACE|URGENCES",6
+"29","25 RUE CHILDERIC",2
+"30","26 RUE EL BAIL",3
+"31","3 CHEMIN DU SART",6
+"32","3 RUE DU COUPIAT",2
+"33","48 RTE DE SENZEILLES",1
+"34","49 AVENUE DE FECAMP|CENTRE HOSPITALIER MOUSCRON|URGENCES",1
+"35","49 AVENUE DE FECAMP|CHM - SITE CHR",12
+"36","49 AVENUE DE FECAMP|CHM - SITE CHR|SERVICE DE GASTRO-ENTEROLOGIE",1
+"37","49 AVENUE DE FECAMP|CHM - SITE CHR|SERVICE DES URGENCES",3
+"38","49 AVENUE DE FECAMP|NEPHRO-NEURO-RHUMATO",1
+"39","51 GRAND'RUE",5
+"40","51 GRAND RUE",1
+"41","51 RUE DES SPORTS|CHWAPI - SITE UNION",1
+"42","56 RUE ST PIAT",1
+"43","6 RUE DE LA PLACE",1
+"44","6 RUE GILLES SAVOIE",1
+"45","6 RUE MARGUERITE DEPASSE|GHDC - SITE ST JOSEPH",11
+"46","6 RUE MARGUERITE DEPASSE|GHDC - SITE ST JOSEPH|SERVICE DE BIOLOGIE CLINIQUE",6
+"47","71 CHAUSSEE DE LANNOY",1
+"48","8 PLACE ABBE CESAR RENARD",2
+"49","9 CHEMIN DE LA RAMEE",4
+"50","9 VIEUX CHEMIN D'ERE|LA MAISON MEDICALE",1
+"51","92 R DES FRANCS",1
+"52","92B RUE DE LA LIBERTE",4
+"53","Algemeen Klinisch Labo",252
+"54","Algemeen Klinisch Labo Lier",1
+"55","Algemeen Medisch Labo",1114
+"56","ALGEMEEN MEDISCH LABO",6
+"57","Algemeen Medisch Laboratorium",14
+"58","Algemeen Medisch Laboratorium (AML)",52
+"59","Antwerp University Hospital",6
+"60","arlon",28
+"61","Arlon",586
+"62","AV ADOLPHE SCHATTENS 29/1",1
+"63","AV DE LA LIBERATION",2
+"64","AV JULES DESTREE 30",1
+"65","AVENUE DE LA BASILIQUE 16-18|CLIN. NEURO-PSYCHIATRIQUE",5
+"66","AVENUE DELMEE 9",2
+"67","AVENUE DELMEE 9|CHWAPI - SITE NOTRE DAME",6
+"68","AVENUE DELMEE 9|CHWAPI - SITE NOTRE DAME|ANESTHESIOLOGIE - REANIMATION",1
+"69","AVENUE DELMEE 9|CHWAPI - SITE NOTRE DAME|SERVICE DE BIOLOGIE CLINIQUE",3
+"70","AVENUE GEORGES LEMAITRE 25",3
+"71","Avenue Paul Pastur 190",1
+"72","AZ Delta",9
+"73","AZ Delta Medical Laboratories in Roeselare, Belgium",1
+"74","AZ Jan Portaels",56
+"75","AZ Klina",639
+"76","AZ Monica Deurne",39
+"77","AZ Rivierenland Bornem",15
+"78","AZ Rivierenland Rumst",53
+"79","AZ Rivierenland, Campus Rumst",2
+"80","AZ Sint-Jan",16
+"81","AZ Sint-Jan Brugge",5
+"82","AZ Sint-Jan Brugge-Oostende AV",17
+"83","AZ Sint-Lucas Gent",21
+"84","AZ Sint-Maarten",3
+"85","AZ Sint Blasius",1
+"86","AZ Sint Jan Brugge-Oostende AV",1
+"87","AZ Sint Maarten",60
+"88","AZ St. Jozef",7
+"89","AZ St.Jan",1
+"90","AZ St.jan Brugge",10
+"91","AZ St.Jan Brugge",11
+"92","AZ St.Jan Brugge-Oostende",643
+"93","AZ St.Jan Brugge-Oostende AV",11
+"94","AZ St.Jan campus Brugge",5
+"95","AZ St.Jan campus Oostende",5
+"96","AZ St.Jan, campus Oostende",1
+"97","AZ Turnhout",26
+"98","AZ Vesale (Tongres)",4
+"99","AZ Zeno",53
+"100","AZ Zeno Knokke-Blankenberge",49
+"101","AZDelta",9542
+"102","AZT",6
+"103","AZV",3
+"104","Brussels Academic Hospital Lab (LHUB-ULB)",96
+"105","C.H Peltzer - la Tourelle",193
+"106","C.H.Bois de l'Abbaye",39
+"107","C.H.C MontLégia",320
+"108","CABINET MEDICAL DE LA GARE RUE REINE ELISABETH 76",1
+"109","CABINET MEDICAL|22 PLACE DU PERRON",1
+"110","Cabinet Priv<U+00E9>",26
+"111","Cabinet Privé",6
+"112","CABINET PRIVE ZIP 5650",1
+"113","CABINET PRIVE ZIP 6000",1
+"114","CABINET PRIVE ZIP 6010",1
+"115","CABINET PRIVE ZIP 6030",1
+"116","CABINET PRIVE ZIP 6120",1
+"117","CABINET PRIVE ZIP 6181",1
+"118","CABINET PRIVE ZIP 6200",1
+"119","CABINET PRIVE ZIP 6230",2
+"120","CABINET PRIVE ZIP 6240",1
+"121","CABINET PRIVE ZIP 6280",1
+"122","CABINET PRIVE ZIP 6534",1
+"123","CABINET PRIVE ZIP 7502",1
+"124","CABINET PRIVE ZIP 7521",2
+"125","CABINET PRIVE ZIP 7531",1
+"126","CABINET PRIVE ZIP 7608",1
+"127","CABINET PRIVE ZIP 7620",1
+"128","CABINET PRIVE ZIP 7640",1
+"129","CABINET PRIVE ZIP 7760",1
+"130","CABINET RAVEL RUE DU BERGEANT 79 9",1
+"131","Centre de prélèvements du Heysel",1
+"132","Centre de tri Clinique St Jean - Pacheco",1
+"133","Centre de tri Iris-Sud",1
+"134","Centre de tri IRIS-Sud",1
+"135","Centre Hospitalier de l'Ardenne",13
+"136","Centre Hospitalier de Wallonie picarde (CHwapi)",3
+"137","Centre Hospitalier de Wallonie Picarde (CHWaPi)",12
+"138","Centre Hospitalier Interrégional Edith Cavell",3
+"139","Centrum voor Medische Analyse",1992
+"140","CENTRUM VOOR MEDISCHE ANALYSE",38
+"141","CHAUSSEE DE CHARLEROI 9",1
+"142","CHAUSSEE DE NAMUR 10",1
+"143","CHAUSSEE DE THUIN 197",1
+"144","CHC",12
+"145","CHC Liège",2
+"146","CHEE DE FLEURUS 8",1
+"147","CHEM.DES MEUNIERS 61",1
+"148","CHEMIN DE LA RAMEE 9",3
+"149","CHM - SITE CHR",52
+"150","CHR - HAUTE SENNE (TI)",1
+"151","CHR Citadelle",18
+"152","CHR de la Citadelle",52
+"153","CHR de La Citadelle",150
+"154","CHR de Namur",1
+"155","CHR Namur",1
+"156","CHR Verviers",2
+"157","Chu Tivoli",5
+"158","CHU UCL Namur, Avenue G. Thérasse 1, 5530 Yvoir, Belgium",1048
+"159","CHWAPI - SITE NOTRE DAME",505
+"160","CHWAPI - SITE NOTRE DAME"",""AVENUE DELMEE 9 ZIP 7500",1
+"161","Clinical Virology",1
+"162","Clinique André Renard Herstal",11
+"163","CLINIQUE DE BONSECOURS|AVENUE DE LA BASILIQUE 16/18",2
+"164","CLINIQUE N-D DE GRACE",352
+"165","Clinique N.D de Grâce Gosselies",24
+"166","Clinique Notre Dame à Hermalle",62
+"167","Clinique Notre Dame Waremme",28
+"168","Clinique Saint-Pierre asbl",114
+"169","Clinique Saint-Pierre Ottignies",747
+"170","Clinique St Joseph Saint Vith",97
+"171","Cliniques Cud-Luxembourg",15
+"172","Cliniques Saint-Pierre Ottignies",15
+"173","Cliniques Sud-Luxembourg",10
+"174","Cliniques universitaires Saint-Luc",3066
+"175","CRP LES MARRONNIERS 94 RUE DESPARS",2
+"176","CUB Hopital Erasme Laboratoire d'Anatomie Pathologique",11
+"177","CUSL/UCLouvain COVID testing federal platform",9
+"178","Department of Clinical Microbiology",4737
+"179","Department of Microbiology, Laboratoire Hospitalier Universitaire de Bruxelles, Université Libre de Bruxelles",1559
+"180","Drive in Ohain",1
+"181","Dutch COVID-19 response team",10
+"182","GHDC - SITE ST JOSEPH",72
+"183","GHDC - SITE ST JOSEPH ZIP 6060",1
+"184","GRAND RUE 3",11
+"185","GRAND RUE 3|GHDC SITE NOTRE DAME",2
+"186","GZA Hospital Sint-Augustinus",1
+"187","GZA Sint-Augustinus",1
+"188","GZA Sint-Augustinus Hospital",6
+"189","HCRC",12
+"190","Heilig Hart Hospital",5
+"191","Heilig Hart Hospital Lier",1
+"192","Heilig hart Lier",232
+"193","Heilig Hart Lier",1
+"194","Heilig Hart Mol",1
+"195","Heilig Hartziekenhuis Mol",1
+"196","Hôpital Princesse Paola, IFAC, Vivalia, Rue du Vivier, 21 – 6900 Marche-en-Famenne",8
+"197","Hopital Sainte Therese Bastogne",1
+"198","Hôpitaux Iris Sud Etterbeek-Ixelles",7
+"199","Hospital AZ Rivierenland",35
+"200","HOUPIERE 227",1
+"201","I.F.A.C. Hopital Princesse Paola",47
+"202","Imeda Hospital",66
+"203","Imelda hospital",7
+"204","Imelda Hospital",35
+"205","Imelda hospital Bonheiden",7
+"206","Imelda Ziekenhuis",333
+"207","Institut de Pathologie et Genetique (IPG)",4
+"208","Institute information KU Leuven, Clinical and Epidemiological Virology",1
+"209","Instituut Tropische Geneeskunde",12
+"210","IPG - 25 R GEORGES LEMAITRE",3
+"211","Jan Yperman Ziekenhuis",1
+"212","jessa",46
+"213","Jessa",3419
+"214","Jessa Ziekenhuis",28
+"215","Klinisch Laboratorium GZA",14
+"216","Klinisch laboratorium regionaal Ziekenhuis Sint-Maria",1
+"217","Klinisch Laboratorium ZNA",1881
+"218","KU Leuven, Clincal and Epidemiological Virology",1
+"219","KU Leuven, Clinical and Epidemiological Virology",183
+"220","KU Leuven, Rega Institute, Clinical and Epidemiological Virology",15803
+"221","Lab voor klinische biologie",11179
+"222","Labo Klinische Biologie, University Hospital Antwerp (UZA)",3
+"223","Labo Klinische Biologie, UZA",364
+"224","LABO LKO - LMC",4
+"225","Labo Luc Olivier",79
+"226","Labo Medicom",6
+"227","Labo Somedi",2
+"228","Laboratoire de biologie moléculaire - Plateforme Clinique",1
+"229","Laboratoire Hospitalier Universitaire de Bruxelles (LHUB-ULB)",28
+"230","Laboratoire Vivalia",13
+"231","Laboratoire Vivalia - Cliniques St-Joseph",12
+"232","Laboratoire Vivalia - Cliniques St-Joseph, Rue des Déportés 137, 6700 Arlon, Belgium",70
+"233","Laboratoire Vivalia -Cliniques St-Joseph",1
+"234","Laboratoires Réunis",1
+"235","Landstuhl Regional Medical Center",4
+"236","LHUB-ULB",898
+"237","Libramont",57
+"238","LKO",578
+"239","LKOLMC",8
+"240","MAISON MEDICALE DE RANSART MAISON MEDICALE DE RANSART PLACE FRANCOIS GOFFE, 32",1
+"241","MAISON MEDICALE DE RANSART PLACE FRANCOIS GOFFE, 32",1
+"242","MAISON MEDICALE LA BRECHE PLACE WILSON 126",1
+"243","MAISON MEDICALE|RUE DU PHENIX 3",1
+"244","marche en famenne",13
+"245","Marche en famenne",35
+"246","Marche en Famenne",206
+"247","MEDECINE GENERALE COUR MONDEZ 2",1
+"248","MEDECINE GENERALE RUE DU BIEZ 12",3
+"249","Microbiology Department - University Hospital Brussel",659
+"250","Microvida",4
+"251","National Plateform bis UMONS/Jolimont",1
+"252","National Platform bis COVID ULB-IBC",3969
+"253","National Platform bis UMONS/hCoV-19/Belgium/UMONS-hCoV-19/Belgium/UMONS-hCoV-19/Belgium/UMONS-Jolimont",43
+"254","National Platform bis UMONS/hCoV-19/Belgium/UMONS-Jolimont",46
+"255","National Platform bis UMONS/Jolimont",2667
+"256","OLVZ Aalst",464
+"257","Pl Joseph Wauters 53",2
+"258","PLACE COMMUNALE 24",1
+"259","PLACE DE BRASMENIL 3",3
+"260","PLACE DEVEZON 3",1
+"261","PLACE DU MARAIS 25",1
+"262","PLACE F GOFFE 32",1
+"263","PLACE FRANCOIS GOFFE 32",1
+"264","Plateforme BIS Namur",42
+"265","Plateforme Clinique de testing Namuroise",27
+"266","Plateforme de testing namuroise",22
+"267","Plateforme de testing Namuroise",4150
+"268","Platform BIS UZA/UAntwerpen",7972
+"269","Platform BIS UZA/UAntwerpen (PLBIS)",9
+"270","Platform BIS UZA/Uantwerpen, University Hospital Antwerp (UZA)",91
+"271","Platform BIS UZA/UAntwerpen, University Hospital Antwerp, Edegem, Belgium",23
+"272","QUAI DU REMPART 19",1
+"273","Queen Astrid Military Hospital",10
+"274","R BRASSERIE GILLIEAUX 13",4
+"275","R MARECHAL FOCH 2/A",1
+"276","R ST GERMAIN 79",1
+"277","ROUTE DE PHILIPPEVILLE 163",1
+"278","RUE ALBERT 1ER 64",1
+"279","RUE ALBERT 72",1
+"280","RUE BELLE EAU 7",10
+"281","RUE BEYAERT 26",2
+"282","RUE BLANCHE 57",4
+"283","RUE CHAMPS FALNUEE 67",1
+"284","RUE CHARLES MAUROY 28",3
+"285","RUE CORNUHAUT 8",1
+"286","RUE D'AZEBOIS 84",1
+"287","RUE DE FORMANOIR 17",3
+"288","RUE DE FRANCE 3",1
+"289","Rue de l'Esp<U+00E9>rance 24",1
+"290","RUE DE L'ESPERANCE 24",1
+"291","RUE DE LA BASSEE 79",1
+"292","RUE DE LA BELLE JOURNEE 1",2
+"293","RUE DE LA PECHERIE 19",1
+"294","RUE DE LA PETITE TAILLE 12",1
+"295","RUE DE LA ROQUE-CREPIN 18",1
+"296","RUE DE LA TANNERIE 4",1
+"297","RUE DE LA VEILLEE 44",1
+"298","RUE DE LA VIEILLE PLACE 67",1
+"299","RUE DE MARBAIX 20",6
+"300","RUE DE MARCHIENNE 113",2
+"301","RUE DE STAVE 1",1
+"302","RUE DE TOURNAI 66 A",2
+"303","RUE DES ALLIES 83",6
+"304","RUE DES BERGERS 4/0014",1
+"305","RUE DES COMBATTANTS 25",1
+"306","RUE DES DEPORTES 1",2
+"307","RUE DES ECOLES 26",1
+"308","RUE DES FALAISES 11",1
+"309","RUE DES PATURES 2A",1
+"310","RUE DES PATURES 2A, 7621 LESDAIN",2
+"311","RUE DU BAN 17",1
+"312","RUE DU BERCEAU 29",2
+"313","RUE DU BERGEANT 79",3
+"314","RUE DU BERGEANT 79|CHWAPI - SITE NOTRE DAME",3
+"315","RUE DU BON DIEU CAUWERE 4",2
+"316","RUE DU CALVAIRE 98 MAISON MEDICALE",1
+"317","RUE DU CENTENAIRE 12",1
+"318","RUE DU CENTRE 92",2
+"319","RUE DU CHAMBGE 24",1
+"320","RUE DU CHATEAU 4",2
+"321","RUE DU CHENEAU 49",1
+"322","RUE DU CRAMPON 11|CABINET PRIVE",1
+"323","RUE DU CRAMPON 111",5
+"324","RUE DU MAMBOURG 22",3
+"325","RUE DU MONT 8",3
+"326","RUE DU PHENIX 3|M.M DE DAMPREMY",1
+"327","RUE DU PONCHA 2",1
+"328","RUE DU SART-ALLET 127",1
+"329","RUE DU SART ALLET 127",2
+"330","RUE E. VANDERVELDE 125",1
+"331","RUE FAUTRIL 3",1
+"332","RUE JEAN LEROY 16",1
+"333","RUE JULES COPPEE 87",2
+"334","RUE LEON DUBOIS 241",1
+"335","RUE MARECHAL FOCH 2 A",3
+"336","RUE MARECHAL FOCH 2A",5
+"337","RUE NEUVE 96",2
+"338","RUE SAINT GERMAIN 79",1
+"339","Saint-Luc Bouge",4
+"340","Sainte-Elisabeth",25
+"341","SCIENSANO National Influenza Centre",1
+"342","SEBLES 1",1
+"343","SEQUENCING AZ TURNHOUT",3
+"344","SFZ",2
+"345","Sint-Dimpna Geel",43
+"346","Somedi",16
+"347","Somedi laboratories",27
+"348","Somedi Laboratories",39
+"349","ST. JOZEFKLINIEK-Campus Willebroek",1
+"350","St. Nikolaus-Hospital Eupen",124
+"351","STZ",3
+"352","Synlab",143
+"353","SYNLAB",5231
+"354","SYNLAB - Laboratoire J. Collard",248
+"355","The Institute of Tropical Medicine in Antwerp, Belgium",1
+"356","Trudo",4
+"357","Univeritair Ziekenhuis Antwerpen (UZA)",6
+"358","Universitair Ziekemhuis Antwerpen (UZA)",1
+"359","University Hospital Antwerp (UZA), Drie Eikenstraat 655, 2650 Edegem, Belgium",4
+"360","University Hospital Laboratory of Brussels Universitair Laboratorium van Brussel (LHUB-ULB)",1
+"361","University of Liège COVID-19 testing center",2931
+"362","US Air Force School of Aerospace Medicine",59
+"363","UZ Leuven, National Reference Laboratory for Coronaviruses, Laboratory Medicine, Leuven, Belgium",951
+"364","UZA/UAntwerpen (BIS lab), University Hospital Antwerp, Edegem, Belgium",7
+"365","VIEUX CHEMIN D'ERE 9",5
+"366","VIEUX CHEMIN D ERE 9|MAISON MEDICALE ASBL",1
+"367","Vivalia - Clinique Saint-Joseph",27
+"368","Ziekenhuis Oost-Limburg",47
+"369","ZNA Middelheim",1
+"370","ZOL",1447

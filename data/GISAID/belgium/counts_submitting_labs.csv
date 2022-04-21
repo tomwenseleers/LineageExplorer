@@ -2,60 +2,61 @@
 "1","21GM015739",1
 "2","Augustijnslei 100 2930 Brasschaat",1
 "3","AZ Delta",9
-"4","AZ Delta Medical Laboratories in Roeselare, Belgium",4575
-"5","AZ Klina",506
+"4","AZ Delta Medical Laboratories in Roeselare, Belgium",8830
+"5","AZ Klina",637
 "6","AZ KLina",1
 "7","AZ SINT-JAN BRUGGE",157
 "8","AZ Sint-Lucas Gent",21
 "9","AZ Sint Jan",121
-"10","AZ St.Jan Brugge-Oostende",306
+"10","AZ St.Jan Brugge-Oostende",551
 "11","AZDelta",713
 "12","Clinical Bacteriology",1
 "13","CUB Hopital Erasme Laboratoire d'Anatomie Pathologique",10
 "14","CUB Hopital Erasme Laboratoire d'Anatomie Pathologique Laboratoire d’Anatomie Pathologique CUB Hopital Erasme Route de Lennik, 808 1070 Brussels",1
-"15","Department of Microbiology, Laboratoire Hospitalier Universitaire de Bruxelles, Université Libre de Bruxelles",119
+"15","Department of Microbiology, Laboratoire Hospitalier Universitaire de Bruxelles, Université Libre de Bruxelles",1559
 "16","Erasmus Medical Center",7
-"17","GIGA Medical Genomics",12531
+"17","GIGA Medical Genomics",14676
 "18","HCRC",12
 "19","Imeda Hospital",78
 "20","Imelda Hospital",91
 "21","Imelda hospital Bonheiden",25
-"22","Imelda Ziekenhuis",483
-"23","Institut de Pathologie et Genetique (IPG)",981
+"22","Imelda Ziekenhuis",695
+"23","Institut de Pathologie et Genetique (IPG)",1374
 "24","Institut de Pathologie et Génétique (IPG)",39
 "25","Institute information KU Leuven, Clinical and Epidemiological Virology",1
 "26","Institute of Tropical Medicine",51
-"27","Jessa",4147
-"28","Jessa Ziekenhuis",48
-"29","Klinisch Laboratorium ZNA",1167
+"27","Jessa",5506
+"28","Jessa Ziekenhuis",85
+"29","Klinisch Laboratorium ZNA",1895
 "30","KU Leuven, Clincal and Epidemiological Virology",1
 "31","KU Leuven, Clinical and Epidemiological Virology",183
-"32","KU Leuven, Rega Institute, Clinical and Epidemiological Virology",16754
-"33","Lab voor klinische biologie",7502
-"34","Labo Klinische Biologie, UZA",8486
-"35","Laboratoire de biologie moléculaire - Plateforme Clinique",1
-"36","Laboratory of Medical Microbiology, University of Antwerp, Campus Drie Eiken, S6.26, Universiteitsplein 1, 2610, Wilrijk, Antwerp, Belgium",7
-"37","LHUB-ULB",84
-"38","Medical Microbiology, Maastricht University Medical Centre",2
-"39","Microbiology Department - University Hospital Brussel",237
-"40","Microvida",1
-"41","National Plateform bis UMONS/Jolimont",1
-"42","National Platform bis COVID ULB-IBC",2755
-"43","National Platform bis UMONS/hCoV-19/Belgium/UMONS-hCoV-19/Belgium/UMONS-hCoV-19/Belgium/UMONS-Jolimont",43
-"44","National Platform bis UMONS/hCoV-19/Belgium/UMONS-Jolimont",46
-"45","National Platform bis UMONS/Jolimont",2062
-"46","OLVZ Aalst",363
-"47","Onderzoeksgroep Virologie",298
-"48","PathoSense BV",1
-"49","Plateforme Clinique de testing Namuroise",27
-"50","Plateforme de testing namuroise",1
-"51","Plateforme de testing Namuroise",4181
-"52","Plateforme Fédérale COVID ULB-IBC",5
-"53","UAntwerp, Laboratory of Medical Microbiology",763
-"54","UAntwerp, Laboratory of Medical Microbiology,",2
-"55","UAntwerp, Laboratory of Medical Microbiology, Campus Drie Eiken S6.26, Universiteitsplein 1, 2610, Wilrijk, Antwerp, Belgium",29
-"56","UAntwerp, Laboratory of Medical Microbiology, Campus Drie Eiken S6.26, Universiteitsplein 1, 2610, Wilrijk, Belgium",13
-"57","UCLouvain/IREC/MBLG",1897
-"58","UCLouvain/IREC/MBLG-CTMA",695
-"59","US Air Force School of Aerospace Medicine",42
-"60","UZA, Clinical Biology",71
+"32","KU Leuven, Rega Institute, Clinical and Epidemiological Virology",16755
+"33","Lab voor klinische biologie",10881
+"34","Labo Klinische Biologie, University Hospital Antwerp (UZA)",130
+"35","Labo Klinische Biologie, UZA",12096
+"36","Laboratoire de biologie moléculaire - Plateforme Clinique",1
+"37","Laboratory of Medical Microbiology, University of Antwerp, Campus Drie Eiken, S6.26, Universiteitsplein 1, 2610, Wilrijk, Antwerp, Belgium",7
+"38","LHUB-ULB",84
+"39","Medical Microbiology, Maastricht University Medical Centre",2
+"40","Microbiology Department - University Hospital Brussel",660
+"41","Microvida",5
+"42","National Plateform bis UMONS/Jolimont",1
+"43","National Platform bis COVID ULB-IBC",3969
+"44","National Platform bis UMONS/hCoV-19/Belgium/UMONS-hCoV-19/Belgium/UMONS-hCoV-19/Belgium/UMONS-Jolimont",43
+"45","National Platform bis UMONS/hCoV-19/Belgium/UMONS-Jolimont",46
+"46","National Platform bis UMONS/Jolimont",2667
+"47","OLVZ Aalst",465
+"48","Onderzoeksgroep Virologie",298
+"49","PathoSense BV",1
+"50","Plateforme Clinique de testing Namuroise",27
+"51","Plateforme de testing namuroise",1
+"52","Plateforme de testing Namuroise",6391
+"53","Plateforme Fédérale COVID ULB-IBC",5
+"54","UAntwerp, Laboratory of Medical Microbiology",763
+"55","UAntwerp, Laboratory of Medical Microbiology,",2
+"56","UAntwerp, Laboratory of Medical Microbiology, Campus Drie Eiken S6.26, Universiteitsplein 1, 2610, Wilrijk, Antwerp, Belgium",29
+"57","UAntwerp, Laboratory of Medical Microbiology, Campus Drie Eiken S6.26, Universiteitsplein 1, 2610, Wilrijk, Belgium",13
+"58","UCLouvain/IREC/MBLG",1897
+"59","UCLouvain/IREC/MBLG-CTMA",1950
+"60","US Air Force School of Aerospace Medicine",63
+"61","UZA, Clinical Biology",71

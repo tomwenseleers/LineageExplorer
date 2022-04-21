@@ -221,29 +221,84 @@ d = as.Date(max(rawcases$DATE[rawcases$DATE!="unknown"]))
 # d = format(as.Date(max(rawcases$DATE[rawcases$DATE!="unknown"])), "%b %d %y")
 tag = paste("@TWenseleers\n",d)
 
-# total nr of new confirmed cases across the whole of Belgium
+# case data (total)
 cases_tot = rawcases[rawcases$PROVINCE=="All"&
                        rawcases$REGION=="Belgium"&
                        rawcases$SEX=="All"&
                        rawcases$AGEGROUP=="All",]
 cases_tot$DATE = as.Date(cases_tot$DATE)
 cases_tot = cases_tot[!is.na(cases_tot$DATE),]
-range(cases_tot$DATE) # "2020-03-01" "2021-02-21"
-cases_tot$BANKHOLIDAY = bankholiday(cases_tot$DATE)
+range(cases_tot$DATE) # "2020-03-01" "2022-04-11"
 cases_tot$DATE_NUM = as.numeric(cases_tot$DATE)
 cases_tot$TESTS_ALL = tests_tot$TESTS_ALL[match(cases_tot$DATE,tests_tot$DATE)]
+cases_tot$BANKHOLIDAY = bankholiday(cases_tot$DATE)
 cases_tot$WEEKDAY = as.factor(weekdays(as.Date(cases_tot$DATE)))
 cases_tot$OBS = factor(1:nrow(cases_tot))
 cases_tot$DAYSBEFOREPRESENT = as.Date(Sys.time())-cases_tot$DATE
 cases_tot$WEEKDAY_DAYSBEFOREPRESENT = interaction(cases_tot$WEEKDAY,cases_tot$DAYSBEFOREPRESENT)
+tail(cases_tot,14)
 cases_tot$completeness = completeness$COMPLETENESS[match(cases_tot$WEEKDAY_DAYSBEFOREPRESENT,completeness$WEEKDAY_DAYSBEFOREPRESENT)]
 cases_tot$completeness[is.na(cases_tot$completeness)] = 1
 cases_tot$CASES = round(cases_tot$CASES/cases_tot$completeness,0) # apply correction to most recent data
 cases_tot$TESTS_ALL = round(cases_tot$TESTS_ALL/cases_tot$completeness,0) # apply correction to most recent data
 cases_tot$CASESPERTEST = cases_tot$CASES/cases_tot$TESTS_ALL
 cases_tot$TESTSPERCASES = cases_tot$TESTS_ALL/(cases_tot$CASES+1)
-cases_tot = cases_tot[complete.cases(cases_tot),]
+tail(cases_tot)
 clip = 2
 if (weekdays(today)=="Sunday") clip = clip+1
 if (weekdays(today)=="Monday") clip = clip+2
-cases_tot = cases_tot[cases_tot$DATE<(as.Date(Sys.time())-clip),] # we leave out last 2-3 days since they are incomplete
+cases_tot = cases_tot[cases_tot$DATE<(as.Date(Sys.time())-clip),] # we leave out last 3-4 days since they are incomplete
+cases_tot = cases_tot[complete.cases(cases_tot),]
+# tail(cases_tot,14)
+# cases_tot = cases_tot[cases_tot$DATE>=as.Date("2020-07-01"),]
+# range(cases_tot$DATE) # "2020-03-01" "2022-04-10"
+
+# cases per province
+cases_prov = rawcases[rawcases$PROVINCE!="All"&rawcases$REGION!="Belgium"&rawcases$SEX=="All"&rawcases$AGEGROUP!="unknown"&rawcases$AGEGROUP=="All"&rawcases$PROVINCE!="unknown",]
+cases_prov$PROVINCE = as.factor(cases_prov$PROVINCE)
+cases_prov$AGEGROUP = as.factor(cases_prov$AGEGROUP)
+cases_prov$DATE = as.Date(cases_prov$DATE)
+cases_prov$DATE_NUM = as.numeric(cases_prov$DATE)
+cases_prov$PROVDATE = interaction(cases_prov$PROVINCE,cases_prov$DATE)
+cases_prov$TESTS_ALL = tests_prov$TESTS_ALL[match(cases_prov$PROVDATE,tests_prov$PROVDATE)]
+cases_prov$WEEKDAY = as.factor(weekdays(as.Date(cases_prov$DATE)))
+cases_prov$BANKHOLIDAY = as.factor(bankholiday(as.Date(cases_prov$DATE)))
+cases_prov = cases_prov[complete.cases(cases_prov),]
+cases_prov$PROVINCEAGE = interaction(cases_prov$PROVINCE, cases_prov$AGEGROUP)
+cases_prov = cases_prov[cases_prov$DATE!=max(cases_prov$DATE),]
+cases_prov = cases_prov[cases_prov$DATE!=max(cases_prov$DATE),]
+# cases_prov = cases_prov[cases_prov$DATE>=as.Date("2020-08-01"),]
+cases_prov$TESTSPERCASES = (cases_prov$TESTS_ALL+1)/(cases_prov$CASES+1)
+
+# hospitalisation data (total)
+hosp_tot = rawhospit[rawhospit$PROVINCE=="All"&rawhospit$REGION=="Belgium"&rawhospit$PROVINCE!="unknown",]
+hosp_tot$DATE = as.Date(hosp_tot$DATE)
+hosp_tot$DATE_NUM = as.numeric(hosp_tot$DATE)
+hosp_tot$BANKHOLIDAY = bankholiday(hosp_tot$DATE)
+hosp_tot$WEEKDAY = as.factor(weekdays(as.Date(hosp_tot$DATE)))
+hosp_tot$OBS = factor(1:nrow(hosp_tot))
+hosp_tot$DAYSBEFOREPRESENT = as.Date(Sys.time())-hosp_tot$DATE
+hosp_tot$WEEKDAY_DAYSBEFOREPRESENT = interaction(hosp_tot$WEEKDAY,hosp_tot$DAYSBEFOREPRESENT)
+# TO DO: calculate completeness based on archived data & correct for it
+#hosp_tot$completeness = completeness$COMPLETENESS[match(hosp_tot$WEEKDAY_DAYSBEFOREPRESENT,completeness$WEEKDAY_DAYSBEFOREPRESENT)] 
+#hosp_tot$completeness[is.na(hosp_tot$completeness)] = 1
+#hosp_tot$TOTAL_IN = round(hosp_tot$TOTAL_IN/hosp_tot$completeness,0) # apply correction to most recent data
+hosp_tot = hosp_tot[complete.cases(hosp_tot),]
+# tail(hosp_tot,14)
+
+# hospitalisation data per province
+hosp_prov = rawhospit[rawhospit$PROVINCE!="All"&rawhospit$REGION!="Belgium"&rawhospit$PROVINCE!="unknown",]
+hosp_prov$PROVINCE = as.factor(hosp_prov$PROVINCE)
+# hosp_prov$AGEGROUP = as.factor(hosp_prov$AGEGROUP) # MAYBE GET THIS FROM SCIENSANO DASHBOARD?
+hosp_prov$DATE = as.Date(hosp_prov$DATE)
+hosp_prov$DATE_NUM = as.numeric(hosp_prov$DATE)
+hosp_prov$BANKHOLIDAY = bankholiday(hosp_prov$DATE)
+hosp_prov$PROVDATE = interaction(hosp_prov$PROVINCE,hosp_prov$DATE)
+hosp_prov$TESTS_ALL = tests_prov$TESTS_ALL[match(hosp_prov$PROVDATE,tests_prov$PROVDATE)]
+hosp_prov$WEEKDAY = as.factor(weekdays(as.Date(hosp_prov$DATE)))
+hosp_prov = hosp_prov[complete.cases(hosp_prov),]
+# tail(hosp_prov)
+hosp_prov = hosp_prov[hosp_prov$DATE<=(max(hosp_prov$DATE)-3),]
+# range(hosp_prov$DATE)
+
+
