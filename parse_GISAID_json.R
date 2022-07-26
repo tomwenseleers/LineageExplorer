@@ -1,30 +1,24 @@
 # IMPORT GISAID json METADATA 
-# T. Wenseleers, 28 January 2022
+# T. Wenseleers, 20 JULY 2022
 
-# to download latest GISAID JSON run
+# to download latest GISAID JSON stream execute
 # source(".//download_GISAID_json.R")
 
-# PS takes ca an hour to load on my laptop, better run this on a workstation with a lot of memory
-
+# PS best to run this on a workstation with a lot of memory
+# takes ca half an hour to parse
 library(jsonlite)
 message("Parsing JSON GISAID records...")
 GISAID_json = jsonlite::stream_in(gzfile(".//data//GISAID_json//provision.json.xz")) 
 saveRDS(GISAID_json, ".//data/GISAID_json//GISAID_json.rds")
-nrow(GISAID_json) # data frame with 4425000 rows
-library(inspectdf)
-memcons = data.frame(inspect_mem(GISAID_json))
-memcons
-# PS most memory taken up by these columns
-#                     col_name     bytes      size      pcnt
-# 1   covsurver_prot_mutations 665094432 634.28 Mb 23.158827
-# 2  covsurver_existingmutlist 627688440 598.61 Mb 21.856337
-# 3            covv_virus_name 427700024 407.89 Mb 14.892668
-# 4          covv_accession_id 308555832 294.26 Mb 10.744025
+# GISAID_json = readRDS(".//data/GISAID_json//GISAID_json.rds")
 
+nrow(GISAID_json) # data frame with 12025647 rows
+
+sum(missingIDs %in% GISAID_json$covv_accession_id) # 113
 
 # only keep human samples
 GISAID_json = GISAID_json[GISAID_json$covv_host=="Human",] 
-nrow(GISAID_json) # data frame with 4285497  rows
+nrow(GISAID_json) # data frame with 11853650  rows
 names(GISAID_json)
 head(GISAID_json$covv_location)
 head(GISAID_json$covv_collection_date)
@@ -36,39 +30,51 @@ head(GISAID_json$covsurver_uniquemutlist)
 unique(GISAID_json$covv_sampling_strategy)
 
 library(dplyr)
-GISAID_json = mutate_at(GISAID_json, "covv_sampling_strategy", .funs=toupper)
-GISAID_json = mutate_at(GISAID_json, "covv_add_host_info", .funs=toupper)
-GISAID_json = mutate_at(GISAID_json, "covv_add_location", .funs=toupper)
+GISAID_json = mutate_at(GISAID_json, 
+                        "covv_sampling_strategy", .funs=toupper)
+GISAID_json = mutate_at(GISAID_json, 
+                        "covv_add_host_info", .funs=toupper)
+GISAID_json = mutate_at(GISAID_json, 
+                        "covv_add_location", .funs=toupper)
 
-# remove travel-related cases, active surveillance, surge testing etc
-GISAID_json = GISAID_json[!grepl("ACTIVE|S GENE|COVIGEN|S-GENE|SUSPECT|LONGITUDINAL|ASSAY|DROPOUT|CLUSTER|OUTBREAK|LONGITUDINAL|S GENE|SAME-PATIENT|TRAVEL|VOC|VARIANT|CONTACT|TRACING|PCR TEST|RETURNING|SGTF|TRIAL|FAMILY|DROPOUT|TAQPATH|WEEKLY|NON-RANDOM|SAME PATIENT|TIME-SERIES|TARGET|QUARANTINE|PASSAGE",
+# remove travel-related cases, active surveillance, surge testing, targeted S dropout sequencing, etc
+filterout_actsurv = FALSE
+
+if (filterout_actsurv) {
+filter_sampling_strategy = "ACTIVE|S GENE|COVIGEN|S-GENE|SUSPECT|LONGITUDINAL|ASSAY|DROPOUT|CLUSTER|OUTBREAK|LONGITUDINAL|S GENE|SAME-PATIENT|TRAVEL|VOC|VARIANT|CONTACT|TRACING|PCR TEST|RETURNING|SGTF|TRIAL|FAMILY|DROPOUT|TAQPATH|WEEKLY|NON-RANDOM|SAME PATIENT|TIME-SERIES|TARGET|QUARANTINE|PASSAGE"
+filter_add_host_info = "ACTIVE|S GENE|COVIGEN|S-GENE|SUSPECT|LONGITUDINAL|ASSAY|DROPOUT|CLUSTER|OUTBREAK|LONGITUDINAL|S GENE|SAME-PATIENT|TRAVEL|VOC|VARIANT|CONTACT|TRACING|PCR TEST|RETURNING|SGTF|TRIAL|FAMILY|DROPOUT|TAQPATH|WEEKLY|NON-RANDOM|SAME PATIENT|TIME-SERIES|TARGET|QUARANTINE|PASSAGE|PASSENGER|INFECTED IN|HOLIDAY|CONTACT|CAME FROM|RETURN|FROM|VISIT|FOREIGN|SKIING|IMPORT|RELATED WITH|ENTERED FROM|CASE FROM"
+filter_add_location = "ACTIVE|S GENE|COVIGEN|S-GENE|SUSPECT|LONGITUDINAL|ASSAY|DROPOUT|CLUSTER|OUTBREAK|LONGITUDINAL|S GENE|SAME-PATIENT|TRAVEL|VOC|VARIANT|CONTACT|TRACING|PCR TEST|RETURNING|SGTF|TRIAL|FAMILY|DROPOUT|TAQPATH|WEEKLY|NON-RANDOM|SAME PATIENT|TIME-SERIES|TARGET|QUARANTINE|PASSAGE|PASSENGER|INFECTED IN|HOLIDAY|CONTACT|CAME FROM|RETURN|FROM|VISIT|FOREIGN|SKIING|IMPORT|RELATED WITH|ENTERED FROM|CASE FROM|HISTOR|SAMPLED AT|TOURIST|VISIT"
+
+GISAID_json = GISAID_json[!grepl(filter_sampling_strategy,
                                  GISAID_json$covv_sampling_strategy),]
-nrow(GISAID_json) # 4211029 rows
-GISAID_json = GISAID_json[!grepl("ACTIVE|S GENE|COVIGEN|S-GENE|SUSPECT|LONGITUDINAL|ASSAY|DROPOUT|CLUSTER|OUTBREAK|LONGITUDINAL|S GENE|SAME-PATIENT|TRAVEL|VOC|VARIANT|CONTACT|TRACING|PCR TEST|RETURNING|SGTF|TRIAL|FAMILY|DROPOUT|TAQPATH|WEEKLY|NON-RANDOM|SAME PATIENT|TIME-SERIES|TARGET|QUARANTINE|PASSAGE|PASSENGER|INFECTED IN|HOLIDAY|CONTACT|CAME FROM|RETURN|FROM|VISIT|FOREIGN|SKIING|IMPORT|RELATED WITH|ENTERED FROM|CASE FROM",
+nrow(GISAID_json) # 11658421 rows
+GISAID_json = GISAID_json[!grepl(filter_add_host_info,
                                  GISAID_json$covv_add_host_info),]
-nrow(GISAID_json) # 4202123 rows
-GISAID_json = GISAID_json[!grepl("ACTIVE|S GENE|COVIGEN|S-GENE|SUSPECT|LONGITUDINAL|ASSAY|DROPOUT|CLUSTER|OUTBREAK|LONGITUDINAL|S GENE|SAME-PATIENT|TRAVEL|VOC|VARIANT|CONTACT|TRACING|PCR TEST|RETURNING|SGTF|TRIAL|FAMILY|DROPOUT|TAQPATH|WEEKLY|NON-RANDOM|SAME PATIENT|TIME-SERIES|TARGET|QUARANTINE|PASSAGE|PASSENGER|INFECTED IN|HOLIDAY|CONTACT|CAME FROM|RETURN|FROM|VISIT|FOREIGN|SKIING|IMPORT|RELATED WITH|ENTERED FROM|CASE FROM|HISTOR|SAMPLED AT|TOURIST|VISIT",
+nrow(GISAID_json) # 11641947 rows
+GISAID_json = GISAID_json[!grepl(filter_add_location,
                                  GISAID_json$covv_add_location),]
-nrow(GISAID_json) # 4195414 rows
+nrow(GISAID_json) # 11619356 rows
+# 11853650 - 11619356 # 234294 records removed (2%)
+}
 
 # parse dates & remove records with invalid dates
 library(stringr)
-date_isvalid = sapply(GISAID_json$covv_collection_date, function (s) str_count(s, pattern = "-")==2)
+date_isvalid = (str_count(GISAID_json$covv_collection_date, 
+                         pattern = "-")==2)
 GISAID_json = GISAID_json[date_isvalid,]
-GISAID_json$date = as.Date(GISAID_json$covv_collection_date) 
+library(lubridate)
+GISAID_json$date = as.Date(fast_strptime(GISAID_json$covv_collection_date, "%Y-%m-%d"))
 GISAID_json = GISAID_json[!is.na(GISAID_json$date),]
-nrow(GISAID_json) # 4068724
+nrow(GISAID_json) # 11311172
 
-# add numeric version of date, week midpoint & week & year
+# add numeric version of date, start of week & week & year
 
-# GISAID_json = GISAID_json[GISAID_json$date>=as.Date("2021-01-01"),]
-range(GISAID_json$date) # "2019-12-24" "2021-10-11"
+range(GISAID_json$date) # "2019-12-05" "2022-07-08"
 
 GISAID_json$Week = lubridate::week(GISAID_json$date)
 GISAID_json$Year = lubridate::year(GISAID_json$date)
 GISAID_json$Year_Week = interaction(GISAID_json$Year,GISAID_json$Week)
-library(lubridate)
-GISAID_json$week_midpoint = as.Date(as.character(cut(GISAID_json$date, "week")))+3.5 # week midpoint date
+GISAID_json$week_startingdate = as.Date(fast_strptime(as.character(cut(GISAID_json$date, "week")), "%Y-%m-%d"))
 GISAID_json$DATE_NUM = as.numeric(GISAID_json$date)
 names(GISAID_json)
 
@@ -87,11 +93,118 @@ levels_countries = levels(GISAID_json$country)
 GISAID_json$location = factor(loc[,3])
 levels_locations = levels(GISAID_json$location)
 
+# remove sequences not assigned to pango lineage
+removeunassigned = FALSE
+if (removeunassigned) GISAID_json = GISAID_json[!(GISAID_json$covv_lineage=="None"|GISAID_json$covv_lineage==""|is.na(GISAID_json$covv_lineage)),]
+nrow(GISAID_json)
+
+# define variant names
+sel_target_VOC = "Omicron (BA.2.75)"
+sel_reference_VOC = "Omicron (BA.5)"
+levels_VARIANTS = c(sel_reference_VOC, "Beta", "Alpha", "Other", "Delta", "Omicron (BA.1)", "Omicron (BA.2)", "Omicron (BA.3)", "Omicron (BA.4)", "Omicron (BA.2.74)", "Omicron (BA.2.76)", sel_target_VOC)
+levels_VARIANTS_plot = c("Other", "Beta", "Alpha", "Delta", "Omicron (BA.1)", "Omicron (BA.2)", "Omicron (BA.3)", "Omicron (BA.4)", "Omicron (BA.5)", "Omicron (BA.2.74)", "Omicron (BA.2.76)", "Omicron (BA.2.75)")
+
+# define variant colours
+n = length(levels_VARIANTS)
+lineage_cols = hcl(h = seq(0, 180, length = n), l = 60, c = 180)
+lineage_cols[which(levels_VARIANTS=="Alpha")] = "#0085FF"
+lineage_cols[which(levels_VARIANTS=="Beta")] = "green4"
+lineage_cols[which(levels_VARIANTS=="Delta")] = "mediumorchid"
+# lineage_cols[which(levels_VARIANTS=="C.1.2")] = "darkorange"
+lineage_cols[which(levels_VARIANTS=="Omicron (BA.1)")] = "red" # "magenta"
+lineage_cols[which(levels_VARIANTS=="Omicron (BA.2)")] = "red3"
+lineage_cols[which(levels_VARIANTS=="Omicron (BA.3)")] = "red4" 
+lineage_cols[which(levels_VARIANTS=="Omicron (BA.4)")] = "darkorange" 
+lineage_cols[which(levels_VARIANTS=="Omicron (BA.5)")] = "darkorange3" 
+lineage_cols[which(levels_VARIANTS=="Omicron (BA.2.74)")] = "black"
+lineage_cols[which(levels_VARIANTS=="Omicron (BA.2.76)")] = muted(muted("magenta")) 
+lineage_cols[which(levels_VARIANTS=="Omicron (BA.2.75)")] = "magenta" 
+lineage_cols[which(levels_VARIANTS=="Other")] = "grey65"
+
+lineage_cols_plot = lineage_cols[match(levels_VARIANTS_plot,levels_VARIANTS)]
+
+# code variants from pango lineages & AA substitutions present
+GISAID_json$pango_lineage = GISAID_json$covv_lineage
+GISAID_json$aa_substitutions = GISAID_json$covsurver_existingmutlist
+
+library(dplyr)
+# PS this is slow - optimize this, maybe use 
+# multicore version multidplyr?
+GISAID_json$variant = case_when(
+  grepl("B.1.617.2", GISAID_json$pango_lineage, fixed=T) | grepl("AY", GISAID_json$pango_lineage)  ~ "Delta",
+  grepl("^B\\.1\\.1\\.7$", GISAID_json$pango_lineage) ~ "Alpha",
+  grepl("B.1.351", GISAID_json$pango_lineage, fixed=T) ~ "Beta",
+  (grepl("^BA\\.1$|BA\\.1\\.", GISAID_json$pango_lineage)) ~ "Omicron (BA.1)",
+  (grepl("^BA\\.3$|BA\\.3\\.", GISAID_json$pango_lineage)) ~ "Omicron (BA.3)",
+  (((grepl("^BA\\.4",GISAID_json$pango_lineage)))|((grepl("BA.2",GISAID_json$pango_lineage))&
+                                                ((grepl("L452R", GISAID_json$aa_substitutions)&
+                                                    grepl("486V", GISAID_json$aa_substitutions)&
+                                                    grepl("11F", GISAID_json$aa_substitutions)&
+                                                    (!grepl("D3N",GISAID_json$aa_substitutions)) )))) ~ "Omicron (BA.4)",
+  (((grepl("^BA\\.5",GISAID_json$pango_lineage)))|((grepl("BA.2",GISAID_json$pango_lineage))&
+                                                ((grepl("L452R",GISAID_json$aa_substitutions)&
+                                                    grepl("486V",GISAID_json$aa_substitutions)&
+                                                    (!grepl("11F", GISAID_json$aa_substitutions))&
+                                                    grepl("D3N",GISAID_json$aa_substitutions))))) ~ "Omicron (BA.5)",
+  ((grepl("NSP3_S403L",GISAID_json$aa_substitutions)& 
+    grepl("NSP8_N118S",GISAID_json$aa_substitutions))) ~ "Omicron (BA.2.75)",
+  ((grepl("Spike_L452M",GISAID_json$aa_substitutions)&
+    grepl("Spike_R346T",GISAID_json$aa_substitutions))) ~ "Omicron (BA.2.74)",
+  ((grepl("Spike_Y248N",GISAID_json$aa_substitutions)&
+   grepl("Spike_R346T",GISAID_json$aa_substitutions))) ~ "Omicron (BA.2.76)",
+  (grepl("^BA\\.2",GISAID_json$pango_lineage)) ~ "Omicron (BA.2)", 
+  T ~ "Other"
+)
+
+# see https://twitter.com/JosetteSchoenma/status/1545509992572272641/photo/1
+# https://twitter.com/JosetteSchoenma/status/1546892094316445696/photo/1
+# also: 
+# BA.2.74 = S:L452M + S:R346T
+# BA.2.76 = S:Y248N + S:R346T
+# BA.2.77 = S:K356T + S:L452R + S:R493Q + S:D936H + S:E340K
+# BA.2.78 = 
+# BA.2.79 = S:N450D+S:Y248S
+# or for BA.2.75 = E_T11A,NSP3_S403L+sample date since May (https://twitter.com/CorneliusRoemer/status/1547023464602734593)
+
+sum(GISAID_json$variant=="Omicron (BA.2.75)") # 244
+GISAID_json[GISAID_json$variant=="Omicron (BA.2.75)",]
+df=as.data.frame(table(GISAID_json[GISAID_json$variant=="Omicron (BA.2.75)",
+                  "covv_location"]))
+df
+
+df=as.data.frame(table(GISAID_json[GISAID_json$variant=="Omicron (BA.2.75)",
+                  "country"]))
+df=df[df$Freq!=0,]
+colnames(df)=c("country","BA.2.75")
+df[order(df$BA.2.75,decreasing=T),]
+
+sum(grepl("Maharashtra",GISAID_json[GISAID_json$variant=="Omicron (BA.2.75)","covv_location"])) # 84
+# most BA.2.75 seqs from Maharashtra (n=84) are from Aurangabad (n=42) or Nagpur (n=36)
+
+sum(grepl("West Bengal",GISAID_json[GISAID_json$variant=="Omicron (BA.2.75)","covv_location"])) # 84
+# most BA.2.75 seqs from West Bengal (n=30) are from Kolkata (n=8)
+
+table(GISAID_json$continent, GISAID_json$variant)
+
+# define X axis for plots
+firststofmonth = seq(as.Date("2020-01-01"), as.Date("2022-12-01"), by="month")
+xaxis = scale_x_continuous(breaks=firststofmonth,
+                           labels=substring(months(firststofmonth),1,1),
+                           expand=c(0,0))
 
 
-# recode pango lineages as desired
-GISAID_json = GISAID_json[!(GISAID_json$covv_lineage=="None"|GISAID_json$covv_lineage==""|is.na(GISAID_json$covv_lineage)),]
-nrow(GISAID_json) # 3981738
+
+
+# subset to desired date range
+start_date = "2020-06-01"
+end_date = today
+GISAID_json = GISAID_json[GISAID_json$date>=as.Date(start_date)&
+                            GISAID_json$date<=as.Date(end_date),]
+nrow(GISAID_json) # 11346346
+
+
+
+
 options(max.print=1000000)
 unique(GISAID_json$covv_lineage)
 length(unique(GISAID_json$covv_lineage)) # 1393 pango lineages

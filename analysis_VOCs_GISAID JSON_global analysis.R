@@ -19,7 +19,8 @@ plotdir = "global_GISAID_records"
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 
 # import GISAID json metadata 
-# get JSON file using https://github.com/tomwenseleers/pyro-cov/blob/master/pull_gisaid.sh
+# get JSON file using 
+# https://github.com/tomwenseleers/pyro-cov/blob/master/pull_gisaid.sh
 # TO DO: maybe code that in R using RCurl or curl ?
 # @Carl: I have a username & password (https://www.epicov.org/epi3/3p/kuleuven/export/provision.json.xz)
 library(jsonlite)
@@ -63,15 +64,15 @@ GISAID_json = GISAID_json[!grepl("ACTIVE|S GENE|COVIGEN|S-GENE|SUSPECT|LONGITUDI
 nrow(GISAID_json) # 4202123 rows
 GISAID_json = GISAID_json[!grepl("ACTIVE|S GENE|COVIGEN|S-GENE|SUSPECT|LONGITUDINAL|ASSAY|DROPOUT|CLUSTER|OUTBREAK|LONGITUDINAL|S GENE|SAME-PATIENT|TRAVEL|VOC|VARIANT|CONTACT|TRACING|PCR TEST|RETURNING|SGTF|TRIAL|FAMILY|DROPOUT|TAQPATH|WEEKLY|NON-RANDOM|SAME PATIENT|TIME-SERIES|TARGET|QUARANTINE|PASSAGE|PASSENGER|INFECTED IN|HOLIDAY|CONTACT|CAME FROM|RETURN|FROM|VISIT|FOREIGN|SKIING|IMPORT|RELATED WITH|ENTERED FROM|CASE FROM|HISTOR|SAMPLED AT|TOURIST|VISIT",
                                  GISAID_json$covv_add_location),]
-nrow(GISAID_json) # 4195414 rows
+nrow(GISAID_json) # 11800835 rows
 
 # parse dates & remove records with invalid dates
 library(stringr)
 date_isvalid = sapply(GISAID_json$covv_collection_date, function (s) str_count(s, pattern = "-")==2)
 GISAID_json = GISAID_json[date_isvalid,]
-GISAID_json$date = as.Date(GISAID_json$covv_collection_date) 
+GISAID_json$date = as.Date(fast_strptime(GISAID_json$covv_collection_date, "%Y-%m-%d"))
 GISAID_json = GISAID_json[!is.na(GISAID_json$date),]
-nrow(GISAID_json) # 4068724
+nrow(GISAID_json) # 11492394
 
 # add numeric version of date, week midpoint & week & year
 

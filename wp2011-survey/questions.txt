@@ -1,0 +1,210 @@
+01
+Which of the following better describes how you use WordPress?
+If both apply to you, please choose the one that you think fits best
+A. I'm a developer, or I work for a company that develops websites; I use WordPress to build websites and/or blogs for others. (This might include theme development, writing plugins, other custom work.)
+B. I own, run, or contribute to a blog or website that is built with WordPress.
+Neither of the above.
+
+
+02
+Which of the following best describes your involvement with WordPress?
+My primary job is working for a company or organization that uses WordPress.
+My primary job is as a self-employed developer that uses WordPress.
+I earn money from part-time or occasional freelance work involving WordPress.
+Work that I do involving WordPress is just a hobby, I don't make money from it.
+
+
+03
+How does your company or organization work with WordPress?
+Build and/or maintain websites or blogs for other people, companies, or organizations.
+Build and/or maintain websites or blogs for my own use.
+Develop or customize themes.
+Host websites for customers.
+Develop or distribute plugins.
+Contribute bug reports and/or patches to WordPress core.
+Sponsor and/or attend WordCamps.
+Provide educational resources to help others to use WordPress.
+Other
+
+
+04
+How does your company or organization use WordPress when developing websites?
+Mostly as a blogging platform.
+Mostly as a content management system (CMS).
+About half the time as a blogging platform and half the time as a CMS.
+
+
+05
+How much is your average WordPress site customized from the original WordPress installation?
+Guesses are fine
+Not at all, it's still pretty much the same as the original download.
+There's a different theme and some plugins have been added.
+A lot of work has been done, the front end is unrecognizable, but the Dashboard still looks like the usual WordPress interface.
+You'd never know this was a WordPress installation, everything (including the admin) has been customized.
+
+
+06
+Roughly how many currently active WordPress sites has your company or organization built?
+0
+10
+20
+30
+40
+50
+60
+70
+80
+90
+100
+
+
+07
+MULTIPLE CHOICE 
+Roughly what percentage of your company or organization's output is based around WordPress (as opposed to other platforms or software) ?
+0 %
+
+
+08
+MULTIPLE CHOICE 
+Which of the following have you done with WordPress?
+I’ve written a theme from scratch.
+I’ve written a plugin.
+I've attended a WordCamp.
+I've attended a WordPress meetup.
+I've submitted a WordPress bug report.
+I've contributed a WordPress core patch.
+I've contributed to the WordPress codex.
+I've answered a question in the WordPress forum.
+Other
+
+
+09
+MULTIPLE CHOICE 
+Can you (truthfully!) say "I make my living from WordPress"?
+Be honest...
+Yes.
+Not really, but I do get some or all of my income as a result of working with WordPress.
+No.
+
+
+13
+MULTIPLE CHOICE 
+In which of the following ways do you work with WordPress?
+Build and/or maintain websites or blogs for other people, companies, or organizations.
+Develop or customize themes.
+Host websites for customers.
+Develop or distribute plugins.
+Contribute bug reports and/or patches to WordPress core.
+Sponsor and/or attend WordCamps.
+Provide educational resources to help others to use WordPress.
+Other
+
+
+14
+MULTIPLE CHOICE 
+How do you use WordPress in your development?
+Mostly as a blogging platform.
+Mostly as a content management system (CMS).
+About half the time as a blogging platform and half the time as a CMS.
+
+
+15
+MULTIPLE CHOICE 
+How much is your average WordPress site customized from the original WordPress installation?
+Guesses are fine
+Not at all, it's still pretty much the same as the original download.
+There's a different theme and some plugins have been added.
+A lot of work has been done, the front end is unrecognizable, but the Dashboard still looks like the usual WordPress interface.
+You'd never know this was a WordPress installation, everything (including the admin) has been customized.
+
+
+16
+MULTIPLE CHOICE 
+How many currently active WordPress sites have you built?
+0
+
+
+17
+MULTIPLE CHOICE 
+Roughly what percentage of your working time is spent working with WordPress?
+0 %
+
+
+18
+MULTIPLE CHOICE 
+Which of the following have you done with WordPress?
+I’ve written a theme from scratch.
+I’ve written a plugin.
+I've attended a WordCamp.
+I've attended a WordPress meetup.
+I've submitted a WordPress bug report.
+I've contributed a WordPress core patch.
+I've contributed to the WordPress codex.
+I've answered a question in the WordPress forum.
+Other
+
+
+19
+FREE TEXT 
+What's your approximate hourly rate for developing a WordPress site? (Answer in US dollars if possible - otherwise please state the currency)
+
+
+20
+MULTIPLE CHOICE 
+Can you (truthfully!) say "I make my living from WordPress"?
+Be honest...
+Yes.
+Not really, but I do get some or all of my income as a result of working with WordPress.
+No.
+
+
+24
+MULTIPLE CHOICE 
+Which of the following describes how you use WordPress?
+You can select more than one
+My personal blog (or blogs) uses WordPress.
+My company or organization's website is built with WordPress software.
+I write (or otherwise work) for an online publication that uses WordPress.
+I have a hobby or side project that has a website built with WordPress.
+Other
+
+
+25
+MULTIPLE CHOICE 
+Who installed your WordPress website?
+If you have more than one, please answer for the biggest site (by number of visitors) that you're involved with.
+I did.
+My hosting provider.
+A friend or family member.
+An internal web person/team or a colleague.
+An external company.
+I don't know.
+Other
+
+
+26
+MULTIPLE CHOICE 
+How much has the site been customized from the original WordPress installation?
+Guesses are fine
+Not at all, it's still pretty much the same as it was when I started out.
+There's a different theme and some plugins have been added.
+A lot of work has been done, the site itself is unrecognizable from the original theme, but the Dashboard still looks like the usual WordPress interface.
+You'd never know this was a WordPress installation, everything has been customized.
+
+
+27
+MULTIPLE CHOICE 
+Can you (truthfully!) say "I make my living from WordPress"
+Be honest...
+Yes.
+Not really, but I do get some or all of my income as a result of working with WordPress.
+No.
+
+
+32
+MULTIPLE CHOICE 
+Can you (truthfully!) say "I make my living from WordPress"?
+Be honest...
+Yes.
+Not really, but I do get some or all of my income as a result of working with WordPress.
+No.
