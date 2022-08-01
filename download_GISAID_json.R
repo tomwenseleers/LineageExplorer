@@ -1,8 +1,14 @@
 # DOWNLOAD GISAID json METADATA 
-# T. Wenseleers, 12 JULY 2022
+# T. Wenseleers, 29 JULY 2022
 
 library(curl)
 library(glue)
+
+# note: set GISAID JSON access credentials first using ####
+# Sys.setenv(GISAIDJSON_USERNAME = "XXX")
+# Sys.setenv(GISAIDJSON_PASSWORD = "XXX")
+# Sys.setenv(GISAIDJSON_STREAM = "XXX")
+source(".//set_GISAID_credentials.R")
 
 custom_curl <- function(user, pass, feed, dest) {
   custom_handle <- curl::new_handle()
@@ -20,7 +26,9 @@ custom_curl <- function(user, pass, feed, dest) {
 }
 
 message("Downloading GISAID JSON...")
-custom_curl('u0008355', 'f32oF9ASmWAsX', 'kuleuven', 
+custom_curl(Sys.getenv("GISAIDJSON_USERNAME"), 
+            Sys.getenv("GISAIDJSON_PASSWORD"), 
+            Sys.getenv("GISAIDJSON_STREAM"), 
             'data/GISAID_json/provision.json.xz')
 message("GISAID JSON download complete")
 

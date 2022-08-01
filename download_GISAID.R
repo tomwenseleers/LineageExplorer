@@ -1,15 +1,20 @@
-# DOWNLOAD GISAID METADATA 
-# T. Wenseleers, 20 JULY 2022
+# DOWNLOAD GISAID METADATA DOWNLOAD PACKAGE ####
+# T. Wenseleers, 1 AUGUST 2022
 
 library(RSelenium)
-usr="u0008355" # put GISAID username here
-psw="Tompie99" # put GISAID password here
+
+# note: set GISAID access credentials first using ####
+# Sys.setenv(GISAIDR_USERNAME = "XXX") # GISAID username
+# Sys.setenv(GISAIDR_PASSWORD = "XXX") # GISAID password
+# source(".//set_GISAID_credentials.R")
+
+usr=Sys.getenv("GISAIDR_USERNAME")  
+psw=Sys.getenv("GISAIDR_PASSWORD")  
 target_dir = "C:/Users/bherr/Documents/Github/newcovid_belgium/data/GISAID" # target download directory
 
-message("Downloading GISAID metadata...")
 browser = wdman::chrome(port = 4570L, version="102.0.5005.61", check=FALSE)
 eCaps = list(chromeOptions = list(
-  args = c('--headless', # for headless operation, but didn't work for me
+  args = c('--headless', # for headless operation
     '--no-sandbox', 
     '--disable-dev-shm-usage', 
     '--disable-blink-features=AutomationControlled',
@@ -31,7 +36,7 @@ remDr = remoteDriver(port = 4570L,
                      browserName = "chrome", 
                      extraCapabilities = eCaps)
 remDr$open()
-# supposedly needed in headless mode, but headless operation didn't work for me
+# code below needed in headless mode
 # https://stackoverflow.com/questions/35504731/specify-download-folder-in-rselenium
 remDr$queryRD(
   ipAddr = paste0(remDr$serverURL, "/session/", remDr$sessionInfo[["id"]], "/chromium/send_command"),
@@ -44,11 +49,15 @@ remDr$queryRD(
     )
   )
 )
+
+message("Downloading GISAID metadata...")
+
 remDr$navigate("https://www.epicov.org/epi3/start") 
 remDr$setImplicitWaitTimeout(milliseconds = 100)
 
 # enter credentials
-username = remDr$findElement(using = "xpath", "//input[@id='elogin']")
+username = NULL
+while (length(username)==0) { username = remDr$findElement(using = "xpath", "//input[@id='elogin']") }
 username$sendKeysToElement(list(usr))
 password = remDr$findElement(using = "xpath", "//input[@id='epassword']")
 password$sendKeysToElement(list(psw))
@@ -56,7 +65,7 @@ password$sendKeysToElement(list(psw))
 # click Login buttom
 login_button = remDr$findElement(using = "xpath", "//input[@value='Login']")
 login_button$clickElement() 
-Sys.sleep(5)
+Sys.sleep(6)
 
 epicov_tab = remDr$findElement("xpath", "//a[contains(text(),'EpiCoV™')]")
 epicov_tab$click()
@@ -64,40 +73,51 @@ Sys.sleep(1)
 
 downloads_tab = remDr$findElements("class", "sys-actionbar-action-ni")[[3]]
 downloads_tab$clickElement()
-Sys.sleep(2)
+Sys.sleep(3)
 
 # switch to right frame
-frames = remDr$findElements("tag name", "iframe")
+frames = NULL
+while (length(frames)==0) { frames = remDr$findElements("tag name", "iframe") }
 remDr$switchToFrame(frames[[1]])
 remDr$setImplicitWaitTimeout(milliseconds = 10)
 
 # available download buttons
-download_buttons = remDr$findElements("class", "kachel75")
-length(download_buttons) # 26 downloads available in total
+download_buttons = NULL
+while (length(download_buttons)==0) { download_buttons = remDr$findElements("class", "kachel75") }
+# length(download_buttons) # 26 downloads available in total
 
 # DOWNLOAD PATIENT METADATA
 metadata_button = download_buttons[[12]] # patient metadata
 metadata_button$clickElement()
-frames = remDr$findElements("tag name", "iframe")
+Sys.sleep(1)
+
+frames = NULL
+while (length(frames)==0) { frames = remDr$findElements("tag name", "iframe") }
 remDr$switchToFrame(frames[[1]])
 remDr$setImplicitWaitTimeout(milliseconds = 10)
 checkbox = remDr$findElements("class", "sys-event-hook")[[1]]
 checkbox$clickElement() 
 Sys.sleep(1)
-download = remDr$findElements("class", "sys-form-button-icon")[[2]]
-download$clickElement() # download file
+
+download_button = remDr$findElements("class", "sys-form-button")[[2]]
+download_button$clickElement() 
+Sys.sleep(15)
+
+# press OK to NOTICE AND REMINDER OF TERMS OF USE (THIS ONE DOES NOT ALWAYS SHOW UP)
+download_button = remDr$findElements("class", "sys-form-button")[[2]]
+suppressMessages(tryCatch({
+  download_button$clickElement() 
+}, error = function( err ) { message("") }))
 Sys.sleep(1)
 # wait until download finishes
-l = 1
-while (l!=0) {
-  f = list.files(target_dir, pattern=".crdownload")
-  l = length(f)
-  if (l==1) download = gsub(".crdownload", "", f, fixed=T) # name of downloaded file
+while (length(list.files(target_dir, pattern="crdownload", full.names=T))>=1) {
   Sys.sleep(1)
-} 
+}
+df = file.info(list.files(target_dir, pattern=".tar.xz", full.names = T))
+download = gsub(paste0(target_dir,"/"), "", rownames(df)[which.max(df$mtime)])
+
 message(paste0("Downloaded GISAID metadata file version ", download))
 
 remDr$close()
 browser$stop()
 remDr$quit()
-
