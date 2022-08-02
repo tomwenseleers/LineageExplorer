@@ -1,17 +1,23 @@
 # DOWNLOAD GISAID METADATA DOWNLOAD PACKAGE ####
-# T. Wenseleers, 1 AUGUST 2022
-
-library(RSelenium)
+# T. Wenseleers, 2 AUGUST 2022
 
 # note: set GISAID access credentials first using ####
 # Sys.setenv(GISAIDR_USERNAME = "XXX") # GISAID username
 # Sys.setenv(GISAIDR_PASSWORD = "XXX") # GISAID password
 # source(".//set_GISAID_credentials.R")
 
-usr=Sys.getenv("GISAIDR_USERNAME")  
-psw=Sys.getenv("GISAIDR_PASSWORD")  
-target_dir = "C:/Users/bherr/Documents/Github/newcovid_belgium/data/GISAID" # target download directory
-
+download_GISAD_meta = function(target_dir = getwd(), # target download directory
+                               usr=Sys.getenv("GISAIDR_USERNAME"),  
+                               psw=Sys.getenv("GISAIDR_PASSWORD")) {
+  # TO DO: also implement arguments clean_up=TRUE to delete downloaded file (default best set to FALSE though)
+  # and get_sequence=TRUE to also download FASTA with sequences & add those to outputted dataframe
+  
+  require(RSelenium)
+  require(readr)
+  require(archive)
+  
+  if (!dir.exists(target_dir)) dir.create(target_dir)
+                              
 browser = wdman::chrome(port = 4570L, version="102.0.5005.61", check=FALSE)
 eCaps = list(chromeOptions = list(
   args = c('--headless', # for headless operation
@@ -88,6 +94,7 @@ while (length(download_buttons)==0) { download_buttons = remDr$findElements("cla
 
 # DOWNLOAD PATIENT METADATA
 metadata_button = download_buttons[[12]] # patient metadata
+# TO DO: check available version & if that file is already present in target_dir don't bother downloading it again
 metadata_button$clickElement()
 Sys.sleep(1)
 
@@ -121,3 +128,14 @@ message(paste0("Downloaded GISAID metadata file version ", download))
 remDr$close()
 browser$stop()
 remDr$quit()
+
+message(paste0("Reading GISAID metadata file version ", download))
+
+return(read_tsv( # to directly read from archive
+  archive_read(paste0(target_dir, "//", download), file=2), 
+  col_types = cols(.default = "c")))
+
+}
+
+# example
+# GISAID = download_GISAD_meta(target_dir = "C:/Users/bherr/Documents/Github/newcovid_belgium/data/GISAID")

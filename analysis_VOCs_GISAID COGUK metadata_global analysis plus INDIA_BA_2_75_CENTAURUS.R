@@ -11,6 +11,7 @@
 # Sys.setenv(GISAIDJSON_STREAM = "XXXXX")
 # for me:
 source(".//set_GISAID_credentials.R")
+source(".//download_GISAID.R") # load function to download GISAID metadata download package (lacking records from last few days)
 source(".//download_GISAID_records.R") # load functions to download most recent GISAID records
 
 # load required packages
@@ -61,13 +62,11 @@ xaxis = scale_x_continuous(breaks=firststofmonth,
 # import GISAID metadata ####
 
 # download latest GISAID metadata ####
-source("./download_GISAID.R") # TO DO: put this in a function & add read_tsv
 target_dir = "C:/Users/bherr/Documents/Github/newcovid_belgium/data/GISAID" # target download directory
+system.time(GISAID <- download_GISAD_meta(target_dir = target_dir)) # 150s
 download = tail(list.files(target_dir, pattern=".tar.xz"), 1)
 download # "metadata_tsv_2022_08_01.tar.xz"  
-system.time(GISAID <- read_tsv( # to directly read from archive
-  archive_read(paste0(target_dir, "//", download), file=2), 
-  col_types = cols(.default = "c"))) # 166 s
+
 # records go up to submission date
 GISAID_max_submdate = as.Date(max(GISAID$`Submission date`, na.rm=T))
 GISAID_max_submdate # "2022-07-30"
@@ -108,6 +107,7 @@ d1 = read_tsv(".//data//GISAID//BA_2_75//extra//gisaid_hcov-19_2022_08_01_14.tsv
 d2 = read_tsv(".//data//GISAID//BA_2_75//extra//gisaid_hcov-19_2022_08_01_14 (1).tsv", col_types = cols(.default = "c"))
 d3 = read_tsv(".//data//GISAID//BA_2_75//extra//gisaid_hcov-19_2022_08_01_14 (2).tsv", col_types = cols(.default = "c"))
 
+# normally this should have worked, but AA field missing, so still did it manually as above
 # extra_records = download_GISAID_records(
 #     accession_ids=recent_records,
 #     get_sequence=FALSE, 
