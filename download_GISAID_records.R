@@ -8,10 +8,10 @@
 
 # function to download given records, after having logged in first
 # (max batch of 10 000 records at a time)
-downl_records = function (accession_ids=c("EPI_ISL_14041928", "EPI_ISL_14042096", "EPI_ISL_14041961"),
+downl_records = function (accession_ids,
                           get_sequence=FALSE, 
                           clean_up=FALSE,
-                          target_dir="C:/Users/bherr/Documents/Github/newcovid_belgium/data/GISAID/BA_2_75/extra",
+                          target_dir,
                           remDr=remDr) {
   require(readr)
   require(dplyr)
@@ -21,7 +21,7 @@ downl_records = function (accession_ids=c("EPI_ISL_14041928", "EPI_ISL_14042096"
   # click Select tab at the bottom
   select_tab = remDr$findElements("class", "sys-form-button")[[2]]
   select_tab$clickElement()
-  Sys.sleep(20)
+  # Sys.sleep(20)
   
   # enter desired GISAID access nrs in input field 
   frames=NULL
@@ -29,14 +29,48 @@ downl_records = function (accession_ids=c("EPI_ISL_14041928", "EPI_ISL_14042096"
   remDr$switchToFrame(frames[[1]])
   remDr$setImplicitWaitTimeout(milliseconds = 10)
   
-  # put GISAID_ids in entry form
+  # write accession IDs to file & select them via Choose file...
+  IDfile = paste0(target_dir, "/IDs.csv")
+  write.csv(accession_ids, IDfile, row.names=F) # make temporary file with IDs
+  # clear input field
   input_field = remDr$findElements("class", "sys-form-fi-multiline")[[2]]
   input_field$clickElement()
   input_field$clearElement()
-  input_field$sendKeysToElement(list(paste0(accession_ids, collapse=", ")))
+  
+  remDr$refresh()
+  
+  frames=NULL
+  while (length(frames)==0) { frames = remDr$findElements("tag name", "iframe") }
+  remDr$switchToFrame(frames[[1]])
+  remDr$setImplicitWaitTimeout(milliseconds = 10)
+
+  frames=NULL
+  while (length(frames)==0) { frames = remDr$findElements("tag name", "iframe") }
+  remDr$switchToFrame(frames[[1]])
+  remDr$setImplicitWaitTimeout(milliseconds = 10)
+  
+  file_field = remDr$findElements("name", "data")[[1]]
+  file_field$sendKeysToElement(list(IDfile))
+  
+  unlink(IDfile) # remove temporary file with IDs again
+  
+  # # put GISAID_ids in entry form
+  # # this approach only worked for small queries, so doing this via file as above 
+  # input_field = remDr$findElements("class", "sys-form-fi-multiline")[[2]]
+  # input_field$clickElement()
+  # input_field$clearElement()
+  # input_field$sendKeysToElement(list(paste0(accession_ids, collapse=", "))) 
+
   Sys.sleep(3)
   
   # click OK
+  remDr$refresh()
+  
+  frames=NULL
+  while (length(frames)==0) { frames = remDr$findElements("tag name", "iframe") }
+  remDr$switchToFrame(frames[[1]])
+  remDr$setImplicitWaitTimeout(milliseconds = 10)
+  
   OK_button = remDr$findElements("class", "sys-form-button")[[2]]
   OK_button$clickElement()
   Sys.sleep(10)
@@ -118,41 +152,8 @@ downl_records = function (accession_ids=c("EPI_ISL_14041928", "EPI_ISL_14042096"
   # read in .tsv file download
   output = read_tsv(download, 
                     col_types = cols(.default = "c"))
-  colnames(output)[which(colnames(output) %in%
-                           c("Virus name",
-                             "Accession ID",
-                             "Collection date",
-                             "Location",
-                             "Host", 
-                             "Additional location information",
-                             "Sampling strategy",
-                             "Gender",                         
-                             "Patient age",
-                             "Patient status",
-                             "Last vaccinated",
-                             "Passage",                        
-                             "Specimen",
-                             "Additional host information",    
-                             "Lineage",
-                             "Clade",                          
-                             "AA Substitutions"))] =
-    c("virus_name",
-      "accession_id",
-      "collection_date",
-      "location",
-      "host", 
-      "additional_location_information",
-      "sampling_strategy",
-      "gender",                         
-      "patient_age",
-      "patient_status",
-      "last_vaccinated",
-      "passage_details_history",                        
-      "specimen",
-      "additional_host_information",    
-      "lineage",
-      "clade",                          
-      "aa_substitutions")
+  
+  colnames(output) = gsub(" ", "_", tolower(colnames(output)))
   
   if (clean_up) unlink(download)
   
@@ -218,7 +219,8 @@ remDr$navigate("https://www.epicov.org/epi3/start")
 remDr$setImplicitWaitTimeout(milliseconds = 100)
 
 # enter credentials
-username = remDr$findElement(using = "xpath", "//input[@id='elogin']")
+username = NULL
+while (length(username)==0) { username = remDr$findElement(using = "xpath", "//input[@id='elogin']") }
 username$sendKeysToElement(list(usr))
 password = remDr$findElement(using = "xpath", "//input[@id='epassword']")
 password$sendKeysToElement(list(psw))
