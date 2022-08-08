@@ -30,7 +30,7 @@ downl_records = function (accession_ids,
   remDr$setImplicitWaitTimeout(milliseconds = 10)
   
   # write accession IDs to file & select them via Choose file...
-  IDfile = paste0(target_dir, "/IDs.csv")
+  IDfile = file.path(target_dir,"IDs.csv")
   write.csv(accession_ids, IDfile, row.names=F) # make temporary file with IDs
   # clear input field
   input_field = remDr$findElements("class", "sys-form-fi-multiline")[[2]]
@@ -172,13 +172,21 @@ download_GISAID_records = function(
                             clean_up=FALSE,
                             target_dir="C:/Users/bherr/Documents/Github/newcovid_belgium/data/GISAID/BA_2_75/extra",
                             max_batch_size=10000, # maximum batch size
+                            headless = FALSE,
+                            chromedriver_version = "104.0.5112.79",
                             usr=Sys.getenv("GISAIDR_USERNAME"),
                             psw=Sys.getenv("GISAIDR_PASSWORD")) {
 require(RSelenium)  
 
 if (!dir.exists(target_dir)) dir.create(target_dir)  
 
-browser = wdman::chrome(port = 4570L, version="104.0.5112.79", check=FALSE)
+arg = c('--no-sandbox', 
+        '--disable-dev-shm-usage', 
+        '--disable-blink-features=AutomationControlled',
+        'user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36'
+)
+if (headless) { arg = c('--headless', arg) } # for headless operation
+
 eCaps = list(chromeOptions = list(
   args = c(#'--headless', # for headless operation
            '--no-sandbox', 
@@ -194,11 +202,12 @@ eCaps = list(chromeOptions = list(
     "safebrowsing.enabled" = TRUE,
     "safebrowsing.disable_download_protection" = TRUE,
     "useAutomationExtension" = FALSE,
-    "default_directory" = gsub("/", "\\", target_dir, fixed=T)
+    "default_directory" = normalizePath(target_dir)
   )
 ))
+browser = wdman::chrome(port = 4570L, version=chromedriver_version, check=TRUE)
 remDr = remoteDriver(port = 4570L, 
-                     version="104.0.5112.79", 
+                     version = chromedriver_version, 
                      browserName = "chrome", 
                      extraCapabilities = eCaps)
 remDr$open()
@@ -211,7 +220,7 @@ remDr$queryRD(
     cmd = "Page.setDownloadBehavior",
     params = list(
       behavior = "allow",
-      downloadPath = gsub("/", "\\", target_dir, fixed=T)
+      downloadPath = normalizePath(target_dir)
     )
   )
 )

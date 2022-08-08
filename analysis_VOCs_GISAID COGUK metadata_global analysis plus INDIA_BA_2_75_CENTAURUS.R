@@ -52,7 +52,7 @@ today = as.Date(Sys.time())
 today_num = as.numeric(today)
 today # "2021-08-08"
 plotdir = "GISAID_BA_2_75"
-suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
+suppressWarnings(dir.create(file.path("plots",plotdir)))
 tag = paste("@TWenseleers\n",today)
 
 # X axis for plots
@@ -65,13 +65,19 @@ xaxis = scale_x_continuous(breaks=firststofmonth,
 
 # download latest GISAID metadata ####
 target_dir = "C:/Users/bherr/Documents/Github/newcovid_belgium/data/GISAID" # target download directory
-system.time(GISAID <- download_GISAD_meta(target_dir = target_dir)) # 214s
+system.time(GISAID <- download_GISAD_meta(target_dir = target_dir,
+                                          headless = FALSE,
+                                          chromedriver_version = "104.0.5112.79",
+                                          usr = Sys.getenv("GISAIDR_USERNAME"),
+                                          psw = Sys.getenv("GISAIDR_PASSWORD"))) # 214s
 # note: if you get a message This version of ChromeDriver only supports Chrome version xxx
-# then make sure that you have specified the right chromdedriver version (check under binman/binman_chromedriver/XXX which ones get installed)
-# downgrade your Chrome browser to version xxx using instructions at
+# then make sure that you have specified the right chromedriver version 
+# (check if installed chrome version matches some version available under binman/binman_chromedriver/XXX which ones get installed)
+# it may be necessary to downgrade your Chrome browser to version xxx using instructions at
 # https://browserhow.com/how-to-downgrade-and-install-older-version-of-chrome/#download-the-older-chrome-version
 # download browser install from https://filehippo.com/download_google-chrome/history/
 # and disable chrome updates
+
 colnames(GISAID)
 # [1] "virus_name"                      "type"                            "accession_id"                   
 # [4] "collection_date"                 "location"                        "additional_location_information"
@@ -83,17 +89,17 @@ colnames(GISAID)
 # [22] "gc_content" 
 
 download = tail(list.files(target_dir, pattern=".tar.xz"), 1)
-download # "metadata_tsv_2022_08_06.tar.xz"  
+download # "metadata_tsv_2022_08_08.tar.xz"  
 
 # records go up to submission date
 GISAID_max_submdate = as.Date(max(GISAID$submission_date, na.rm=T))
-GISAID_max_submdate # "2022-08-04"
-nrow(GISAID) # 12331474
+GISAID_max_submdate # "2022-08-06"
+nrow(GISAID) # 12372529
 
 # PS fread is slightly faster (multicore), but requires file to be unzipped first
-# system.time(archive_extract(archive=paste0(target_dir, "//", download),
+# system.time(archive_extract(archive=file.path(target_dir,download),
 #                 dir=target_dir)) # 33s
-# system.time(GISAID <- fread(paste0(target_dir, "//", "metadata.tsv"))) # 51s
+# system.time(GISAID <- fread(file.path(target_dir,"metadata.tsv"))) # 51s
 
 
 # add some extra manually downloaded data from the last few days ####
@@ -114,9 +120,9 @@ recent_records = as.vector(query(
   to_subm = as.character(today),
   fast = TRUE
 ))$accession_id
-length(recent_records) # 67981
+length(recent_records) # 14757
 recent_records = recent_records[!recent_records %in% GISAID$accession_id]
-length(recent_records) # 46182
+length(recent_records) # 12360
 
 # dataframe with recently submitted records that are not yet in GISAID metadata package download
 d_extra = download_GISAID_records(accession_ids = recent_records,
@@ -124,9 +130,11 @@ d_extra = download_GISAID_records(accession_ids = recent_records,
                                   clean_up=FALSE,
                                   target_dir="C:/Users/bherr/Documents/Github/newcovid_belgium/data/GISAID/BA_2_75/extra",
                                   max_batch_size=10000, # maximum batch size
+                                  headless = FALSE,
+                                  chromedriver_version = "104.0.5112.79",
                                   usr=Sys.getenv("GISAIDR_USERNAME"),
                                   psw=Sys.getenv("GISAIDR_PASSWORD"))
-dim(d_extra) # 46182    17
+dim(d_extra) # 12360      17
 colnames(d_extra) 
 # [1] "virus_name"                      "accession_id"                    "collection_date"                
 # [4] "location"                        "host"                            "additional_location_information"
@@ -136,10 +144,10 @@ colnames(d_extra)
 # [16] "clade"                           "aa_substitutions"  
 
 GISAID = dplyr::bind_rows(GISAID, d_extra)
-nrow(GISAID) # 12377656
+nrow(GISAID) # 12384889
 
-sum(grepl("BA.2.75", GISAID$pango_lineage, fixed=T)) # 1455
-sum(grepl("BA.2.75", GISAID$pango_lineage, fixed=T)&grepl("India", GISAID$location)) # 1108
+sum(grepl("BA.2.75", GISAID$pango_lineage, fixed=T)) # 1673
+sum(grepl("BA.2.75", GISAID$pango_lineage, fixed=T)&grepl("India", GISAID$location)) # 1316
 
 
 # with GISAIDR functions this should normally have worked, but since AA substitutions field is missing
@@ -229,7 +237,7 @@ nrow(coguk) # 2817365
 # MERGE GISAID (MINUS UK GISAID DATA) & COG-UK DATA FOR UK ####
 GISAID = dplyr::bind_rows(GISAID[GISAID$country!="United Kingdom",], 
                            coguk)
-nrow(GISAID) # 12301912
+nrow(GISAID) # 12306565
 
 # PARSE GISAID DATA ####
 GISAID = as.data.frame(GISAID) 
@@ -461,13 +469,13 @@ data_agbyweekcountry1$prop = data_agbyweekcountry1$count/data_agbyweekcountry1$t
 data_agbyweekcountry1 = data_agbyweekcountry1[data_agbyweekcountry1$total!=0,]
 data_agbyweekcountry1$floor_date = NULL
 # unmark to start here & read in aggregated counts
-# data_agbyweekcountry1 = read.csv(file=".//data//GISAID//GISAID aggregated counts by start of week and lineage.csv") 
+# data_agbyweekcountry1 = read.csv(file="./data/GISAID/GISAID aggregated counts by start of week and lineage.csv") 
 data_agbyweekcountry1$country = factor(data_agbyweekcountry1$country)
 if (is.null(data_agbyweekcountry1$continent)) data_agbyweekcountry1$continent = GISAID_sel$continent[match(data_agbyweekcountry1$country, GISAID_sel$country)]
 data_agbyweekcountry1$continent = factor(data_agbyweekcountry1$continent)
 data_agbyweekcountry1$collection_date = as.Date(data_agbyweekcountry1$collection_date)
 data_agbyweekcountry1$variant = factor(data_agbyweekcountry1$variant, levels=levels_VARIANTS)
-write.csv(data_agbyweekcountry1, file=".//data//GISAID//GISAID aggregated counts by start of week and lineage.csv", row.names=F)
+write.csv(data_agbyweekcountry1, file="./data/GISAID/GISAID aggregated counts by start of week and lineage.csv", row.names=F)
 
 # fit multinomial spline model ####
 set.seed(1)
@@ -521,7 +529,7 @@ bestfit_multi = fit9b_multi # I will use this model
 #                                    adjust="none", df=NA)$contrasts, 
 #                            p.value=as.data.frame(emtr$contrasts)$p.value)
 # delta_r
-# write.csv(delta_r, paste0(".\\plots\\",plotdir,"\\growth advantage BA.2.75 vs BA.5 by continent.csv"), row.names=F)
+# write.csv(delta_r, file.path(plots,"growth advantage BA.2.75 vs BA.5 by continent.csv"), row.names=F)
 
 emtr_pairw = emtrends(bestfit_multi, revpairwise ~ variant, by="continent", 
                 var="DATE_NUM",  mode="latent",
@@ -530,7 +538,7 @@ delta_r_pairw = data.frame(confint(emtr_pairw,
                              adjust="none", df=NA)$contrasts, 
                      p.value=as.data.frame(emtr_pairw$contrasts)$p.value)
 delta_r_pairw
-write.csv(delta_r_pairw, paste0(".\\plots\\",plotdir,"\\growth advantage BA.2.75 vs all other strains by continent.csv"), row.names=F)
+write.csv(delta_r_pairw, file.path("plots", plotdir, "growth advantage BA.2.75 vs all other strains by continent.csv"), row.names=F)
 
 delta_r_pairw2 = delta_r_pairw[delta_r_pairw$contrast %in%
                                  c("Omicron (BA.2.75) - Omicron (BA.2)",
@@ -558,7 +566,7 @@ qplot(data=delta_r_pairw2,
   labs(tag = tag) +
   theme(plot.tag.position = "bottomright",
         plot.tag = element_text(vjust = 1, hjust = 1, size=8))
-ggsave(file=paste0(".\\plots\\",plotdir,"\\growth rate advantage BA_2_75_by continent.png"), width=7, height=5)
+ggsave(file=file.path("plots", plotdir,"growth rate advantage BA_2_75_by continent.png"), width=7, height=5)
 
 
 
@@ -635,7 +643,7 @@ plot_preds_logit = qplot(data=fit_preds[fit_preds$variant!="Other"&fit_preds$cou
         plot.tag = element_text(vjust = 1, hjust = 1, size=8))
 plot_preds_logit
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\predictions global multinom fit_logit scale.png"), width=13, height=8)
+ggsave(file=file.path("plots", plotdir, "predictions global multinom fit_logit scale.png"), width=13, height=8)
 
 # map variant share onto case numbers
 
@@ -659,7 +667,7 @@ qplot(data=country_data, x=date, y=cases_new, group=country, geom="blank", colou
   theme(legend.position="none") +
   ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY IN\nTOP 3 COUNTRIES WITH MOST BA.2.75 CASES",
           subtitle="7 day simple moving average, using\nWHO case data accessed via covidregionaldata package")
-ggsave(file=paste0(".\\plots\\",plotdir,"\\new cases in top 3 countries with most BA_2_75 cases.png"), width=7, height=5)
+ggsave(file=file.path("plots", plotdir, "new cases in top 3 countries with most BA_2_75 cases.png"), width=7, height=5)
 
 fit_preds[(fit_preds$date==today)&(fit_preds$variant=="Omicron (BA.2.75)"),]
 
@@ -714,7 +722,7 @@ ggplot(data=fit_preds2,
   coord_cartesian(ylim=c(1,NA)) # +
 # coord_cartesian(xlim=c(as.Date("2021-01-01"),max(fit_india_multi_predsbystate2$collection_date)-20))
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\confirmed cases multinomial fit by country.png"), width=8, height=10)
+ggsave(file=file.path("plots", plotdir,"confirmed cases multinomial fit by country.png"), width=8, height=10)
 
 
 fit_preds3 = fit_preds2
@@ -736,7 +744,7 @@ ggplot(data=fit_preds3,
   ggtitle("NEW CONFIRMED SARS-CoV2 CASES BY VARIANT IN\nTOP 3 COUNTRIES WITH MOST SEQUENCED BA.2.75 CASES") +
   coord_cartesian(xlim=c(as.Date("2022-03-01"),NA))
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\confirmed cases stacked area multinomial fit by country.png"), width=8, height=10)
+ggsave(file=file.path("plots", plotdir,"\\confirmed cases stacked area multinomial fit by country.png"), width=8, height=10)
 
 
 
@@ -830,8 +838,7 @@ ggplot(data=cases_india_bystate[cases_india_bystate$Date>=as.Date("2022-01-01"),
 #  coord_cartesian(ylim=c(1,NA)) # +
 # coord_cartesian(xlim=c(as.Date("2021-01-01"),max(fit_india_multi_predsbystate2$collection_date)-20))
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\india_cases per day by state.png"), width=12, height=12)
-# ggsave(file=paste0(".\\plots\\",plotdir,"\\india_cases per day by state.pdf"), width=12, height=12)
+ggsave(file=file.path("plots", plotdir,"\\india_cases per day by state.png"), width=12, height=12)
 
 # plot positivity ratios per day by state
 ggplot(data=cases_india_bystate[cases_india_bystate$Date>=as.Date("2022-01-01"),],
@@ -851,8 +858,7 @@ ggplot(data=cases_india_bystate[cases_india_bystate$Date>=as.Date("2022-01-01"),
 #  coord_cartesian(ylim=c(1,NA)) # +
 # coord_cartesian(xlim=c(as.Date("2021-01-01"),max(fit_india_multi_predsbystate2$collection_date)-20))
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\india_pos ratios by state.png"), width=12, height=12)
-# ggsave(file=paste0(".\\plots\\",plotdir,"\\india_pos ratios by state.pdf"), width=12, height=12)
+ggsave(file=file.path("plots", plotdir,"india_pos ratios by state.png"), width=12, height=12)
 
 
 # GISAID data India
@@ -950,8 +956,7 @@ muller_india_raw1 = ggplot(data=data_agbyweek1, aes(x=collection_date, y=count, 
 # coord_cartesian(xlim=c(1,max(GISAID_india$Week)))
 muller_india_raw1
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\india_muller plots_raw data.png"), width=8, height=6)
-# ggsave(file=paste0(".\\plots\\",plotdir,"\\india_muller plots_raw data.pdf"), width=8, height=6)
+ggsave(file=file.path("plots", plotdir,"india_muller plots_raw data.png"), width=8, height=6)
 
 data_agbyweekregion1$variant2 = factor(data_agbyweekregion1$variant, levels=levels_VARIANTS_plot)
 muller_indiabystate_raw2 = ggplot(data=data_agbyweekregion1, aes(x=collection_date, y=count, group=variant2)) +
@@ -970,8 +975,7 @@ muller_indiabystate_raw2 = ggplot(data=data_agbyweekregion1, aes(x=collection_da
 # coord_cartesian(xlim=c(1,max(GISAID_india$Week)))
 muller_indiabystate_raw2
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\india_muller plots by state_raw data.png"), width=10, height=8)
-# ggsave(file=paste0(".\\plots\\",plotdir,"\\india_muller plots by state_raw data.pdf"), width=10, height=8)
+ggsave(file=file.path("plots", plotdir,"india_muller plots by state_raw data.png"), width=10, height=8)
 
 
 
@@ -1070,8 +1074,7 @@ date.to = today_num+extrapolate
 #   ggtitle("SPREAD OF SARS-CoV2 VOCs IN MAHARASHTRA, INDIA\n(multinomial 2 df spline fit)")
 # muller_india_mfit
 # 
-# ggsave(file=paste0(".\\plots\\",plotdir,"\\india_muller plots_multinom fit.png"), width=8, height=6)
-# ggsave(file=paste0(".\\plots\\",plotdir,"\\india_muller plots_multinom fit.pdf"), width=8, height=6)
+# ggsave(file=file.path("plots", plotdir,"india_muller plots_multinom fit.png"), width=8, height=6)
 
 
 # library(ggpubr)
@@ -1084,8 +1087,7 @@ date.to = today_num+extrapolate
 #             ggtitle("SPREAD OF SARS-CoV2 VOCs in MAHARASHTRA, INDIA", "raw GISAID data"), 
 #           muller_india_mfit+ggtitle("", "multinomial 2 df spline fit"), ncol=1)
 # 
-# ggsave(file=paste0(".\\plots\\",plotdir,"\\india_muller plots multipanel_multinom fit.png"), width=8, height=6)
-# ggsave(file=paste0(".\\plots\\",plotdir,"\\india_muller plots multipanel_multinom fit.pdf"), width=8, height=6)
+# ggsave(file=file.path("plots", plotdir,"india_muller plots multipanel_multinom fit.png"), width=8, height=6)
 
 
 # muller_indiabystate_mfit = ggplot(data=fit_india_multi_predsbystate, 
@@ -1105,8 +1107,7 @@ date.to = today_num+extrapolate
 #   ggtitle("SPREAD OF SARS-CoV2 VARIANTS B.1.617.1 & B.1.617.2 IN INDIA\n(multinomial fit)")
 # muller_indiabystate_mfit
 # 
-# ggsave(file=paste0(".\\plots\\",plotdir,"\\india_muller plots by state_multinom fit.png"), width=6, height=8)
-# ggsave(file=paste0(".\\plots\\",plotdir,"\\india_muller plots by state_multinom fit.pdf"), width=6, height=8)
+# ggsave(file=file.path("plots", plotdir,"india_muller plots by state_multinom fit.png"), width=6, height=8)
 # 
 # ggarrange(muller_indiabystate_raw2+
 #             coord_cartesian(xlim=c(as.Date("2020-06-01"),as.Date("2021-06-30")))+
@@ -1119,8 +1120,7 @@ date.to = today_num+extrapolate
 #           muller_indiabystate_mfit+ggtitle("\nMultinomial fit")+
 #             coord_cartesian(xlim=c(as.Date("2020-06-01"),as.Date("2021-06-30"))), nrow=2)
 # 
-# ggsave(file=paste0(".\\plots\\",plotdir,"\\india_muller plots by state multipanel_multinom fit.png"), width=7, height=11)
-# ggsave(file=paste0(".\\plots\\",plotdir,"\\india_muller plots by state multipanel_multinom fit.pdf"), width=7, height=11)
+# ggsave(file=file.path("plots", plotdir,"india_muller plots by state multipanel_multinom fit.png"), width=7, height=11)
 
 # PLOT MODEL FIT WITH DATA
 
@@ -1186,7 +1186,7 @@ plot_india_mfit_logit = qplot(data=fit_india_multi_preds2[fit_india_multi_preds2
         plot.tag = element_text(vjust = 1, hjust = 1, size=8))
 plot_india_mfit_logit
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\india_multinom fit_logit scale.png"), width=10, height=6)
+ggsave(file=file.path("plots", plotdir,"india_multinom fit_logit scale.png"), width=10, height=6)
 
 
 # on response scale:
@@ -1227,7 +1227,7 @@ plot_india_mfit = qplot(data=fit_india_multi_preds2[fit_india_multi_preds2$varia
         plot.tag = element_text(vjust = 1, hjust = 1, size=8))
 plot_india_mfit
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\india_multinom fit_response scale.png"), width=10, height=6)
+ggsave(file=file.path("plots", plotdir,"india_multinom fit_response scale.png"), width=10, height=6)
 
 
 # project multinomial fit onto case data ####
@@ -1315,8 +1315,7 @@ ggplot(data=fit_india_multi_predsbystate2,
   theme(plot.tag.position = "bottomright",
         plot.tag = element_text(vjust = 1, hjust = 1, size=8))
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\india_confirmed cases multinomial fit.png"), width=11, height=6)
-# ggsave(file=paste0(".\\plots\\",plotdir,"\\india_confirmed cases multinomial fit.pdf"), width=8, height=10)
+ggsave(file=file.path("plots", plotdir,"india_confirmed cases multinomial fit.png"), width=11, height=6)
 
 ggplot(data=fit_india_multi_predsbystate2, 
        aes(x=collection_date, y=cases, group=variant)) + 
@@ -1338,8 +1337,7 @@ ggplot(data=fit_india_multi_predsbystate2,
         plot.tag = element_text(vjust = 1, hjust = 1, size=8))
 
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\india_confirmed cases stacked area multinomial fit.png"), width=11, height=6)
-# ggsave(file=paste0(".\\plots\\",plotdir,"\\india_confirmed cases stacked area multinomial fit.pdf"), width=8, height=10)
+ggsave(file=file.path("plots", plotdir,"india_confirmed cases stacked area multinomial fit.png"), width=11, height=6)
 
 fit_india_multi_predsbystate3 = fit_india_multi_predsbystate2
 fit_india_multi_predsbystate3[fit_india_multi_predsbystate3$collection_date<as.Date("2022-05-01"),"cases"] = 0
@@ -1364,7 +1362,7 @@ ggplot(data=fit_india_multi_predsbystate3[fit_india_multi_predsbystate3$collecti
   theme(plot.tag.position = "bottomright",
         plot.tag = element_text(vjust = 1, hjust = 1, size=8))
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\india_confirmed cases stacked area multinomial fit_ZOOMED.png"), width=10, height=6)
+ggsave(file=file.path("plots", plotdir,"india_confirmed cases stacked area multinomial fit_ZOOMED.png"), width=10, height=6)
 
 # graph with positivity ratios by variant
 ggplot(data=fit_india_multi_predsbystate3[fit_india_multi_predsbystate3$collection_date>=as.Date("2022-04-30"),], 
@@ -1386,11 +1384,8 @@ ggplot(data=fit_india_multi_predsbystate3[fit_india_multi_predsbystate3$collecti
   theme(plot.tag.position = "bottomright",
         plot.tag = element_text(vjust = 1, hjust = 1, size=8))
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\india_positivity ratios stacked area multinomial fit_ZOOMED.png"), width=10, height=6)
-#write.csv(fit_india_multi_predsbystate3[fit_india_multi_predsbystate3$collection_date>=as.Date("2022-04-30"),],
-#                                        "multinom fit India.csv", row.names=F)
-
-write.csv(fit_india_multi_predsbystate, file=".//data//GISAID//GISAID fitted lineage frequencies multinomial spline fit by start of week and lineage_india_bystate__plus_positivity_ratios_by_state_allstateswithatleast_5_BA_2_75.csv", row.names=F)
+ggsave(file=file.path("plots", plotdir,"india_positivity ratios stacked area multinomial fit_ZOOMED.png"), width=12, height=6)
+write.csv(fit_india_multi_predsbystate, file="./data/GISAID/GISAID fitted lineage frequencies multinomial spline fit by start of week and lineage_india_bystate__plus_positivity_ratios_by_state_allstateswithatleast_5_BA_2_75.csv", row.names=F)
 
 
 ggplot(data=fit_india_multi_predsbystate2, 
@@ -1412,4 +1407,4 @@ ggplot(data=fit_india_multi_predsbystate2,
   theme(plot.tag.position = "bottomright",
         plot.tag = element_text(vjust = 1, hjust = 1, size=8))
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\india_positivity ratios stacked area multinomial fit.png"), width=11, height=6)
+ggsave(file=file.path("plots", plotdir,"india_positivity ratios stacked area multinomial fit.png"), width=12, height=6)

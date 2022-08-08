@@ -9,6 +9,7 @@
 download_GISAD_meta = function(target_dir = "C:/Users/bherr/Documents/Github/newcovid_belgium/data/GISAID", # target_dir = getwd(), # target download directory
                                clean_up = FALSE,
                                headless = FALSE,
+                               chromedriver_version = "104.0.5112.79",
                                usr = Sys.getenv("GISAIDR_USERNAME"),  
                                psw = Sys.getenv("GISAIDR_PASSWORD")) {
   # TO DO: also implement arguments clean_up=TRUE to delete downloaded file (default best set to FALSE though)
@@ -36,12 +37,12 @@ eCaps = list(chromeOptions = list(
     "safebrowsing.enabled" = TRUE,
     "safebrowsing.disable_download_protection" = TRUE,
     "useAutomationExtension" = FALSE,
-    "default_directory" = gsub("/", "\\", target_dir, fixed=T)
+    "default_directory" = normalizePath(target_dir)
   )
 ))
-browser = wdman::chrome(port = 4570L, version="104.0.5112.79", check=FALSE) # 102.0.5005.61
+browser = wdman::chrome(port = 4570L, version=chromedriver_version, check=TRUE) 
 remDr = remoteDriver(port = 4570L, 
-                     version="104.0.5112.79", # 102.0.5005.61
+                     version=chromedriver_version,
                      browserName = "chrome", 
                      extraCapabilities = eCaps)
 remDr$open()
@@ -54,7 +55,7 @@ remDr$queryRD(
     cmd = "Page.setDownloadBehavior",
     params = list(
       behavior = "allow",
-      downloadPath = gsub("/", "\\", target_dir, fixed=T)
+      downloadPath = normalizePath(target_dir)
     )
   )
 )
@@ -150,12 +151,12 @@ remDr$quit()
 
 message(paste0("Reading GISAID metadata file version ", download))
 output = read_tsv( # to directly read from archive
-  archive_read(paste0(target_dir, "//", download), file=2), 
+  archive_read(file.path(target_dir,download), file=2), 
   col_types = cols(.default = "c"))
 colnames(output) = gsub("-", "_", gsub("?", "", gsub(" ", "_", tolower(colnames(output))), fixed=T), fixed=T)
 output$pango_lineage = gsub(" (marker override based on Emerging Variants AA substitutions)", "",  output$pango_lineage, fixed=T)
 
-if (clean_up) unlink(paste0(target_dir, "//", download))
+if (clean_up) unlink(file.path(target_dir,download))
 
 return(output)
 
