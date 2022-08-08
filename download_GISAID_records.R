@@ -94,6 +94,7 @@ downl_records = function (accession_ids,
   remDr$switchToFrame(frames[[1]])
   remDr$setImplicitWaitTimeout(milliseconds = 10)
   
+  Sys.sleep(1)
   checkbox_metadata = NULL
   while (length(checkbox_metadata)==0) { checkbox_metadata = remDr$findElements("class", "sys-event-hook")[[4]] }
   checkbox_metadata$clickElement() 
@@ -154,6 +155,8 @@ downl_records = function (accession_ids,
                     col_types = cols(.default = "c"))
   
   colnames(output) = gsub(" ", "_", tolower(colnames(output)))
+  colnames(output)[which(colnames(output) %in% c("lineage"))] = "pango_lineage" # code lineage as pango_lineage as in GISAID metadata download package
+  output$pango_lineage = gsub(" (marker override based on Emerging Variants AA substitutions)", "",  output$pango_lineage, fixed=T)
   
   if (clean_up) unlink(download)
   
@@ -175,7 +178,7 @@ require(RSelenium)
 
 if (!dir.exists(target_dir)) dir.create(target_dir)  
 
-browser = wdman::chrome(port = 4570L, version="102.0.5005.61", check=FALSE)
+browser = wdman::chrome(port = 4570L, version="104.0.5112.79", check=FALSE)
 eCaps = list(chromeOptions = list(
   args = c(#'--headless', # for headless operation
            '--no-sandbox', 
@@ -195,7 +198,7 @@ eCaps = list(chromeOptions = list(
   )
 ))
 remDr = remoteDriver(port = 4570L, 
-                     version="102.0.5005.61", 
+                     version="104.0.5112.79", 
                      browserName = "chrome", 
                      extraCapabilities = eCaps)
 remDr$open()

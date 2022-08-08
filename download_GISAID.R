@@ -6,9 +6,11 @@
 # Sys.setenv(GISAIDR_PASSWORD = "XXX") # GISAID password
 # source(".//set_GISAID_credentials.R")
 
-download_GISAD_meta = function(target_dir = getwd(), # target download directory
-                               usr=Sys.getenv("GISAIDR_USERNAME"),  
-                               psw=Sys.getenv("GISAIDR_PASSWORD")) {
+download_GISAD_meta = function(target_dir = "C:/Users/bherr/Documents/Github/newcovid_belgium/data/GISAID", # target_dir = getwd(), # target download directory
+                               clean_up = FALSE,
+                               headless = FALSE,
+                               usr = Sys.getenv("GISAIDR_USERNAME"),  
+                               psw = Sys.getenv("GISAIDR_PASSWORD")) {
   # TO DO: also implement arguments clean_up=TRUE to delete downloaded file (default best set to FALSE though)
   # and get_sequence=TRUE to also download FASTA with sequences & add those to outputted dataframe
   
@@ -18,14 +20,14 @@ download_GISAD_meta = function(target_dir = getwd(), # target download directory
   
   if (!dir.exists(target_dir)) dir.create(target_dir)
                               
-browser = wdman::chrome(port = 4570L, version="102.0.5005.61", check=FALSE)
+arg = c('--no-sandbox', 
+        '--disable-dev-shm-usage', 
+        '--disable-blink-features=AutomationControlled',
+        'user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36'
+)
+if (headless) { arg = c('--headless', arg) } # for headless operation
 eCaps = list(chromeOptions = list(
-  args = c('--headless', # for headless operation
-    '--no-sandbox', 
-    '--disable-dev-shm-usage', 
-    '--disable-blink-features=AutomationControlled',
-    'user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36'
-  ),
+  args = arg,
   prefs = list(
     "profile.default_content_settings.popups" = 0L,
     "profile.default_content_setting_values.automatic_downloads" = 1L,
@@ -37,8 +39,9 @@ eCaps = list(chromeOptions = list(
     "default_directory" = gsub("/", "\\", target_dir, fixed=T)
   )
 ))
+browser = wdman::chrome(port = 4570L, version="104.0.5112.79", check=FALSE) # 102.0.5005.61
 remDr = remoteDriver(port = 4570L, 
-                     version="102.0.5005.61", 
+                     version="104.0.5112.79", # 102.0.5005.61
                      browserName = "chrome", 
                      extraCapabilities = eCaps)
 remDr$open()
@@ -92,6 +95,19 @@ download_buttons = NULL
 while (length(download_buttons)==0) { download_buttons = remDr$findElements("class", "kachel75") }
 # length(download_buttons) # 26 downloads available in total
 
+# sapply(download_buttons, function(d) d$findChildElement("class", "downicon"))
+
+downicons = remDr$findElements("class", "downicon")
+downicons_titles = sapply(downicons, function (d) d$getElementAttribute('title'))
+
+linkicons = remDr$findElements("class", "linkicon")
+linkicons_titles = sapply(linkicons, function (d) d$getElementAttribute('title'))
+
+# # TO DO : get titles of <div class="downicon" onclick="sys.call('c_rg1kzy_13e','DownloadFile',new Object({'id':'gisaid:metadata_tsv.tar.xz'}));" title="TSV-File (2022-08-01)">
+# <img src="/epi3/app_entities/entities/corona2020/download_other2.png"><div>metadata</div>
+#   </div>
+# #   
+
 # DOWNLOAD PATIENT METADATA
 metadata_button = download_buttons[[12]] # patient metadata
 # TO DO: check available version & if that file is already present in target_dir don't bother downloading it again
@@ -104,10 +120,13 @@ remDr$switchToFrame(frames[[1]])
 remDr$setImplicitWaitTimeout(milliseconds = 10)
 checkbox = remDr$findElements("class", "sys-event-hook")[[1]]
 checkbox$clickElement() 
-Sys.sleep(1)
+Sys.sleep(3)
 
-download_button = remDr$findElements("class", "sys-form-button")[[2]]
-download_button$clickElement() 
+download_button = NULL
+while (length(download_button==0)) download_button = remDr$findElements("class", "sys-form-button")[[2]]
+suppressMessages(tryCatch({
+  download_button$clickElement() 
+}, error = function( err ) { message("") }))
 Sys.sleep(15)
 
 # press OK to NOTICE AND REMINDER OF TERMS OF USE (THIS ONE DOES NOT ALWAYS SHOW UP)
@@ -130,10 +149,15 @@ browser$stop()
 remDr$quit()
 
 message(paste0("Reading GISAID metadata file version ", download))
-
-return(read_tsv( # to directly read from archive
+output = read_tsv( # to directly read from archive
   archive_read(paste0(target_dir, "//", download), file=2), 
-  col_types = cols(.default = "c")))
+  col_types = cols(.default = "c"))
+colnames(output) = gsub("-", "_", gsub("?", "", gsub(" ", "_", tolower(colnames(output))), fixed=T), fixed=T)
+output$pango_lineage = gsub(" (marker override based on Emerging Variants AA substitutions)", "",  output$pango_lineage, fixed=T)
+
+if (clean_up) unlink(paste0(target_dir, "//", download))
+
+return(output)
 
 }
 

@@ -1,6 +1,6 @@
 # ANALYSIS OF GROWTH ADVANTAGE OF BA.2.75, AKA CENTAURUS
 # T. Wenseleers
-# last update 1 AUGUST 2022
+# last update 8 AUGUST 2022
 
 # set GISAID credentials ####
 # set them first using 
@@ -10,6 +10,9 @@
 # Sys.setenv(GISAIDJSON_PASSWORD = "XXXXX")
 # Sys.setenv(GISAIDJSON_STREAM = "XXXXX")
 # for me:
+
+# devtools::install_github("Wytamma/GISAIDR")
+library(GISAIDR)
 source(".//set_GISAID_credentials.R")
 source(".//download_GISAID.R") # load function to download GISAID metadata download package (lacking records from last few days)
 source(".//download_GISAID_records.R") # load functions to download most recent GISAID records
@@ -41,14 +44,13 @@ library(covidregionaldata)
 library(tidyquant)
 library(data.table)
 library(R.utils)
-# devtools::install_github("Wytamma/GISAIDR")
-library(GISAIDR)
+
 
 # 1. LOAD DATA ####
 
 today = as.Date(Sys.time())
 today_num = as.numeric(today)
-today # "2021-07-29"
+today # "2021-08-08"
 plotdir = "GISAID_BA_2_75"
 suppressWarnings(dir.create(paste0(".//plots//",plotdir)))
 tag = paste("@TWenseleers\n",today)
@@ -63,14 +65,30 @@ xaxis = scale_x_continuous(breaks=firststofmonth,
 
 # download latest GISAID metadata ####
 target_dir = "C:/Users/bherr/Documents/Github/newcovid_belgium/data/GISAID" # target download directory
-system.time(GISAID <- download_GISAD_meta(target_dir = target_dir)) # 150s
+system.time(GISAID <- download_GISAD_meta(target_dir = target_dir)) # 214s
+# note: if you get a message This version of ChromeDriver only supports Chrome version xxx
+# then make sure that you have specified the right chromdedriver version (check under binman/binman_chromedriver/XXX which ones get installed)
+# downgrade your Chrome browser to version xxx using instructions at
+# https://browserhow.com/how-to-downgrade-and-install-older-version-of-chrome/#download-the-older-chrome-version
+# download browser install from https://filehippo.com/download_google-chrome/history/
+# and disable chrome updates
+colnames(GISAID)
+# [1] "virus_name"                      "type"                            "accession_id"                   
+# [4] "collection_date"                 "location"                        "additional_location_information"
+# [7] "sequence_length"                 "host"                            "patient_age"                    
+# [10] "gender"                          "clade"                           "pango_lineage"                  
+# [13] "pangolin_version"                "variant"                         "aa_substitutions"               
+# [16] "submission_date"                 "is_reference"                    "is_complete"                    
+# [19] "is_high_coverage"                "is_low_coverage"                 "n_content"                      
+# [22] "gc_content" 
+
 download = tail(list.files(target_dir, pattern=".tar.xz"), 1)
-download # "metadata_tsv_2022_08_01.tar.xz"  
+download # "metadata_tsv_2022_08_06.tar.xz"  
 
 # records go up to submission date
-GISAID_max_submdate = as.Date(max(GISAID$`Submission date`, na.rm=T))
-GISAID_max_submdate # "2022-07-30"
-nrow(GISAID) # 12242947
+GISAID_max_submdate = as.Date(max(GISAID$submission_date, na.rm=T))
+GISAID_max_submdate # "2022-08-04"
+nrow(GISAID) # 12331474
 
 # PS fread is slightly faster (multicore), but requires file to be unzipped first
 # system.time(archive_extract(archive=paste0(target_dir, "//", download),
@@ -96,27 +114,36 @@ recent_records = as.vector(query(
   to_subm = as.character(today),
   fast = TRUE
 ))$accession_id
-length(recent_records) # 23031
-recent_records = recent_records[!recent_records %in% GISAID$`Accession ID`]
-length(recent_records) # 20378
+length(recent_records) # 67981
+recent_records = recent_records[!recent_records %in% GISAID$accession_id]
+length(recent_records) # 46182
 
-write.csv(recent_records[1:10000],file=".//data//GISAID//BA_2_75//extra//ids1.csv", row.names=F)
-write.csv(recent_records[10001:20000],file=".//data//GISAID//BA_2_75//extra//ids2.csv", row.names=F)
-write.csv(recent_records[20001:length(recent_records)],file=".//data//GISAID//BA_2_75//extra//ids3.csv", row.names=F)
-d1 = read_tsv(".//data//GISAID//BA_2_75//extra//gisaid_hcov-19_2022_08_01_14.tsv", col_types = cols(.default = "c"))
-d2 = read_tsv(".//data//GISAID//BA_2_75//extra//gisaid_hcov-19_2022_08_01_14 (1).tsv", col_types = cols(.default = "c"))
-d3 = read_tsv(".//data//GISAID//BA_2_75//extra//gisaid_hcov-19_2022_08_01_14 (2).tsv", col_types = cols(.default = "c"))
+# dataframe with recently submitted records that are not yet in GISAID metadata package download
+d_extra = download_GISAID_records(accession_ids = recent_records,
+                                  get_sequence=FALSE, 
+                                  clean_up=FALSE,
+                                  target_dir="C:/Users/bherr/Documents/Github/newcovid_belgium/data/GISAID/BA_2_75/extra",
+                                  max_batch_size=10000, # maximum batch size
+                                  usr=Sys.getenv("GISAIDR_USERNAME"),
+                                  psw=Sys.getenv("GISAIDR_PASSWORD"))
+dim(d_extra) # 46182    17
+colnames(d_extra) 
+# [1] "virus_name"                      "accession_id"                    "collection_date"                
+# [4] "location"                        "host"                            "additional_location_information"
+# [7] "sampling_strategy"               "gender"                          "patient_age"                    
+# [10] "patient_status"                  "last_vaccinated"                 "passage"                        
+# [13] "specimen"                        "additional_host_information"     "pango_lineage"                        
+# [16] "clade"                           "aa_substitutions"  
 
-# normally this should have worked, but AA field missing, so still did it manually as above
-# extra_records = download_GISAID_records(
-#     accession_ids=recent_records,
-#     get_sequence=FALSE, 
-#     clean_up=FALSE,
-#     target_dir="C:/Users/bherr/Documents/Github/newcovid_belgium/data/GISAID/BA_2_75/extra",
-#     max_batch_size=10000, # maximum batch size
-#     usr=Sys.getenv("GISAIDR_USERNAME"),
-#     psw=Sys.getenv("GISAIDR_PASSWORD"))
+GISAID = dplyr::bind_rows(GISAID, d_extra)
+nrow(GISAID) # 12377656
 
+sum(grepl("BA.2.75", GISAID$pango_lineage, fixed=T)) # 1455
+sum(grepl("BA.2.75", GISAID$pango_lineage, fixed=T)&grepl("India", GISAID$location)) # 1108
+
+
+# with GISAIDR functions this should normally have worked, but since AA substitutions field is missing
+# I am using my own function above (this is being fixed in GISAIDR)
 # # function to split vector in chunks of max size chunk_length
 # chunk = function(x, chunk_length=4000) split(x, ceiling(seq_along(x)/chunk_length))
 # chunks = chunk(df_recent$accession_id)
@@ -127,7 +154,7 @@ d3 = read_tsv(".//data//GISAID//BA_2_75//extra//gisaid_hcov-19_2022_08_01_14 (2)
 #                      return(download(credentials = credentials, 
 #                               list_of_accession_ids = chunks[[chunk]],
 #                               clean_up=FALSE)) } ))
-# dim(downloads) # 103356     29
+# dim(downloads)
 # names(downloads)
 # # [1] "strain"                "virus"                 "accession_id"         
 # # [4] "genbank_accession"     "date"                  "region"               
@@ -155,20 +182,9 @@ d3 = read_tsv(".//data//GISAID//BA_2_75//extra//gisaid_hcov-19_2022_08_01_14 (2)
 # countries_BA_2_75 = unique(full_df_countries_BA_2_75$country)
 # countries_BA_2_75
 
-
-d_extra = rbind(d1, d2, d3)
-d_extra = d_extra[!d_extra$`Accession ID` %in% GISAID$`Accession ID`,] # remove duplicates if present
-d_extra$duplicated = duplicated(d_extra$`Accession ID`)
-d_extra = d_extra[!d_extra$duplicated,]
-d_extra$duplicated = NULL
-nrow(d_extra) # 20378
-
-GISAID = dplyr::bind_rows(GISAID, d_extra)
-nrow(GISAID) # 12263325
-
 # parse location field ####
 # parse continent / country / location (PS: location is sometimes city & sometimes province)
-loc = do.call(cbind, data.table::tstrsplit(unlist(GISAID$Location), "/", TRUE)) # parse location info
+loc = do.call(cbind, data.table::tstrsplit(unlist(GISAID$location), "/", TRUE)) # parse location info
 loc = trimws(loc, whitespace = " ")
 # unique(loc[,1]) # continent
 # unique(loc[,2]) # country
@@ -183,21 +199,37 @@ levels_locations = levels(GISAID$location)
 
 # LOAD COG-UK DATA FOR THE UNITED KINGDOM ####
 coguk = fread("https://cog-uk.s3.climb.ac.uk/phylogenetics/latest/cog_metadata.csv.gz")
-coguk$`Collection date` = as.character(coguk$sample_date)
-coguk$`Pango lineage` = coguk$lineage
-coguk$aa_substitutions = "" 
+colnames(coguk)
+colnames(coguk)[which(colnames(coguk) %in% c("sample_date", "lineage", "mutations"))] = c("collection_date", "pango_lineage", "aa_substitutions") # code as in GISAID
+coguk$aa_substitutions = gsub(":","_",gsub("S:","Spike_",coguk$aa_substitutions, fixed=T), fixed=T)
+coguk$aa_substitutions = gsub("orf1ab_S1221L", "NSP3_S403L",coguk$aa_substitutions, fixed=T)
+coguk$aa_substitutions = gsub("orf1ab_N4060S", "NSP8_N118S",coguk$aa_substitutions, fixed=T)
+
 # TO DO: convert syntax to that used in GISAID genomic epidemiology metadata download
+# now orf1ab_ still needs to be converted to NSP_ notation, rest should be OK
 # see https://github.com/theosanderson/Codon2Nucleotide/blob/main/src/App.js
 # https://codon2nucleotide.theo.io/
-coguk$Host = "Human"
+# (currently only still problems for NSPs <> orf1ab in coguk)
+# NSP8_N118S.
+# Look up the start of NSP8 in the nsps array: 3943.
+# Add 3943+118-1 = 4060 (subtract 1 because they count from 1).
+# So NSP8_N118S = orf1ab:N4060S
+
+# NSP3_S403L start of NSP3=819, 819+403-1=1221 -> = orf1ab_S1221L   
+# NSP8_N118S start of NSP8=3943, 3943+118-1=4060 -> = orf1ab_N4060S
+# I now just converted these 2 mutations to GISAID notation, as I am using these later on
+# to help identify BA.2.75
+
+coguk$host = "Human"
 coguk$country = "United Kingdom"
 coguk$continent = "Europe"
-nrow(coguk) # 2802865
+coguk$collection_date = as.character(coguk$collection_date)
+nrow(coguk) # 2817365
 
 # MERGE GISAID (MINUS UK GISAID DATA) & COG-UK DATA FOR UK ####
 GISAID = dplyr::bind_rows(GISAID[GISAID$country!="United Kingdom",], 
                            coguk)
-nrow(GISAID) # 12186865
+nrow(GISAID) # 12301912
 
 # PARSE GISAID DATA ####
 GISAID = as.data.frame(GISAID) 
@@ -228,8 +260,6 @@ lineage_cols[which(levels_VARIANTS=="Other")] = "grey65"
 lineage_cols_plot = lineage_cols[match(levels_VARIANTS_plot,levels_VARIANTS)]
 
 # CODE MAIN LINEAGES ####
-GISAID$pango_lineage = GISAID$`Pango lineage`
-GISAID$aa_substitutions = GISAID$`AA Substitutions`
 GISAID$aa_substitutions[is.na(GISAID$aa_substitutions)] = ""
 
 # PS this is slow - optimize this, maybe use multiple cores / multidplyr?
@@ -260,36 +290,39 @@ GISAID$variant = case_when(
   #                                                   grepl("D3N",GISAID$aa_substitutions))))) ~ "Omicron (BA.5)", # old pattern I was using
   (grepl("^BA\\.5",GISAID$pango_lineage)|grepl("BE|BF",GISAID$pango_lineage)|((GISAID$pango_lineage!="Unassigned")&grepl("M_D3N",GISAID$aa_substitutions))) ~ "Omicron (BA.5)", # cf pattern used by Alex Selby
   (grepl("^BA\\.2",GISAID$pango_lineage)) ~ "Omicron (BA.2)",
-  GISAID$pango_lineage!="Unassigned" ~ "Other" # assign NA to remaining Unassigned & remove them
+  GISAID$pango_lineage!="Unassigned" ~ "Other" # assigns NA to remaining Unassigned & remove them later on
   # TRUE ~ "Other"
 )
 
-sum(is.na(GISAID$variant)) # 196644 unassigned, in GISAID somewhat less - check where discrepancy comes from
-sum(GISAID$pango_lineage=="Unassigned", na.rm=T) # 182498
-sum(GISAID$variant=="Omicron (BA.2.75)", na.rm=T) # 1312 BA.2.75 
-sum(GISAID$pango_lineage=="BA.2.75", na.rm=T) # 808
-sum(GISAID$variant=="Omicron (BA.5)", na.rm=T) # 318579
+# records with valid date
+GISAID$date_isvalid = (str_count(GISAID$collection_date,
+                                 pattern = "-")==2)
+
+sum(is.na(GISAID$variant)) # 186128 unassigned
+sum(GISAID$pango_lineage=="Unassigned", na.rm=T) # 186173 originally unassigned in GISAID
+sum(GISAID$variant=="Omicron (BA.2.75)", na.rm=T) # 1779 BA.2.75
+sum(GISAID$variant=="Omicron (BA.2.75)"&GISAID$country=="India", na.rm=T) # 1424 BA.2.75 for India
+sum(GISAID$variant=="Omicron (BA.2.75)"&GISAID$date_isvalid, na.rm=T) # 1582 BA.2.75 with valid date
+sum(GISAID$variant=="Omicron (BA.2.75)"&GISAID$country=="India"&GISAID$date_isvalid, na.rm=T) # 1228 BA.2.75 for India with valid date
+sum(GISAID$pango_lineage=="BA.2.75", na.rm=T) # 1455
+sum(GISAID$variant=="Omicron (BA.5)", na.rm=T) # 404568
 table(GISAID$variant)
 
 # GISAID = GISAID[!is.na(GISAID$variant),]
-nrow(GISAID) # 12186865
+nrow(GISAID) # 12301912
 
 
-# FILTER OUT SOME INVALID GISAID RECORDS ####
+
+# GISAID SELECTION ####
 GISAID_sel = GISAID
 
 # remove records with invalid/incomplete dates ####
-GISAID_sel$date = GISAID_sel$`Collection date` 
-date_isvalid = (str_count(GISAID_sel$date,
-                          pattern = "-")==2)
-GISAID_sel = GISAID_sel[which(date_isvalid),]
+GISAID_sel$date = GISAID_sel$collection_date
+GISAID_sel = GISAID_sel[GISAID_sel$date_isvalid,]
 GISAID_sel$date = as.Date(fast_strptime(GISAID_sel$date, "%Y-%m-%d")) # faster than as.Date(GISAID$date)
 
-# keep only Human records ####
-# unique(GISAID$Host)
-# GISAID[GISAID$Host!="Human","Lineage"]
-GISAID_sel = GISAID_sel[which(GISAID_sel$Host=="Human"),]
-nrow(GISAID_sel) # 11971603
+GISAID_sel = GISAID_sel[which(GISAID_sel$host=="Human"),]
+nrow(GISAID_sel) # 12085208
 
 # filter to desired date range ####
 start_date = "2020-06-01"
@@ -297,8 +330,8 @@ end_date = today
 GISAID_sel = GISAID_sel[GISAID_sel$date>=as.Date(start_date)&
                           GISAID_sel$date<=as.Date(end_date),]
 
-range(GISAID_sel$date, na.rm=T) # "2020-06-01" "2022-07-28"
-nrow(GISAID_sel) # 11826153
+range(GISAID_sel$date, na.rm=T) # "2020-06-01" "2022-08-03"
+nrow(GISAID_sel) # 11939663
 
 # add week, year & start of week
 # fix a wrong date
@@ -316,9 +349,13 @@ table(GISAID_sel$continent, GISAID_sel$variant)
 table(GISAID_sel[GISAID_sel$variant=="Omicron (BA.2.75)","country"])
 
 nBA_2_75 = sum(GISAID_sel$variant=="Omicron (BA.2.75)", na.rm=T)
-nBA_2_75 # 1118 BA.2.75 so far
-sum(GISAID_sel$variant=="Omicron (BA.2.75)"&GISAID_sel$country=="United Kingdom", na.rm=T) # 26
-# 30 BA.2.75 in UK so far
+nBA_2_75 # 1582 BA.2.75 records so far with valid date
+
+nBA_2_75_india = sum(GISAID_sel$variant=="Omicron (BA.2.75)"&GISAID_sel$country=="India", na.rm=T)
+nBA_2_75_india # 1228 BA.2.75 records so far for India with valid date
+
+sum(GISAID_sel$variant=="Omicron (BA.2.75)"&GISAID_sel$country=="United Kingdom", na.rm=T)
+# 32 BA.2.75 in UK so far
 maxsubmdate = today
 
 
@@ -331,23 +368,28 @@ tab = as.data.frame(table(GISAID_sel$country, GISAID_sel$variant))
 
 sel_countries_min10 = as.character(tab[tab$Var2=="Omicron (BA.2.75)"&tab$Freq>=10,"Var1"])
 sel_countries_min10
-# [1] "Australia"      "Canada"         "Denmark"        "India"          "Japan"          "Nepal"         
-# [7] "Singapore"      "United Kingdom" "USA"
+# [1] "Australia"      "Canada"         "Denmark"        "India"          "Israel"        
+# [6] "Japan"          "Nepal"          "Singapore"      "United Kingdom" "USA"
 
 sel_countries = as.character(tab[tab$Var2=="Omicron (BA.2.75)"&tab$Freq>=1,"Var1"])
 sel_countries
 
-# GISAID selection : subsetted to countries with >=BA.2.75 sequence ####
+# GISAID selection : subsetted to countries with >=1 BA.2.75 sequence ####
 GISAID_sel = GISAID_sel[as.character(GISAID_sel$country) %in% sel_countries,]
-GISAID_sel = GISAID_sel[!is.na(GISAID_sel$variant),]
+GISAID_sel = GISAID_sel[!is.na(GISAID_sel$variant),] # we remove records with unassigned lineage
 GISAID_sel$country = factor(GISAID_sel$country)
-GISAID_sel$country = droplevels(GISAID_sel$country)
 table(GISAID_sel$country, GISAID_sel$variant)
 table(GISAID_sel$continent, GISAID_sel$variant)
 
 df_cont=as.data.frame(table(GISAID_sel[GISAID_sel$variant=="Omicron (BA.2.75)","continent"]))
 colnames(df_cont)=c("continent","BA.2.75")
 df_cont[order(df_cont$BA.2.75,decreasing=T),]
+#       continent BA.2.75
+# 1          Asia    1346
+# 3 North America     117
+# 2        Europe      77
+# 4       Oceania      40
+# 5 South America       2
 
 df=as.data.frame(table(GISAID_sel[GISAID_sel$variant=="Omicron (BA.2.75)","location"]))
 df=df[df$Freq!=0,]
@@ -359,6 +401,35 @@ df=df[df$Freq!=0,]
 df=df[order(df$Freq, decreasing=T),]
 colnames(df)=c("country","BA.2.75")
 df
+#           country BA.2.75
+# 9           India    1228
+# 27            USA      83
+# 20      Singapore      43
+# 1       Australia      34
+# 4          Canada      33
+# 26 United Kingdom      32
+# 13          Japan      29
+# 16          Nepal      17
+# 6         Denmark      13
+# 11         Israel      11
+# 2         Austria       9
+# 10      Indonesia       9
+# 7          France       7
+# 8         Germany       6
+# 18    New Zealand       6
+# 23    South Korea       5
+# 14     Luxembourg       4
+# 12          Italy       2
+# 19           Peru       2
+# 24       Thailand       2
+# 3        Cambodia       1
+# 5           China       1
+# 15     Martinique       1
+# 17    Netherlands       1
+# 21       Slovakia       1
+# 22       Slovenia       1
+# 25         Turkey       1
+
 
 # AGGREGATE DATA BY DATE & COUNTRY ####
 data_agbydatecountry1 = as.data.frame(table(GISAID_sel$date, GISAID_sel$country, GISAID_sel$variant))
@@ -390,13 +461,13 @@ data_agbyweekcountry1$prop = data_agbyweekcountry1$count/data_agbyweekcountry1$t
 data_agbyweekcountry1 = data_agbyweekcountry1[data_agbyweekcountry1$total!=0,]
 data_agbyweekcountry1$floor_date = NULL
 # unmark to start here & read in aggregated counts
-# data_agbyweekcountry1 = read.csv(file=".//data//GISAID//GISAID aggregated counts by week and lineage.csv") 
+# data_agbyweekcountry1 = read.csv(file=".//data//GISAID//GISAID aggregated counts by start of week and lineage.csv") 
 data_agbyweekcountry1$country = factor(data_agbyweekcountry1$country)
 if (is.null(data_agbyweekcountry1$continent)) data_agbyweekcountry1$continent = GISAID_sel$continent[match(data_agbyweekcountry1$country, GISAID_sel$country)]
 data_agbyweekcountry1$continent = factor(data_agbyweekcountry1$continent)
 data_agbyweekcountry1$collection_date = as.Date(data_agbyweekcountry1$collection_date)
 data_agbyweekcountry1$variant = factor(data_agbyweekcountry1$variant, levels=levels_VARIANTS)
-write.csv(data_agbyweekcountry1, file=".//data//GISAID//GISAID aggregated counts by week and lineage.csv", row.names=F)
+write.csv(data_agbyweekcountry1, file=".//data//GISAID//GISAID aggregated counts by start of week and lineage.csv", row.names=F)
 
 # fit multinomial spline model ####
 set.seed(1)
@@ -418,7 +489,7 @@ fit9b_multi = nnet::multinom(variant ~ ns(DATE_NUM, df=3)+ns(DATE_NUM, df=3):con
 #fit10_multi = nnet::multinom(variant ~ ns(DATE_NUM, df=2)*country, weights=count, data=data_agbyweekcountry1, maxit=1000)
 #fit11_multi = nnet::multinom(variant ~ ns(DATE_NUM, df=2), weights=count, data=data_agbyweekcountry1, maxit=1000)
 
-BIC(fit8_multi, fit8b_multi,fit9_multi, fit9b_multi) 
+BIC(fit9_multi, fit9b_multi) 
 # fit9_multi has best BIC, fit9b_multi & fit8b_multi close
 
 bestfit_multi = fit9b_multi # I will use this model
@@ -493,7 +564,7 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\growth rate advantage BA_2_75_by cont
 
 # PLOT MULTINOMIAL FIT
 
-extrapolate = 30
+extrapolate = 150
 date.from = as.numeric(as.Date("2020-06-01"))
 date.to = today_num+extrapolate # max(GISAID_sel$DATE_NUM, na.rm=T)
 
@@ -515,6 +586,8 @@ levels_country = c("India", "Nepal", "China",
                    as.character(levels_country)[!as.character(levels_country) %in% c("India","Nepal","China")])
 fit_preds$country = factor(fit_preds$country, levels=levels_country)
 fit_preds$continent = factor(fit_preds$continent)
+write.csv(fit_preds, file=".//data//GISAID//GISAID fitted lineage frequencies multinomial spline fit by start of week and lineage.csv", row.names=F)
+
 
 # PLOT OF MULTINOMIAL FIT ON LOGIT SCALE ####
 ymin = 0.0001
@@ -549,20 +622,20 @@ plot_preds_logit = qplot(data=fit_preds[fit_preds$variant!="Other"&fit_preds$cou
              ),
              alpha=I(1)) +
   scale_size_continuous("total number\nsequenced", trans="sqrt",
-                        range=c(1, 5), limits=c(1,max(data_agbyweekcountry1$total)), 
+                        range=c(0.1, 3), limits=c(1,max(data_agbyweekcountry1$total)), 
                         breaks=c(10,100,1000, 10000)) +
   # guides(fill=FALSE) +
   # guides(colour=FALSE) +
   theme(legend.position = "right") +
   xlab("Collection date (start of week)") +
-  coord_cartesian(xlim=c(as.Date("2022-01-01"),NA), 
+  coord_cartesian(xlim=c(as.Date("2020-11-01"),NA), 
                   ylim=c(0.0001, 0.99901), expand=0) +
   labs(tag = tag) +
   theme(plot.tag.position = "bottomright",
         plot.tag = element_text(vjust = 1, hjust = 1, size=8))
 plot_preds_logit
 
-ggsave(file=paste0(".\\plots\\",plotdir,"\\predictions global multinom fit_logit scale.png"), width=11, height=8)
+ggsave(file=paste0(".\\plots\\",plotdir,"\\predictions global multinom fit_logit scale.png"), width=13, height=8)
 
 # map variant share onto case numbers
 
@@ -589,7 +662,6 @@ qplot(data=country_data, x=date, y=cases_new, group=country, geom="blank", colou
 ggsave(file=paste0(".\\plots\\",plotdir,"\\new cases in top 3 countries with most BA_2_75 cases.png"), width=7, height=5)
 
 fit_preds[(fit_preds$date==today)&(fit_preds$variant=="Omicron (BA.2.75)"),]
-# 81% [] in Nepal, 65% [] in India, 6.5% [] in Japan 
 
 # fit_multi_predsbycountry = data.frame(emmeans(fit8_multi,
 #                                                   ~ variant,
@@ -740,14 +812,6 @@ cases_india_bystate = cases_india_bystate[cases_india_bystate$State!="India",]
 levels_STATES = sort(unique(cases_india_bystate$State))
 levels_STATES
 
-ggplot(data=cases_india_bystate[cases_india_bystate$State=="Chandigarh",],
-       aes(x=Date, y=newcases))+geom_line()+coord_cartesian(xlim=c(as.Date("2022-04-01"),NA),
-                                                            ylim=c(0,200))
-
-ggplot(data=cases_india_bystate[cases_india_bystate$State=="Chandigarh",],
-       aes(x=Date, y=posratio))+geom_line()+coord_cartesian(xlim=c(as.Date("2022-04-01"),NA),
-                                                            ylim=c(0,30))
-
 # plot new cases per day by state
 ggplot(data=cases_india_bystate[cases_india_bystate$Date>=as.Date("2022-01-01"),],
        aes(x=Date, y=newcases, 
@@ -797,7 +861,7 @@ GISAID_india = GISAID_sel[as.character(GISAID_sel$country)=="India",]
 GISAID_india$location = droplevels(GISAID_india$location)
 GISAID_india = GISAID_india[!is.na(GISAID_india$location),]
 GISAID_india = GISAID_india[!toupper(as.character(GISAID_india$location))=="NAIROBI",]
-nrow(GISAID_india) # 187814
+nrow(GISAID_india) # 190101
 table(GISAID_india$variant, GISAID_india$location)
 sort(unique(toupper(as.character(GISAID_india$location))))
 
@@ -814,9 +878,9 @@ tab_BA_2_75 = tab_BA_2_75[order(tab_BA_2_75$Freq, decreasing=T),]
 tab_BA_2_75[tab_BA_2_75$Freq!=0,]
 sel_states = as.character(tab_BA_2_75$Var2[tab_BA_2_75$Freq>=5])
 sel_states
-# [1] "West Bengal"      "Maharashtra"      "Rajasthan"        "Delhi"            "Gujarat"          "Odisha"          
-# [7] "Himachal Pradesh" "Haryana"          "Tamil Nadu"       "Telangana"        "Chhattisgarh"     "Madhya Pradesh"  
-# [13] "Chandigarh"
+# [1] "West Bengal"      "Maharashtra"      "Odisha"           "Delhi"            "Telangana"       
+# [6] "Rajasthan"        "Gujarat"          "Himachal Pradesh" "Haryana"          "Tamil Nadu"      
+# [11] "Assam"            "Chhattisgarh"     "Madhya Pradesh"   "Chandigarh"
 
 GISAID_india = GISAID_india[as.character(GISAID_india$location) %in%
                               sel_states, ]
@@ -828,7 +892,7 @@ table(GISAID_india[GISAID_india$date>=as.Date("2022-06-01"),"variant"],
       GISAID_india[GISAID_india$date>=as.Date("2022-06-01"),"pango_lineage"])
 
 nBA_2_75_india = sum(GISAID_india$variant=="Omicron (BA.2.75)")
-nBA_2_75_india # 855
+nBA_2_75_india # 1215
 
 # aggregated data to make Muller plots of raw data
 # aggregated by week for selected variant lineages for whole of India
@@ -864,6 +928,7 @@ data_agbyweekregion1$floor_date = NULL
 data_agbyweekregion1$location = data_agbyweekregion1$division
 data_agbyweekregion1$location = droplevels(data_agbyweekregion1$location)
 data_agbyweekregion1$DATE_NUM = data_agbyweekregion1$collection_date_num
+write.csv(data_agbyweekregion1, file=".//data//GISAID//GISAID aggregated counts by start of week and lineage_india_bystate_allstateswithatleast_5_BA_2_75.csv", row.names=F)
 
 
 # MULLER PLOT (RAW DATA)
@@ -890,7 +955,7 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\india_muller plots_raw data.png"), wi
 
 data_agbyweekregion1$variant2 = factor(data_agbyweekregion1$variant, levels=levels_VARIANTS_plot)
 muller_indiabystate_raw2 = ggplot(data=data_agbyweekregion1, aes(x=collection_date, y=count, group=variant2)) +
-  facet_wrap(~ division, ncol=3) +
+  facet_wrap(~ division, ncol=4) +
   geom_col(aes(width=I(10), colour=NULL, fill=variant2, group=variant2), position="fill") +
   scale_fill_manual("", values=lineage_cols_plot) +
   xaxis +
@@ -918,11 +983,11 @@ GISAID_india$variant = factor(GISAID_india$variant, levels=levels_VARIANTS)
 # fit1_india_multi = nnet::multinom(variant ~ scale(DATE_NUM)+location, data=GISAID_india, maxit=1000)
 # fit2_india_multi = nnet::multinom(variant ~ ns(DATE_NUM, df=2)+location, data=GISAID_india, maxit=1000)
 # fit3_india_multi = nnet::multinom(variant ~ ns(DATE_NUM, df=3)+location, data=GISAID_india, maxit=1000)
-fit1_india_multi = nnet::multinom(variant ~ scale(DATE_NUM)+location, weights=count, data=data_agbyweekregion1, maxit=10000)
-fit2_india_multi = nnet::multinom(variant ~ ns(DATE_NUM, df=2)+location, weights=count, data=data_agbyweekregion1, maxit=10000)
+# fit1_india_multi = nnet::multinom(variant ~ scale(DATE_NUM)+location, weights=count, data=data_agbyweekregion1, maxit=10000)
+# fit2_india_multi = nnet::multinom(variant ~ ns(DATE_NUM, df=2)+location, weights=count, data=data_agbyweekregion1, maxit=10000)
 fit3_india_multi = nnet::multinom(variant ~ ns(DATE_NUM, df=3)+location, weights=count, data=data_agbyweekregion1, maxit=10000)
-fit4_india_multi = nnet::multinom(variant ~ ns(DATE_NUM, df=2)*location, weights=count, data=data_agbyweekregion1, maxit=10000)
-fit5_india_multi = nnet::multinom(variant ~ ns(DATE_NUM, df=3)*location, weights=count, data=data_agbyweekregion1, maxit=10000)
+# fit4_india_multi = nnet::multinom(variant ~ ns(DATE_NUM, df=2)*location, weights=count, data=data_agbyweekregion1, maxit=10000)
+# fit5_india_multi = nnet::multinom(variant ~ ns(DATE_NUM, df=3)*location, weights=count, data=data_agbyweekregion1, maxit=10000)
 BIC(fit1_india_multi, fit2_india_multi, fit3_india_multi, fit4_india_multi, fit5_india_multi) 
 # fit3_india_multi has best BIC
 
@@ -1072,6 +1137,9 @@ levels_state = rev(fit_preds[fit_preds$date==today&fit_preds$variant=="Omicron (
 as.character(levels_state)
 fit_preds$location = factor(fit_preds$location, levels=levels_state)
 
+write.csv(fit_preds, file=".//data//GISAID//GISAID fitted lineage frequencies multinomial spline fit by start of week and lineage_india_bystate_allstateswithatleast_5_BA_2_75.csv", row.names=F)
+
+
 # on logit scale:
 
 fit_india_multi_preds2 = fit_preds
@@ -1084,7 +1152,7 @@ fit_india_multi_preds2$prob[fit_india_multi_preds2$prob<ymin] = ymin
 
 plot_india_mfit_logit = qplot(data=fit_india_multi_preds2[fit_india_multi_preds2$variant!="Other",], 
                               x=date, y=prob, geom="blank") +
-  facet_wrap(~location, ncol=3) +
+  facet_wrap(~location, ncol=4) +
   # geom_ribbon(aes(y=prob, ymin=asymp.LCL, ymax=asymp.UCL, colour=NULL,
   #                 fill=variant
   # ), alpha=I(0.3)) +
@@ -1124,7 +1192,7 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\india_multinom fit_logit scale.png"),
 # on response scale:
 plot_india_mfit = qplot(data=fit_india_multi_preds2[fit_india_multi_preds2$variant!="Other",], x=date, 
                         y=100*prob, geom="blank") +
-  facet_wrap(~location, ncol=3) +
+  facet_wrap(~location, ncol=4) +
   # geom_ribbon(aes(y=100*prob, ymin=100*asymp.LCL, ymax=100*asymp.UCL, 
   #                 colour=NULL,
   #                 fill=variant
@@ -1228,7 +1296,7 @@ fit_india_multi_predsbystate2$variant = factor(fit_india_multi_predsbystate2$var
 
 ggplot(data=fit_india_multi_predsbystate2, 
        aes(x=collection_date, y=cases)) + 
-  facet_wrap(~ location, scale="free", ncol=3) +
+  facet_wrap(~ location, scale="free", ncol=4) +
   geom_line(aes(lwd=I(1), colour=variant, group=variant)) +
   geom_line(data=fit_india_multi_predsbystate2, aes(x=collection_date, y=totnewcases_smoothed, lwd=I(1.5)), colour=alpha("black",0.3)) +
   # geom_line(aes(lwd=I(1), colour=LINEAGE2, group=LINEAGE2)) +
@@ -1252,7 +1320,7 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\india_confirmed cases multinomial fit
 
 ggplot(data=fit_india_multi_predsbystate2, 
        aes(x=collection_date, y=cases, group=variant)) + 
-  facet_wrap(~ location, scale="free", ncol=3) +
+  facet_wrap(~ location, scale="free", ncol=4) +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), position="stack") +
   scale_fill_manual("", values=lineage_cols_plot) +
   # annotate("rect", xmin=max(GISAID_india$DATE_NUM)+1, 
@@ -1279,7 +1347,7 @@ fit_india_multi_predsbystate3[fit_india_multi_predsbystate3$collection_date<as.D
 
 ggplot(data=fit_india_multi_predsbystate3[fit_india_multi_predsbystate3$collection_date>=as.Date("2022-04-30"),], 
        aes(x=collection_date, y=cases, group=variant)) + 
-  facet_wrap(~ location, scale="free", ncol=3) +
+  facet_wrap(~ location, scale="free", ncol=4) +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), position="stack") +
   scale_fill_manual("", values=lineage_cols_plot) +
   # annotate("rect", xmin=max(GISAID_india$DATE_NUM)+1, 
@@ -1301,7 +1369,7 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\india_confirmed cases stacked area mu
 # graph with positivity ratios by variant
 ggplot(data=fit_india_multi_predsbystate3[fit_india_multi_predsbystate3$collection_date>=as.Date("2022-04-30"),], 
        aes(x=collection_date, y=posratio, group=variant)) + 
-  facet_wrap(~ location, scale="free", ncol=3) +
+  facet_wrap(~ location, scale="free", ncol=4) +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), position="stack") +
   scale_fill_manual("", values=lineage_cols_plot) +
   # annotate("rect", xmin=max(GISAID_india$DATE_NUM)+1, 
@@ -1322,9 +1390,12 @@ ggsave(file=paste0(".\\plots\\",plotdir,"\\india_positivity ratios stacked area 
 #write.csv(fit_india_multi_predsbystate3[fit_india_multi_predsbystate3$collection_date>=as.Date("2022-04-30"),],
 #                                        "multinom fit India.csv", row.names=F)
 
+write.csv(fit_india_multi_predsbystate, file=".//data//GISAID//GISAID fitted lineage frequencies multinomial spline fit by start of week and lineage_india_bystate__plus_positivity_ratios_by_state_allstateswithatleast_5_BA_2_75.csv", row.names=F)
+
+
 ggplot(data=fit_india_multi_predsbystate2, 
        aes(x=collection_date, y=posratio, group=variant)) + 
-  facet_wrap(~ location, scale="free", ncol=3) +
+  facet_wrap(~ location, scale="free", ncol=4) +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), position="stack") +
   scale_fill_manual("", values=lineage_cols_plot) +
   # annotate("rect", xmin=max(GISAID_india$DATE_NUM)+1, 
