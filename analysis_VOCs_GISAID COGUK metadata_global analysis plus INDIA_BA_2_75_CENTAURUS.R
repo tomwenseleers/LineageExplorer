@@ -1,6 +1,6 @@
 # ANALYSIS OF GROWTH ADVANTAGE OF BA.2.75, AKA CENTAURUS
 # T. Wenseleers
-# last update 9 AUGUST 2022
+# last update 10 AUGUST 2022
 
 # set GISAID credentials ####
 # set them first using 
@@ -51,7 +51,7 @@ library(locatexec)
 
 today = as.Date(Sys.time())
 today_num = as.numeric(today)
-today # "2021-08-09"
+today # "2021-08-10"
 plotdir = "GISAID_BA_2_75"
 suppressWarnings(dir.create(file.path("plots",plotdir)))
 tag = paste("@TWenseleers\n",today)
@@ -256,8 +256,8 @@ GISAID$date[which(GISAID$date_isvalid)] = as.Date(fast_strptime(GISAID$collectio
 # define variant lineages and colours ####
 sel_target_VOC = "Omicron (BA.2.75)"
 sel_reference_VOC = "Omicron (BA.5)"
-levels_VARIANTS = c(sel_reference_VOC, "Beta", "Alpha", "Other", "Delta", "Omicron (BA.1)", "Omicron (BA.2)", "Omicron (BA.2.12.1)", "Omicron (BA.4)", "Omicron (BA.4.6)", "Omicron (BA.2.76)", "Omicron (BA.5.2)", sel_target_VOC)
-levels_VARIANTS_plot = c("Other", "Beta", "Alpha", "Delta", "Omicron (BA.1)", "Omicron (BA.2)", "Omicron (BA.2.12.1)", "Omicron (BA.4)", "Omicron (BA.4.6)", "Omicron (BA.5)", "Omicron (BA.5.2)", "Omicron (BA.2.76)", "Omicron (BA.2.75)")
+levels_VARIANTS = c(sel_reference_VOC, "Beta", "Alpha", "Other", "Delta", "Omicron (BA.1)", "Omicron (BA.2)", "Omicron (BA.2.38)", "Omicron (BA.2.12.1)", "Omicron (BA.4)", "Omicron (BA.4.6)", "Omicron (BA.2.76)", "Omicron (BA.5.2)", sel_target_VOC)
+levels_VARIANTS_plot = c("Other", "Beta", "Alpha", "Delta", "Omicron (BA.1)", "Omicron (BA.2)", "Omicron (BA.2.38)", "Omicron (BA.2.12.1)", "Omicron (BA.4)", "Omicron (BA.4.6)", "Omicron (BA.5)", "Omicron (BA.5.2)", "Omicron (BA.2.76)", "Omicron (BA.2.75)")
 
 n = length(levels_VARIANTS)
 lineage_cols_plot = case_when(
@@ -267,7 +267,8 @@ lineage_cols_plot = case_when(
   levels_VARIANTS_plot=="Delta" ~ "mediumorchid",
   levels_VARIANTS_plot=="Omicron (BA.1)" ~ "red",
   levels_VARIANTS_plot=="Omicron (BA.2)" ~ "red3",
-  levels_VARIANTS_plot=="Omicron (BA.2.12.1)" ~ "red4",
+  levels_VARIANTS_plot=="Omicron (BA.2.12.1)" ~ "black",
+  levels_VARIANTS_plot=="Omicron (BA.2.38)" ~ "red4",
   levels_VARIANTS_plot=="Omicron (BA.4)" ~ "green3",
   levels_VARIANTS_plot=="Omicron (BA.4.6)" ~ "green2",
   levels_VARIANTS_plot=="Omicron (BA.5)" ~ "blue4",
@@ -310,11 +311,13 @@ GISAID$variant = case_when(
                                                     (!grepl("D3N",GISAID$aa_substitutions)) )))) ~ "Omicron (BA.4)",
   (grepl("^BA\\.5",GISAID$pango_lineage)|grepl("BE|BF",GISAID$pango_lineage)|((GISAID$pango_lineage!="Unassigned")&grepl("M_D3N",GISAID$aa_substitutions)))&(GISAID$date>as.Date("2022-02-01")) ~ "Omicron (BA.5)", # cf pattern used by Alex Selby
   (grepl("^BA\\.2\\.12\\.1$", GISAID$pango_lineage))&(GISAID$date>as.Date("2022-02-01")) ~ "Omicron (BA.2.12.1)",
+  (grepl("^BA\\.2\\.38$|^BA\\.2\\.38\\.", GISAID$pango_lineage)) ~ "Omicron (BA.2.38)",
   (grepl("^BA\\.2",GISAID$pango_lineage)) ~ "Omicron (BA.2)",
   GISAID$pango_lineage!="Unassigned" ~ "Other" # assigns NA to remaining Unassigned & remove them later on
   # TRUE ~ "Other"
 )
 
+# note: in India BA.2.38 & BA.2.38.1 caused an infection wave in some states - hence separated out above
 
 sum(is.na(GISAID$variant)) # 189574 unassigned
 sum(GISAID$pango_lineage=="Unassigned", na.rm=T) # 189615 originally unassigned in GISAID
@@ -337,7 +340,7 @@ GISAID_sel = GISAID
 # remove records with invalid/incomplete dates ####
 GISAID_sel = GISAID_sel[GISAID_sel$date_isvalid,]
 GISAID_sel = GISAID_sel[which(GISAID_sel$host=="Human"),]
-nrow(GISAID_sel) # 12104208
+nrow(GISAID_sel) # 12135765
 
 # filter to desired date range ####
 start_date = "2020-06-01"
@@ -345,7 +348,7 @@ end_date = today
 GISAID_sel = GISAID_sel[GISAID_sel$date>=as.Date(start_date)&
                           GISAID_sel$date<=as.Date(end_date),]
 
-range(GISAID_sel$date, na.rm=T) # "2020-06-01" "2022-08-07"
+range(GISAID_sel$date, na.rm=T) # "2020-06-01" "2022-08-09"
 nrow(GISAID_sel) # 11958660
 
 # add week, year & start of week
@@ -370,7 +373,7 @@ nBA_2_75_india = sum(GISAID_sel$variant=="Omicron (BA.2.75)"&GISAID_sel$country=
 nBA_2_75_india # 1522 BA.2.75 records so far for India with valid date
 
 sum(GISAID_sel$variant=="Omicron (BA.2.75)"&GISAID_sel$country=="United Kingdom", na.rm=T)
-# 33 BA.2.75 in UK so far
+# 34 BA.2.75 in UK so far
 maxsubmdate = today
 
 
@@ -547,6 +550,7 @@ write.csv(delta_r_pairw, file.path("plots", plotdir, "growth advantage BA.2.75 v
 # plot growth rate advantage of BA.2.75
 delta_r_pairw2 = delta_r_pairw[delta_r_pairw$contrast %in%
                                  c("Omicron (BA.2.75) - Omicron (BA.2)",
+                                   "Omicron (BA.2.75) - Omicron (BA.2.38)",
                                    "Omicron (BA.2.75) - Omicron (BA.2.12.1)",
                                    "Omicron (BA.2.75) - Omicron (BA.5)",
                                    "Omicron (BA.2.75) - Omicron (BA.5.2)",
@@ -556,6 +560,7 @@ delta_r_pairw2$contrast = droplevels(delta_r_pairw2$contrast)
 delta_r_pairw2$contrast = factor(delta_r_pairw2$contrast,
                                  levels=c("Omicron (BA.2.75) - Omicron (BA.2)",
                                           "Omicron (BA.2.75) - Omicron (BA.2.12.1)",
+                                          "Omicron (BA.2.75) - Omicron (BA.2.38)",
                                           "Omicron (BA.2.75) - Omicron (BA.4)",
                                           "Omicron (BA.2.75) - Omicron (BA.5)",
                                           "Omicron (BA.2.75) - Omicron (BA.5.2)",
@@ -564,7 +569,7 @@ delta_r_pairw2 = delta_r_pairw2[!delta_r_pairw2$continent %in%
                                   c("South America", "Africa"),]
 
 library(RColorBrewer)
-cols = brewer.pal(n = 7, "Blues")[-1]
+cols = brewer.pal(n = 8, "Blues")[-1]
 qplot(data=delta_r_pairw2,
       x=continent, group=contrast,
       y=estimate,
@@ -607,12 +612,14 @@ delta_r_BA_4_6_2 = delta_r_BA_4_6[delta_r_BA_4_6$contrast %in%
                                       "Omicron (BA.4.6) - Omicron (BA.4)",
                                       "Omicron (BA.4.6) - Omicron (BA.2.75)",
                                       "Omicron (BA.4.6) - Omicron (BA.2.12.1)",
+                                      "Omicron (BA.4.6) - Omicron (BA.2.38)",
                                       "Omicron (BA.4.6) - Omicron (BA.2)"
                                       ),]
 delta_r_BA_4_6_2$contrast = droplevels(delta_r_BA_4_6_2$contrast)
 delta_r_BA_4_6_2$contrast = factor(delta_r_BA_4_6_2$contrast,
                                  levels=c("Omicron (BA.4.6) - Omicron (BA.2)",
                                           "Omicron (BA.4.6) - Omicron (BA.2.12.1)",
+                                          "Omicron (BA.4.6) - Omicron (BA.2.38)",
                                           "Omicron (BA.4.6) - Omicron (BA.4)",
                                           "Omicron (BA.4.6) - Omicron (BA.5)",
                                           "Omicron (BA.4.6) - Omicron (BA.5.2)",
@@ -621,7 +628,7 @@ delta_r_BA_4_6_2 = delta_r_BA_4_6_2[!delta_r_BA_4_6_2$continent %in%
                                   c("South America", "Africa"),]
 
 library(RColorBrewer)
-cols = brewer.pal(n = 7, "Blues")[-1]
+cols = brewer.pal(n = 8, "Blues")[-1]
 qplot(data=delta_r_BA_4_6_2,
       x=continent, group=contrast,
       y=estimate,
@@ -935,51 +942,51 @@ GISAID_india = GISAID_india[as.character(GISAID_india$location)!="",]
 GISAID_india$location = droplevels(GISAID_india$location)
 
 # Muller plot of aggregated data using all data from India using all states
-nBA_2_75_india = sum(GISAID_india$variant=="Omicron (BA.2.75)")
+nBA_2_75_india = sum(GISAID_india$variant=="Omicron (BA.2.75)", na.rm=T)
 nBA_2_75_india # 1521
 
-# # PS this was for Ewen Callaway's Nature piece on BA.2.75
-# # aggregated by week for selected variant lineages for whole of India using data from all states
-# data_agbyweek1 = as.data.frame(table(GISAID_india$floor_date, 
-#                                      GISAID_india$variant))
-# colnames(data_agbyweek1) = c("floor_date", "variant", "count")
-# data_agbyweek1_sum = aggregate(count ~ floor_date, 
-#                                data=data_agbyweek1, sum)
-# data_agbyweek1$total = data_agbyweek1_sum$count[match(data_agbyweek1$floor_date, data_agbyweek1_sum$floor_date)]
-# sum(data_agbyweek1[data_agbyweek1$variant=="Omicron (BA.1)","total"]) == nrow(GISAID_india) # correct
-# data_agbyweek1$collection_date = as.Date(as.character(data_agbyweek1$floor_date))
-# data_agbyweek1$variant = factor(data_agbyweek1$variant, 
-#                                 levels=levels_VARIANTS)
-# data_agbyweek1$collection_date_num = as.numeric(data_agbyweek1$collection_date)
-# data_agbyweek1$prop = data_agbyweek1$count/data_agbyweek1$total
-# data_agbyweek1$floor_date = NULL
-# 
-# # MULLER PLOT (RAW DATA)
-# data_agbyweek1$variant2 = factor(data_agbyweek1$variant, levels=levels_VARIANTS_plot)
-# muller_india_raw1_all = ggplot(data=data_agbyweek1, aes(x=collection_date, y=count, group=variant2)) + 
-#   # facet_wrap(~ STATE, ncol=1) +
-#   # geom_col(aes(lwd=I(1.2), colour=NULL, fill=variant), width=1, position="fill") +
-#   geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant2, group=variant2), position="fill") +
-#   scale_fill_manual("", values=lineage_cols_plot) +
-#   xaxis +
-#   # guides(color = guide_legend(reverse=F, nrow=2, byrow=T), fill = guide_legend(reverse=F, nrow=2, byrow=T)) +
-#   theme_hc() +
-#   ylab("Share") + 
-#   theme(legend.position="right",  
-#         axis.title.x=element_blank()) +
-#   labs(title = "SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN INDIA",
-#        subtitle=paste0("Raw GISAID data up to ",today,"\n(n=", nBA_2_75_india," BA.2.75 sequences in India in total)")) 
-# # +
-# # coord_cartesian(xlim=c(1,max(GISAID_india$Week)))
-# muller_india_raw1_all
-# 
-# ggsave(file=file.path("plots", plotdir,"india_muller plots_raw data all states.png"), width=7, height=5)
-# ggsave(file=file.path("plots", plotdir,"india_muller plots_raw data all states.pdf"), width=7, height=5)
-# ggsave(file=file.path("plots", plotdir,"india_muller plots_raw data all states.svg"), width=7, height=5)
-# saveRDS(muller_india_raw1_all, file.path("plots", plotdir,"india_muller plots_raw data all states.rds"))
-# data_agbyweek2=data_agbyweek1
-# data_agbyweek2$variant2=NULL
-# write.csv(data_agbyweek2, file=file.path("plots", plotdir,"india_muller plots_raw data all states.csv"), row.names=F)
+# PS this was for Ewen Callaway's Nature piece on BA.2.75
+# aggregated by week for selected variant lineages for whole of India using data from all states
+data_agbyweek1 = as.data.frame(table(GISAID_india$floor_date,
+                                     GISAID_india$variant))
+colnames(data_agbyweek1) = c("floor_date", "variant", "count")
+data_agbyweek1_sum = aggregate(count ~ floor_date,
+                               data=data_agbyweek1, sum)
+data_agbyweek1$total = data_agbyweek1_sum$count[match(data_agbyweek1$floor_date, data_agbyweek1_sum$floor_date)]
+sum(data_agbyweek1[data_agbyweek1$variant=="Omicron (BA.1)","total"]) == nrow(GISAID_india) # correct
+data_agbyweek1$collection_date = as.Date(as.character(data_agbyweek1$floor_date))
+data_agbyweek1$variant = factor(data_agbyweek1$variant,
+                                levels=levels_VARIANTS)
+data_agbyweek1$collection_date_num = as.numeric(data_agbyweek1$collection_date)
+data_agbyweek1$prop = data_agbyweek1$count/data_agbyweek1$total
+data_agbyweek1$floor_date = NULL
+
+# MULLER PLOT (RAW DATA)
+data_agbyweek1$variant2 = factor(data_agbyweek1$variant, levels=levels_VARIANTS_plot)
+muller_india_raw1_all = ggplot(data=data_agbyweek1, aes(x=collection_date, y=count, group=variant2)) +
+  # facet_wrap(~ STATE, ncol=1) +
+  # geom_col(aes(lwd=I(1.2), colour=NULL, fill=variant), width=1, position="fill") +
+  geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant2, group=variant2), position="fill") +
+  scale_fill_manual("", values=lineage_cols_plot) +
+  xaxis +
+  # guides(color = guide_legend(reverse=F, nrow=2, byrow=T), fill = guide_legend(reverse=F, nrow=2, byrow=T)) +
+  theme_hc() +
+  ylab("Share") +
+  theme(legend.position="right",
+        axis.title.x=element_blank()) +
+  labs(title = "SPREAD OF SARS-CoV2 VARIANTS OF CONCERN IN INDIA",
+       subtitle=paste0("Raw GISAID data up to ",today,"\n(n=", nBA_2_75_india," BA.2.75 sequences in India in total)"))
+# +
+# coord_cartesian(xlim=c(1,max(GISAID_india$Week)))
+muller_india_raw1_all
+
+ggsave(file=file.path("plots", plotdir,"india_muller plots_raw data all states.png"), width=7, height=5)
+ggsave(file=file.path("plots", plotdir,"india_muller plots_raw data all states.pdf"), width=7, height=5)
+ggsave(file=file.path("plots", plotdir,"india_muller plots_raw data all states.svg"), width=7, height=5)
+saveRDS(muller_india_raw1_all, file.path("plots", plotdir,"india_muller plots_raw data all states.rds"))
+data_agbyweek2=data_agbyweek1
+data_agbyweek2$variant2=NULL
+write.csv(data_agbyweek2, file=file.path("plots", plotdir,"india_muller plots_raw data all states.csv"), row.names=F)
 
 
 # per state analysis, using data from states with at least 5 BA.2.75 sequences
@@ -1003,7 +1010,7 @@ table(GISAID_india$variant)
 table(GISAID_india[GISAID_india$date>=as.Date("2022-06-01"),"variant"],
       GISAID_india[GISAID_india$date>=as.Date("2022-06-01"),"pango_lineage"])
 
-nBA_2_75_india = sum(GISAID_india$variant=="Omicron (BA.2.75)")
+nBA_2_75_india = sum(GISAID_india$variant=="Omicron (BA.2.75)", na.rm=T)
 nBA_2_75_india # 1505
 
 # aggregated data to make Muller plots of raw data
@@ -1105,7 +1112,7 @@ fit2_india_multi = nnet::multinom(variant ~ ns(DATE_NUM, df=2)+location, weights
 # fit3_india_multi = nnet::multinom(variant ~ ns(DATE_NUM, df=3)+location, weights=count, data=data_agbyweekregion1, maxit=10000)
 # fit4_india_multi = nnet::multinom(variant ~ ns(DATE_NUM, df=2)*location, weights=count, data=data_agbyweekregion1, maxit=10000)
 # fit5_india_multi = nnet::multinom(variant ~ ns(DATE_NUM, df=3)*location, weights=count, data=data_agbyweekregion1, maxit=10000)
-BIC(fit1_india_multi, fit2_india_multi, fit3_india_multi, fit4_india_multi, fit5_india_multi) 
+# BIC(fit1_india_multi, fit2_india_multi, fit3_india_multi, fit4_india_multi, fit5_india_multi) 
 # fit3_india_multi has best BIC, but fit2_india_multi almost as good & since data is sparse I will use
 # that simpler model
 
