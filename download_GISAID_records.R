@@ -6,6 +6,8 @@
 # Sys.setenv(GISAIDR_PASSWORD = "XXX") # GISAID password
 # source(".//set_GISAID_credentials.R")
 
+library(locatexec)
+
 # function to download given records, after having logged in first
 # (max batch of 10 000 records at a time)
 downl_records = function (accession_ids,
@@ -173,7 +175,7 @@ download_GISAID_records = function(
                             target_dir="C:/Users/bherr/Documents/Github/newcovid_belgium/data/GISAID/BA_2_75/extra",
                             max_batch_size=10000, # maximum batch size
                             headless = FALSE,
-                            chromedriver_version = "104.0.5112.79",
+                            chromedriver_version = as.character(unlist(binman::list_versions("chromedriver")))[grepl(as.character(locatexec::exec_version("chrome")[[1, 1]]), as.character(unlist(binman::list_versions("chromedriver"))))], # "104.0.5112.79"
                             usr=Sys.getenv("GISAIDR_USERNAME"),
                             psw=Sys.getenv("GISAIDR_PASSWORD")) {
 require(RSelenium)  

@@ -6,10 +6,12 @@
 # Sys.setenv(GISAIDR_PASSWORD = "XXX") # GISAID password
 # source(".//set_GISAID_credentials.R")
 
+library(locatexec)
+
 download_GISAD_meta = function(target_dir = "C:/Users/bherr/Documents/Github/newcovid_belgium/data/GISAID", # target_dir = getwd(), # target download directory
                                clean_up = FALSE,
                                headless = FALSE,
-                               chromedriver_version = "104.0.5112.79",
+                               chromedriver_version = as.character(unlist(binman::list_versions("chromedriver")))[grepl(as.character(locatexec::exec_version("chrome")[[1, 1]]), as.character(unlist(binman::list_versions("chromedriver"))))], # "104.0.5112.79"
                                usr = Sys.getenv("GISAIDR_USERNAME"),  
                                psw = Sys.getenv("GISAIDR_PASSWORD")) {
   # TO DO: also implement arguments clean_up=TRUE to delete downloaded file (default best set to FALSE though)
