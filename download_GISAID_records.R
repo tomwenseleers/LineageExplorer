@@ -17,17 +17,19 @@ downl_records = function (accession_ids,
                           remDr=remDr) {
   require(readr)
   require(dplyr)
+  require(stringr)
+  require(dplyr)
   
   remDr$refresh()
   
   # click Select tab at the bottom
-  select_tab = remDr$findElements("class", "sys-form-button")[[2]]
+  select_tab = NULL
+  while(length(select_tab)==0) select_tab = remDr$findElements("class", "sys-form-button")[[2]]
   select_tab$clickElement()
-  # Sys.sleep(20)
   
   # enter desired GISAID access nrs in input field 
   frames=NULL
-  while (length(frames)==0) { frames = remDr$findElements("tag name", "iframe") }
+  while (length(frames)==0) frames = remDr$findElements("tag name", "iframe")
   remDr$switchToFrame(frames[[1]])
   remDr$setImplicitWaitTimeout(milliseconds = 10)
   
@@ -42,12 +44,12 @@ downl_records = function (accession_ids,
   remDr$refresh()
   
   frames=NULL
-  while (length(frames)==0) { frames = remDr$findElements("tag name", "iframe") }
+  while (length(frames)==0) frames = remDr$findElements("tag name", "iframe")
   remDr$switchToFrame(frames[[1]])
   remDr$setImplicitWaitTimeout(milliseconds = 10)
 
   frames=NULL
-  while (length(frames)==0) { frames = remDr$findElements("tag name", "iframe") }
+  while (length(frames)==0) frames = remDr$findElements("tag name", "iframe")
   remDr$switchToFrame(frames[[1]])
   remDr$setImplicitWaitTimeout(milliseconds = 10)
   
@@ -63,24 +65,27 @@ downl_records = function (accession_ids,
   # input_field$clearElement()
   # input_field$sendKeysToElement(list(paste0(accession_ids, collapse=", "))) 
 
-  Sys.sleep(3)
+  Sys.sleep(1)
   
   # click OK
   remDr$refresh()
   
   frames=NULL
-  while (length(frames)==0) { frames = remDr$findElements("tag name", "iframe") }
+  while (length(frames)==0) frames = remDr$findElements("tag name", "iframe")
   remDr$switchToFrame(frames[[1]])
   remDr$setImplicitWaitTimeout(milliseconds = 10)
   
   OK_button = remDr$findElements("class", "sys-form-button")[[2]]
   OK_button$clickElement()
-  Sys.sleep(10)
+  Sys.sleep(1) # TO DO change to while loop
   
-  # click OK again
-  html = remDr$getPageSource()[[1]]
-  library(stringr)
-  buttonid = str_extract(html, "(?<=button id=\")[0-9]*") # button id appears dynamic
+  # click OK again to Message XXX entries selected
+  buttonid = ""
+  while (buttonid=="") {
+    html = remDr$getPageSource()[[1]]
+    buttonid = str_extract(html, "(?<=button id=\")[0-9]*") # button id appears dynamic
+    # print(buttonid)
+  }
   OK_button = remDr$findElement("id", buttonid)
   OK_button$clickElement()
   
@@ -88,27 +93,59 @@ downl_records = function (accession_ids,
   remDr$refresh()
   download_tab = remDr$findElements("class", "sys-form-button")[[4]]
   download_tab$clickElement()
-  Sys.sleep(20)
+  # Sys.sleep(20) # TO DO change to while loop
   
   # select Patient status metadata checkbox
   frames=NULL
-  while (length(frames)==0) { frames = remDr$findElements("tag name", "iframe") }
+  while (length(frames)==0) {
+    suppressMessages(tryCatch({
+      frames = remDr$findElements("tag name", "iframe")
+    }, error = function( err ) { frames = NULL }))
+    }
   remDr$switchToFrame(frames[[1]])
   remDr$setImplicitWaitTimeout(milliseconds = 10)
   
   Sys.sleep(1)
   checkbox_metadata = NULL
-  while (length(checkbox_metadata)==0) { checkbox_metadata = remDr$findElements("class", "sys-event-hook")[[4]] }
+  while (length(checkbox_metadata)==0) { 
+    checkbox_metadata = remDr$findElements("class", "sys-event-hook")[[4]] }
   checkbox_metadata$clickElement() 
-  Sys.sleep(10)
   
   # click Download
   mostrecenttsv = suppressWarnings(max(file.info(list.files(target_dir, pattern=".tsv", full.names=T))$mtime))
+  Sys.sleep(1) # TO DO change to while loop
   mostrecenttsv_new = mostrecenttsv
-  download_button = remDr$findElements("class", "sys-form-button")[[2]]
-  download_button$clickElement() 
+  download_button = NULL
+  while (length(download_button)==0) {
+    suppressMessages(tryCatch({
+      download_button = remDr$findElements("class", "sys-form-button")[[2]]
+      download_button$clickElement() 
+    }, error = function( err ) { download_button = NULL }))
+  } 
   
+  # CLICK CHECKBOX NOTICE AND REMINDER OF TERMS OF USE & PRESS DOWNLOAD (THIS ONE DOES NOT ALWAYS SHOW UP)
+  frames=NULL
+  while (length(frames)==0) {
+    suppressMessages(tryCatch({
+      frames = remDr$findElements("tag name", "iframe")
+    }, error = function( err ) { frames = NULL }))
+  }
+  remDr$switchToFrame(frames[[1]])
+  remDr$setImplicitWaitTimeout(milliseconds = 10)
+  
+  checkbox_iagree=NULL
+  while (length(checkbox_iagree)==0) checkbox_iagree = remDr$findElements("class", "sys-event-hook")[[1]]
+  checkbox_iagree$clickElement() 
+  
+  Sys.sleep(3)
+  
+  download_button = NULL
+  while (length(download_button)==0) download_button = remDr$findElements("class", "sys-form-button")[[2]]
+  suppressMessages(tryCatch({
+    download_button$clickElement() 
+  }, error = function( err ) { message("") }))
   Sys.sleep(1)
+  
   # wait until download finishes
   while (mostrecenttsv_new==mostrecenttsv) {
     mostrecenttsv_new = suppressWarnings(max(file.info(list.files(target_dir, pattern=".tsv", full.names=T))$mtime))
@@ -125,7 +162,6 @@ downl_records = function (accession_ids,
   # remDr$refresh()
   # download_tab = remDr$findElements("class", "sys-form-button")[[4]]
   # download_tab$clickElement()
-  # Sys.sleep(20)
   # 
   # # select Nucleotide sequences (FASTA) checkbox
   # frames = remDr$findElements("tag name", "iframe")
@@ -134,7 +170,6 @@ downl_records = function (accession_ids,
   # 
   # checkbox_FASTA = remDr$findElements("class", "sys-event-hook")[[3]]
   # checkbox_FASTA$clickElement() 
-  # Sys.sleep(10)
   # 
   # # click Download
   # mostrecentfasta = max(file.info(list.files(target_dir, pattern=".fasta", full.names=T))$mtime)
@@ -172,7 +207,7 @@ download_GISAID_records = function(
                             accession_ids,
                             get_sequence=FALSE, 
                             clean_up=FALSE,
-                            target_dir="C:/Users/bherr/Documents/Github/newcovid_belgium/data/GISAID/BA_2_75/extra",
+                            target_dir="C:/Users/bherr/OneDrive - KU Leuven/Documents/Github/newcovid_belgium/data/GISAID",
                             max_batch_size=10000, # maximum batch size
                             headless = FALSE,
                             chromedriver_version = as.character(unlist(binman::list_versions("chromedriver")))[grepl(as.character(locatexec::exec_version("chrome")[[1, 1]]), as.character(unlist(binman::list_versions("chromedriver"))))], # "104.0.5112.79"
@@ -207,7 +242,7 @@ eCaps = list(chromeOptions = list(
     "default_directory" = normalizePath(target_dir)
   )
 ))
-browser = wdman::chrome(port = 4570L, version=chromedriver_version, check=TRUE)
+browser = wdman::chrome(port = 4570L, version = chromedriver_version, check = TRUE)
 remDr = remoteDriver(port = 4570L, 
                      version = chromedriver_version, 
                      browserName = "chrome", 
@@ -242,17 +277,20 @@ password$sendKeysToElement(list(psw))
 # click Login buttom
 login_button = remDr$findElement(using = "xpath", "//input[@value='Login']")
 login_button$clickElement() 
-Sys.sleep(6)
 
 # click EpiCov tab
-epicov_tab = remDr$findElement("xpath", "//a[contains(text(),'EpiCoV™')]")
+epicov_tab = NULL
+while (length(epicov_tab)==0) { 
+  suppressMessages(tryCatch({
+    epicov_tab = remDr$findElement("xpath", "//a[contains(text(),'EpiCoV™')]") 
+  }, error = function( err ) { epicov_tab = NULL })) }
 epicov_tab$click()
-Sys.sleep(10)
 
 # click Search tab
-search_tab = remDr$findElements("class", "sys-actionbar-action-ni")[[2]]
+search_tab = NULL
+while (length(search_tab)==0) search_tab = remDr$findElements("class", "sys-actionbar-action-ni")[[2]]
 search_tab$clickElement()
-Sys.sleep(10)
+# Sys.sleep(10) # TO DO add while loop in downl_records
 
 # download records in batches of maximum size max_batch_size
 
@@ -264,7 +302,7 @@ batches = chunk(accession_ids)
 downloads = do.call(bind_rows, lapply(1:length(batches),
                                   function (batchnr) {
                                     message(paste0("Downloading batch ", batchnr, " out of ", length(batches)))
-                                    Sys.sleep(3)
+                                    Sys.sleep(1)
                                     output = downl_records(accession_ids=batches[[batchnr]],
                                                                        get_sequence, 
                                                                        clean_up,
