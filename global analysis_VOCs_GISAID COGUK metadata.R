@@ -53,6 +53,7 @@ library(tidyr)
 library(pals)
 library(devtools)
 install_github("tomwenseleers/marginaleffects")
+library(marginaleffects)
 library(inspectdf)
 library(zoo)
 library(RSelenium)
@@ -149,9 +150,6 @@ length(levels_locations) # 289
 
 
 # PARSE GISAID DATA ####
-# GISAID = as.data.frame(GISAID) 
-# TO DO: keep as more efficient data.table or as tibble
-# & make sure everything below still works
 
 # parse date & check dates are valid
 # records with valid date
@@ -266,7 +264,7 @@ system.time(GISAID$variant <- case_when(
   linplus("B.1.221") ~ "B.1.221 (20A/S:98F)",
   !lin("Unassigned") ~ "Other" # assigns NA to remaining Unassigned & remove them later on
   # TRUE ~ "Other" # alternative: to assign Unassigned lineages to category Other
-)) # 86s - note: could be sped up by using multidplyr & parallelization
+)) # 97s - note: could be sped up by using multidplyr & parallelization
 
 # earliest realistic dates were taken from
 # https://raw.githubusercontent.com/nextstrain/ncov/master/defaults/clade_emergence_dates.tsv
@@ -364,7 +362,7 @@ GISAID_sel$DATE_NUM = as.numeric(GISAID_sel$date)
 
 table(GISAID_sel$variant)
 table(GISAID_sel$continent, GISAID_sel$variant)
-table(GISAID_sel[GISAID_sel$variant=="Omicron (BA.2.75)","country"])
+# table(GISAID_sel[GISAID_sel$variant=="Omicron (BA.2.75)","country"])
 
 # nBA_2_75 = sum(GISAID_sel$variant=="Omicron (BA.2.75)", na.rm=T)
 # nBA_2_75 # 8337 BA.2.75 records so far with valid date
@@ -372,19 +370,17 @@ table(GISAID_sel[GISAID_sel$variant=="Omicron (BA.2.75)","country"])
 # nBA_2_75_india = sum(GISAID_sel$variant=="Omicron (BA.2.75)"&GISAID_sel$country=="India", na.rm=T)
 # nBA_2_75_india # 5489 BA.2.75 records so far for India with valid date
 
-sum(GISAID_sel$variant=="Omicron (BA.2.75)"&GISAID_sel$country=="United Kingdom", na.rm=T)
+# sum(GISAID_sel$variant=="Omicron (BA.2.75)"&GISAID_sel$country=="United Kingdom", na.rm=T)
 # 206 BA.2.75 in UK so far
 
-sum(GISAID_sel$variant=="Omicron (BQ.1)"&GISAID_sel$country=="United Kingdom", na.rm=T)
+# sum(GISAID_sel$variant=="Omicron (BQ.1)"&GISAID_sel$country=="United Kingdom", na.rm=T)
 # 69 BQ.1 in UK so far
 
 maxsubmdate = today
 
 
-# these countries are used as a selection for plotting later on
+# selected countries to include, here those with min 5 BA.2.75.2 or 5 BQ.1* or 5 BA.2.3.20 sequences
 tab = as.data.frame(table(GISAID_sel$country, GISAID_sel$variant))
-
-# countries with min 5 BA.2.75.2 or 5 BQ.1* or 5 BA.2.3.20 sequences
 sel_countries_min5 = sort(unique(c(as.character(tab[tab$Var2=="Omicron (BA.2.75.2)"&tab$Freq>=5,"Var1"]),
                                    as.character(tab[tab$Var2=="Omicron (BQ.1)"&tab$Freq>=5,"Var1"]),
                                    as.character(tab[tab$Var2=="Omicron (BA.2.3.20)"&tab$Freq>=5,"Var1"]))))
@@ -397,9 +393,9 @@ sel_countries_min5
 sel_countries = sel_countries_min5
 
 
-# 2. GLOBAL ANALYSIS OF ALL OF THE GISAID+COGUK DATA ####
+# 2. GLOBAL ANALYSIS OF THE GISAID+COGUK DATA USING MULTINOMIAL FITS ####
 
-# TO DO: replace this with more elegant/tidy dplyr coce? 
+# TO DO: replace this with more elegant/tidy dplyr code? 
 
 # AGGREGATED DATA BY DATE & COUNTRY ####
 data_agbydatecountry1 = as.data.frame(table(GISAID_sel$date, GISAID_sel$country, GISAID_sel$variant))
@@ -452,8 +448,6 @@ data_agbyweekcountry1$collection_date = as.Date(data_agbyweekcountry1$collection
 data_agbyweekcountry1$variant = factor(data_agbyweekcountry1$variant, levels=levels_VARIANTS)
 # write.csv(data_agbyweekcountry1, file="./data/GISAID/GISAID aggregated counts by start of week and lineage_all.csv", row.names=F)
 
-data_agbyweek1$variant = factor(data_agbyweek1$variant, levels=levels_VARIANTS_plot)
-
 
 # MULLER PLOT (RAW DATA, all countries pooled, but with big sampling biases across countries)
 muller_raw_all = ggplot(data=data_agbyweek1, aes(x=date, y=count, group=variant)) +
@@ -475,14 +469,13 @@ muller_raw_all
 ggsave(file=file.path("plots", plotdir,"global analysis_muller plot_raw data all countries pooled.png"), width=7, height=5)
 
 
-# fit multinomial spline model ####
+# FIT NNET::MULTINOM MULTINOMIAL SPLINE MODEL ####
+
+# we use data subsetted to the countries selected above
 data_agbyweekcountry1_subs = data_agbyweekcountry1[data_agbyweekcountry1$country %in% 
                                                      sel_countries,]
 data_agbyweekcountry1_subs$country = droplevels(data_agbyweekcountry1_subs$country)
 data_agbyweekcountry1_subs$variant = factor(data_agbyweekcountry1_subs$variant, levels=levels_VARIANTS)
-
-data_agbyweekcountry1_subs2 = data_agbyweekcountry1_subs[data_agbyweekcountry1_subs$continent=="Europe",]
-data_agbyweekcountry1_subs2$country = droplevels(data_agbyweekcountry1_subs2$country)
 
 
 set.seed(1)
@@ -493,29 +486,17 @@ system.time(fit_global_multi <- nnet::multinom(variant ~
                                     country, 
                                   weights=count, 
                                   data=data_agbyweekcountry1_subs, 
-                                  maxit=10000, MaxNWts=100000)) # 597s; 5h if we use all GISAID data from all countries
+                                  maxit=10000, MaxNWts=100000)) # 430s; 5h if we use all GISAID data from all countries
+# we calculate the Hessian using my own faster Rcpp Kronecker-product based function
 system.time(fit_global_multi$Hessian <- fastmultinomHess(fit_global_multi, model.matrix(fit_global_multi))) # 17s
 system.time(fit_global_multi$vcov <- vcov(fit_global_multi)) # 0.6s
 
 
-
-# calculate current pairwise growth rate differences compared to ref level BA.5.2 ####
-
-# for all pairwise growth rate differences:
-# growth_differences = comparisons(
-#   fit_global_multi,
-#   newdata = datagrid(DATE_NUM = today_num),
-#   variables = "DATE_NUM",
-#   by = "continent",
-#   type = "clr",
-#   hypothesis = "pairwise")
-
-
-# WITH SAVED ENVIRONMENT YOU CAN START FROM HERE ####
+# with saved environment you can start from here ####
 
 # save.image("~/Github/LineageExplorer/environment_2022_09_25.RData")
 # load("~/Github/LineageExplorer/environment_2022_09_25.RData")
- 
+
 # clean up some memory
 rm(GISAID, d_extra, recent_records, coguk) 
 # mem_usage = inspect_mem(GISAID_sel)
@@ -526,6 +507,39 @@ gc()
 
 # save.image("~/Github/LineageExplorer/environment_2022_09_25_small.RData")
 # load("~/Github/LineageExplorer/environment_2022_09_25_small.RData")
+
+
+
+
+# CALCULATE GROWTH RATE ADVANTAGE OVER REFERENCE LEVEL BA.5.2 ####
+
+# with new faster marginaleffects code
+system.time(meffects <- marginaleffects(fit_global_multi, 
+                                               type = "link", # = additive log-ratio = growth rate advantage relative to BA.5.2
+                                               variables = c("DATE_NUM"),
+                                               by = c("group"),
+                                               vcov = fit_global_multi$vcov,
+                                               newdata = datagrid(DATE_NUM = today_num 
+                                               ))) # 13s
+
+# growth rate advantage compared to reference level BA.5.2 by continent
+system.time(meffects_bycontinent <- marginaleffects(fit_global_multi, 
+                                               type = "link", # = additive log-ratio = growth rate advantage relative to BA.5.2
+                                               variables = c("DATE_NUM"),
+                                               by = c("group", "continent"),
+                                               vcov = fit_global_multi$vcov,
+                                               newdata = datagrid(DATE_NUM = today_num,
+                                                                  continent = unique(data_agbyweekcountry1$continent)
+                                               ))) # 16s
+
+# for all pairwise growth rate differences:
+# growth_differences = comparisons(
+#   fit_global_multi,
+#   newdata = datagrid(DATE_NUM = today_num),
+#   variables = "DATE_NUM",
+#   by = "continent",
+#   type = "clr", # here we could either use "clr" (centered logratio) or "link" (additive logratio) - this gives same result
+#   hypothesis = "pairwise")
 
 
 # old emtrends code to calculate pairwise growth rate differences
@@ -539,26 +553,6 @@ gc()
 # delta_r_pairw
 # write.csv(delta_r_pairw, file.path("plots", plotdir, "growth rate advantage all variants vs BA_5_2.csv"), row.names=F)
 
-# average growth rate advantage compared to reference level BA.5.2
-# with new faster marginaleffects code
-system.time(meffects <- marginaleffects(fit_global_multi, 
-                                               type = "link", # = additive log-ratio = growth rate advantage relative to BA.5.2
-                                               variables = c("DATE_NUM"),
-                                               by = c("group"),
-                                               vcov = fit_global_multi$vcov,
-                                               newdata = datagrid(DATE_NUM = today_num 
-                                               ))) # 13s
-
-
-# growth rate advantage compared to reference level BA.5.2 by continent
-system.time(meffects_bycontinent <- marginaleffects(fit_global_multi, 
-                                               type = "link", # = additive log-ratio = growth rate advantage relative to BA.5.2
-                                               variables = c("DATE_NUM"),
-                                               by = c("group", "continent"),
-                                               vcov = fit_global_multi$vcov,
-                                               newdata = datagrid(DATE_NUM = today_num,
-                                                                  continent = unique(data_agbyweekcountry1$continent)
-                                               ))) # 16s
 
 # plot of growth rate advantage of last X newest variants
 lastn = 4
@@ -612,16 +606,14 @@ ggsave(file=file.path("plots", plotdir,"growth rate advantage VOCs_global fit_by
 
 
 
-# PLOT MULTINOMIAL FIT
+# PLOT MULTINOMIAL FIT ####
 
 extrapolate = 60
 date.from = as.numeric(as.Date("2020-01-01"))
 date.to = today_num+extrapolate # max(GISAID_sel$DATE_NUM, na.rm=T)
 
-# plot predicted values
+# multinomial model predictions by country with CIs calculated using margineffects::predictions
 
-
-# multinomial model predictions by province (fastest, but no confidence intervals)
 predgrid = expand.grid(list(DATE_NUM=as.numeric(seq(date.from, date.to)),
                             country=unique(data_agbyweekcountry1_subs$country))) # unique(GISAID_sel$country)
 predgrid$continent = data_agbyweekcountry1_subs$continent[match(predgrid$country,
@@ -644,15 +636,18 @@ fit_preds <- fit_preds %>% mutate(predicted = ifelse(is.na(predicted), 0, predic
 fit_preds$date = as.Date(fit_preds$DATE_NUM, origin="1970-01-01")
 fit_preds$variant = fit_preds$group
 fit_preds$variant = factor(fit_preds$variant, levels=levels_VARIANTS_plot)
+fit_preds$group = NULL
 
 # TO DO: check why some predictions before jan 2021 come out as NA,
 # presumably due to some overflow??
+# maybe bug in my marginaleffects package modifications - check
 
-fit_preds$country = factor(fit_preds$country) # , levels=levels_country
+fit_preds$country = factor(fit_preds$country)
 levels(fit_preds$country)
 fit_preds$continent = factor(fit_preds$continent)
 
-write_csv(fit_preds, file=file.path("plots", plotdir, "GISAID fitted lineage frequencies multinomial spline fit by start of week and lineage.csv"))
+write_csv(fit_preds, file=file.path("plots", plotdir, "GISAID fitted lineage frequencies global multinomial spline fit.csv"))
+
 
 # PLOT MULTINOMIAL FIT ON LOGIT SCALE ####
 
@@ -885,9 +880,8 @@ ggsave(file=file.path("plots", plotdir, "global multinom fit_all data_prediction
 
 
 
-# map variant share onto case numbers
+# MAP VARIANT SHARE ONTO CASE NUMBERS ####
 
-# sel_countries_top3 = c("India", "Nepal", "Singapore")
 sel_countries = c("Austria","Bangladesh","Belgium","Denmark","France","Germany","Israel","Singapore","United Kingdom")
 country_data = get_national_data(countries=sel_countries, # sel_countries_top3,
                                  source="who",
@@ -911,7 +905,7 @@ qplot(data=country_data, x=date, y=cases_new, group=country, geom="blank", colou
 # ggsave(file=file.path("plots", plotdir, "new cases countries with more than 10 sequenced BA_2_75 cases.png"), width=7, height=5)
 
   
-fit_preds[(fit_preds$date==today)&(fit_preds$variant=="Omicron (BA.2.75)"),]
+fit_preds[(fit_preds$date==today)&(fit_preds$variant=="Omicron (BQ.1)"),]
 
 fit_preds$totnewcases = 
   country_data$cases_new[match(interaction(fit_preds$country,
@@ -959,9 +953,6 @@ ggplot(data=fit_preds2,
 ggsave(file=file.path("plots", plotdir,"global multinom fit_all data_predictions_confirmed cases multinomial fit by country.png"), width=20, height=12)
 
 
-fit_preds3 = fit_preds2
-# fit_preds3$cases[fit_preds3$date<=as.Date("2022-03-01")] = 0
-
 ggplot(data=fit_preds2, 
        aes(x=date, y=cases, group=variant)) + 
   facet_wrap(~ country, scale="free_y") +
@@ -990,6 +981,10 @@ ggsave(file=file.path("plots", plotdir,"\\global multinom fit_all data_predictio
 # https://ihmecovid19storage.blob.core.windows.net/archive/2022-07-19/data_download_file_reference_2020.csv
 # https://ihmecovid19storage.blob.core.windows.net/archive/2022-07-19/data_download_file_reference_2021.csv
 # https://ihmecovid19storage.blob.core.windows.net/archive/2022-07-19/data_download_file_reference_2022.csv
-# get mortality data from Eurostat with Eurostat package, convolve
-# case data by variant to mortality data & figure out
+
+# TO DO : get mortality data from Eurostat with Eurostat package & https://www.mortality.org/Data/STMF
+# convolve case data by variant to mortality data & calculate
 # death toll of each variant
+
+# TO DO : finish spatial multinomial tensor spline fit in function of latitude & longitude & time
+# (especially good for countries with limited or no sequencing data)
