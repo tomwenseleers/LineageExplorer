@@ -108,7 +108,10 @@ downl_records = function (accession_ids,
   Sys.sleep(1)
   checkbox_metadata = NULL
   while (length(checkbox_metadata)==0) { 
-    checkbox_metadata = remDr$findElements("class", "sys-event-hook")[[4]] }
+    suppressMessages(tryCatch({
+      checkbox_metadata = remDr$findElements("class", "sys-event-hook")[[4]]
+    }, error = function( err ) { checkbox_metadata = NULL }))
+  }
   checkbox_metadata$clickElement() 
   
   # click Download
@@ -195,6 +198,18 @@ downl_records = function (accession_ids,
   colnames(output)[which(colnames(output) %in% c("lineage"))] = "pango_lineage" # code lineage as pango_lineage as in GISAID metadata download package
   output$pango_lineage = gsub(" (marker override based on Emerging Variants AA substitutions)", "",  output$pango_lineage, fixed=T)
   
+  # remove leading and trailing round brackets from aa_substitutions
+  output$aa_substitutions = stringr::str_sub(output$aa_substitutions, 2, -2)
+  
+  # parse location field ####
+  # parse continent / country / location (PS: location is sometimes city & sometimes province)
+  loc = do.call(cbind, data.table::tstrsplit(unlist(output$location), "/", TRUE)) # parse location info
+  loc = trimws(loc, whitespace = " ")
+  levels_continents = c("Asia","North America","Europe","Africa","South America","Oceania")
+  output$continent = factor(loc[,1], levels=levels_continents)
+  output$country = factor(loc[,2])
+  output$location = factor(loc[,3]) # city or province/state
+  
   if (clean_up) unlink(download)
   
   return(output)
@@ -210,7 +225,7 @@ download_GISAID_records = function(
                             target_dir="C:/Users/bherr/OneDrive - KU Leuven/Documents/Github/newcovid_belgium/data/GISAID",
                             max_batch_size=10000, # maximum batch size
                             headless = FALSE,
-                            chromedriver_version = as.character(unlist(binman::list_versions("chromedriver")))[grepl(as.character(locatexec::exec_version("chrome")[[1, 1]]), as.character(unlist(binman::list_versions("chromedriver"))))], # "104.0.5112.79"
+                            chromedriver_version = as.character(unlist(binman::list_versions("chromedriver")))[grepl(as.character(locatexec::exec_version("chrome")[[1, 1]]), as.character(unlist(binman::list_versions("chromedriver"))))][[1]],
                             usr=Sys.getenv("GISAIDR_USERNAME"),
                             psw=Sys.getenv("GISAIDR_PASSWORD")) {
 require(RSelenium)  

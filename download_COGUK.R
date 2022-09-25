@@ -17,6 +17,11 @@ download_COGUK_meta = function() {
   coguk$aa_substitutions = gsub(":","_",gsub("S:","Spike_",coguk$aa_substitutions, fixed=T), fixed=T)
   coguk$aa_substitutions = gsub("orf1ab_S1221L", "NSP3_S403L",coguk$aa_substitutions, fixed=T)
   coguk$aa_substitutions = gsub("orf1ab_N4060S", "NSP8_N118S",coguk$aa_substitutions, fixed=T)
+  
+  # change delimiter from | to , as in GISAID
+  coguk$aa_substitutions = gsub("|", ",", coguk$aa_substitutions, fixed=TRUE)
+  
+  coguk$location = NA
 
 # TO DO: convert syntax to that used in GISAID genomic epidemiology metadata download
 # now orf1ab_ still needs to be converted to NSP_ notation, rest should be OK

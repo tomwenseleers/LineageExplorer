@@ -12,7 +12,7 @@ download_GISAD_meta = function(target_dir = "C:/Users/bherr/OneDrive - KU Leuven
                                clean_up = FALSE,
                                headless = FALSE,
                                genom_epidem = FALSE, # if TRUE use Genomic Epidemiology Metadata package download, else use regular Metadata package download  
-                               chromedriver_version = as.character(unlist(binman::list_versions("chromedriver")))[grepl(as.character(locatexec::exec_version("chrome")[[1, 1]]), as.character(unlist(binman::list_versions("chromedriver"))))], # "104.0.5112.79"
+                               chromedriver_version = as.character(unlist(binman::list_versions("chromedriver")))[grepl(as.character(locatexec::exec_version("chrome")[[1, 1]]), as.character(unlist(binman::list_versions("chromedriver"))))][[1]], # "105.0.5195.127" or before "104.0.5112.79"
                                usr = Sys.getenv("GISAIDR_USERNAME"),  
                                psw = Sys.getenv("GISAIDR_PASSWORD")) {
   # TO DO: also implement arguments clean_up=TRUE to delete downloaded file (default best set to FALSE though)
@@ -23,6 +23,7 @@ download_GISAD_meta = function(target_dir = "C:/Users/bherr/OneDrive - KU Leuven
   require(archive)
   require(data.table)
   require(dplyr)
+  require(stringr)
   
   if (!dir.exists(target_dir)) dir.create(target_dir)
                               
@@ -205,6 +206,19 @@ output$pango_lineage = gsub(" (marker override based on Emerging Variants AA sub
 # [17] "is_reference"                    "is_complete"                    
 # [19] "is_high_coverage"                "is_low_coverage"                
 # [21] "n_content"                       "gc_content" 
+
+# remove leading and trailing round brackets from aa_substitutions
+output$aa_substitutions = stringr::str_sub(output$aa_substitutions, 2, -2)
+
+# parse location field ####
+# parse continent / country / location (PS: location is sometimes city & sometimes province)
+loc = do.call(cbind, data.table::tstrsplit(unlist(output$location), "/", TRUE)) # parse location info
+loc = trimws(loc, whitespace = " ")
+levels_continents = c("Asia","North America","Europe","Africa","South America","Oceania")
+output$continent = factor(loc[,1], levels=levels_continents)
+output$country = factor(loc[,2])
+output$location = factor(loc[,3]) # city or province/state
+
 } else {
   # system.time(output <- read_tsv( # we directly read from archive
   #   gzfile(file.path(target_dir,download)), 
@@ -224,6 +238,11 @@ output$pango_lineage = gsub(" (marker override based on Emerging Variants AA sub
   # [21] "originating_lab"       "submitting_lab"        "authors"               "url"                  
   # [25] "title"                 "paper_url"             "date_submitted"        "purpose_of_sequencing"
 } 
+
+colnames(output) = gsub("region", "continent", colnames(output), fixed=TRUE)
+colnames(output) = gsub("location", "city", colnames(output), fixed=TRUE)
+colnames(output) = gsub("division", "location", colnames(output), fixed=TRUE)
+
 if (clean_up) unlink(file.path(target_dir,download))
 
 return(output)
