@@ -11,14 +11,13 @@ library(locatexec)
 # function to download given records, after having logged in first
 # (max batch of 10 000 records at a time)
 downl_records = function (accession_ids,
-                          get_sequence=FALSE, 
-                          clean_up=FALSE,
-                          target_dir,
-                          remDr=remDr) {
+                          get_sequence = FALSE, 
+                          clean_up = FALSE,
+                          target_dir = getwd(),
+                          remDr = remDr) {
   require(readr)
   require(dplyr)
   require(stringr)
-  require(dplyr)
   
   remDr$refresh()
   
@@ -220,14 +219,14 @@ downl_records = function (accession_ids,
 # (will be split in batches of max 10 000 records each)
 download_GISAID_records = function(
                             accession_ids,
-                            get_sequence=FALSE, 
-                            clean_up=FALSE,
-                            target_dir="C:/Users/bherr/OneDrive - KU Leuven/Documents/Github/newcovid_belgium/data/GISAID",
-                            max_batch_size=10000, # maximum batch size
+                            get_sequence = FALSE, 
+                            clean_up = FALSE,
+                            target_dir = getwd(),
+                            max_batch_size = 10000, # maximum batch size
                             headless = FALSE,
                             chromedriver_version = as.character(unlist(binman::list_versions("chromedriver")))[grepl(as.character(locatexec::exec_version("chrome")[[1, 1]]), as.character(unlist(binman::list_versions("chromedriver"))))][[1]],
-                            usr=Sys.getenv("GISAIDR_USERNAME"),
-                            psw=Sys.getenv("GISAIDR_PASSWORD")) {
+                            usr = Sys.getenv("GISAIDR_USERNAME"),
+                            psw = Sys.getenv("GISAIDR_PASSWORD")) {
 require(RSelenium)  
 
 if (!dir.exists(target_dir)) dir.create(target_dir)  

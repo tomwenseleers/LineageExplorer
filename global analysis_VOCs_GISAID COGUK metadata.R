@@ -55,6 +55,7 @@ library(devtools)
 install_github("tomwenseleers/marginaleffects")
 library(inspectdf)
 library(zoo)
+library(RSelenium)
 
 
 # 1. LOAD DATA ####
@@ -63,7 +64,7 @@ today = as.Date(Sys.time())
 today_num = as.numeric(today)
 today # "2021-09-25"
 plotdir = "GISAID_COGUK_GLOBAL_ANALYSIS"
-target_dir = "C:/Users/bherr/OneDrive - KU Leuven/Documents/Github/LineageExplorer/data/GISAID" # target download directory GISAID data
+target_dir = "C:/Users/bherr/OneDrive - KU Leuven/Documents/Github/LineageExplorer/LineageExplorer/data/GISAID" # target download directory GISAID data
 suppressWarnings(dir.create(file.path("plots",plotdir)))
 tag = paste("@TWenseleers\n",today)
 
@@ -80,7 +81,7 @@ xaxis = scale_x_continuous(breaks=firststofmonth,
 system.time(GISAID <- download_GISAD_meta(target_dir = target_dir,
                                           headless = FALSE,
                                           usr = Sys.getenv("GISAIDR_USERNAME"),
-                                          psw = Sys.getenv("GISAIDR_PASSWORD"))) # 218s
+                                          psw = Sys.getenv("GISAIDR_PASSWORD"))) # 194s
 download = tail(list.files(target_dir, pattern=".tar.xz"), 1)
 download # "metadata_tsv_2022_09_24.tar.xz"  
 
@@ -90,7 +91,7 @@ GISAID_max_submdate # "2022-09-22"
 nrow(GISAID) # 13217765
 
 
-# add some extra manually downloaded data from the last few days ####
+# add some extra recently submitted records not available in download package ####
 
 # I'll use https://github.com/Wytamma/GISAIDR
 # but in current implementation field AA substitutions still missing, see 
@@ -114,13 +115,13 @@ length(recent_records) # 25540 record not available in GISAID download package
 
 # dataframe with recently submitted records that are not yet in GISAID metadata package download
 d_extra = download_GISAID_records(accession_ids = recent_records,
-                                  get_sequence=FALSE, 
-                                  clean_up=FALSE,
-                                  target_dir=target_dir, # TO DO: check if directory exists, and if not make it
-                                  max_batch_size=10000, # maximum batch size, usually either 10000 or 5000
+                                  get_sequence = FALSE, 
+                                  clean_up = FALSE,
+                                  target_dir = target_dir, # TO DO: check if directory exists, and if not make it
+                                  max_batch_size = 10000, # maximum batch size, usually either 10000 or 5000
                                   headless = FALSE,
-                                  usr=Sys.getenv("GISAIDR_USERNAME"),
-                                  psw=Sys.getenv("GISAIDR_PASSWORD"))
+                                  usr = Sys.getenv("GISAIDR_USERNAME"),
+                                  psw = Sys.getenv("GISAIDR_PASSWORD"))
 dim(d_extra) # 25540                                       19
 
 # merge GISAID download package & recently submitted records

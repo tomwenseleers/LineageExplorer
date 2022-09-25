@@ -6,9 +6,7 @@
 # Sys.setenv(GISAIDR_PASSWORD = "XXX") # GISAID password
 # source(".//set_GISAID_credentials.R")
 
-library(locatexec)
-
-download_GISAD_meta = function(target_dir = "C:/Users/bherr/OneDrive - KU Leuven/Documents/Github/newcovid_belgium/data/GISAID", # target_dir = getwd(), # target download directory
+download_GISAD_meta = function(target_dir = getwd(), # target download directory
                                clean_up = FALSE,
                                headless = FALSE,
                                genom_epidem = FALSE, # if TRUE use Genomic Epidemiology Metadata package download, else use regular Metadata package download  
@@ -76,7 +74,7 @@ remDr$queryRD(
   )
 )
 
-if (genom_epidem) { message("Downloading GISAID genomic epidemiology metadata...") } else { message("Downloading GISAID metadata...") }
+if (genom_epidem) { message("Checking GISAID genomic epidemiology metadata...") } else { message("Checking GISAID metadata...") }
 
 remDr$navigate("https://www.epicov.org/epi3/start") 
 remDr$setImplicitWaitTimeout(milliseconds = 100)
@@ -112,7 +110,7 @@ remDr$setImplicitWaitTimeout(milliseconds = 10)
 # available download buttons
 download_buttons = NULL
 while (length(download_buttons)==0) download_buttons = remDr$findElements("class", "kachel75")
-# length(download_buttons) # 26 downloads available in total
+# length(download_buttons) # 27 downloads available in total for me
 
 # sapply(download_buttons, function(d) d$findChildElement("class", "downicon"))
 
@@ -139,13 +137,25 @@ download_nr_gisaid_genom_epidem_meta = which(grepl("metadata_", downicons_titles
 # <img src="/epi3/app_entities/entities/corona2020/download_other2.png"><div>metadata</div>
 #   </div>
 
-# TO DO: check version available for download & if already downloaded don't download it again
-# allow downloading FASTA or other available download packages
+# check version available for download & if already downloaded don't download it again
 
+# TO DO: allow downloading FASTA or other available download packages
 
+downl_title = downicons_titles[which(grepl("TSV-File", downicons_titles))]
+patt = "(?i)((?:(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z ]*\\.?)|(?:\\d{1,2}))[\\/ ,-](\\d{1,2})(?:[\\/ ,-]\\s*(\\d{4}|\\d{2}))?"
+available_metadata_todownload = paste0("metadata_tsv_20", gsub("-", "_", str_match_all(downl_title, patt)[[1]][[1]], fixed=T), ".tar.xz")
+available_genomepidem_todownload = downicons_titles[which(grepl("metadata_", downicons_titles))]
+available_todownload = ifelse(genom_epidem, available_genomepidem_todownload, available_metadata_todownload)
+
+metadata_already_downloaded = tail(list.files(target_dir, pattern=".tar.xz"),1)
+genomepidem_already_downloaded = tail(list.files(target_dir, pattern=".tsv.gz"),1)
+already_downloaded = ifelse(genom_epidem, genomepidem_already_downloaded, metadata_already_downloaded)
+  
+if (available_todownload != already_downloaded) {
 # DOWNLOAD PATIENT METADATA (EITHER REGULAR GISAID METADATA OR GENOMIC EPIDEMIOLOGY METADATA)
 download_nr = ifelse(genom_epidem, download_nr_gisaid_genom_epidem_meta, download_nr_gisaid_meta)
 metadata_button = download_buttons[[download_nr]] # patient metadata
+
 # TO DO: check available version & if that file is already present in target_dir don't bother downloading it again
 metadata_button$clickElement()
 
@@ -172,15 +182,20 @@ while (length(list.files(target_dir, pattern="crdownload", full.names=T))>=1) {
   Sys.sleep(1)
 }
 
+if (genom_epidem) pat = ".tsv.gz" else pat = ".tar.xz"
+# df = file.info(list.files(target_dir, pattern=pat, full.names = T))
+# gsub(paste0(target_dir,"/"), "", rownames(df)[which.max(df$mtime)])
+download = tail(list.files(target_dir, pattern=pat, full.names = F), 1) 
+
+message(paste0("Downloaded GISAID metadata file version ", download))
+
+} else { message(paste0("No new metadata package available to download, using cached previously downloaded file"))
+         download = already_downloaded
+}
+
 remDr$close()
 browser$stop()
 remDr$quit()
-
-if (genom_epidem) pat = ".tsv.gz" else pat = ".tar.xz"
-df = file.info(list.files(target_dir, pattern=pat, full.names = T))
-download = gsub(paste0(target_dir,"/"), "", rownames(df)[which.max(df$mtime)])
-
-message(paste0("Downloaded GISAID metadata file version ", download))
 
 message(paste0("Reading GISAID metadata file version ", download))
 
