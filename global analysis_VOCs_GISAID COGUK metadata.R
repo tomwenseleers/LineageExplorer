@@ -10,9 +10,10 @@
 # Sys.setenv(GISAIDJSON_PASSWORD = "XXXXX")
 # Sys.setenv(GISAIDJSON_STREAM = "XXXXX")
 
-# devtools::install_github("Wytamma/GISAIDR")
+# load some utility functions & install required packages 
+library(devtools)
+remotes::install_github("Wytamma/GISAIDR")
 library(GISAIDR)
-# setwd("~/Github/newcovid_belgium")
 source(".//set_GISAID_credentials.R") # set GISAID credentials
 source(".//download_GISAID.R") # load function to download GISAID metadata download package (lacking records from last few days)
 source(".//download_GISAID_records.R") # load functions to download most recent GISAID records
@@ -24,9 +25,9 @@ source(".//fastmultinomHess.R") # faster way to calculation Hessian of multinomi
 library(nnet)
 library(splines)
 library(devtools)
-# devtools::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
+remotes::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
 library(mclogit)
-# remotes::install_github("rvlenth/emmeans", dependencies = TRUE, force = TRUE)
+remotes::install_github("rvlenth/emmeans", dependencies = FALSE)
 library(emmeans)
 library(readr)
 library(ggplot2)
@@ -41,21 +42,28 @@ library(countrycode)
 library(memoise)
 library(readxl)
 # install.packages("covidregionaldata",
-#                  repos = "https://epiforecasts.r-universe.dev"
-# )
+#                   repos = "https://epiforecasts.r-universe.dev")
+remotes::install_github("epiforecasts/covidregionaldata")
 library(covidregionaldata)
 library(tidyquant)
 library(data.table)
 library(R.utils)
 library(locatexec)
+library(tidyr)
+library(pals)
+library(devtools)
+install_github("tomwenseleers/marginaleffects")
+library(inspectdf)
+library(zoo)
 
 
 # 1. LOAD DATA ####
 
 today = as.Date(Sys.time())
 today_num = as.numeric(today)
-today # "2021-09-20"
+today # "2021-09-25"
 plotdir = "GISAID_COGUK_GLOBAL_ANALYSIS"
+target_dir = "C:/Users/bherr/OneDrive - KU Leuven/Documents/Github/LineageExplorer/data/GISAID" # target download directory GISAID data
 suppressWarnings(dir.create(file.path("plots",plotdir)))
 tag = paste("@TWenseleers\n",today)
 
@@ -68,7 +76,6 @@ xaxis = scale_x_continuous(breaks=firststofmonth,
 # import GISAID metadata ####
 
 # download latest GISAID metadata ####
-target_dir = "C:/Users/bherr/OneDrive - KU Leuven/Documents/Github/newcovid_belgium/data/GISAID" # target download directory
 
 system.time(GISAID <- download_GISAD_meta(target_dir = target_dir,
                                           headless = FALSE,
@@ -81,8 +88,6 @@ download # "metadata_tsv_2022_09_24.tar.xz"
 GISAID_max_submdate = as.Date(max(GISAID$submission_date, na.rm=T))
 GISAID_max_submdate # "2022-09-22"
 nrow(GISAID) # 13217765
-
-
 
 
 # add some extra manually downloaded data from the last few days ####
@@ -122,38 +127,6 @@ dim(d_extra) # 25540                                       19
 GISAID = dplyr::bind_rows(GISAID, d_extra)
 nrow(GISAID) # 13243305
 
-# with GISAIDR functions this should normally have worked, but since AA substitutions field is missing
-# I am using my own function above (this is being fixed in GISAIDR)
-# # function to split vector in chunks of max size chunk_length
-# chunk = function(x, chunk_length=4000) split(x, ceiling(seq_along(x)/chunk_length))
-# chunks = chunk(df_recent$accession_id)
-# downloads = do.call(rbind, lapply(1:length(chunks),
-#                    function (chunk) {
-#                      message(paste0("Downloading batch ", chunk, " out of ", length(chunks)))
-#                      Sys.sleep(3)
-#                      return(download(credentials = credentials, 
-#                               list_of_accession_ids = chunks[[chunk]],
-#                               clean_up=FALSE)) } ))
-# dim(downloads)
-# names(downloads)
-
-  
-# # search in which countries at least 1 BA.2.75 was picked up in the last few days
-# df_countries_BA_2_75 = query(
-#   credentials = credentials, 
-#   lineage = "BA.2.75", 
-#   from_subm = as.character(GISAID_max_submdate), 
-#   to_subm = as.character(today),
-#   fast = TRUE
-# )
-# full_df_countries_BA_2_75 = download(credentials = credentials, 
-#                            list_of_accession_ids = df_countries_BA_2_75$accession_id)
-# full_df_countries_BA_2_75$sequence = NULL
-# countries_BA_2_75 = unique(full_df_countries_BA_2_75$country)
-# countries_BA_2_75
-
-# write.csv(GISAID$accession_id, ".//data//GISAID//GISAID_accession_IDs.csv", row.names=F)
-
 # LOAD COG-UK DATA FOR THE UNITED KINGDOM ####
 if (use_coguk) { coguk = download_COGUK_meta()
   # MERGE GISAID (MINUS UK GISAID DATA) & COG-UK DATA FOR UK
@@ -187,16 +160,12 @@ GISAID$date = as.Date(NA)
 GISAID$date[which(GISAID$date_isvalid)] = as.Date(fast_strptime(GISAID$collection_date[which(GISAID$date_isvalid)], "%Y-%m-%d")) # faster than as.Date(GISAID$collection_date)
 
 
-
-
-
 # CODE VARIANT LINEAGES ####
 
 sum(is.na(GISAID$aa_substitutions)) # 11134
 GISAID$aa_substitutions[is.na(GISAID$aa_substitutions)] = ""
 
 # # convert AA substitions to nested column "muts"
-# library(tidyr)
 # system.time(GISAID <- GISAID %>% 
 #   # convert mutations to nested list column, you can unnest this again using unnest(aa_substitutions)
 #   mutate(muts = strsplit(aa_substitutions, ","))) # 344 s
@@ -311,17 +280,17 @@ system.time(GISAID$variant <- case_when(
 # BJ.1, https://github.com/cov-lineages/pango-designation/issues/915
 # (just 11 seqs for now, https://cov-spectrum.org/explore/World/AllSamples/Past6M/variants?variantQuery=%5B4-of%3A+ORF1a%3A47R%2C+S%3A83A%2C+S%3A146Q%2C+S%3A213E%2C+S%3A339H%2C+S%3A445P%2C+S%3A483A%2C+S%3A1003I%2C+M%3A3Y%2C+ORF7a%3A110T%2C+N%3A282I%2C+15738T%2C+15939C%5D&)
 
-sum(is.na(GISAID$variant)) # 224476 unassigned
-sum(GISAID$pango_lineage=="Unassigned", na.rm=T) # 224635 originally unassigned in GISAID
-sum(GISAID$variant=="Omicron (BA.2.75)", na.rm=T) # 8337 BA.2.75
-sum(GISAID$variant=="Omicron (BA.2.75)"&GISAID$country=="India", na.rm=T) # 5489 BA.2.75 for India
-sum(GISAID$variant=="Omicron (BA.2.75)"&GISAID$date_isvalid, na.rm=T) # 8337 BA.2.75 with valid date
-sum(GISAID$variant=="Omicron (BA.2.75)"&GISAID$country=="India"&GISAID$date_isvalid, na.rm=T) # 5489 BA.2.75 for India with valid date
-sum(GISAID$pango_lineage=="BA.2.75", na.rm=T) # 8786
-sum(GISAID$variant=="Omicron (BA.5)", na.rm=T) # 474004
-sum(GISAID$variant=="Omicron (BA.5.2)", na.rm=T) # 188559
-sum(GISAID$variant=="Omicron (BA.5.2.1)", na.rm=T) # 281604
-sum(GISAID$variant=="Omicron (BQ.1)", na.rm=T) # 381
+# sum(is.na(GISAID$variant)) # 224476 unassigned
+# sum(GISAID$pango_lineage=="Unassigned", na.rm=T) # 224635 originally unassigned in GISAID
+# sum(GISAID$variant=="Omicron (BA.2.75)", na.rm=T) # 8337 BA.2.75
+# sum(GISAID$variant=="Omicron (BA.2.75)"&GISAID$country=="India", na.rm=T) # 5489 BA.2.75 for India
+# sum(GISAID$variant=="Omicron (BA.2.75)"&GISAID$date_isvalid, na.rm=T) # 8337 BA.2.75 with valid date
+# sum(GISAID$variant=="Omicron (BA.2.75)"&GISAID$country=="India"&GISAID$date_isvalid, na.rm=T) # 5489 BA.2.75 for India with valid date
+# sum(GISAID$pango_lineage=="BA.2.75", na.rm=T) # 8786
+# sum(GISAID$variant=="Omicron (BA.5)", na.rm=T) # 474004
+# sum(GISAID$variant=="Omicron (BA.5.2)", na.rm=T) # 188559
+# sum(GISAID$variant=="Omicron (BA.5.2.1)", na.rm=T) # 281604
+# sum(GISAID$variant=="Omicron (BQ.1)", na.rm=T) # 381
 table(GISAID$variant)
 
 # GISAID = GISAID[!is.na(GISAID$variant),]
@@ -356,7 +325,6 @@ lineage_cols_plot = case_when(
   levels_VARIANTS_plot=="Omicron (BA.2.75.2)" ~ "magenta",
   levels_VARIANTS_plot=="Omicron (BA.2.3.20)" ~ "orange"  
 )
-library(pals)
 pal.bands(lineage_cols_plot)
 # pal.volcano(lineage_cols_plot)
 # pal.zcurve(lineage_cols_plot)
@@ -397,11 +365,11 @@ table(GISAID_sel$variant)
 table(GISAID_sel$continent, GISAID_sel$variant)
 table(GISAID_sel[GISAID_sel$variant=="Omicron (BA.2.75)","country"])
 
-nBA_2_75 = sum(GISAID_sel$variant=="Omicron (BA.2.75)", na.rm=T)
-nBA_2_75 # 8337 BA.2.75 records so far with valid date
-
-nBA_2_75_india = sum(GISAID_sel$variant=="Omicron (BA.2.75)"&GISAID_sel$country=="India", na.rm=T)
-nBA_2_75_india # 5489 BA.2.75 records so far for India with valid date
+# nBA_2_75 = sum(GISAID_sel$variant=="Omicron (BA.2.75)", na.rm=T)
+# nBA_2_75 # 8337 BA.2.75 records so far with valid date
+# 
+# nBA_2_75_india = sum(GISAID_sel$variant=="Omicron (BA.2.75)"&GISAID_sel$country=="India", na.rm=T)
+# nBA_2_75_india # 5489 BA.2.75 records so far for India with valid date
 
 sum(GISAID_sel$variant=="Omicron (BA.2.75)"&GISAID_sel$country=="United Kingdom", na.rm=T)
 # 206 BA.2.75 in UK so far
@@ -529,85 +497,49 @@ system.time(fit_global_multi$Hessian <- fastmultinomHess(fit_global_multi, model
 system.time(fit_global_multi$vcov <- vcov(fit_global_multi)) # 0.6s
 
 
-# just fit on data last 3 months (used to look at growth rate advantage)
-set.seed(1)
-system.time(fit_global_multi_last3m <- nnet::multinom(variant ~ 
-                                                 ns(DATE_NUM, df=2)+
-                                                 ns(DATE_NUM, df=2):continent+
-                                                 country, 
-                                               weights=count, 
-                                               data=data_agbyweekcountry1_subs[
-                                                 (data_agbyweekcountry1_subs$DATE_NUM>=(today_num-30*3)),], 
-                                               maxit=10000, MaxNWts=100000)) # 12s
-system.time(fit_global_multi_last3m$Hessian <- fastmultinomHess(fit_global_multi_last3m, model.matrix(fit_global_multi_last3m))) # 1.5s
-system.time(fit_global_multi_last3m$vcov <- vcov(fit_global_multi_last3m)) # 0.5s
-
-set.seed(1)
-system.time(fit_europe_multi <- nnet::multinom(variant ~ 
-                                                 ns(DATE_NUM, df=2)+
-                                                 country, 
-                                               weights=count, 
-                                               data=data_agbyweekcountry1_subs2, 
-                                               maxit=10000, MaxNWts=100000)) # 82s
-system.time(fit_europe_multi$Hessian <- fastmultinomHess(fit_europe_multi, model.matrix(fit_europe_multi))) # 1.3s
-system.time(fit_europe_multi$vcov <- vcov(fit_europe_multi)) # 0.03s
-
-
 
 # calculate current pairwise growth rate differences compared to ref level BA.5.2 ####
 
-# library(devtools)
-# # install_github("tomwenseleers/marginaleffects")
-
-# library(marginaleffects)
 # for all pairwise growth rate differences:
-# growth_differences_europe = comparisons(
-#   fit_global_multi_last3m,
-#   newdata = datagrid(DATE_NUM = today_num,
-#                      continent = GISAID_sel$continent[GISAID_sel$continent=="Europe"][[1]],
-#                      country = GISAID_sel$country[GISAID_sel$country=="United Kingdom"][[1]]),
+# growth_differences = comparisons(
+#   fit_global_multi,
+#   newdata = datagrid(DATE_NUM = today_num),
 #   variables = "DATE_NUM",
-#   # by = "continent",
+#   by = "continent",
 #   type = "clr",
 #   hypothesis = "pairwise")
 
-# ANALYSIS STARTS HERE ####
 
-# save.image("~/Github/newcovid_belgium/environment_2022_09_25.RData")
-# load("~/Github/newcovid_belgium/environment_2022_09_25.RData")
+# WITH SAVED ENVIRONMENT YOU CAN START FROM HERE ####
+
+# save.image("~/Github/LineageExplorer/environment_2022_09_25.RData")
+# load("~/Github/LineageExplorer/environment_2022_09_25.RData")
  
 # clean up some memory
 rm(GISAID, d_extra, recent_records, coguk) 
-# library(inspectdf)
 # mem_usage = inspect_mem(GISAID_sel)
 # print(mem_usage, n=100)
 GISAID_sel$aa_substitutions = NULL # takes up 3 Gb
 GISAID_sel$virus_name = NULL # takes up 1 Gb
 gc()
 
-# save.image("~/Github/newcovid_belgium/environment_2022_09_25_small.RData")
-# load("~/Github/newcovid_belgium/environment_2022_09_25_small.RData")
+# save.image("~/Github/LineageExplorer/environment_2022_09_25_small.RData")
+# load("~/Github/LineageExplorer/environment_2022_09_25_small.RData")
 
-library(devtools)
-install_github("tomwenseleers/marginaleffects")
-library(marginaleffects)
 
-# # pairwise growth rate differences
-# system.time(emtr_pairw <- emtrends(fit_global_multi_last3m, revpairwise ~ variant,
+# old emtrends code to calculate pairwise growth rate differences
+# system.time(emtr_pairw <- emtrends(fit_global_multi, revpairwise ~ variant,
 #                                    by="continent",
 #                                    var="DATE_NUM",  mode="latent",
 #                                    at=list(DATE_NUM=today_num))) # 
-# # Error in ref_grid(object = list(n = c(229, 0, 21), nunits = 251L, nconn = c(0,  :
-# #      Something went wrong:unique(data_agbyweekcountry1$variant)
-# #      Non-conformable elements in reference grid.
 # delta_r_pairw = data.frame(confint(emtr_pairw,
 #                                    adjust="none", df=NA)$contrasts,
 #                            p.value=as.data.frame(emtr_pairw$contrasts)$p.value)
 # delta_r_pairw
 # write.csv(delta_r_pairw, file.path("plots", plotdir, "growth rate advantage all variants vs BA_5_2.csv"), row.names=F)
 
-.
 # average growth rate advantage compared to reference level BA.5.2
+# with new faster marginaleffects code
 system.time(meffects <- marginaleffects(fit_global_multi, 
                                                type = "link", # = additive log-ratio = growth rate advantage relative to BA.5.2
                                                variables = c("DATE_NUM"),
@@ -715,10 +647,6 @@ fit_preds$variant = factor(fit_preds$variant, levels=levels_VARIANTS_plot)
 # TO DO: check why some predictions before jan 2021 come out as NA,
 # presumably due to some overflow??
 
-# levels_country = rev(fit_preds[fit_preds$date==today&
-#                                  fit_preds$variant=="Omicron (BA.2.75.2)","country"][order(fit_preds[fit_preds$date==today&fit_preds$variant=="Omicron (BA.2.75.2)","prob"])])
-# levels_country = c("India", "Nepal", "China", 
-#                    as.character(levels_country)[!as.character(levels_country) %in% c("India","Nepal","China")])
 fit_preds$country = factor(fit_preds$country) # , levels=levels_country
 levels(fit_preds$country)
 fit_preds$continent = factor(fit_preds$continent)
@@ -984,23 +912,11 @@ qplot(data=country_data, x=date, y=cases_new, group=country, geom="blank", colou
   
 fit_preds[(fit_preds$date==today)&(fit_preds$variant=="Omicron (BA.2.75)"),]
 
-# fit_multi_predsbycountry = data.frame(emmeans(fit8_multi,
-#                                                   ~ variant,
-#                                                   by=c("DATE_NUM",
-#                                                        "continent",
-#                                                        "country"),
-#                                                   at=list(DATE_NUM=today_num), # by=7 just to speed up things a bit
-#                                                   mode="prob", df=NA,
-#                                                   rg.limit=100000))
-# 
-# fit_multi_predsbycountry[fit_multi_predsbycountry$variant=="Omicron (BA.2.75)",]
-
 fit_preds$totnewcases = 
   country_data$cases_new[match(interaction(fit_preds$country,
                                           fit_preds$date),
                                       interaction(country_data$country, 
                                                   country_data$date))]
-library(zoo)
 fit_preds = fit_preds %>% 
   group_by(country) %>% 
   mutate(totnewcases_smoothed = rollmean(totnewcases, 7, na.pad = T))
@@ -1073,3 +989,6 @@ ggsave(file=file.path("plots", plotdir,"\\global multinom fit_all data_predictio
 # https://ihmecovid19storage.blob.core.windows.net/archive/2022-07-19/data_download_file_reference_2020.csv
 # https://ihmecovid19storage.blob.core.windows.net/archive/2022-07-19/data_download_file_reference_2021.csv
 # https://ihmecovid19storage.blob.core.windows.net/archive/2022-07-19/data_download_file_reference_2022.csv
+# get mortality data from Eurostat with Eurostat package, convolve
+# case data by variant to mortality data & figure out
+# death toll of each variant
