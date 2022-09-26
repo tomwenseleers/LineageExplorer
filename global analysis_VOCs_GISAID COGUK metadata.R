@@ -9,12 +9,13 @@
 # Sys.setenv(GISAIDJSON_USERNAME = "XXXXX") # not needed for this script
 # Sys.setenv(GISAIDJSON_PASSWORD = "XXXXX")
 # Sys.setenv(GISAIDJSON_STREAM = "XXXXX")
+if (file.exists("..//set_GISAID_credentials.R")) source("..//set_GISAID_credentials.R") # using my GISAID credentials
+
 
 # load some utility functions & install required packages 
 library(devtools)
 remotes::install_github("Wytamma/GISAIDR")
 library(GISAIDR)
-source(".//set_GISAID_credentials.R") # set GISAID credentials
 source(".//download_GISAID.R") # load function to download GISAID metadata download package (lacking records from last few days)
 source(".//download_GISAID_records.R") # load functions to download most recent GISAID records
 source(".//download_COGUK.R") # load function to download COG-UK metadata
@@ -79,6 +80,8 @@ xaxis = scale_x_continuous(breaks=firststofmonth,
 
 # download latest GISAID metadata ####
 
+# note: make sure to have a working installation of RSelenium & chrome
+# browser installed
 system.time(GISAID <- download_GISAD_meta(target_dir = target_dir,
                                           headless = FALSE,
                                           usr = Sys.getenv("GISAIDR_USERNAME"),
@@ -354,6 +357,7 @@ nrow(GISAID_sel) # 12933396
 GISAID_sel[which(GISAID_sel$variant=="Omicron (BA.2.75)"&GISAID_sel$date==as.Date("2022-01-07")),"date"] = as.Date("2022-07-01") # had day & month flipped around
 # min(GISAID$date[GISAID$variant=="Omicron (BA.2.75)"],na.rm=T) # "2022-05-26"
 
+# TO DO: add these columns in download functions??
 GISAID_sel$Week = lubridate::week(GISAID_sel$date)
 GISAID_sel$Year = lubridate::year(GISAID_sel$date)
 GISAID_sel$Year_Week = interaction(GISAID_sel$Year,GISAID_sel$Week)
@@ -381,16 +385,19 @@ maxsubmdate = today
 
 # selected countries to include, here those with min 5 BA.2.75.2 or 5 BQ.1* or 5 BA.2.3.20 sequences
 tab = as.data.frame(table(GISAID_sel$country, GISAID_sel$variant))
-sel_countries_min5 = sort(unique(c(as.character(tab[tab$Var2=="Omicron (BA.2.75.2)"&tab$Freq>=5,"Var1"]),
-                                   as.character(tab[tab$Var2=="Omicron (BQ.1)"&tab$Freq>=5,"Var1"]),
-                                   as.character(tab[tab$Var2=="Omicron (BA.2.3.20)"&tab$Freq>=5,"Var1"]))))
-sel_countries_min5
-# [1] "Australia"      "Austria"        "Bangladesh"     "Belgium"        "Canada"        
-# [6] "Denmark"        "France"         "Germany"        "India"          "Ireland"       
-# [11] "Israel"         "Italy"          "Japan"          "Netherlands"    "New Zealand"   
-# [16] "Singapore"      "South Korea"    "Switzerland"    "United Kingdom" "USA"  
+sel_countries = sort(unique(c(tab[tab$Var2=="Omicron (BA.2.75.2)"&tab$Freq>=5,"Var1"],
+                              tab[tab$Var2=="Omicron (BQ.1)"&tab$Freq>=5,"Var1"],
+                              tab[tab$Var2=="Omicron (BA.2.3.20)"&tab$Freq>=5,"Var1"])))
+sel_countries
+# [1] Australia      Austria        Bangladesh     Belgium        Canada         Denmark       
+# [7] France         Germany        India          Ireland        Israel         Italy         
+# [13] Japan          Netherlands    New Zealand    Singapore      South Korea    Switzerland   
+# [19] United Kingdom USA   
 
-sel_countries = sel_countries_min5
+GISAID_sel = as.data.frame(GISAID_sel)
+GISAID_sel = GISAID_sel[GISAID_sel$country %in% sel_countries,]
+GISAID_sel$country = droplevels(GISAID_sel$country)
+GISAID_sel$continent = factor(GISAID_sel$continent, levels=unique(GISAID_sel$continent))
 
 
 # 2. GLOBAL ANALYSIS OF THE GISAID+COGUK DATA USING MULTINOMIAL FITS ####
@@ -449,7 +456,7 @@ data_agbyweekcountry1$variant = factor(data_agbyweekcountry1$variant, levels=lev
 # write.csv(data_agbyweekcountry1, file="./data/GISAID/GISAID aggregated counts by start of week and lineage_all.csv", row.names=F)
 
 
-# MULLER PLOT (RAW DATA, all countries pooled, but with big sampling biases across countries)
+# MULLER PLOT (RAW DATA, selected countries pooled, but with big sampling biases across countries)
 muller_raw_all = ggplot(data=data_agbyweek1, aes(x=date, y=count, group=variant)) +
   # facet_wrap(~ STATE, ncol=1) +
   # geom_col(aes(lwd=I(1.2), colour=NULL, fill=variant), width=1, position="fill") +
@@ -471,13 +478,6 @@ ggsave(file=file.path("plots", plotdir,"global analysis_muller plot_raw data all
 
 # FIT NNET::MULTINOM MULTINOMIAL SPLINE MODEL ####
 
-# we use data subsetted to the countries selected above
-data_agbyweekcountry1_subs = data_agbyweekcountry1[data_agbyweekcountry1$country %in% 
-                                                     sel_countries,]
-data_agbyweekcountry1_subs$country = droplevels(data_agbyweekcountry1_subs$country)
-data_agbyweekcountry1_subs$variant = factor(data_agbyweekcountry1_subs$variant, levels=levels_VARIANTS)
-
-
 set.seed(1)
 # best model:
 system.time(fit_global_multi <- nnet::multinom(variant ~ 
@@ -485,12 +485,12 @@ system.time(fit_global_multi <- nnet::multinom(variant ~
                                     ns(DATE_NUM, df=2):continent+
                                     country, 
                                   weights=count, 
-                                  data=data_agbyweekcountry1_subs, 
+                                  data=data_agbyweekcountry1, 
                                   maxit=10000, MaxNWts=100000)) # 430s; 5h if we use all GISAID data from all countries
 # we calculate the Hessian using my own faster Rcpp Kronecker-product based function
 system.time(fit_global_multi$Hessian <- fastmultinomHess(fit_global_multi, model.matrix(fit_global_multi))) # 17s
+# we add variance-coveriance matrix as extra slot to be re-used later
 system.time(fit_global_multi$vcov <- vcov(fit_global_multi)) # 0.6s
-
 
 # with saved environment you can start from here ####
 
@@ -568,9 +568,9 @@ qplot(data=meffects_sel1,
   theme(legend.position="none") + xlab("") +
   ggtitle("GROWTH RATE ADVANTAGE OF SARS-CoV2 VARIANTS",
           subtitle=paste0("based on multinomial spline fit variant ~ ns(date, df=2)+ns(date, df=2):continent+country,\nGISAID & COG-UK data, using data from countries with >=5 BQ.1*, BA.2.3.20 or BA.2.75.2\n(",
-                   paste0(sel_countries_min5[1:10], collapse=", "), "\n",
-                   paste0(sel_countries_min5[11:18], collapse=", "), "\n",
-                   paste0(sel_countries_min5[19:length(sel_countries_min5)], collapse=", "), ")") ) +
+                   paste0(sel_countries[1:10], collapse=", "), "\n",
+                   paste0(sel_countries[11:18], collapse=", "), "\n",
+                   paste0(sel_countries[19:length(sel_countries)], collapse=", "), ")") ) +
   labs(tag = tag) +
   theme(plot.tag.position = "bottomright",
         plot.tag = element_text(vjust = 1, hjust = 1, size=8)) # +
@@ -581,7 +581,7 @@ ggsave(file=file.path("plots", plotdir,"growth rate advantage VOCs_global fit.pn
 # plot of growth rate advantage of last X newest variants by continent
 lastn = 4
 sel_variants = tail(levels_VARIANTS,lastn)
-sel_continents = unique(data_agbyweekcountry1_subs$continent)
+sel_continents = unique(data_agbyweekcountry1$continent)
 meffects_sel2 = meffects_bycontinent[meffects_bycontinent$continent %in% sel_continents,]
 meffects_sel2 = meffects_sel2[meffects_sel2$group %in% sel_variants,]
 meffects_sel2$group = factor(meffects_sel2$group, levels=levels(meffects_sel1$group))
@@ -594,9 +594,9 @@ qplot(data=meffects_sel2,
   theme(legend.position="none") + xlab("") +
   ggtitle("GROWTH RATE ADVANTAGE OF SARS-CoV2 VARIANTS",
           subtitle=paste0("based on multinomial spline fit variant ~ ns(date, df=2)+ns(date, df=2):continent+country,\nGISAID & COG-UK data, using data from countries with >=5 BQ.1*, BA.2.3.20 or BA.2.75.2\n(",
-                          paste0(sel_countries_min5[1:10], collapse=", "), "\n",
-                          paste0(sel_countries_min5[11:18], collapse=", "), "\n",
-                          paste0(sel_countries_min5[19:length(sel_countries_min5)], collapse=", "), ")") ) +
+                          paste0(sel_countries[1:10], collapse=", "), "\n",
+                          paste0(sel_countries[11:18], collapse=", "), "\n",
+                          paste0(sel_countries[19:length(sel_countries)], collapse=", "), ")") ) +
   labs(tag = tag) +
   theme(plot.tag.position = "bottomright",
         plot.tag = element_text(vjust = 1, hjust = 1, size=8)) # +
@@ -610,37 +610,43 @@ ggsave(file=file.path("plots", plotdir,"growth rate advantage VOCs_global fit_by
 
 extrapolate = 60
 date.from = as.numeric(as.Date("2020-01-01"))
-date.to = today_num+extrapolate # max(GISAID_sel$DATE_NUM, na.rm=T)
+date.to = today_num+extrapolate
 
 # multinomial model predictions by country with CIs calculated using margineffects::predictions
 
 predgrid = expand.grid(list(DATE_NUM=as.numeric(seq(date.from, date.to)),
-                            country=unique(data_agbyweekcountry1_subs$country))) # unique(GISAID_sel$country)
-predgrid$continent = data_agbyweekcountry1_subs$continent[match(predgrid$country,
-                                                                data_agbyweekcountry1_subs$country)]
-# note: CIs are backtransformed from a logit scale as in the Effects package
+                            country=unique(data_agbyweekcountry1$country))) # unique(GISAID_sel$country)
+predgrid$continent = data_agbyweekcountry1$continent[match(predgrid$country,
+                                                                data_agbyweekcountry1$country)]
+# note: now using Delta method on response scale, better to
+# calculate CIs as in Effects package on link scale (type="link") & backtransform
+# but still having some problems with over/underflows
+
 # also possible (and slightly better) to use isometric logratio scale type="ilr", 
 # but more hassle to backtransform
 system.time(fit_preds <- data.frame(predictions(fit_global_multi, 
                        newdata = predgrid,
-                       type = "logit",
-                       vcov = fit_global_multi$vcov) %>%
-             transform(conf.low = predicted - 1.96 * std.error,
-                       conf.high = predicted + 1.96 * std.error) %>%
-             group_by(rowid) |>
-             mutate_at(c("predicted", "conf.low", "conf.high"), function (x) plogis(x)))) # 238s
-# replace NAs by 0
-fit_preds <- fit_preds %>% mutate(predicted = ifelse(is.na(predicted), 0, predicted),
-                                  conf.low = ifelse(is.na(conf.low), 0, conf.low),
-                                  conf.high = ifelse(is.na(conf.high), 0, conf.high))
-fit_preds$date = as.Date(fit_preds$DATE_NUM, origin="1970-01-01")
-fit_preds$variant = fit_preds$group
-fit_preds$variant = factor(fit_preds$variant, levels=levels_VARIANTS_plot)
-fit_preds$group = NULL
+                       type = "probs",
+                       vcov = fit_global_multi$vcov))) # %>% # 
+             # transform(conf.low = predicted - 1.96 * std.error,
+             #          conf.high = predicted + 1.96 * std.error) %>%
+             # group_by(rowid) |>
+             #mutate_at(c("predicted", "conf.low", "conf.high"), function (x) plogis(x)))
+             # 238s
+fit_preds$conf.high[fit_preds$conf.high>1] = 1 # slight artefact of Delta method on response scale
+fit_preds$conf.low[fit_preds$conf.low<0] = 0
 
-# TO DO: check why some predictions before jan 2021 come out as NA,
-# presumably due to some overflow??
-# maybe bug in my marginaleffects package modifications - check
+# replace NAs by 0
+# fit_preds <- fit_preds %>% mutate(predicted = ifelse(is.na(predicted), 0, predicted),
+#                                   conf.low = ifelse(is.na(conf.low), 0, conf.low),
+#                                   conf.high = ifelse(is.na(conf.high), 0, conf.high))
+fit_preds$date = as.Date(fit_preds$DATE_NUM, origin="1970-01-01")
+fit_preds$variant = NULL
+colnames(fit_preds)[which(colnames(fit_preds)=="group")] = "variant"
+fit_preds$variant = factor(fit_preds$variant, levels=levels_VARIANTS_plot)
+
+# TO DO: fix bug with type="link" where some predictions come out as NA,
+# and/or switch to type="ilr" - check in my marginaleffects fork
 
 fit_preds$country = factor(fit_preds$country)
 levels(fit_preds$country)
@@ -667,7 +673,7 @@ plot_preds_logit = qplot(data=fit_preds[fit_preds$variant!="Other",],
   scale_fill_manual("variant", values=tail(as.vector(lineage_cols_plot),-1)) +
   scale_colour_manual("variant", values=tail(as.vector(lineage_cols_plot),-1)) +
   geom_point(data=data_agbyweekcountry1[data_agbyweekcountry1$variant!="Other"&
-                                          data_agbyweekcountry1$country %in% sel_countries_min5,],
+                                          data_agbyweekcountry1$country %in% sel_countries,],
              aes(x=collection_date, y=prop, size=total,
                  colour=variant
              ),
@@ -708,7 +714,7 @@ plot_preds_logit = qplot(data=fit_preds[fit_preds$variant %in% sel_variants,],
   scale_fill_manual("variant", values=tail(as.vector(lineage_cols_plot),-11)) +
   scale_colour_manual("variant", values=tail(as.vector(lineage_cols_plot),-11)) +
   geom_point(data=data_agbyweekcountry1[data_agbyweekcountry1$variant %in% sel_variants&
-                                          data_agbyweekcountry1$country %in% sel_countries_min5,],
+                                          data_agbyweekcountry1$country %in% sel_countries,],
              aes(x=collection_date, y=prop, size=total,
                  colour=variant
              ),
