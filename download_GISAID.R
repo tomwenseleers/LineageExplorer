@@ -4,7 +4,7 @@
 # note: set GISAID access credentials first using ####
 # Sys.setenv(GISAIDR_USERNAME = "XXX") # GISAID username
 # Sys.setenv(GISAIDR_PASSWORD = "XXX") # GISAID password
-# source(".//set_GISAID_credentials.R")
+# source("..//set_GISAID_credentials.R")
 
 download_GISAD_meta = function(target_dir = getwd(), # target download directory
                                clean_up = FALSE,
@@ -147,9 +147,13 @@ available_metadata_todownload = paste0("metadata_tsv_20", gsub("-", "_", str_mat
 available_genomepidem_todownload = downicons_titles[which(grepl("metadata_", downicons_titles))]
 available_todownload = ifelse(genom_epidem, available_genomepidem_todownload, available_metadata_todownload)
 
+message(paste0("Metadata file version available for download: ", available_todownload))
+
 metadata_already_downloaded = tail(list.files(target_dir, pattern=".tar.xz"),1)
 genomepidem_already_downloaded = tail(list.files(target_dir, pattern=".tsv.gz"),1)
 already_downloaded = ifelse(genom_epidem, genomepidem_already_downloaded, metadata_already_downloaded)
+
+message(paste0("Metadata file version already downloaded available in target directory: ", already_downloaded))
   
 if (available_todownload != already_downloaded) {
 # DOWNLOAD PATIENT METADATA (EITHER REGULAR GISAID METADATA OR GENOMIC EPIDEMIOLOGY METADATA)
@@ -177,6 +181,8 @@ suppressMessages(tryCatch({
   download_button$clickElement() 
 }, error = function( err ) { message("") }))
 
+Sys.sleep(3)
+
 # wait until download finishes
 while (length(list.files(target_dir, pattern="crdownload", full.names=T))>=1) {
   Sys.sleep(1)
@@ -189,7 +195,7 @@ download = tail(list.files(target_dir, pattern=pat, full.names = F), 1)
 
 message(paste0("Downloaded GISAID metadata file version ", download))
 
-} else { message(paste0("No new metadata package available to download, using cached previously downloaded file"))
+} else { message(paste0("No new metadata package available to download, using previously downloaded metadata available in target directory"))
          download = already_downloaded
 }
 

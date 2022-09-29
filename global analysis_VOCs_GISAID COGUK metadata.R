@@ -1,6 +1,6 @@
 # GLOBAL ANALYSIS OF SARS-Cov2 VARIANTS OF CONCERN & INTEREST
 # T. Wenseleers
-# last update 25 SEPTEMBER 2022
+# last update 29 SEPTEMBER 2022
 
 # set GISAID credentials ####
 # set them first using 
@@ -87,12 +87,12 @@ system.time(GISAID <- download_GISAD_meta(target_dir = target_dir,
                                           usr = Sys.getenv("GISAIDR_USERNAME"),
                                           psw = Sys.getenv("GISAIDR_PASSWORD"))) # 194s
 download = tail(list.files(target_dir, pattern=".tar.xz"), 1)
-download # "metadata_tsv_2022_09_24.tar.xz"  
+download # "metadata_tsv_2022_09_29.tar.xz"  
 
 # records go up to submission date
 GISAID_max_submdate = as.Date(max(GISAID$submission_date, na.rm=T))
-GISAID_max_submdate # "2022-09-22"
-nrow(GISAID) # 13217765
+GISAID_max_submdate # "2022-09-27"
+nrow(GISAID) # 13283029
 
 
 # add some extra recently submitted records not available in download package ####
@@ -113,9 +113,9 @@ recent_records = as.vector(query(
   to_subm = as.character(today),
   fast = TRUE
 ))$accession_id
-length(recent_records) # 34680  records
+length(recent_records) # 55042   records
 recent_records = recent_records[!recent_records %in% GISAID$accession_id]
-length(recent_records) # 25540 record not available in GISAID download package
+length(recent_records) # 36015 record not available in GISAID download package
 
 # dataframe with recently submitted records that are not yet in GISAID metadata package download
 d_extra = download_GISAID_records(accession_ids = recent_records,
@@ -126,11 +126,11 @@ d_extra = download_GISAID_records(accession_ids = recent_records,
                                   headless = FALSE,
                                   usr = Sys.getenv("GISAIDR_USERNAME"),
                                   psw = Sys.getenv("GISAIDR_PASSWORD"))
-dim(d_extra) # 25540                                       19
+dim(d_extra) # 36015                                           19
 
 # merge GISAID download package & recently submitted records
 GISAID = dplyr::bind_rows(GISAID, d_extra)
-nrow(GISAID) # 13243305
+nrow(GISAID) # 13319044
 
 # LOAD COG-UK DATA FOR THE UNITED KINGDOM ####
 if (use_coguk) { coguk = download_COGUK_meta()
@@ -140,7 +140,7 @@ if (use_coguk) { coguk = download_COGUK_meta()
   GISAID$country = factor(GISAID$country)
   GISAID$country = factor(GISAID$country)
   }
-nrow(GISAID) # 13164288
+nrow(GISAID) # 13239510
 
 levels_continents = c("Asia","North America","Europe","Africa","South America","Oceania")
 GISAID$continent= factor(GISAID$continent, levels=levels_continents)
@@ -149,7 +149,7 @@ levels_countries = levels(GISAID$country)
 length(levels_countries) # 217
 GISAID$location = factor(GISAID$location)
 levels_locations = levels(GISAID$location)
-length(levels_locations) # 289
+length(levels_locations) # 574
 
 
 # PARSE GISAID DATA ####
@@ -164,7 +164,7 @@ GISAID$date[which(GISAID$date_isvalid)] = as.Date(fast_strptime(GISAID$collectio
 
 # CODE VARIANT LINEAGES ####
 
-sum(is.na(GISAID$aa_substitutions)) # 11134
+sum(is.na(GISAID$aa_substitutions)) # 11185
 GISAID$aa_substitutions[is.na(GISAID$aa_substitutions)] = ""
 
 # # convert AA substitions to nested column "muts"
@@ -341,7 +341,7 @@ GISAID_sel = GISAID
 # remove records with invalid/incomplete dates ####
 GISAID_sel = GISAID_sel[GISAID_sel$date_isvalid,]
 GISAID_sel = GISAID_sel[which(GISAID_sel$host=="Human"),]
-nrow(GISAID_sel) # 12933396
+nrow(GISAID_sel) # 13006973
 
 # filter to desired date range ####
 # start_date = "2020-06-01"
@@ -391,8 +391,8 @@ sel_countries = sort(unique(c(tab[tab$Var2=="Omicron (BA.2.75.2)"&tab$Freq>=5,"V
 sel_countries
 # [1] Australia      Austria        Bangladesh     Belgium        Canada         Denmark       
 # [7] France         Germany        India          Ireland        Israel         Italy         
-# [13] Japan          Netherlands    New Zealand    Singapore      South Korea    Switzerland   
-# [19] United Kingdom USA   
+# [13] Japan          Netherlands    New Zealand    Nigeria        Portugal       Singapore     
+# [19] South Korea    Spain          Sweden         Switzerland    United Kingdom USA  
 
 GISAID_sel = as.data.frame(GISAID_sel)
 GISAID_sel = GISAID_sel[GISAID_sel$country %in% sel_countries,]
@@ -494,9 +494,6 @@ system.time(fit_global_multi$vcov <- vcov(fit_global_multi)) # 0.6s
 
 # with saved environment you can start from here ####
 
-# save.image("~/Github/LineageExplorer/environment_2022_09_25.RData")
-# load("~/Github/LineageExplorer/environment_2022_09_25.RData")
-
 # clean up some memory
 rm(GISAID, d_extra, recent_records, coguk) 
 # mem_usage = inspect_mem(GISAID_sel)
@@ -505,8 +502,8 @@ GISAID_sel$aa_substitutions = NULL # takes up 3 Gb
 GISAID_sel$virus_name = NULL # takes up 1 Gb
 gc()
 
-# save.image("~/Github/LineageExplorer/environment_2022_09_25_small.RData")
-# load("~/Github/LineageExplorer/environment_2022_09_25_small.RData")
+# save.image("~/Github/LineageExplorer/environment_2022_09_29_small.RData")
+# load("~/Github/LineageExplorer/environment_2022_09_29_small.RData")
 
 
 
@@ -554,7 +551,7 @@ system.time(meffects_bycontinent <- marginaleffects(fit_global_multi,
 # write.csv(delta_r_pairw, file.path("plots", plotdir, "growth rate advantage all variants vs BA_5_2.csv"), row.names=F)
 
 
-# plot of growth rate advantage of last X newest variants
+# plot of growth rate advantage of last n newest variants
 lastn = 4
 sel_variants = tail(levels_VARIANTS,lastn)
 meffects_sel1 = meffects[meffects$group %in% sel_variants,]
@@ -582,6 +579,7 @@ ggsave(file=file.path("plots", plotdir,"growth rate advantage VOCs_global fit.pn
 lastn = 4
 sel_variants = tail(levels_VARIANTS,lastn)
 sel_continents = unique(data_agbyweekcountry1$continent)
+sel_continents = sel_continents[!sel_continents %in% c("Africa")] # too little data
 meffects_sel2 = meffects_bycontinent[meffects_bycontinent$continent %in% sel_continents,]
 meffects_sel2 = meffects_sel2[meffects_sel2$group %in% sel_variants,]
 meffects_sel2$group = factor(meffects_sel2$group, levels=levels(meffects_sel1$group))
@@ -619,11 +617,11 @@ predgrid = expand.grid(list(DATE_NUM=as.numeric(seq(date.from, date.to)),
 predgrid$continent = data_agbyweekcountry1$continent[match(predgrid$country,
                                                                 data_agbyweekcountry1$country)]
 # note: now using Delta method on response scale, better to
-# calculate CIs as in Effects package on link scale (type="link") & backtransform
-# but still having some problems with over/underflows
+# calculate CIs as in Effects package on link scale (type="link") or
+# on isometric logratio scale (type="ilr") & then backtransform
+# but still having some problems with over/underflows with
+# type="link" and type="ilr" is a bit more hassle to backtransform
 
-# also possible (and slightly better) to use isometric logratio scale type="ilr", 
-# but more hassle to backtransform
 system.time(fit_preds <- data.frame(predictions(fit_global_multi, 
                        newdata = predgrid,
                        type = "probs",
@@ -633,8 +631,12 @@ system.time(fit_preds <- data.frame(predictions(fit_global_multi,
              # group_by(rowid) |>
              #mutate_at(c("predicted", "conf.low", "conf.high"), function (x) plogis(x)))
              # 238s
-fit_preds$conf.high[fit_preds$conf.high>1] = 1 # slight artefact of Delta method on response scale
-fit_preds$conf.low[fit_preds$conf.low<0] = 0
+fit_preds$conf.high[fit_preds$conf.high>0.99999] = 0.99999 # slight artefact of Delta method on response scale
+# fit_preds$conf.high[fit_preds$conf.high<1E-10] = 1E-10
+fit_preds$conf.low[fit_preds$conf.low<1E-10] = 1E-10
+# fit_preds$conf.low[fit_preds$conf.low>0.99999-10] = 0.99999
+# fit_preds$predicted[fit_preds$predicted>0.99999] = 0.99999
+# fit_preds$predicted[fit_preds$predicted<1E-10] = 1E-10
 
 # replace NAs by 0
 # fit_preds <- fit_preds %>% mutate(predicted = ifelse(is.na(predicted), 0, predicted),
@@ -884,11 +886,12 @@ muller_fit
 ggsave(file=file.path("plots", plotdir, "global multinom fit_all data_predictions_muller plot.png"), width=20, height=12)
 
 
-
+# save.image("~/Github/LineageExplorer/environment_2022_09_29_small.RData")
+# load("~/Github/LineageExplorer/environment_2022_09_29_small.RData")
 
 # MAP VARIANT SHARE ONTO CASE NUMBERS ####
 
-sel_countries = c("Austria","Bangladesh","Belgium","Denmark","France","Germany","Israel","Singapore","United Kingdom")
+sel_countries = c("Austria","Belgium","Denmark","France","Germany","Israel","Netherlands","Singapore","United Kingdom") # "Bangladesh",
 country_data = get_national_data(countries=sel_countries, # sel_countries_top3,
                                  source="who",
                                  level=1)
@@ -980,6 +983,53 @@ ggplot(data=fit_preds2,
   coord_cartesian(ylim=c(1,NA), xlim=c(as.Date("2021-01-01"),NA))
 
 ggsave(file=file.path("plots", plotdir,"\\global multinom fit_all data_predictions_confirmed cases stacked area multinomial fit by country.png"), width=20, height=12)
+
+# zoomed in since jan 2022
+ggplot(data=fit_preds2, 
+       aes(x=date, y=cases, group=variant)) + 
+  facet_wrap(~ country, scale="free_y") +
+  geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), 
+            position="stack") +
+  scale_fill_manual("", values=lineage_cols_plot) +
+  # annotate("rect", xmin=max(GISAID_india$DATE_NUM)+1, 
+  #          xmax=as.Date("2021-05-31"), ymin=0, ymax=1, alpha=0.3, fill="white") + # extrapolated part
+  xaxis +
+  # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
+  theme_hc() + theme(legend.position="right", 
+                     axis.title.x=element_blank()) + 
+  ylab("New confirmed cases per day") +
+  ggtitle("NEW CONFIRMED SARS-CoV2 CASES BY VARIANT",
+          subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, " plus COG-UK data\nand multinomial spline fit variant ~ ns(date, df=2)+ns(date, df=2):continent+country,\nall countries with >=5 BQ.1*, BA.2.3.20 or BA.2.75.2 sequences shown")) +
+  # coord_cartesian(xlim=c(as.Date("2021-06-01"),NA))
+  theme(plot.title=element_text(size=25)) +
+  theme(plot.subtitle=element_text(size=20)) +
+  coord_cartesian(ylim=c(1,NA), xlim=c(as.Date("2022-01-01"),NA))
+
+ggsave(file=file.path("plots", plotdir,"\\global multinom fit_all data_predictions_confirmed cases stacked area multinomial fit by country_zoomed.png"), width=20, height=12)
+
+# zoomed in since june 2022
+ggplot(data=fit_preds2[fit_preds2$date>=as.Date("2022-06-01"),], 
+       aes(x=date, y=cases, group=variant)) + 
+  facet_wrap(~ country, scale="free_y") +
+  geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), 
+            position="stack") +
+  scale_fill_manual("", values=lineage_cols_plot[-c(2,3,4,5,6,7,8)]) + # TO DO: determine dropped levels automatically
+  # annotate("rect", xmin=max(GISAID_india$DATE_NUM)+1, 
+  #          xmax=as.Date("2021-05-31"), ymin=0, ymax=1, alpha=0.3, fill="white") + # extrapolated part
+  xaxis +
+  # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
+  theme_hc() + theme(legend.position="right", 
+                     axis.title.x=element_blank()) + 
+  ylab("New confirmed cases per day") +
+  ggtitle("NEW CONFIRMED SARS-CoV2 CASES BY VARIANT",
+          subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, " plus COG-UK data\nand multinomial spline fit variant ~ ns(date, df=2)+ns(date, df=2):continent+country,\nall countries with >=5 BQ.1*, BA.2.3.20 or BA.2.75.2 sequences shown")) +
+  # coord_cartesian(xlim=c(as.Date("2021-06-01"),NA))
+  theme(plot.title=element_text(size=25)) +
+  theme(plot.subtitle=element_text(size=20)) +
+  coord_cartesian(ylim=c(1,NA), xlim=c(as.Date("2022-06-01"),NA))
+
+ggsave(file=file.path("plots", plotdir,"\\global multinom fit_all data_predictions_confirmed cases stacked area multinomial fit by country_zoomed2.png"), width=20, height=12)
+
 
 # TO DO : get IHME infection estimates from links below,
 # convolve these to cases & map them onto variant frequencies
