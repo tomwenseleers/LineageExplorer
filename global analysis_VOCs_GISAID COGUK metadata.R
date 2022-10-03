@@ -269,6 +269,12 @@ system.time(GISAID$variant <- case_when(
   # TRUE ~ "Other" # alternative: to assign Unassigned lineages to category Other
 )) # 97s - note: could be sped up by using multidplyr & parallelization
 
+# for all Spike_N460K lineages together:
+# cf https://twitter.com/rquiroga777/status/1575564008501182464
+# S:R346T | S:K356T | S:K444T | S:F486V | S:F486S
+# mut(Spike_N460K) & mut_oneof(Spike_R346T, Spike_K356T, Spike_K444T,Spike_F486V,Spike_F486S)
+# "& datefrom("2022-07-01")
+
 # earliest realistic dates were taken from
 # https://raw.githubusercontent.com/nextstrain/ncov/master/defaults/clade_emergence_dates.tsv
 
@@ -1030,6 +1036,8 @@ ggplot(data=fit_preds2[fit_preds2$date>=as.Date("2022-06-01"),],
 
 ggsave(file=file.path("plots", plotdir,"\\global multinom fit_all data_predictions_confirmed cases stacked area multinomial fit by country_zoomed2.png"), width=20, height=12)
 
+# save.image("~/Github/LineageExplorer/environment_2022_09_29_small.RData")
+# load("~/Github/LineageExplorer/environment_2022_09_29_small.RData")
 
 # TO DO : get IHME infection estimates from links below,
 # convolve these to cases & map them onto variant frequencies
