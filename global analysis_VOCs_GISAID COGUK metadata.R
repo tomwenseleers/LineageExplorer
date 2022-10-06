@@ -906,7 +906,7 @@ plot_preds_logit_au = qplot(data=fit_preds[fit_preds$variant!="Other"&fit_preds$
   ylab("Share among newly diagnosed infections (%)") +
   theme_hc() + xlab("") +
   ggtitle("SARS-CoV2 LINEAGE FREQUENCIES IN AUSTRIA",
-          subtitle=paste0("GISAID data up to ",today, " plus COG-UK data, multinomial spline fit variant ~ ns(date, df=2)+ns(date, df=2):continent+country,\nonly Denmark shown here")) +
+          subtitle=paste0("GISAID data up to ",today, " plus COG-UK data, multinomial spline fit variant ~ ns(date, df=2)+ns(date, df=2):continent+country,\nonly Austria shown here")) +
   xaxis +  
   scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
                       labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
@@ -934,6 +934,48 @@ plot_preds_logit_au = qplot(data=fit_preds[fit_preds$variant!="Other"&fit_preds$
 plot_preds_logit_au
 
 ggsave(file=file.path("plots", plotdir, "global multinom fit_Austria_logit scale.png"), width=12, height=5)
+
+
+# plot just for Singapore
+plot_preds_logit_singap = qplot(data=fit_preds[fit_preds$variant!="Other"&fit_preds$country=="Singapore",], 
+                            x=date, y=predicted, geom="blank") +
+  # facet_wrap(~ country) +
+  geom_ribbon(aes(y=predicted, ymin=conf.low, ymax=conf.high, colour=NULL,
+                  fill=variant
+  ), alpha=I(0.3)) +
+  geom_line(aes(y=predicted,
+                colour=variant), alpha=I(1)) +
+  ylab("Share among newly diagnosed infections (%)") +
+  theme_hc() + xlab("") +
+  ggtitle("SARS-CoV2 LINEAGE FREQUENCIES IN SINGAPORE",
+          subtitle=paste0("GISAID data up to ",today, " plus COG-UK data, multinomial spline fit variant ~ ns(date, df=2)+ns(date, df=2):continent+country,\nonly Singapore shown here")) +
+  xaxis +  
+  scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
+                      labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
+  scale_fill_manual("variant", values=tail(as.vector(lineage_cols_plot),-1)) +
+  scale_colour_manual("variant", values=tail(as.vector(lineage_cols_plot),-1)) +
+  geom_point(data=data_agbyweekcountry1[data_agbyweekcountry1$variant!="Other"&data_agbyweekcountry1$country=="Denmark",],
+             aes(x=collection_date, y=prop, size=total,
+                 colour=variant
+             ),
+             alpha=I(1)) +
+  scale_size_continuous("total number\nsequenced", trans="sqrt",
+                        range=c(0.5, 4), limits=c(1,max(data_agbyweekcountry1$total)), 
+                        breaks=c(10,100,1000, 10000), guide=F) +
+  # guides(fill=FALSE) +
+  # guides(colour=FALSE) +
+  theme(legend.position = "bottom") +
+  xlab("Collection date (start of week)") +
+  coord_cartesian(xlim=c(as.Date("2021-01-01"),NA), 
+                  ylim=c(0.0001, 0.99901), expand=0) +
+  labs(tag = tag) +
+  theme(plot.tag.position = "bottomright",
+        plot.tag = element_text(vjust = 1, hjust = 1, size=8)) # +
+# theme(plot.title=element_text(size=25)) +
+# theme(plot.subtitle=element_text(size=20))
+plot_preds_logit_singap
+
+ggsave(file=file.path("plots", plotdir, "global multinom fit_Singapore_logit scale.png"), width=12, height=5)
 
 
 
