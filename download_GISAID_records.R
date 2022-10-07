@@ -114,7 +114,7 @@ downl_records = function (accession_ids,
   checkbox_metadata$clickElement() 
   
   # click Download
-  mostrecenttsv = suppressWarnings(max(file.info(list.files(target_dir, pattern=".tsv", full.names=T))$mtime))
+  mostrecenttsv = suppressWarnings(max(file.info(list.files(target_dir, pattern=".tsv$", full.names=T))$mtime))
   Sys.sleep(1) # TO DO change to while loop
   mostrecenttsv_new = mostrecenttsv
   download_button = NULL
@@ -150,10 +150,11 @@ downl_records = function (accession_ids,
   
   # wait until download finishes
   while (mostrecenttsv_new==mostrecenttsv) {
-    mostrecenttsv_new = suppressWarnings(max(file.info(list.files(target_dir, pattern=".tsv", full.names=T))$mtime))
+    mostrecenttsv_new = suppressWarnings(max(file.info(list.files(target_dir, pattern=".tsv$", full.names=T))$mtime))
     Sys.sleep(1)
   }
-  df = file.info(list.files(target_dir, pattern=".tsv", full.names = T))
+  Sys.sleep(2)
+  df = file.info(list.files(target_dir, pattern=".tsv$", full.names = T))
   download = rownames(df)[which.max(df$mtime)]
   
   message(paste0("Downloaded GISAID metadata file ", download))

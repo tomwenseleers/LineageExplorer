@@ -1,6 +1,6 @@
 # GLOBAL ANALYSIS OF SARS-Cov2 VARIANTS OF CONCERN & INTEREST
 # T. Wenseleers
-# last update 6 OCTOBER 2022
+# last update 7 OCTOBER 2022
 
 # set GISAID credentials ####
 # set them first using 
@@ -63,7 +63,6 @@ library(RSelenium)
 
 today = as.Date(Sys.time())
 today_num = as.numeric(today)
-today # "2021-09-25"
 plotdir = "GISAID_COGUK_GLOBAL_ANALYSIS"
 target_dir = "C:/Users/bherr/OneDrive - KU Leuven/Documents/Github/LineageExplorer/LineageExplorer/data/GISAID" # target download directory GISAID data
 suppressWarnings(dir.create(file.path("plots",plotdir)))
@@ -112,9 +111,9 @@ recent_records = as.vector(query(
   to_subm = as.character(today),
   fast = TRUE
 ))$accession_id
-length(recent_records) # 49648   records
+length(recent_records) # 73884   records
 recent_records = recent_records[!recent_records %in% GISAID$accession_id]
-length(recent_records) # 48110 record not available in GISAID download package
+length(recent_records) # 4845     record not available in GISAID download package
 
 # dataframe with recently submitted records that are not yet in GISAID metadata package download
 d_extra = download_GISAID_records(accession_ids = recent_records,
@@ -125,11 +124,11 @@ d_extra = download_GISAID_records(accession_ids = recent_records,
                                   headless = FALSE,
                                   usr = Sys.getenv("GISAIDR_USERNAME"),
                                   psw = Sys.getenv("GISAIDR_PASSWORD"))
-dim(d_extra) # 48110                                               19
+dim(d_extra) # 4845                                                                  19
 
 # merge GISAID download package & recently submitted records
 GISAID = dplyr::bind_rows(GISAID, d_extra)
-nrow(GISAID) # 13389714
+nrow(GISAID) # 13413950    
 
 # LOAD COG-UK DATA FOR THE UNITED KINGDOM ####
 if (use_coguk) { coguk = download_COGUK_meta()
@@ -139,7 +138,7 @@ if (use_coguk) { coguk = download_COGUK_meta()
   GISAID$country = factor(GISAID$country)
   GISAID$country = factor(GISAID$country)
   }
-nrow(GISAID) # 13312997
+nrow(GISAID) # 13337052
 
 levels_continents = c("Asia","North America","Europe","Africa","South America","Oceania")
 GISAID$continent= factor(GISAID$continent, levels=levels_continents)
@@ -148,7 +147,7 @@ levels_countries = levels(GISAID$country)
 length(levels_countries) # 217
 GISAID$location = factor(GISAID$location)
 levels_locations = levels(GISAID$location)
-length(levels_locations) # 587
+length(levels_locations) # 822
 
 
 # PARSE GISAID DATA ####
@@ -163,7 +162,7 @@ GISAID$date[which(GISAID$date_isvalid)] = as.Date(fast_strptime(GISAID$collectio
 
 # CODE VARIANT LINEAGES ####
 
-sum(is.na(GISAID$aa_substitutions)) # 11323
+sum(is.na(GISAID$aa_substitutions)) 
 GISAID$aa_substitutions[is.na(GISAID$aa_substitutions)] = ""
 
 # # convert AA substitions to nested column "muts"
@@ -173,7 +172,7 @@ GISAID$aa_substitutions[is.na(GISAID$aa_substitutions)] = ""
 # splitting unique mutations into separate columns first did not speed up things
 # https://stackoverflow.com/questions/73758344/fast-way-to-split-comma-separated-strings-into-sparse-boolean-matrix-in-r
 
-# some helper functions to simplify regular expressions below ####
+# HELPER FUNCTIONS TO SIMPLIFY REGULAR EXPRESSIONS BELOW ####
 # is a mutation present?
 mut = function (mutation, x=GISAID$aa_substitutions) { str_detect(x, fixed(mutation)) }
 # system.time(output <- mut("NSP3_S403L")) # 2.6s
@@ -220,6 +219,7 @@ datefrom = function (date, x=GISAID$date) { x >= as.Date(date) }
 # DEFINE VARIANT LINEAGES OF INTEREST
 
 # PS this currently crashes my R session - not sure why...
+gc()
 system.time(GISAID$variant <- case_when(
   (linplus_oneof(c("BA.2.75.2","BL.1"))|
     mut_allof(c("NSP3_S403L","NSP8_N118S","Spike_R346T","Spike_F486S"))|
@@ -242,7 +242,7 @@ system.time(GISAID$variant <- case_when(
     mut_allof(c("Spike_K444T","Spike_N460K"))&
     datefrom("2022-02-01") ~ "Omicron (BQ.1)",
   lin_oneof(c("BJ.1","BA.2.10"))&mut_allof(c("M_D3Y","N_T282I")) ~ "Omicron (BJ.1)", # PS some BJ.1 get assigned as BA.2.10
-  lin_oneof(c("BA.2","BA.2.10"))&mut_allof(c("Spike_H146Q","Spike_G252V","E_T11A")) ~ "Omicron (XBB)",
+  lin_oneof(c("BA.2","BA.2.10"))&mut_allof(c("Spike_H146Q","Spike_Q183E","E_T11A")) ~ "Omicron (XBB)",
   linplus_oneof(c("BF.7"))&
     datefrom("2022-02-01") ~ "Omicron (BF.7)", # BF.7=BA.5.2.1.7, also potentially interesting: BF.5=BA.5.2.1.5, BF.10=BA.5.2.1.10, BF.14=BA.5.2.1.14
   linplus_oneof("BA.5.2")&
@@ -276,7 +276,7 @@ system.time(GISAID$variant <- case_when(
   linplus("B.1.221") ~ "B.1.221 (20A/S:98F)",
   !lin("Unassigned") ~ "Other" # assigns NA to remaining Unassigned & remove them later on
   # TRUE ~ "Other" # alternative: to assign Unassigned lineages to category Other
-)) # 140s - note: could be sped up by using multidplyr & parallelization
+)) # 129s - note: could be sped up by using multidplyr & parallelization
 
 # for all Spike_N460K lineages together:
 # cf https://twitter.com/rquiroga777/status/1575564008501182464
@@ -298,7 +298,7 @@ system.time(GISAID$variant <- case_when(
 table(GISAID$variant)
 
 # GISAID = GISAID[!is.na(GISAID$variant),]
-nrow(GISAID) # 13164288
+nrow(GISAID) # 13337052
 
 # define variant lineages and colours ####
 sel_reference_VOC = "Omicron (BA.5.2)"
@@ -337,16 +337,21 @@ pal.bands(lineage_cols_plot)
 # pal.zcurve(lineage_cols_plot)
 lineage_cols = lineage_cols_plot[match(levels_VARIANTS,levels_VARIANTS_plot)]
 
+saveRDS(GISAID, file=file.path(target_dir, "GISAID.rds"))
 
 
 # GISAID SELECTION ####
 
+# GISAID_sel = readRDS(file.path(target_dir, "GISAID.rds"))
 GISAID_sel = GISAID
+rm(GISAID)
+gc()
+
 
 # remove records with invalid/incomplete dates ####
 GISAID_sel = GISAID_sel[GISAID_sel$date_isvalid,]
 GISAID_sel = GISAID_sel[which(GISAID_sel$host=="Human"),]
-nrow(GISAID_sel) # 13078490
+nrow(GISAID_sel) # 13103981
 
 # filter to desired date range ####
 # start_date = "2020-06-01"
@@ -385,7 +390,7 @@ table(GISAID_sel$continent, GISAID_sel$variant)
 # sum(GISAID_sel$variant=="Omicron (BQ.1)"&GISAID_sel$country=="United Kingdom", na.rm=T)
 # 69 BQ.1 in UK so far
 
-maxsubmdate = today
+maxsubmdate = max(GISAID_sel$submission_date, na.rm=T)
 
 
 # selected countries to include, here those with min 5 BA.2.75.2 or 5 BQ.1* or 5 BA.2.3.20 sequences
@@ -397,10 +402,11 @@ sel_countries = sort(unique(c(tab[tab$Var2=="Omicron (BA.2.75.2)"&tab$Freq>=5,"V
                               tab[tab$Var2=="Omicron (XBB)"&tab$Freq>=5,"Var1"],
                               tab[tab$Var2=="Omicron (BA.2.3.20)"&tab$Freq>=5,"Var1"])))
 sel_countries
-# [1] Australia      Austria        Bangladesh     Belgium        Brunei         Canada         Denmark       
-# [8] France         Germany        India          Ireland        Israel         Italy          Japan         
-# [15] Netherlands    New Zealand    Nigeria        Portugal       Singapore      Slovakia       South Korea   
-# [22] Spain          Sweden         Switzerland    Thailand       United Kingdom USA 
+# [1] Australia      Austria        Bangladesh     Belgium        Brunei         Canada        
+# [7] Denmark        France         Germany        Hong Kong      India          Ireland       
+# [13] Israel         Italy          Japan          Luxembourg     Netherlands    New Zealand   
+# [19] Nigeria        Portugal       Singapore      South Korea    Spain          Sweden        
+# [25] Switzerland    Thailand       Turkey         United Kingdom USA   
 
 GISAID_sel = as.data.frame(GISAID_sel)
 GISAID_sel = GISAID_sel[GISAID_sel$country %in% sel_countries,]
@@ -463,8 +469,10 @@ data_agbyweekcountry1$collection_date = as.Date(data_agbyweekcountry1$collection
 data_agbyweekcountry1$variant = factor(data_agbyweekcountry1$variant, levels=levels_VARIANTS)
 # write.csv(data_agbyweekcountry1, file="./data/GISAID/GISAID aggregated counts by start of week and lineage_all.csv", row.names=F)
 
+gc()
 
 # MULLER PLOT (RAW DATA, selected countries pooled, but with big sampling biases across countries)
+data_agbyweek1$variant = factor(data_agbyweek1$variant, levels=levels_VARIANTS_plot)
 muller_raw_all = ggplot(data=data_agbyweek1, aes(x=date, y=count, group=variant)) +
   # facet_wrap(~ STATE, ncol=1) +
   # geom_col(aes(lwd=I(1.2), colour=NULL, fill=variant), width=1, position="fill") +
@@ -486,22 +494,37 @@ ggsave(file=file.path("plots", plotdir,"global analysis_muller plot_raw data all
 
 # FIT NNET::MULTINOM MULTINOMIAL SPLINE MODEL ####
 
+data_agbyweekcountry1$variant = relevel(data_agbyweekcountry1$variant, ref=sel_reference_VOC)
+
 set.seed(1)
-# best model:
-system.time(fit_global_multi <- nnet::multinom(variant ~ 
-                                    ns(DATE_NUM, df=2)+
-                                    ns(DATE_NUM, df=2):continent+
-                                    country, 
-                                  weights=count, 
-                                  data=data_agbyweekcountry1, 
-                                  maxit=10000, MaxNWts=100000)) # 935s; 5h if we use all GISAID data from all countries
+gc()
+system.time(fit_best <- nnet::multinom(variant ~ ns(DATE_NUM, df=2)*continent+country, 
+                                   weights=count, 
+                                   data=data_agbyweekcountry1, 
+                                   maxit=10000, MaxNWts=100000)) # 1122s
+model = "variant ~ ns(date, df=2)*continent + country" # syntax of model to put on plot legend
+
+set.seed(1)
+gc()
+system.time(fit_best2 <- nnet::multinom(variant ~ ns(DATE_NUM, df=2)+ns(DATE_NUM, df=2):continent+country, 
+                                       weights=count, 
+                                       data=data_agbyweekcountry1, 
+                                       maxit=10000, MaxNWts=100000)) # 1068s
+model = "variant ~ ns(date, df=2)+ns(date, df=2):continent+country" # syntax of model to put on plot legend
+
+BIC(fit_best, fit_best2) # in principle fit_best best, but I will use fit_best2
+#            df      BIC
+# fit_best  897 10768332
+# fit_best2 897 10774208
+
+fit_best = fit_best2
+
 # we calculate the Hessian using my own faster Rcpp Kronecker-product based function
 source(".//fastmultinomHess.R") # faster way to calculation Hessian of multinomial fits
-system.time(fit_global_multi$Hessian <- fastmultinomHess(fit_global_multi, model.matrix(fit_global_multi))) # 54s
+system.time(fit_best$Hessian <- fastmultinomHess(fit_best, model.matrix(fit_best))) # 98s
 # we add variance-covariance matrix as extra slot to be re-used later
-system.time(fit_global_multi$vcov <- vcov(fit_global_multi)) # 1.75s
+system.time(fit_best$vcov <- vcov(fit_best)) # 2.38s
 
-# with saved environment you can start from here ####
 
 # clean up some memory
 rm(d_extra, recent_records, coguk) 
@@ -509,38 +532,40 @@ rm(d_extra, recent_records, coguk)
 # print(mem_usage, n=100)
 GISAID_sel$aa_substitutions = NULL # takes up 3 Gb
 GISAID_sel$virus_name = NULL # takes up 1 Gb
+GISAID_sel$last_vaccinated=NULL
+GISAID_sel$'passage_details/history'=NULL
+GISAID_sel$'additional_location_information'=NULL
 gc()
 
-# save.image("~/Github/LineageExplorer/environment_2022_10_06_small.RData")
-# load("~/Github/LineageExplorer/environment_2022_10_06_small.RData")
-
+# save.image("~/Github/LineageExplorer/environment_2022_10_07.RData")
+# load("~/Github/LineageExplorer/environment_2022_10_07.RData")
 
 
 
 # CALCULATE GROWTH RATE ADVANTAGE OVER REFERENCE LEVEL BA.5.2 ####
 
 # with new faster marginaleffects code
-system.time(meffects <- marginaleffects(fit_global_multi, 
+system.time(meffects <- marginaleffects(fit_best, 
                                                type = "link", # = additive log-ratio = growth rate advantage relative to BA.5.2
                                                variables = c("DATE_NUM"),
                                                by = c("group"),
-                                               vcov = fit_global_multi$vcov,
+                                               vcov = fit_best$vcov,
                                                newdata = datagrid(DATE_NUM = today_num 
-                                               ))) # 21s
+                                               ))) # 25s
 
 # growth rate advantage compared to reference level BA.5.2 by continent
-system.time(meffects_bycontinent <- marginaleffects(fit_global_multi, 
+system.time(meffects_bycontinent <- marginaleffects(fit_best, 
                                                type = "link", # = additive log-ratio = growth rate advantage relative to BA.5.2
                                                variables = c("DATE_NUM"),
                                                by = c("group", "continent"),
-                                               vcov = fit_global_multi$vcov,
+                                               vcov = fit_best$vcov,
                                                newdata = datagrid(DATE_NUM = today_num,
                                                                   continent = unique(data_agbyweekcountry1$continent)
-                                               ))) # 23s
+                                               ))) # 36s
 
 # for all pairwise growth rate differences:
 # growth_differences = comparisons(
-#   fit_global_multi,
+#   fit_best,
 #   newdata = datagrid(DATE_NUM = today_num),
 #   variables = "DATE_NUM",
 #   by = "continent",
@@ -549,7 +574,7 @@ system.time(meffects_bycontinent <- marginaleffects(fit_global_multi,
 
 
 # old emtrends code to calculate pairwise growth rate differences
-# system.time(emtr_pairw <- emtrends(fit_global_multi, revpairwise ~ variant,
+# system.time(emtr_pairw <- emtrends(fit_best, revpairwise ~ variant,
 #                                    by="continent",
 #                                    var="DATE_NUM",  mode="latent",
 #                                    at=list(DATE_NUM=today_num))) # 
@@ -575,10 +600,10 @@ qplot(data=meffects_sel1,
   scale_fill_manual(values=cols) +
   theme(legend.position="none") + xlab("") +
   ggtitle("GROWTH RATE ADVANTAGE OF SARS-CoV2 VARIANTS",
-          subtitle=paste0("based on multinomial spline fit variant ~ ns(date, df=2)+ns(date, df=2):continent+country,\nGISAID & COG-UK data, using data from countries with >=5 BQ.1, BQ.1.1, BJ.1, XBB, BA.2.3.20 or BA.2.75.2\n(",
+          subtitle=paste0("based on multinomial fit ", model, "\nGISAID & COG-UK data, using data from countries with >=5 BQ.1, BQ.1.1, BJ.1, XBB, BA.2.3.20 or BA.2.75.2\n(",
                    paste0(sel_countries[1:10], collapse=", "), "\n",
-                   paste0(sel_countries[11:18], collapse=", "), "\n",
-                   paste0(sel_countries[19:length(sel_countries)], collapse=", "), ")") ) +
+                   paste0(sel_countries[11:20], collapse=", "), "\n",
+                   paste0(sel_countries[21:length(sel_countries)], collapse=", "), ")") ) +
   labs(tag = tag) +
   theme(plot.tag.position = "bottomright",
         plot.tag = element_text(vjust = 1, hjust = 1, size=8)) +
@@ -596,8 +621,17 @@ sel_continents = sel_continents[!sel_continents %in% c("Africa")] # too little d
 meffects_sel2 = meffects_bycontinent[meffects_bycontinent$continent %in% sel_continents,]
 meffects_sel2 = meffects_sel2[meffects_sel2$group %in% sel_variants,]
 meffects_sel2$group = factor(meffects_sel2$group, levels=levels(meffects_sel1$group))
-outlier = abs(meffects_sel2$dydx)>=0.40 # typically due to there being too little data
+outlier = (abs(meffects_sel2$dydx)>=0.35)|(meffects_sel2$dydx<0) # typically due to there being too little data
 meffects_sel2 = meffects_sel2[!outlier,]
+
+tbl = as.data.frame(table(GISAID_sel[GISAID_sel$variant %in% sel_variants,"continent"], 
+      GISAID_sel[GISAID_sel$variant %in% sel_variants,"variant"]))
+colnames(tbl) = c("continent", "variant", "count")
+meffects_sel2$count = tbl$count[match(interaction(meffects_sel2$continent, meffects_sel2$group),
+                                      interaction(tbl$continent, tbl$variant))]
+count_cutoff = 50 # retain only estimates with total count > XXX
+meffects_sel2 = meffects_sel2[meffects_sel2$count>=count_cutoff, ]
+
 qplot(data=meffects_sel2, 
       x=group, y=dydx*100, ymin=conf.low*100, ymax=conf.high*100, fill=group, geom="col", 
       width=I(0.7)) +
@@ -606,10 +640,10 @@ qplot(data=meffects_sel2,
   scale_fill_manual(values=cols) +
   theme(legend.position="none") + xlab("") +
   ggtitle("GROWTH RATE ADVANTAGE OF SARS-CoV2 VARIANTS",
-          subtitle=paste0("based on multinomial spline fit variant ~ ns(date, df=2)+ns(date, df=2):continent+country,\nGISAID & COG-UK data, using data from countries with >=5 BQ.1, BQ.1.1, BJ.1, XBB, BA.2.3.20 or BA.2.75.2\n(",
+          subtitle=paste0("based on multinomial fit ", model, ",\nGISAID & COG-UK data, using data from countries with >=5 BQ.1, BQ.1.1, BJ.1, XBB, BA.2.3.20 or BA.2.75.2\n(",
                           paste0(sel_countries[1:10], collapse=", "), "\n",
-                          paste0(sel_countries[11:18], collapse=", "), "\n",
-                          paste0(sel_countries[19:length(sel_countries)], collapse=", "), ")") ) +
+                          paste0(sel_countries[11:20], collapse=", "), "\n",
+                          paste0(sel_countries[21:length(sel_countries)], collapse=", "), ")\nEstimates shown for continents with >",count_cutoff," sequences of each variant") ) +
   labs(tag = tag) +
   theme(plot.tag.position = "bottomright",
         plot.tag = element_text(vjust = 1, hjust = 1, size=8)) +
@@ -625,10 +659,11 @@ qplot(data=meffects_sel2[meffects_sel2$continent=="Europe",],
   scale_fill_manual(values=cols) +
   theme(legend.position="none") + xlab("") +
   ggtitle("GROWTH RATE ADVANTAGE OF SARS-CoV2 VARIANTS IN EUROPE",
-          subtitle=paste0("based on multinomial spline fit variant ~ ns(date, df=2)+ns(date, df=2):continent+country,\nGISAID & COG-UK data, using data from countries with >=5 BQ.1, BQ.1.1, BJ.1, XBB, BA.2.3.20 or BA.2.75.2\n(",
-                          paste0(sel_countries[1:10], collapse=", "), "\n",
-                          paste0(sel_countries[11:18], collapse=", "), "\n",
-                          paste0(sel_countries[19:length(sel_countries)], collapse=", "), ")") ) +
+          subtitle=paste0("based on multinomial fit ", model, ",\nGISAID & COG-UK data, using data from countries with >=5 BQ.1, BQ.1.1, BJ.1, XBB, BA.2.3.20 or BA.2.75.2\nEstimates shown for variants with >",count_cutoff," sequences")
+#                          paste0(sel_countries[1:10], collapse=", "), "\n",
+#                          paste0(sel_countries[11:18], collapse=", "), "\n",
+#                          paste0(sel_countries[19:length(sel_countries)], collapse=", "), ")") 
+       ) +
   labs(tag = tag) +
   theme(plot.tag.position = "bottomright",
         plot.tag = element_text(vjust = 1, hjust = 1, size=8)) +
@@ -655,15 +690,18 @@ predgrid$continent = data_agbyweekcountry1$continent[match(predgrid$country,
 # but still having some problems with over/underflows with
 # type="link" and type="ilr" is a bit more hassle to backtransform
 
-system.time(fit_preds <- data.frame(predictions(fit_global_multi, 
+# rm(fit_preds)
+gc()
+system.time(fit_preds <- data.frame(predictions(fit_best, 
                        newdata = predgrid,
                        type = "probs",
-                       vcov = fit_global_multi$vcov))) # %>% # 
+                       vcov = fit_best$vcov))) # %>% # 607s
              # transform(conf.low = predicted - 1.96 * std.error,
              #          conf.high = predicted + 1.96 * std.error) %>%
              # group_by(rowid) |>
              #mutate_at(c("predicted", "conf.low", "conf.high"), function (x) plogis(x)))
-             # 442s
+
+gc()
 fit_preds$conf.high[fit_preds$conf.high>0.99999] = 0.99999 # slight artefact of Delta method on response scale
 # fit_preds$conf.high[fit_preds$conf.high<1E-10] = 1E-10
 fit_preds$conf.low[fit_preds$conf.low<1E-10] = 1E-10
@@ -687,7 +725,7 @@ fit_preds$country = factor(fit_preds$country)
 levels(fit_preds$country)
 fit_preds$continent = factor(fit_preds$continent)
 
-write_csv(fit_preds, file=file.path("plots", plotdir, "GISAID fitted lineage frequencies global multinomial spline fit.csv"))
+write_csv(fit_preds, file=file.path("plots", plotdir, "GISAID fitted lineage frequencies global multinomial fit.csv"))
 
 
 # PLOT MULTINOMIAL FIT ON LOGIT SCALE ####
@@ -701,7 +739,7 @@ plot_preds_logit = qplot(data=fit_preds[fit_preds$variant!="Other",],
   ylab("Share among newly diagnosed infections (%)") +
   theme_hc() + xlab("") +
   ggtitle("SARS-CoV2 LINEAGE FREQUENCIES",
-          subtitle=paste0("GISAID data up to ",today, " plus COG-UK data, multinomial spline fit variant ~ ns(date, df=2)+ns(date, df=2):continent+country,\nall countries with >=5 BQ.1, BQ.1.1, BJ.1, XBB, BA.2.3.20 or BA.2.75.2 sequences shown")) +
+          subtitle=paste0("GISAID data up to ",today, " plus COG-UK data, multinomial fit ", model, ",\nall countries with >=5 BQ.1, BQ.1.1, BJ.1, XBB, BA.2.3.20 or BA.2.75.2 sequences shown")) +
   xaxis +  
   scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
                       labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
@@ -742,7 +780,7 @@ plot_preds_logit = qplot(data=fit_preds[fit_preds$variant %in% sel_variants,],
   ylab("Share among newly diagnosed infections (%)") +
   theme_hc() + xlab("") +
   ggtitle("SARS-CoV2 LINEAGE FREQUENCIES",
-          subtitle=paste0("GISAID data up to ",today, " plus COG-UK data, multinomial spline fit variant ~ ns(date, df=2)+ns(date, df=2):continent+country,\nall countries with >=5 BQ.1, BQ.1.1, BJ.1, XBB, BA.2.3.20 or BA.2.75.2 sequences shown")) +
+          subtitle=paste0("GISAID data up to ",today, " plus COG-UK data, multinomial fit ", model, ",\nall countries with >=5 BQ.1, BQ.1.1, BJ.1, XBB, BA.2.3.20 or BA.2.75.2 sequences shown")) +
   xaxis +  
   scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
                       labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
@@ -783,7 +821,7 @@ plot_preds_logit_be = qplot(data=fit_preds[fit_preds$variant!="Other"&fit_preds$
   ylab("Share among newly diagnosed infections (%)") +
   theme_hc() + xlab("") +
   ggtitle("SARS-CoV2 LINEAGE FREQUENCIES IN BELGIUM",
-          subtitle=paste0("GISAID data up to ",today, " plus COG-UK data, multinomial spline fit variant ~ ns(date, df=2)+ns(date, df=2):continent+country,\nonly Belgium shown here")) +
+          subtitle=paste0("GISAID data up to ",today, " plus COG-UK data, multinomial fit ", model, ",\nonly Belgium shown here")) +
   xaxis +  
   scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
                       labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
@@ -822,7 +860,7 @@ plot_preds_logit_uk = qplot(data=fit_preds[fit_preds$variant!="Other"&fit_preds$
   ylab("Share among newly diagnosed infections (%)") +
   theme_hc() + xlab("") +
   ggtitle("SARS-CoV2 LINEAGE FREQUENCIES IN UNITED KINGDOM",
-          subtitle=paste0("GISAID data up to ",today, " plus COG-UK data, multinomial spline fit variant ~ ns(date, df=2)+ns(date, df=2):continent+country,\nonly UK shown here")) +
+          subtitle=paste0("GISAID data up to ",today, " plus COG-UK data, multinomial fit ", model, ",\nonly UK shown here")) +
   xaxis +  
   scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
                       labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
@@ -864,7 +902,7 @@ plot_preds_logit_dk = qplot(data=fit_preds[fit_preds$variant!="Other"&fit_preds$
   ylab("Share among newly diagnosed infections (%)") +
   theme_hc() + xlab("") +
   ggtitle("SARS-CoV2 LINEAGE FREQUENCIES IN DENMARK",
-          subtitle=paste0("GISAID data up to ",today, " plus COG-UK data, multinomial spline fit variant ~ ns(date, df=2)+ns(date, df=2):continent+country,\nonly Denmark shown here")) +
+          subtitle=paste0("GISAID data up to ",today, " plus COG-UK data, multinomial fit ", model, ",\nonly Denmark shown here")) +
   xaxis +  
   scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
                       labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
@@ -895,6 +933,8 @@ ggsave(file=file.path("plots", plotdir, "global multinom fit_Denmark_logit scale
 
 
 # plot just for Austria
+# note: this one doesn't seem to fit well, probably because of pre-selected sequencing going on
+# BA.2.75.XX also overestimated due to pre-selected sequencing going on
 plot_preds_logit_au = qplot(data=fit_preds[fit_preds$variant!="Other"&fit_preds$country=="Austria",], 
                             x=date, y=predicted, geom="blank") +
   # facet_wrap(~ country) +
@@ -906,7 +946,7 @@ plot_preds_logit_au = qplot(data=fit_preds[fit_preds$variant!="Other"&fit_preds$
   ylab("Share among newly diagnosed infections (%)") +
   theme_hc() + xlab("") +
   ggtitle("SARS-CoV2 LINEAGE FREQUENCIES IN AUSTRIA",
-          subtitle=paste0("GISAID data up to ",today, " plus COG-UK data, multinomial spline fit variant ~ ns(date, df=2)+ns(date, df=2):continent+country,\nonly Austria shown here")) +
+          subtitle=paste0("GISAID data up to ",today, " plus COG-UK data, multinomial fit ", model, ",\nonly Austria shown here")) +
   xaxis +  
   scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
                       labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
@@ -937,6 +977,7 @@ ggsave(file=file.path("plots", plotdir, "global multinom fit_Austria_logit scale
 
 
 # plot just for Singapore
+# this one doesn't fit so well
 plot_preds_logit_singap = qplot(data=fit_preds[fit_preds$variant!="Other"&fit_preds$country=="Singapore",], 
                             x=date, y=predicted, geom="blank") +
   # facet_wrap(~ country) +
@@ -948,7 +989,7 @@ plot_preds_logit_singap = qplot(data=fit_preds[fit_preds$variant!="Other"&fit_pr
   ylab("Share among newly diagnosed infections (%)") +
   theme_hc() + xlab("") +
   ggtitle("SARS-CoV2 LINEAGE FREQUENCIES IN SINGAPORE",
-          subtitle=paste0("GISAID data up to ",today, " plus COG-UK data, multinomial spline fit variant ~ ns(date, df=2)+ns(date, df=2):continent+country,\nonly Singapore shown here")) +
+          subtitle=paste0("GISAID data up to ",today, " plus COG-UK data, multinomial fit ", model, ",\nonly Singapore shown here")) +
   xaxis +  
   scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
                       labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
@@ -993,7 +1034,7 @@ muller_fit = ggplot(data=fit_preds[fit_preds$date>=as.Date("2021-01-01"),],
   theme(legend.position="right",
         axis.title.x=element_blank()) +
   labs(title = "SARS-CoV2 LINEAGE FREQUENCIES",
-       subtitle=paste0("GISAID data up to ",today, " plus COG-UK data, multinomial spline fit variant ~ ns(date, df=2)+ns(date, df=2):continent+country,\nall countries with >=5 BQ.1, BQ.1.1, BJ.1, XBB, BA.2.3.20 or BA.2.75.2 sequences shown")) +
+       subtitle=paste0("GISAID data up to ",today, " plus COG-UK data, multinomial fit ", model, ",\nall countries with >=5 BQ.1, BQ.1.1, BJ.1, XBB, BA.2.3.20 or BA.2.75.2 sequences shown")) +
   annotate("rect", xmin=max(GISAID_sel$DATE_NUM)+1, 
            xmax=as.Date(date.to, origin="1970-01-01")+5, 
            ymin=0, ymax=1, alpha=0.5, fill="white") + # extrapolated part
@@ -1072,7 +1113,7 @@ ggplot(data=fit_preds2,
                      axis.title.x=element_blank()) + 
   ylab("New confirmed cases per day") +
   ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT",
-          subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, " plus COG-UK data\nand multinomial spline fit variant ~ ns(date, df=2)+ns(date, df=2):continent+country,\nselected countries with >=5 BQ.1, BQ.1.1, BJ.1, XBB, BA.2.3.20 or BA.2.75.2 sequences shown")) +
+          subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, " plus COG-UK data\nand multinomial fit ", model, ",\nselected countries with >=5 BQ.1, BQ.1.1, BJ.1, XBB, BA.2.3.20 or BA.2.75.2 sequences shown")) +
   scale_colour_manual("lineage", values=lineage_cols_plot) +
   scale_y_log10() +
   coord_cartesian(ylim=c(1,NA), xlim=c(as.Date("2021-01-01"),NA)) +
@@ -1095,7 +1136,7 @@ ggplot(data=fit_preds2,
                      axis.title.x=element_blank()) + 
   ylab("New confirmed cases per day") +
   ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT",
-          subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, " plus COG-UK data\nand multinomial spline fit variant ~ ns(date, df=2)+ns(date, df=2):continent+country,\nselected countries with >=5 BQ.1, BQ.1.1, BJ.1, XBB, BA.2.3.20 or BA.2.75.2 sequences shown")) +
+          subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, " plus COG-UK data\nand multinomial fit ", model, ",\nselected countries with >=5 BQ.1, BQ.1.1, BJ.1, XBB, BA.2.3.20 or BA.2.75.2 sequences shown")) +
   scale_colour_manual("lineage", values=lineage_cols_plot) +
   scale_y_log10() +
   coord_cartesian(ylim=c(1,NA), xlim=c(as.Date("2021-01-01"),NA)) +
@@ -1120,7 +1161,7 @@ ggplot(data=fit_preds2,
                      axis.title.x=element_blank()) + 
   ylab("New confirmed cases per day") +
   ggtitle("NEW CONFIRMED SARS-CoV2 CASES BY VARIANT",
-          subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, " plus COG-UK data\nand multinomial spline fit variant ~ ns(date, df=2)+ns(date, df=2):continent+country,\nselected countries with >=5 BQ.1, BQ.1.1, BJ.1, XBB, BA.2.3.20 or BA.2.75.2 sequences shown")) +
+          subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, " plus COG-UK data\nand multinomial fit ", model, ",\nselected countries with >=5 BQ.1, BQ.1.1, BJ.1, XBB, BA.2.3.20 or BA.2.75.2 sequences shown")) +
   # coord_cartesian(xlim=c(as.Date("2021-06-01"),NA))
   theme(plot.title=element_text(size=25)) +
   theme(plot.subtitle=element_text(size=20)) +
@@ -1143,7 +1184,7 @@ ggplot(data=fit_preds2,
                      axis.title.x=element_blank()) + 
   ylab("New confirmed cases per day") +
   ggtitle("NEW CONFIRMED SARS-CoV2 CASES BY VARIANT",
-          subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, " plus COG-UK data\nand multinomial spline fit variant ~ ns(date, df=2)+ns(date, df=2):continent+country,\nselected countries with >=5 BQ.1, BQ.1.1, BJ.1, XBB, BA.2.3.20 or BA.2.75.2 sequences shown")) +
+          subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, " plus COG-UK data\nand multinomial fit ", model, ",\nselected countries with >=5 BQ.1, BQ.1.1, BJ.1, XBB, BA.2.3.20 or BA.2.75.2 sequences shown")) +
   # coord_cartesian(xlim=c(as.Date("2021-06-01"),NA))
   theme(plot.title=element_text(size=25)) +
   theme(plot.subtitle=element_text(size=20)) +
@@ -1166,7 +1207,7 @@ ggplot(data=fit_preds2[fit_preds2$date>=as.Date("2022-06-01"),],
                      axis.title.x=element_blank()) + 
   ylab("New confirmed cases per day") +
   ggtitle("NEW CONFIRMED SARS-CoV2 CASES BY VARIANT",
-          subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, " plus COG-UK data\nand multinomial spline fit variant ~ ns(date, df=2)+ns(date, df=2):continent+country,\nselected countries with >=5 BQ.1, BQ.1.1, BJ.1, XBB, BA.2.3.20 or BA.2.75.2 sequences shown")) +
+          subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, " plus COG-UK data\nand multinomial fit ", model, ",\nselected countries with >=5 BQ.1, BQ.1.1, BJ.1, XBB, BA.2.3.20 or BA.2.75.2 sequences shown")) +
   # coord_cartesian(xlim=c(as.Date("2021-06-01"),NA))
   theme(plot.title=element_text(size=25)) +
   theme(plot.subtitle=element_text(size=20)) +
@@ -1190,3 +1231,20 @@ ggsave(file=file.path("plots", plotdir,"\\global multinom fit_all data_predictio
 
 # TO DO : finish spatial multinomial tensor spline fit in function of latitude & longitude & time
 # (especially good for countries with limited or no sequencing data)
+
+
+# FUNCTION TO CALCULATE EFFECTIVE REPRODUCTION NUMBER R FROM
+# THE INSTANTANEOUS GROWTH RATE r, ASSUMING A GAMMA DISTRIBUTED GENERATION TIME
+# from epiforecasts package growth_to_R
+# https://github.com/epiforecasts/EpiNow2/blob/5015e75f7048c2580b2ebe83e46d63124d014861/R/utilities.R#L109
+# https://royalsocietypublishing.org/doi/10.1098/rsif.2020.0144
+# (better if distribution is known to be gamma, based on the full integral)
+Re_from_r <- function(r, gamma_mean=4.7, gamma_sd=2.9) {
+  k <- (gamma_sd / gamma_mean)^2
+  R <- (1 + k * r * gamma_mean)^(1 / k)
+  return(R)
+}
+
+Re_from_r(0.18, gamma_mean=4.7, gamma_sd=2.9) # 2.2
+# 2.1/6=35% of the population susceptible
+gc()
