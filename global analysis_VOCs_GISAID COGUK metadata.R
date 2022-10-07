@@ -1201,7 +1201,7 @@ ggplot(data=fit_preds2[fit_preds2$date>=as.Date("2022-06-01"),],
   scale_fill_manual("", values=lineage_cols_plot[-c(2,3,4,5,6,7,8)]) + # TO DO: determine dropped levels automatically
   # annotate("rect", xmin=max(GISAID_india$DATE_NUM)+1, 
   #          xmax=as.Date("2021-05-31"), ymin=0, ymax=1, alpha=0.3, fill="white") + # extrapolated part
-  xaxis +
+  xaxis + 
   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
   theme_hc() + theme(legend.position="right", 
                      axis.title.x=element_blank()) + 
