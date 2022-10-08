@@ -20,7 +20,7 @@ source(".//download_GISAID.R") # load function to download GISAID metadata downl
 source(".//download_GISAID_records.R") # load functions to download most recent GISAID records
 source(".//download_COGUK.R") # load function to download COG-UK metadata
 use_coguk = TRUE # use COG-UK data instead of GISAID data for UK?
-
+ 
 # load required packages
 library(nnet)
 library(splines)

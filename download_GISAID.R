@@ -146,7 +146,7 @@ patt = "(?i)((?:(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z ]*\\.?)|
 available_metadata_todownload = paste0("metadata_tsv_20", gsub("-", "_", str_match_all(downl_title, patt)[[1]][[1]], fixed=T), ".tar.xz")
 available_genomepidem_todownload = downicons_titles[which(grepl("metadata_", downicons_titles))]
 available_todownload = ifelse(genom_epidem, available_genomepidem_todownload, available_metadata_todownload)
-
+ 
 message(paste0("Metadata file version available for download: ", available_todownload))
 
 metadata_already_downloaded = tail(list.files(target_dir, pattern=".tar.xz"),1)
