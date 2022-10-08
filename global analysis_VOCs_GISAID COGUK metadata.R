@@ -2,6 +2,8 @@
 # T. Wenseleers
 # last update 8 OCTOBER 2022
 
+# note: script below is fairly memory hungry - best to run this on workstation with 64 Gb RAM
+
 # set GISAID credentials ####
 # set them first using 
 # Sys.setenv(GISAIDR_USERNAME = "XXXXX")
@@ -111,9 +113,9 @@ recent_records = as.vector(query(
   to_subm = as.character(today),
   fast = TRUE
 ))$accession_id
-length(recent_records) # 73884   records
+length(recent_records) # 79254   records
 recent_records = recent_records[!recent_records %in% GISAID$accession_id]
-length(recent_records) # 4845     record not available in GISAID download package
+length(recent_records) # 77716     record not available in GISAID download package
 
 # dataframe with recently submitted records that are not yet in GISAID metadata package download
 d_extra = download_GISAID_records(accession_ids = recent_records,
@@ -124,21 +126,23 @@ d_extra = download_GISAID_records(accession_ids = recent_records,
                                   headless = FALSE,
                                   usr = Sys.getenv("GISAIDR_USERNAME"),
                                   psw = Sys.getenv("GISAIDR_PASSWORD"))
-dim(d_extra) # 4845                                                                  19
+dim(d_extra) # 77716                                                                      19
 
 # merge GISAID download package & recently submitted records
 GISAID = dplyr::bind_rows(GISAID, d_extra)
-nrow(GISAID) # 13413950    
+nrow(GISAID) # 13419320    
 
 # LOAD COG-UK DATA FOR THE UNITED KINGDOM ####
 if (use_coguk) { coguk = download_COGUK_meta()
   # MERGE GISAID (MINUS UK GISAID DATA) & COG-UK DATA FOR UK
   GISAID = dplyr::bind_rows(GISAID[GISAID$country!="United Kingdom",], 
                            coguk)
+  rm(coguk)
+  gc()
   GISAID$country = factor(GISAID$country)
   GISAID$country = factor(GISAID$country)
   }
-nrow(GISAID) # 13337052
+nrow(GISAID) # 13343117
 
 levels_continents = c("Asia","North America","Europe","Africa","South America","Oceania")
 GISAID$continent= factor(GISAID$continent, levels=levels_continents)
@@ -147,10 +151,12 @@ levels_countries = levels(GISAID$country)
 length(levels_countries) # 217
 GISAID$location = factor(GISAID$location)
 levels_locations = levels(GISAID$location)
-length(levels_locations) # 822
+length(levels_locations) # 840
 
 
 # PARSE GISAID DATA ####
+
+# TO DO: include this in the actual download function?
 
 # parse date & check dates are valid
 # records with valid date
@@ -276,7 +282,7 @@ system.time(GISAID$variant <- case_when(
   linplus("B.1.221") ~ "B.1.221 (20A/S:98F)",
   !lin("Unassigned") ~ "Other" # assigns NA to remaining Unassigned & remove them later on
   # TRUE ~ "Other" # alternative: to assign Unassigned lineages to category Other
-)) # 129s - note: could be sped up by using multidplyr & parallelization
+)) # 141s - note: could be sped up by using multidplyr & parallelization
 
 # for all Spike_N460K lineages together:
 # cf https://twitter.com/rquiroga777/status/1575564008501182464
@@ -291,19 +297,23 @@ system.time(GISAID$variant <- case_when(
 
 # B.1.177+B.1.160+B.1.221 were behind the 2020 wave in fall in Europe & each had one spike mutations & a small growth rate advantage relative to predominant B.1.1
 
-# variants to watch & maybe add in due time:
+# variants to watch & maybe add in due time: 
+# BU.1, BR.2, BM.1.1.1, CA.1, BN.1
 # https://cov-spectrum.org/collections/1
 # https://cov-spectrum.org/collections/32
 
-table(GISAID$variant)
+# table(GISAID$variant)
 
 # GISAID = GISAID[!is.na(GISAID$variant),]
-nrow(GISAID) # 13337052
+nrow(GISAID) # 13343117
 
 # define variant lineages and colours ####
+# sel_reference_VOC = baseline to which all others will be compared 
+# = current predominant resident type
 sel_reference_VOC = "Omicron (BA.5.2)"
 levels_VARIANTS = c(sel_reference_VOC, "B.1.177 (EU1)", "B.1.160 (EU2)", "B.1.221 (20A/S:98F)", "Beta", "Alpha", "Other", "Delta", "Omicron (BA.1)", "Omicron (BA.2)", "Omicron (BA.2.38)", "Omicron (BA.2.12.1)", "Omicron (BA.4)", "Omicron (BA.4.6)", "Omicron (BA.2.76)", "Omicron (BA.2.75)", "Omicron (BA.2.75.2)", "Omicron (BA.5)", "Omicron (BF.7)", "Omicron (BQ.1)", "Omicron (BQ.1.1)", "Omicron (BJ.1)", "Omicron (XBB)", "Omicron (BA.2.3.20)")
 levels_VARIANTS_plot = c("Other", "B.1.177 (EU1)", "B.1.160 (EU2)", "B.1.221 (20A/S:98F)", "Beta", "Alpha", "Delta", "Omicron (BA.1)", "Omicron (BA.2)", "Omicron (BA.2.38)", "Omicron (BA.2.12.1)", "Omicron (BA.4)", "Omicron (BA.4.6)", "Omicron (BA.5)", "Omicron (BA.5.2)", "Omicron (BF.7)", "Omicron (BA.2.76)", "Omicron (BA.2.75)", "Omicron (BA.2.75.2)", "Omicron (BJ.1)", "Omicron (XBB)", "Omicron (BA.2.3.20)", "Omicron (BQ.1)", "Omicron (BQ.1.1)")
+# I am using order levels_VARIANTS_plot in plots
 
 n = length(levels_VARIANTS)
 lineage_cols_plot = case_when(
@@ -337,6 +347,13 @@ pal.bands(lineage_cols_plot)
 # pal.zcurve(lineage_cols_plot)
 lineage_cols = lineage_cols_plot[match(levels_VARIANTS,levels_VARIANTS_plot)]
 
+# freeing some memory by keeping only the key columns, including
+# the columns I need for the analyses below
+# TO DO: pass this argument in download functions above
+columns_tokeep = c("accession_id", "collection_date", "host", "pango_lineage",
+                   "variant", "submission_date", "continent", "country", "date")
+GISAID = GISAID %>% select(one_of(columns_tokeep))
+gc()
 saveRDS(GISAID, file=file.path(target_dir, "GISAID.rds"))
 
 
@@ -349,9 +366,11 @@ gc()
 
 
 # remove records with invalid/incomplete dates ####
-GISAID_sel = GISAID_sel[GISAID_sel$date_isvalid,]
+GISAID_sel$date_isvalid = (str_count(GISAID_sel$collection_date,
+                                 pattern = "-")==2)
+GISAID_sel = GISAID_sel[which(GISAID_sel$date_isvalid),]
 GISAID_sel = GISAID_sel[which(GISAID_sel$host=="Human"),]
-nrow(GISAID_sel) # 13103981
+nrow(GISAID_sel) # 13110046
 
 # filter to desired date range ####
 # start_date = "2020-06-01"
@@ -498,43 +517,22 @@ data_agbyweekcountry1$variant = relevel(data_agbyweekcountry1$variant, ref=sel_r
 
 set.seed(1)
 gc()
-system.time(fit_best <- nnet::multinom(variant ~ ns(DATE_NUM, df=2)*continent+country, 
-                                   weights=count, 
-                                   data=data_agbyweekcountry1, 
-                                   maxit=10000, MaxNWts=100000)) # 1122s
-model = "variant ~ ns(date, df=2)*continent + country" # syntax of model to put on plot legend
-
-set.seed(1)
-gc()
-system.time(fit_best2 <- nnet::multinom(variant ~ ns(DATE_NUM, df=2)+ns(DATE_NUM, df=2):continent+country, 
+system.time(fit <- nnet::multinom(variant ~ ns(DATE_NUM, df=2)+ns(DATE_NUM, df=2):continent+country, 
                                        weights=count, 
                                        data=data_agbyweekcountry1, 
-                                       maxit=10000, MaxNWts=100000)) # 1068s
-model = "variant ~ ns(date, df=2)+ns(date, df=2):continent+country" # syntax of model to put on plot legend
+                                       maxit=10000, MaxNWts=100000)) # 1068s, ca 5h if you use all GISAID+COGUK data
+# syntax of model to put on plot legend
+model = "variant ~ ns(date, df=2)+ns(date, df=2):continent+country" 
 
-BIC(fit_best, fit_best2) # in principle fit_best best, but I will use fit_best2
-#            df      BIC
-# fit_best  897 10768332
-# fit_best2 897 10774208
-
-fit_best = fit_best2
+# model to use below - I just fitted 1 possible model now
+fit_best = fit
 
 # we calculate the Hessian using my own faster Rcpp Kronecker-product based function
 source(".//fastmultinomHess.R") # faster way to calculation Hessian of multinomial fits
-system.time(fit_best$Hessian <- fastmultinomHess(fit_best, model.matrix(fit_best))) # 98s
+gc()
+system.time(fit_best$Hessian <- fastmultinomHess(fit_best, model.matrix(fit_best))) # 71s
 # we add variance-covariance matrix as extra slot to be re-used later
 system.time(fit_best$vcov <- vcov(fit_best)) # 2.38s
-
-
-# clean up some memory
-rm(d_extra, recent_records, coguk) 
-# mem_usage = inspect_mem(GISAID_sel)
-# print(mem_usage, n=100)
-GISAID_sel$aa_substitutions = NULL # takes up 3 Gb
-GISAID_sel$virus_name = NULL # takes up 1 Gb
-GISAID_sel$last_vaccinated=NULL
-GISAID_sel$'passage_details/history'=NULL
-GISAID_sel$'additional_location_information'=NULL
 gc()
 
 # save.image("~/Github/LineageExplorer/environment_2022_10_07.RData")
@@ -587,7 +585,7 @@ system.time(meffects_bycontinent <- marginaleffects(fit_best,
 
 # plot of growth rate advantage of last n newest variants
 # TO DO: order by selective advantage and then take top n
-lastn = 11
+lastn = 11 # last n variants to show - change in top n ?
 sel_variants = tail(levels_VARIANTS,lastn)
 sel_variants = sel_variants[!sel_variants %in% c(sel_reference_VOC, "Omicron (BA.5)", "Omicron (BA.2.76)")]
 meffects_sel1 = meffects[meffects$group %in% sel_variants,]
@@ -675,7 +673,7 @@ ggsave(file=file.path("plots", plotdir,"growth rate advantage VOCs_global fit_eu
 # PLOT MULTINOMIAL FIT ####
 
 extrapolate = 60
-date.from = as.numeric(as.Date("2021-01-01"))
+date.from = as.numeric(as.Date("2020-01-01"))
 date.to = today_num+extrapolate
 
 # multinomial model predictions by country with CIs calculated using margineffects::predictions
@@ -695,7 +693,7 @@ gc()
 system.time(fit_preds <- data.frame(predictions(fit_best, 
                        newdata = predgrid,
                        type = "probs",
-                       vcov = fit_best$vcov))) # %>% # 607s
+                       vcov = fit_best$vcov))) # %>% # 746s
              # transform(conf.low = predicted - 1.96 * std.error,
              #          conf.high = predicted + 1.96 * std.error) %>%
              # group_by(rowid) |>
@@ -1245,6 +1243,6 @@ Re_from_r <- function(r, gamma_mean=4.7, gamma_sd=2.9) {
   return(R)
 }
 
-Re_from_r(0.18, gamma_mean=4.7, gamma_sd=2.9) # 2.2
-# 2.1/6=35% of the population susceptible
+Re_from_r(0.18, gamma_mean=4.7, gamma_sd=2.9) # from fit Moritz Gerstung for Germany
+# 2.1/6=35% of the population susceptible to BQ.1.1
 gc()
