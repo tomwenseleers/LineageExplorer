@@ -723,12 +723,12 @@ fit_preds$country = factor(fit_preds$country)
 levels(fit_preds$country)
 fit_preds$continent = factor(fit_preds$continent)
 
-write_csv(fit_preds, file=file.path("plots", plotdir, "GISAID fitted lineage frequencies global multinomial fit.csv"))
-
+# write_csv(fit_preds, file=file.path("plots", plotdir, "GISAID fitted lineage frequencies global multinomial fit.csv"))
+saveRDS(fit_preds, file.path("plots", plotdir, "GISAID fitted lineage frequencies global multinomial fit.rds"))
 
 # PLOT MULTINOMIAL FIT ON LOGIT SCALE ####
 
-plot_preds_logit = qplot(data=fit_preds[fit_preds$variant!="Other",], 
+pl = qplot(data=fit_preds[fit_preds$variant!="Other",], 
                          x=date, y=predicted, geom="blank") +
   facet_wrap(~ country) +
   geom_ribbon(aes(y=predicted, ymin=conf.low, ymax=conf.high, colour=NULL,
@@ -763,13 +763,13 @@ plot_preds_logit = qplot(data=fit_preds[fit_preds$variant!="Other",],
         plot.tag = element_text(vjust = 1, hjust = 1, size=8)) +
   theme(plot.title=element_text(size=25)) +
   theme(plot.subtitle=element_text(size=20))
-plot_preds_logit
+pl
 
 ggsave(file=file.path("plots", plotdir, "global multinom fit_all data_predictions_logit scale.png"), width=20, height=12)
 
 # zoomed in on last 6 months
 sel_variants = tail(levels_VARIANTS_plot,-11)
-plot_preds_logit = qplot(data=fit_preds[fit_preds$variant %in% sel_variants,], 
+pl = qplot(data=fit_preds[fit_preds$variant %in% sel_variants,], 
                          x=date, y=predicted, geom="blank") +
   facet_wrap(~ country) +
   geom_ribbon(aes(y=predicted, ymin=conf.low, ymax=conf.high, colour=NULL,
@@ -804,13 +804,13 @@ plot_preds_logit = qplot(data=fit_preds[fit_preds$variant %in% sel_variants,],
         plot.tag = element_text(vjust = 1, hjust = 1, size=8)) +
   theme(plot.title=element_text(size=25)) +
   theme(plot.subtitle=element_text(size=20))
-plot_preds_logit
+pl
 
 ggsave(file=file.path("plots", plotdir, "global multinom fit_all data_predictions_last6months_logit scale.png"), width=20, height=12)
 
 
 # plot just for Belgium
-plot_preds_logit_be = qplot(data=fit_preds[fit_preds$variant!="Other"&fit_preds$country=="Belgium",], 
+pl = qplot(data=fit_preds[fit_preds$variant!="Other"&fit_preds$country=="Belgium",], 
                          x=date, y=predicted, geom="blank") +
   # facet_wrap(~ country) +
   geom_ribbon(aes(y=predicted, ymin=conf.low, ymax=conf.high, colour=NULL,
@@ -844,12 +844,12 @@ plot_preds_logit_be = qplot(data=fit_preds[fit_preds$variant!="Other"&fit_preds$
         plot.tag = element_text(vjust = 1, hjust = 1, size=8)) # +
   # theme(plot.title=element_text(size=25)) +
   # theme(plot.subtitle=element_text(size=20))
-plot_preds_logit_be
+pl
 
 ggsave(file=file.path("plots", plotdir, "global multinom fit_belgium_logit scale.png"), width=12, height=5)
 
 # plot just for UK
-plot_preds_logit_uk = qplot(data=fit_preds[fit_preds$variant!="Other"&fit_preds$country=="United Kingdom",], 
+pl = qplot(data=fit_preds[fit_preds$variant!="Other"&fit_preds$country=="United Kingdom",], 
                             x=date, y=predicted, geom="blank") +
   # facet_wrap(~ country) +
   geom_ribbon(aes(y=predicted, ymin=conf.low, ymax=conf.high, colour=NULL,
@@ -883,13 +883,13 @@ plot_preds_logit_uk = qplot(data=fit_preds[fit_preds$variant!="Other"&fit_preds$
         plot.tag = element_text(vjust = 1, hjust = 1, size=8)) # +
 # theme(plot.title=element_text(size=25)) +
 # theme(plot.subtitle=element_text(size=20))
-plot_preds_logit_uk
+pl
 
 ggsave(file=file.path("plots", plotdir, "global multinom fit_UK_logit scale.png"), width=12, height=5)
 
 
 # plot just for DK
-plot_preds_logit_dk = qplot(data=fit_preds[fit_preds$variant!="Other"&fit_preds$country=="Denmark",], 
+pl = qplot(data=fit_preds[fit_preds$variant!="Other"&fit_preds$country=="Denmark",], 
                             x=date, y=predicted, geom="blank") +
   # facet_wrap(~ country) +
   geom_ribbon(aes(y=predicted, ymin=conf.low, ymax=conf.high, colour=NULL,
@@ -925,7 +925,7 @@ plot_preds_logit_dk = qplot(data=fit_preds[fit_preds$variant!="Other"&fit_preds$
         plot.tag = element_text(vjust = 1, hjust = 1, size=8)) # +
 # theme(plot.title=element_text(size=25)) +
 # theme(plot.subtitle=element_text(size=20))
-plot_preds_logit_dk
+pl
 
 ggsave(file=file.path("plots", plotdir, "global multinom fit_Denmark_logit scale.png"), width=12, height=5)
 
@@ -933,7 +933,7 @@ ggsave(file=file.path("plots", plotdir, "global multinom fit_Denmark_logit scale
 # plot just for Austria
 # note: this one doesn't seem to fit well, probably because of pre-selected sequencing going on
 # BA.2.75.XX also overestimated due to pre-selected sequencing going on
-plot_preds_logit_au = qplot(data=fit_preds[fit_preds$variant!="Other"&fit_preds$country=="Austria",], 
+pl = qplot(data=fit_preds[fit_preds$variant!="Other"&fit_preds$country=="Austria",], 
                             x=date, y=predicted, geom="blank") +
   # facet_wrap(~ country) +
   geom_ribbon(aes(y=predicted, ymin=conf.low, ymax=conf.high, colour=NULL,
@@ -969,14 +969,14 @@ plot_preds_logit_au = qplot(data=fit_preds[fit_preds$variant!="Other"&fit_preds$
         plot.tag = element_text(vjust = 1, hjust = 1, size=8)) # +
 # theme(plot.title=element_text(size=25)) +
 # theme(plot.subtitle=element_text(size=20))
-plot_preds_logit_au
+pl
 
 ggsave(file=file.path("plots", plotdir, "global multinom fit_Austria_logit scale.png"), width=12, height=5)
 
 
 # plot just for Singapore
 # this one doesn't fit so well
-plot_preds_logit_singap = qplot(data=fit_preds[fit_preds$variant!="Other"&fit_preds$country=="Singapore",], 
+pl = qplot(data=fit_preds[fit_preds$variant!="Other"&fit_preds$country=="Singapore",], 
                             x=date, y=predicted, geom="blank") +
   # facet_wrap(~ country) +
   geom_ribbon(aes(y=predicted, ymin=conf.low, ymax=conf.high, colour=NULL,
@@ -1012,7 +1012,7 @@ plot_preds_logit_singap = qplot(data=fit_preds[fit_preds$variant!="Other"&fit_pr
         plot.tag = element_text(vjust = 1, hjust = 1, size=8)) # +
 # theme(plot.title=element_text(size=25)) +
 # theme(plot.subtitle=element_text(size=20))
-plot_preds_logit_singap
+pl
 
 ggsave(file=file.path("plots", plotdir, "global multinom fit_Singapore_logit scale.png"), width=12, height=5)
 
@@ -1020,7 +1020,7 @@ ggsave(file=file.path("plots", plotdir, "global multinom fit_Singapore_logit sca
 
 
 # plot predicted values as Muller plot
-muller_fit = ggplot(data=fit_preds[fit_preds$date>=as.Date("2021-01-01"),], 
+pl = ggplot(data=fit_preds[fit_preds$date>=as.Date("2021-01-01"),], 
                     aes(x=date, y=predicted, group=variant)) +
   facet_wrap(~ country, ncol=5) +
   geom_col(aes(width=I(10), colour=NULL, fill=variant, group=variant), position="fill") +
@@ -1038,7 +1038,7 @@ muller_fit = ggplot(data=fit_preds[fit_preds$date>=as.Date("2021-01-01"),],
            ymin=0, ymax=1, alpha=0.5, fill="white") + # extrapolated part
   theme(plot.title=element_text(size=25)) +
   theme(plot.subtitle=element_text(size=20))
-muller_fit
+pl
 
 ggsave(file=file.path("plots", plotdir, "global multinom fit_all data_predictions_muller plot.png"), width=20, height=12)
 
@@ -1246,3 +1246,5 @@ Re_from_r <- function(r, gamma_mean=4.7, gamma_sd=2.9) {
 Re_from_r(0.18, gamma_mean=4.7, gamma_sd=2.9) # from fit Moritz Gerstung for Germany
 # 2.1/6=35% of the population susceptible to BQ.1.1
 gc()
+
+dev.off()
