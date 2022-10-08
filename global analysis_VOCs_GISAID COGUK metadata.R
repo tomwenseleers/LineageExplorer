@@ -1,6 +1,6 @@
 # GLOBAL ANALYSIS OF SARS-Cov2 VARIANTS OF CONCERN & INTEREST
 # T. Wenseleers
-# last update 7 OCTOBER 2022
+# last update 8 OCTOBER 2022
 
 # set GISAID credentials ####
 # set them first using 
@@ -14,7 +14,7 @@ if (file.exists("..//set_GISAID_credentials.R")) source("..//set_GISAID_credenti
 
 # load some utility functions & install required packages 
 library(devtools)
-remotes::install_github("Wytamma/GISAIDR")
+remotes::install_github("Wytamma/GISAIDR", upgrade="always")
 library(GISAIDR)
 source(".//download_GISAID.R") # load function to download GISAID metadata download package (lacking records from last few days)
 source(".//download_GISAID_records.R") # load functions to download most recent GISAID records
@@ -25,9 +25,9 @@ use_coguk = TRUE # use COG-UK data instead of GISAID data for UK?
 library(nnet)
 library(splines)
 library(devtools)
-remotes::install_github("melff/mclogit",subdir="pkg") # install latest development version of mclogit, to add emmeans support
+remotes::install_github("melff/mclogit",subdir="pkg", upgrade="never") # install latest development version of mclogit, to add emmeans support
 library(mclogit)
-remotes::install_github("rvlenth/emmeans", dependencies = FALSE)
+remotes::install_github("rvlenth/emmeans", dependencies = FALSE, upgrade="never")
 library(emmeans)
 library(readr)
 library(ggplot2)
@@ -43,7 +43,7 @@ library(memoise)
 library(readxl)
 # install.packages("covidregionaldata",
 #                   repos = "https://epiforecasts.r-universe.dev")
-remotes::install_github("epiforecasts/covidregionaldata")
+remotes::install_github("epiforecasts/covidregionaldata", upgrade="never")
 library(covidregionaldata)
 library(tidyquant)
 library(data.table)
@@ -52,7 +52,7 @@ library(locatexec)
 library(tidyr)
 library(pals)
 library(devtools)
-install_github("tomwenseleers/marginaleffects")
+install_github("tomwenseleers/marginaleffects", upgrade="never")
 library(marginaleffects)
 library(inspectdf)
 library(zoo)

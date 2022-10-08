@@ -152,6 +152,7 @@ message(paste0("Metadata file version available for download: ", available_todow
 metadata_already_downloaded = tail(list.files(target_dir, pattern=".tar.xz"),1)
 genomepidem_already_downloaded = tail(list.files(target_dir, pattern=".tsv.gz"),1)
 already_downloaded = ifelse(genom_epidem, genomepidem_already_downloaded, metadata_already_downloaded)
+if (is.na(already_downloaded)) already_downloaded="NA"
 
 message(paste0("Metadata file version already downloaded available in target directory: ", already_downloaded))
   
