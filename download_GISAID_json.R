@@ -62,13 +62,3 @@ GISAID_JSON = stream_in(file(out))
 nrow(GISAID_JSON)
 
 
-
-
-handler = function(df){
-  df <- dplyr::filter(df, distance > 1000)
-  df <- dplyr::mutate(df, delta = dep_delay - arr_delay)
-  stream_out(df, con_out, pagesize = 1000)
-}
-
-
-
