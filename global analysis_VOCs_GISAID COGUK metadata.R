@@ -92,6 +92,8 @@ system.time(GISAID <- download_GISAD_meta(target_dir = target_dir,
                                           psw = Sys.getenv("GISAIDR_PASSWORD"))) # 194s
 download = tail(list.files(target_dir, pattern=".tar.xz"), 1)
 download
+# TO DO : maybe apply some filtering to filter out targeted sequencing & sequencing
+# of travel related cases? E.g. Austria BA.2.75* share now overestimated due to targeted sequencing
 
 # records go up to submission date
 GISAID_max_submdate = as.Date(max(GISAID$submission_date, na.rm=T))
@@ -127,8 +129,24 @@ d_extra = download_GISAID_records(accession_ids = recent_records,
                                   headless = FALSE,
                                   usr = Sys.getenv("GISAIDR_USERNAME"),
                                   psw = Sys.getenv("GISAIDR_PASSWORD"))
+# using my access credentials I am getting back the following fields:
+# [1] "virus_name"                      "accession_id"                   
+# [3] "collection_date"                 "location"                       
+# [5] "host"                            "additional_location_information"
+# [7] "sampling_strategy"               "gender"                         
+# [9] "patient_age"                     "patient_status"                 
+# [11] "last_vaccinated"                 "passage"                        
+# [13] "specimen"                        "additional_host_information"    
+# [15] "pango_lineage"                   "clade"                          
+# [17] "aa_substitutions"                "continent"                      
+# [19] "country"   
+
 # merge GISAID download package & recently submitted records
 GISAID = dplyr::bind_rows(GISAID, d_extra)
+
+# TO DO : maybe apply some filtering to filter out targeted sequencing & sequencing
+# of travel related cases? E.g. Austria BA.2.75* share now overestimated due to targeted sequencing
+
 
 # LOAD COG-UK DATA FOR THE UNITED KINGDOM ####
 if (use_coguk) { 
@@ -315,7 +333,7 @@ levels_VARIANTS = c(sel_reference_VOC, "B.1.177 (EU1)", "B.1.160 (EU2)", "B.1.22
 levels_VARIANTS_plot = c("Other", "B.1.177 (EU1)", "B.1.160 (EU2)", "B.1.221 (20A/S:98F)", "Beta", "Alpha", "Delta", "Omicron (BA.1)", "Omicron (BA.2)", "Omicron (BA.2.38)", "Omicron (BA.2.12.1)", "Omicron (BA.4)", "Omicron (BA.4.6)", "Omicron (BA.5)", "Omicron (BA.5.2)", "Omicron (BF.7)", "Omicron (BA.2.76)", "Omicron (BA.2.75)", "Omicron (BA.2.75.2)", "Omicron (BJ.1)", "Omicron (XBB)", "Omicron (BA.2.3.20)", "Omicron (BQ.1)", "Omicron (BQ.1.1)")
 # I am using order levels_VARIANTS_plot in plots
 
-n = length(levels_VARIANTS)
+n = length(levels_VARIANTS_plot)
 lineage_cols_plot = case_when(
   levels_VARIANTS_plot=="Other" ~ "grey65",
   levels_VARIANTS_plot=="B.1.177 (EU1)" ~ "darkorange4",
@@ -342,10 +360,12 @@ lineage_cols_plot = case_when(
   levels_VARIANTS_plot=="Omicron (BQ.1)" ~ "cyan3",
   levels_VARIANTS_plot=="Omicron (BQ.1.1)" ~ "cyan"
 )
+names(lineage_cols_plot) = levels_VARIANTS_plot
 pal.bands(lineage_cols_plot)
 # pal.volcano(lineage_cols_plot)
 # pal.zcurve(lineage_cols_plot)
 lineage_cols = lineage_cols_plot[match(levels_VARIANTS,levels_VARIANTS_plot)]
+names(lineage_cols) = levels_VARIANTS
 
 # freeing some memory by keeping only the key columns, including
 # the columns I need for the analyses below
@@ -504,7 +524,7 @@ muller_raw_all = ggplot(data=data_agbyweek1, aes(x=date, y=count, group=variant)
   theme(legend.position="right",
         axis.title.x=element_blank()) +
   labs(title = "SARS-CoV2 LINEAGE FREQUENCIES",
-       subtitle=paste0("Raw GISAID data up to ",today," plus COG-UK data, pooled over all countries")) +
+       subtitle=paste0("Raw GISAID data up to ",today," plus COG-UK data")) +
  coord_cartesian(xlim=c(min(GISAID_sel$date),max(GISAID_sel$date)), expand=c(0))
 muller_raw_all
 
@@ -1163,9 +1183,58 @@ ggplot(data=fit_preds2,
   # coord_cartesian(xlim=c(as.Date("2021-06-01"),NA))
   theme(plot.title=element_text(size=25)) +
   theme(plot.subtitle=element_text(size=20)) +
-  coord_cartesian(ylim=c(1,NA), xlim=c(as.Date("2021-01-01"),NA))
+  coord_cartesian(ylim=c(1,NA), xlim=c(as.Date("2020-01-01"),NA))
 
 ggsave(file=file.path("plots", plotdir,"\\global multinom fit_all data_predictions_confirmed cases stacked area multinomial fit by country.png"), width=20, height=12)
+
+
+# stacked area chart, just for Belgium
+ggplot(data=fit_preds2[fit_preds2$country=="Belgium",], 
+       aes(x=date, y=cases, group=variant)) + 
+  # facet_wrap(~ country, scale="free_y") +
+  geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), 
+            position="stack") +
+  scale_fill_manual("", values=lineage_cols_plot) +
+  # annotate("rect", xmin=max(GISAID_india$DATE_NUM)+1, 
+  #          xmax=as.Date("2021-05-31"), ymin=0, ymax=1, alpha=0.3, fill="white") + # extrapolated part
+  xaxis +
+  # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
+  theme_hc() + theme(legend.position="right", 
+                     axis.title.x=element_blank()) + 
+  ylab("New confirmed cases per day") +
+  ggtitle("NEW CONFIRMED SARS-CoV2 CASES BY VARIANT IN BELGIUM",
+          subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, "\nand multinomial fit ", model, ",\nHere only showing data for Belgium")) +
+  # coord_cartesian(xlim=c(as.Date("2021-06-01"),NA))
+  theme(plot.title=element_text(size=25)) +
+  theme(plot.subtitle=element_text(size=20)) +
+  coord_cartesian(ylim=c(1,NA), xlim=c(as.Date("2020-01-01"),NA))
+
+ggsave(file=file.path("plots", plotdir,"\\global multinom fit_all data_predictions_confirmed cases stacked area multinomial fit_BELGIUM.png"), width=12, height=6)
+
+# stacked area chart, just for Singapore
+ggplot(data=fit_preds2[fit_preds2$country=="Singapore",], 
+       aes(x=date, y=cases, group=variant)) + 
+  # facet_wrap(~ country, scale="free_y") +
+  geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), 
+            position="stack") +
+  scale_fill_manual("", values=lineage_cols_plot) +
+  # annotate("rect", xmin=max(GISAID_india$DATE_NUM)+1, 
+  #          xmax=as.Date("2021-05-31"), ymin=0, ymax=1, alpha=0.3, fill="white") + # extrapolated part
+  xaxis +
+  # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
+  theme_hc() + theme(legend.position="right", 
+                     axis.title.x=element_blank()) + 
+  ylab("New confirmed cases per day") +
+  ggtitle("NEW CONFIRMED SARS-CoV2 CASES BY VARIANT IN SINGAPORE",
+          subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, "\nand multinomial fit ", model, ",\nHere only showing data for Singapore")) +
+  # coord_cartesian(xlim=c(as.Date("2021-06-01"),NA))
+  theme(plot.title=element_text(size=25)) +
+  theme(plot.subtitle=element_text(size=20)) +
+  coord_cartesian(ylim=c(1,NA), xlim=c(as.Date("2020-01-01"),NA))
+
+ggsave(file=file.path("plots", plotdir,"\\global multinom fit_all data_predictions_confirmed cases stacked area multinomial fit_SINGAPORE.png"), width=12, height=6)
+
+
 
 # zoomed in since jan 2022
 ggplot(data=fit_preds2, 

@@ -1,5 +1,11 @@
 # DOWNLOAD GISAID json METADATA 
-# T. Wenseleers, 29 JULY 2022
+# T. Wenseleers, 9 OCTOBER 2022
+
+# TO DO: I should wrap this in a function like in download_GISAID.R
+# make the names of the fields consistent with those returned by 
+# download_GISAID.R
+# and maybe apply some filtering to filter out targeted sequencing & sequencing
+# of travel related cases?
 
 library(curl)
 library(glue)

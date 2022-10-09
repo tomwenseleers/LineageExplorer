@@ -331,6 +331,18 @@ remDr$quit()
 
 return(downloads)
 
+# using my access credentials I am getting back the following fields:
+# [1] "virus_name"                      "accession_id"                   
+# [3] "collection_date"                 "location"                       
+# [5] "host"                            "additional_location_information"
+# [7] "sampling_strategy"               "gender"                         
+# [9] "patient_age"                     "patient_status"                 
+# [11] "last_vaccinated"                 "passage"                        
+# [13] "specimen"                        "additional_host_information"    
+# [15] "pango_lineage"                   "clade"                          
+# [17] "aa_substitutions"                "continent"                      
+# [19] "country"   
+
 }
 
 # example

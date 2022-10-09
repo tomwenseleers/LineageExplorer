@@ -215,8 +215,8 @@ if (!genom_epidem) { output = read_tsv( # we directly read from archive
 # system.time(GISAID <- fread(file.path(target_dir,"metadata.tsv")))
 colnames(output) = gsub("-", "_", gsub("?", "", gsub(" ", "_", tolower(colnames(output))), fixed=T), fixed=T)
 output$pango_lineage = gsub(" (marker override based on Emerging Variants AA substitutions)", "",  output$pango_lineage, fixed=T)
-# for me the regular GISAID metadata package download then has the following column names:
-# colnames(output)
+
+# using my access credentials I am getting back the following fields:
 # [1] "virus_name"                      "type"                           
 # [3] "accession_id"                    "collection_date"                
 # [5] "location"                        "additional_location_information"
@@ -228,6 +228,8 @@ output$pango_lineage = gsub(" (marker override based on Emerging Variants AA sub
 # [17] "is_reference"                    "is_complete"                    
 # [19] "is_high_coverage"                "is_low_coverage"                
 # [21] "n_content"                       "gc_content" 
+# note it doesn't have "sampling_strategy" or "additional_host_information", which
+# are present in downloaded records & JSON stream
 
 # remove leading and trailing round brackets from aa_substitutions
 output$aa_substitutions = stringr::str_sub(output$aa_substitutions, 2, -2)
