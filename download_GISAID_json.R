@@ -54,6 +54,7 @@ outfile = file.path(target_dir, 'provision.json.gz')
 con_out = gzfile(outfile, open="wb") # file(outfile, open = "wb")
 system.time(stream_in(con_in, handler = function(df){
   # df <- dplyr::filter(df, XXX) # drop any unneeded columns
+  # TO DO: do all processing in chunks & return processed result - i.e. removing non-baseline surveillance records, lineage calling based on pangolin lineage & AA substitutions & aggregation per week
   stream_out(df, con_out, pagesize = 10000)
 }, pagesize = 10000))
 close(con_out)
