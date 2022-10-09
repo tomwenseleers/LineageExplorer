@@ -11,6 +11,10 @@
 # Sys.setenv(GISAIDJSON_USERNAME = "XXXXX") # not needed for this script
 # Sys.setenv(GISAIDJSON_PASSWORD = "XXXXX")
 # Sys.setenv(GISAIDJSON_STREAM = "XXXXX")
+
+rm(list = ls()) # clear workspace
+gc()
+
 if (file.exists("..//set_GISAID_credentials.R")) source("..//set_GISAID_credentials.R") # using my GISAID credentials
 
 
@@ -87,12 +91,11 @@ system.time(GISAID <- download_GISAD_meta(target_dir = target_dir,
                                           usr = Sys.getenv("GISAIDR_USERNAME"),
                                           psw = Sys.getenv("GISAIDR_PASSWORD"))) # 194s
 download = tail(list.files(target_dir, pattern=".tar.xz"), 1)
-download # "metadata_tsv_2022_10_03.tar.xz"  
+download
 
 # records go up to submission date
 GISAID_max_submdate = as.Date(max(GISAID$submission_date, na.rm=T))
-GISAID_max_submdate # "2022-10-01"
-nrow(GISAID) # 13341604
+GISAID_max_submdate 
 
 
 # add some extra recently submitted records not available in download package ####
@@ -113,9 +116,7 @@ recent_records = as.vector(query(
   to_subm = as.character(today),
   fast = TRUE
 ))$accession_id
-length(recent_records) # 79254   records
 recent_records = recent_records[!recent_records %in% GISAID$accession_id]
-length(recent_records) # 77716     record not available in GISAID download package
 
 # dataframe with recently submitted records that are not yet in GISAID metadata package download
 d_extra = download_GISAID_records(accession_ids = recent_records,
@@ -126,14 +127,13 @@ d_extra = download_GISAID_records(accession_ids = recent_records,
                                   headless = FALSE,
                                   usr = Sys.getenv("GISAIDR_USERNAME"),
                                   psw = Sys.getenv("GISAIDR_PASSWORD"))
-dim(d_extra) # 77716                                                                      19
-
 # merge GISAID download package & recently submitted records
 GISAID = dplyr::bind_rows(GISAID, d_extra)
-nrow(GISAID) # 13419320    
 
 # LOAD COG-UK DATA FOR THE UNITED KINGDOM ####
-if (use_coguk) { coguk = download_COGUK_meta()
+if (use_coguk) { 
+  gc()
+  coguk = download_COGUK_meta() # download COG-UK data
   # MERGE GISAID (MINUS UK GISAID DATA) & COG-UK DATA FOR UK
   GISAID = dplyr::bind_rows(GISAID[GISAID$country!="United Kingdom",], 
                            coguk)
@@ -142,16 +142,15 @@ if (use_coguk) { coguk = download_COGUK_meta()
   GISAID$country = factor(GISAID$country)
   GISAID$country = factor(GISAID$country)
   }
-nrow(GISAID) # 13343117
 
 levels_continents = c("Asia","North America","Europe","Africa","South America","Oceania")
 GISAID$continent= factor(GISAID$continent, levels=levels_continents)
 GISAID$country = factor(GISAID$country)
 levels_countries = levels(GISAID$country)
-length(levels_countries) # 217
+# length(levels_countries)
 GISAID$location = factor(GISAID$location)
 levels_locations = levels(GISAID$location)
-length(levels_locations) # 840
+# length(levels_locations)
 
 
 # PARSE GISAID DATA ####
@@ -279,7 +278,8 @@ system.time(GISAID$variant <- case_when(
     datefrom("2020-05-27") ~ "B.1.177 (EU1)",
   linplus("B.1.160")&
     datefrom("2020-02-15") ~ "B.1.160 (EU2)",
-  linplus("B.1.221") ~ "B.1.221 (20A/S:98F)",
+  linplus("B.1.221")&
+    datefrom("2020-03-01") ~ "B.1.221 (20A/S:98F)", 
   !lin("Unassigned") ~ "Other" # assigns NA to remaining Unassigned & remove them later on
   # TRUE ~ "Other" # alternative: to assign Unassigned lineages to category Other
 )) # 141s - note: could be sped up by using multidplyr & parallelization
@@ -305,7 +305,7 @@ system.time(GISAID$variant <- case_when(
 # table(GISAID$variant)
 
 # GISAID = GISAID[!is.na(GISAID$variant),]
-nrow(GISAID) # 13343117
+# nrow(GISAID) # 13343117
 
 # define variant lineages and colours ####
 # sel_reference_VOC = baseline to which all others will be compared 
@@ -370,7 +370,7 @@ GISAID_sel$date_isvalid = (str_count(GISAID_sel$collection_date,
                                  pattern = "-")==2)
 GISAID_sel = GISAID_sel[which(GISAID_sel$date_isvalid),]
 GISAID_sel = GISAID_sel[which(GISAID_sel$host=="Human"),]
-nrow(GISAID_sel) # 13110046
+# nrow(GISAID_sel) 
 
 # filter to desired date range ####
 # start_date = "2020-06-01"
