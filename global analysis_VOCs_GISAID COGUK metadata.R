@@ -1211,6 +1211,31 @@ ggplot(data=fit_preds2[fit_preds2$country=="Belgium",],
 
 ggsave(file=file.path("plots", plotdir,"\\global multinom fit_all data_predictions_confirmed cases stacked area multinomial fit_BELGIUM.png"), width=12, height=6)
 
+
+# stacked area chart, just for United Kingdom
+ggplot(data=fit_preds2[fit_preds2$country=="United Kingdom",], 
+       aes(x=date, y=cases, group=variant)) + 
+  # facet_wrap(~ country, scale="free_y") +
+  geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), 
+            position="stack") +
+  scale_fill_manual("", values=lineage_cols_plot) +
+  # annotate("rect", xmin=max(GISAID_india$DATE_NUM)+1, 
+  #          xmax=as.Date("2021-05-31"), ymin=0, ymax=1, alpha=0.3, fill="white") + # extrapolated part
+  xaxis +
+  # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
+  theme_hc() + theme(legend.position="right", 
+                     axis.title.x=element_blank()) + 
+  ylab("New confirmed cases per day") +
+  ggtitle("NEW CONFIRMED SARS-CoV2 CASES BY VARIANT IN THE UK",
+          subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, " & COG-UK data\nand multinomial fit ", model, ",\nHere only showing data for the UK")) +
+  # coord_cartesian(xlim=c(as.Date("2021-06-01"),NA))
+  theme(plot.title=element_text(size=25)) +
+  theme(plot.subtitle=element_text(size=20)) +
+  coord_cartesian(ylim=c(1,NA), xlim=c(as.Date("2020-01-01"),NA))
+
+ggsave(file=file.path("plots", plotdir,"\\global multinom fit_all data_predictions_confirmed cases stacked area multinomial fit_UNITED KINGDOM.png"), width=12, height=6)
+
+
 # stacked area chart, just for Singapore
 ggplot(data=fit_preds2[fit_preds2$country=="Singapore",], 
        aes(x=date, y=cases, group=variant)) + 
