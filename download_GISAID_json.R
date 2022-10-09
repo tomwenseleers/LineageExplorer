@@ -52,13 +52,13 @@ library(jsonlite)
 con_in = gzfile(file.path(target_dir, 'provision.json.xz'))
 outfile = file.path(target_dir, 'provision.json.gz')
 con_out = gzfile(outfile, open="wb") # file(outfile, open = "wb")
-stream_in(con_in, handler = function(df){
+system.time(stream_in(con_in, handler = function(df){
   # df <- dplyr::filter(df, XXX) # drop any unneeded columns
-  stream_out(df, con_out, pagesize = 100000)
-}, pagesize = 100000)
+  stream_out(df, con_out, pagesize = 10000)
+}, pagesize = 10000))
 close(con_out)
 # stream it back in
-GISAID_JSON = stream_in(file(outfile))
+system.time(GISAID_JSON <- stream_in(file(outfile)))
 nrow(GISAID_JSON)
 
 
