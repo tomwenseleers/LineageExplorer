@@ -20,7 +20,7 @@ if (file.exists("..//set_GISAID_credentials.R")) source("..//set_GISAID_credenti
 
 # load some utility functions & install required packages 
 library(devtools)
-remotes::install_github("Wytamma/GISAIDR", upgrade="always")
+# remotes::install_github("Wytamma/GISAIDR", upgrade="always")
 library(GISAIDR)
 source(".//download_GISAID.R") # load function to download GISAID metadata download package (lacking records from last few days)
 source(".//download_GISAID_records.R") # load functions to download most recent GISAID records
@@ -31,9 +31,9 @@ use_coguk = TRUE # use COG-UK data instead of GISAID data for UK?
 library(nnet)
 library(splines)
 library(devtools)
-remotes::install_github("melff/mclogit",subdir="pkg", upgrade="never") # install latest development version of mclogit, to add emmeans support
+# remotes::install_github("melff/mclogit",subdir="pkg", upgrade="never") # install latest development version of mclogit, to add emmeans support
 library(mclogit)
-remotes::install_github("rvlenth/emmeans", dependencies = FALSE, upgrade="never")
+# remotes::install_github("rvlenth/emmeans", dependencies = FALSE, upgrade="never")
 library(emmeans)
 library(readr)
 library(ggplot2)
@@ -49,7 +49,7 @@ library(memoise)
 library(readxl)
 # install.packages("covidregionaldata",
 #                   repos = "https://epiforecasts.r-universe.dev")
-remotes::install_github("epiforecasts/covidregionaldata", upgrade="never")
+# remotes::install_github("epiforecasts/covidregionaldata", upgrade="never")
 library(covidregionaldata)
 library(tidyquant)
 library(data.table)
@@ -58,7 +58,7 @@ library(locatexec)
 library(tidyr)
 library(pals)
 library(devtools)
-install_github("tomwenseleers/marginaleffects", upgrade="never")
+# install_github("tomwenseleers/marginaleffects", upgrade="never")
 library(marginaleffects)
 library(inspectdf)
 library(zoo)
@@ -247,7 +247,7 @@ system.time(GISAID$variant <- case_when(
   (linplus_oneof(c("BA.2.75.2","BL.1"))|
     mut_allof(c("NSP3_S403L","NSP8_N118S","Spike_R346T","Spike_F486S"))|
     mut_allof(c("NSP3_S403L","E_T11A","Spike_R346T","Spike_F486S")))&
-    datefrom("2022-04-01") ~ "Omicron (BA.2.75.2)", # also add CA.1 ( BA.2.75.2 + Spike L452R)?
+    datefrom("2022-04-01") ~ "Omicron (BA.2.75.2)", # also add CA.1 ( BA.2.75.2 + Spike L452R)
   (linplus("BA.2.75")|
     mut_allof(c("NSP3_S403L","NSP8_N118S"))|
     mut_allof(c("NSP3_S403L","E_T11A")))&
@@ -316,7 +316,7 @@ system.time(GISAID$variant <- case_when(
 # B.1.177+B.1.160+B.1.221 were behind the 2020 wave in fall in Europe & each had one spike mutations & a small growth rate advantage relative to predominant B.1.1
 
 # variants to watch & maybe add in due time: 
-# BU.1, BR.2, BM.1.1.1, CA.1, BN.1
+# BU.1 (BA.5.2.16.1), BR.2 (BA.2.75.4.2), BM.1.1.1 (BA.2.75.3.1.1.1), CA.1 (BA.2.75.2.1), BN.1 (BA.2.75.5.1)
 # https://cov-spectrum.org/collections/1
 # https://cov-spectrum.org/collections/32
 
@@ -367,10 +367,18 @@ pal.bands(lineage_cols_plot)
 lineage_cols = lineage_cols_plot[match(levels_VARIANTS,levels_VARIANTS_plot)]
 names(lineage_cols) = levels_VARIANTS
 
+# TO DO: REMOVE SAMPLES THAT WERE PRE-SELECTED OR TRAVEL RELATED?
+# e.g. for Austrian data records from Lifebrain are biased by pre-selected sample sequencing
+# covv_virus_name for those contains LB- in the name
+
+# here just removing the LifeBrain deposited sequences from Austria:
+GISAID = GISAID[-which(GISAID$country=="Austria"&grepl("LB", GISAID$virus_name, fixed=T)),]
+
+
 # freeing some memory by keeping only the key columns, including
 # the columns I need for the analyses below
 # TO DO: pass this argument in download functions above
-columns_tokeep = c("accession_id", "collection_date", "host", "pango_lineage",
+columns_tokeep = c("virus_name", "accession_id", "collection_date", "host", "pango_lineage",
                    "variant", "submission_date", "continent", "country", "date")
 GISAID = GISAID %>% select(one_of(columns_tokeep))
 gc()
@@ -379,10 +387,11 @@ saveRDS(GISAID, file=file.path(target_dir, "GISAID.rds"))
 
 # GISAID SELECTION ####
 
-# GISAID_sel = readRDS(file.path(target_dir, "GISAID.rds"))
 GISAID_sel = GISAID
 rm(GISAID)
 gc()
+
+# GISAID_sel = readRDS(file.path(target_dir, "GISAID.rds"))
 
 
 # remove records with invalid/incomplete dates ####
@@ -441,11 +450,11 @@ sel_countries = sort(unique(c(tab[tab$Var2=="Omicron (BA.2.75.2)"&tab$Freq>=5,"V
                               tab[tab$Var2=="Omicron (XBB)"&tab$Freq>=5,"Var1"],
                               tab[tab$Var2=="Omicron (BA.2.3.20)"&tab$Freq>=5,"Var1"])))
 sel_countries
-# [1] Australia      Austria        Bangladesh     Belgium        Brunei         Canada        
-# [7] Denmark        France         Germany        Hong Kong      India          Ireland       
-# [13] Israel         Italy          Japan          Luxembourg     Netherlands    New Zealand   
-# [19] Nigeria        Portugal       Singapore      South Korea    Spain          Sweden        
-# [25] Switzerland    Thailand       Turkey         United Kingdom USA   
+# [1] Australia      Austria        Bahrain        Bangladesh     Belgium        Brunei        
+# [7] Canada         Denmark        France         Germany        Hong Kong      India         
+# [13] Ireland        Israel         Italy          Japan          Luxembourg     Netherlands   
+# [19] New Zealand    Nigeria        Portugal       Singapore      South Korea    Spain         
+# [25] Sweden         Switzerland    Thailand       Turkey         United Kingdom USA   
 
 GISAID_sel = as.data.frame(GISAID_sel)
 GISAID_sel = GISAID_sel[GISAID_sel$country %in% sel_countries,]

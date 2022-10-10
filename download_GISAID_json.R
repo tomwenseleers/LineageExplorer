@@ -62,4 +62,6 @@ close(con_out)
 system.time(GISAID_JSON <- stream_in(file(outfile)))
 nrow(GISAID_JSON)
 
+# note: for Austrian data records from Lifebrain are biased by pre-selected sample sequencing
+# covv_virus_name for those contains LB- in the name
 
