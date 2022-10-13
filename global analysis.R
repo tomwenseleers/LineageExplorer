@@ -1,6 +1,6 @@
 # GLOBAL ANALYSIS OF SARS-Cov2 VARIANTS OF CONCERN & INTEREST
-# T. Wenseleers
-# last update 8 OCTOBER 2022
+# T. Wenseleers, RBDmutations lineage assignments added by Rodrigo Quiroga
+# last update 14 OCTOBER 2022
 
 # note: script below is fairly memory hungry - best to run this on workstation with 64 Gb RAM
 
