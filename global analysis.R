@@ -1068,45 +1068,45 @@ pl
 ggsave(file=file.path(plotdir, "predicted lineage freqs_Singapore_logit scale.png"), width=12, height=5)
 
 
-# plot just for Israel
-pl = qplot(data=fit_preds[fit_preds$variant!="Other"&fit_preds$country=="Israel",], 
-           x=date, y=predicted, geom="blank") +
-  # facet_wrap(~ country) +
-  geom_ribbon(aes(y=predicted, ymin=conf.low, ymax=conf.high, colour=NULL,
-                  fill=variant), alpha=I(0.3)) +
-  geom_line(aes(colour=variant), alpha=I(1)) +
-  ylab("Share among newly diagnosed infections (%)") +
-  theme_hc() + xlab("") +
-  ggtitle("SARS-CoV2 LINEAGE FREQUENCIES IN ISRAEL",
-          subtitle=paste0("GISAID data up to ",today, " plus COG-UK data, multinomial fit ", model, ",\nonly Israel shown here")) +
-  xaxis +  
-  scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
-                      labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
-  scale_fill_manual("variant", values=tail(as.vector(lineage_cols),-1)) +
-  scale_colour_manual("variant", values=tail(as.vector(lineage_cols),-1)) +
-  geom_point(data=data_agbyweekcountry1[data_agbyweekcountry1$variant!="Other"&
-                                          data_agbyweekcountry1$country=="Israel",],
-             aes(x=collection_date, y=prop, size=total,
-                 colour=variant
-             ),
-             alpha=I(1)) +
-  scale_size_continuous("total number\nsequenced", trans="sqrt",
-                        range=c(0.5, 4), limits=c(1,max(data_agbyweekcountry1$total)), 
-                        breaks=c(10,100,1000, 10000), guide=F) +
-  # guides(fill=FALSE) +
-  # guides(colour=FALSE) +
-  theme(legend.position = "bottom") +
-  xlab("Collection date (start of week)") +
-  coord_cartesian(xlim=c(as.Date("2021-01-01"),NA), 
-                  ylim=c(0.0001, 0.99901), expand=0) +
-  labs(tag = tag) +
-  theme(plot.tag.position = "bottomright",
-        plot.tag = element_text(vjust = 1, hjust = 1, size=8)) # +
-# theme(plot.title=element_text(size=25)) +
-# theme(plot.subtitle=element_text(size=20))
-pl
-
-ggsave(file=file.path(plotdir, "predicted lineage freqs_israel_logit scale.png"), width=12, height=5)
+# # plot just for Israel
+# pl = qplot(data=fit_preds[fit_preds$variant!="Other"&fit_preds$country=="Israel",], 
+#            x=date, y=predicted, geom="blank") +
+#   # facet_wrap(~ country) +
+#   geom_ribbon(aes(y=predicted, ymin=conf.low, ymax=conf.high, colour=NULL,
+#                   fill=variant), alpha=I(0.3)) +
+#   geom_line(aes(colour=variant), alpha=I(1)) +
+#   ylab("Share among newly diagnosed infections (%)") +
+#   theme_hc() + xlab("") +
+#   ggtitle("SARS-CoV2 LINEAGE FREQUENCIES IN ISRAEL",
+#           subtitle=paste0("GISAID data up to ",today, " plus COG-UK data, multinomial fit ", model, ",\nonly Israel shown here")) +
+#   xaxis +  
+#   scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
+#                       labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
+#   scale_fill_manual("variant", values=tail(as.vector(lineage_cols),-1)) +
+#   scale_colour_manual("variant", values=tail(as.vector(lineage_cols),-1)) +
+#   geom_point(data=data_agbyweekcountry1[data_agbyweekcountry1$variant!="Other"&
+#                                           data_agbyweekcountry1$country=="Israel",],
+#              aes(x=collection_date, y=prop, size=total,
+#                  colour=variant
+#              ),
+#              alpha=I(1)) +
+#   scale_size_continuous("total number\nsequenced", trans="sqrt",
+#                         range=c(0.5, 4), limits=c(1,max(data_agbyweekcountry1$total)), 
+#                         breaks=c(10,100,1000, 10000), guide=F) +
+#   # guides(fill=FALSE) +
+#   # guides(colour=FALSE) +
+#   theme(legend.position = "bottom") +
+#   xlab("Collection date (start of week)") +
+#   coord_cartesian(xlim=c(as.Date("2021-01-01"),NA), 
+#                   ylim=c(0.0001, 0.99901), expand=0) +
+#   labs(tag = tag) +
+#   theme(plot.tag.position = "bottomright",
+#         plot.tag = element_text(vjust = 1, hjust = 1, size=8)) # +
+# # theme(plot.title=element_text(size=25)) +
+# # theme(plot.subtitle=element_text(size=20))
+# pl
+# 
+# ggsave(file=file.path(plotdir, "predicted lineage freqs_israel_logit scale.png"), width=12, height=5)
 
 
 
@@ -1138,6 +1138,13 @@ ggsave(file=file.path(plotdir, "muller plot.png"),
 
 # MAP VARIANT SHARE ONTO CASE NUMBERS ####
 
+
+# country_data = get_national_data(countries=sel_countries,
+#                                  source="who",
+#                                  level=1)
+# country_data = get_national_data(countries=sel_countries,
+#                                  source="who",
+#                                  level=1)
 sel_countries_fig = c("Austria", "Belgium", "Denmark", "France", "Germany", 
                       "Italy", "Netherlands", "New Zealand", "Singapore", "United Kingdom")
 country_data = get_national_data(countries=sel_countries_fig,
@@ -1176,6 +1183,7 @@ fit_preds$cases[fit_preds$predicted<0.001] = NA
 
 fit_preds_sel = fit_preds
 fit_preds_sel = fit_preds_sel[fit_preds_sel$country %in% sel_countries_fig,]
+# fit_preds_sel = fit_preds_sel[fit_preds_sel$country %in% sel_countries,]
 fit_preds_sel$country = factor(fit_preds_sel$country)
 
 fit_preds2 = fit_preds_sel
@@ -1324,6 +1332,29 @@ ggplot(data=fit_preds2[fit_preds2$country=="Singapore",],
   coord_cartesian(ylim=c(1,NA), xlim=c(as.Date("2020-01-01"),NA))
 
 ggsave(file=file.path(plotdir,"\\confirmed cases multinomial fit_stacked area plot_SINGAPORE.png"), width=12, height=6)
+
+# # stacked area chart, just for Israel
+# ggplot(data=fit_preds2[fit_preds2$country=="Israel",], 
+#        aes(x=date, y=cases, group=variant)) + 
+#   # facet_wrap(~ country, scale="free_y") +
+#   geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), 
+#             position="stack") +
+#   scale_fill_manual("", values=lineage_cols) +
+#   # annotate("rect", xmin=max(GISAID_india$DATE_NUM)+1, 
+#   #          xmax=as.Date("2021-05-31"), ymin=0, ymax=1, alpha=0.3, fill="white") + # extrapolated part
+#   xaxis +
+#   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
+#   theme_hc() + theme(legend.position="right", 
+#                      axis.title.x=element_blank()) + 
+#   ylab("New confirmed cases per day") +
+#   ggtitle("NEW CONFIRMED SARS-CoV2 CASES BY VARIANT IN ISRAEL",
+#           subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, "\nand multinomial fit ", model, ",\nHere only showing data for Israel")) +
+#   # coord_cartesian(xlim=c(as.Date("2021-06-01"),NA))
+#   theme(plot.title=element_text(size=25)) +
+#   theme(plot.subtitle=element_text(size=20)) +
+#   coord_cartesian(ylim=c(1,NA), xlim=c(as.Date("2020-01-01"),NA))
+# 
+# ggsave(file=file.path(plotdir,"\\confirmed cases multinomial fit_stacked area plot_ISRAEL.png"), width=12, height=6)
 
 
 
