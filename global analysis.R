@@ -1077,7 +1077,7 @@ pl = qplot(data=fit_preds[fit_preds$variant!="Other"&fit_preds$country=="Israel"
   geom_line(aes(colour=variant), alpha=I(1)) +
   ylab("Share among newly diagnosed infections (%)") +
   theme_hc() + xlab("") +
-  ggtitle("SARS-CoV2 LINEAGE FREQUENCIES IN BELGIUM",
+  ggtitle("SARS-CoV2 LINEAGE FREQUENCIES IN ISRAEL",
           subtitle=paste0("GISAID data up to ",today, " plus COG-UK data, multinomial fit ", model, ",\nonly Israel shown here")) +
   xaxis +  
   scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
