@@ -584,6 +584,10 @@ system.time(fit <- nnet::multinom(variant ~ ns(DATE_NUM, df=2)+ns(DATE_NUM, df=2
 # syntax of model to put on plot legend
 model = "variant ~ ns(date, df=2)+ns(date, df=2):continent+country" 
 
+# TO DO: change to mclogit::mblogit fit (can take into account overdispersion & latest
+# github version should run - previously it was giving fitting errors)
+# or the MGLM package - but that one also gave fitting errors
+
 # model to use below - I just fitted 1 possible model now
 fit_best = fit
 
