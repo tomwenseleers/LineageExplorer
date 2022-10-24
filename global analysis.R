@@ -2,7 +2,7 @@
 # DATA: GISAID & COG-UK
 
 # T. Wenseleers, RBDmutations lineage assignments added by Rodrigo Quiroga
-# last update 21 OCTOBER 2022
+# last update 24 OCTOBER 2022
 
 # note: script below is fairly memory hungry - best to run this on workstation 
 # with 64 Gb RAM - it runs quite fast though - just ca 30 mins including
@@ -467,7 +467,8 @@ GISAID_sel$floor_date = fast_strptime(as.character(cut(GISAID_sel$date, "week"))
 GISAID_sel$DATE_NUM = as.numeric(GISAID_sel$date)
 
 # removing Austria, since sequencing not representative
-GISAID_sel = GISAID_sel[GISAID_sel$country!="Austria",]
+GISAID_sel = as.data.frame(GISAID_sel)
+GISAID_sel = GISAID_sel[-which(GISAID_sel$country=="Austria"),]
 GISAID_sel$country = droplevels(GISAID_sel$country)
 
 table(GISAID_sel$variant)
