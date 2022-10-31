@@ -594,9 +594,9 @@ system.time(fit <- nnet::multinom(variant ~ ns(DATE_NUM, df=2)+ns(DATE_NUM, df=2
 # syntax of model to put on plot legend
 model = "variant ~ ns(date, df=2)+ns(date, df=2):continent+country" 
 
-# TO DO: change to mclogit::mblogit fit (can take into account overdispersion & latest
-# github version should run - previously it was giving fitting errors)
-# or the MGLM package - but that one also gave fitting errors
+# TO DO: change to mclogit::mblogit fit (can take into account overdispersion &
+# latest github version should run - previously it was giving fitting errors) or
+# the MGLM package - but that one also gave fitting errors
 
 # model to use below - I just fitted 1 possible model now
 fit_best = fit
@@ -612,6 +612,8 @@ gc()
 # save.image("~/Github/LineageExplorer/environment_2022_10_13.RData")
 # load("~/Github/LineageExplorer/environment_2022_10_13.RData")
 
+# save multinom fit
+saveRDS(fit_best, file="~/Github/LineageExplorer/LineageExplorer/fits/multinom_fit.rds")
 
 
 # CALCULATE GROWTH RATE ADVANTAGE OVER BASELINE REFERENCE LEVEL BA.5.2 ####
@@ -1512,4 +1514,6 @@ Re_from_r <- function(r, gamma_mean=4.7, gamma_sd=2.9) {
 Re_from_r(0.18, gamma_mean=4.7, gamma_sd=2.9) # from fit Moritz Gerstung for Germany
 # 2.1/6=35% of the population susceptible to BQ.1.1
 gc()
+
+save.image("~/Github/LineageExplorer/LineageExplorer/environment_31_10_2022.RData")
 
