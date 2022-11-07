@@ -2,7 +2,7 @@
 # DATA: GISAID & COG-UK
 
 # T. Wenseleers, RBDmutations lineage assignments added by Rodrigo Quiroga
-# last update 24 OCTOBER 2022
+# last update 7 NOVEMBER 2022
 
 # note: script below is fairly memory hungry - best to run this on workstation 
 # with 64 Gb RAM - it runs quite fast though - just ca 30 mins including
@@ -1263,7 +1263,7 @@ ggplot(data=fit_preds2,
           subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, " plus COG-UK data\nand multinomial fit ", model, ",\nselected countries with >=", min_n, " level5 or level6+ variant sequences shown")) +
   scale_colour_manual("lineage", values=lineage_cols) +
   scale_y_log10() +
-  coord_cartesian(ylim=c(1,NA), xlim=c(as.Date("2021-01-01"),NA)) +
+  coord_cartesian(xlim=c(as.Date("2021-01-01"),NA)) +
   theme(plot.title=element_text(size=25)) +
   theme(plot.subtitle=element_text(size=20)) 
 # coord_cartesian(xlim=c(as.Date("2021-01-01"),max(fit_india_multi_predsbystate2$collection_date)-20))
@@ -1286,7 +1286,7 @@ ggplot(data=fit_preds2,
           subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, " plus COG-UK data\nand multinomial fit ", model, ",\nselected countries with >=", min_n, " level5 or level6+ variant sequences shown")) +
   scale_colour_manual("lineage", values=lineage_cols) +
   scale_y_log10() +
-  coord_cartesian(ylim=c(1,NA), xlim=c(as.Date("2021-01-01"),NA)) +
+  # coord_cartesian(ylim=c(1,NA), xlim=c(as.Date("2021-01-01"),NA)) +
   theme(plot.title=element_text(size=25)) +
   theme(plot.subtitle=element_text(size=20)) +
   coord_cartesian(xlim=c(as.Date("2022-01-01"),NA))
@@ -1515,5 +1515,5 @@ Re_from_r(0.18, gamma_mean=4.7, gamma_sd=2.9) # from fit Moritz Gerstung for Ger
 # 2.1/6=35% of the population susceptible to BQ.1.1
 gc()
 
-save.image("~/Github/LineageExplorer/LineageExplorer/environment_31_10_2022.RData")
+save.image("~/Github/LineageExplorer/LineageExplorer/environment_07_11_2022.RData")
 
