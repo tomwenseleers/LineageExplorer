@@ -257,8 +257,8 @@ eCaps = list(chromeOptions = list(
     "default_directory" = normalizePath(target_dir)
   )
 ))
-browser = wdman::chrome(port = 4570L, version = chromedriver_version, check = TRUE)
-remDr = remoteDriver(port = 4570L, 
+browser = wdman::chrome(port = 4571L, version = chromedriver_version, check = TRUE)
+remDr = remoteDriver(port = 4571L, 
                      version = chromedriver_version, 
                      browserName = "chrome", 
                      extraCapabilities = eCaps)
@@ -327,7 +327,7 @@ downloads = do.call(bind_rows, lapply(1:length(batches),
 
 remDr$close()
 browser$stop()
-remDr$quit()
+# remDr$quit()
 
 return(downloads)
 

@@ -44,8 +44,8 @@ eCaps = list(chromeOptions = list(
     "default_directory" = normalizePath(target_dir)
   )
 ))
-browser = wdman::chrome(port = 4570L, version = chromedriver_version, check = TRUE) 
-remDr = remoteDriver(port = 4570L, 
+browser = wdman::chrome(port = 4571L, version = chromedriver_version, check = TRUE) 
+remDr = remoteDriver(port = 4571L, 
                      version=chromedriver_version,
                      browserName = "chrome", 
                      extraCapabilities = eCaps)
@@ -202,7 +202,7 @@ message(paste0("Downloaded GISAID metadata file version ", download))
 
 remDr$close()
 browser$stop()
-remDr$quit()
+# remDr$quit()
 
 message(paste0("Reading GISAID metadata file version ", download))
 

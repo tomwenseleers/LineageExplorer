@@ -2,7 +2,7 @@
 # DATA: GISAID & COG-UK
 
 # T. Wenseleers, RBDmutations lineage assignments added by Rodrigo Quiroga
-# last update 7 NOVEMBER 2022
+# last update 15 NOVEMBER 2022
 
 # note: script below is fairly memory hungry - best to run this on workstation 
 # with 64 Gb RAM - it runs quite fast though - just ca 30 mins including
@@ -27,8 +27,11 @@ library(pacman)
 pacman::p_load(devtools, nnet, splines, mclogit, readr, ggplot2, ggthemes, scales,
                archive, dplyr, stringr, lubridate, tidyr, countrycode,
                memoise, readxl, covidregionaldata, tidyquant, data.table, R.utils,
-               locatexec, pals, marginaleffects, inspectdf, zoo, RSelenium)
-pacman::p_load_gh("tomwenseleers/marginaleffects", "Wytamma/GISAIDR", 
+               locatexec, pals, inspectdf, zoo, RSelenium)
+Sys.setenv(GITHUB_PAT = "")
+devtools::install_github("tomwenseleers/marginaleffects")
+library(marginaleffects)
+pacman::p_load_gh("Wytamma/GISAIDR", 
                   "melff/mclogit/pkg", "rvlenth/emmeans",
                   "epiforecasts/covidregionaldata")
 
@@ -587,12 +590,12 @@ data_agbyweekcountry1$variant = relevel(data_agbyweekcountry1$variant, ref=basel
 
 set.seed(1)
 gc()
-system.time(fit <- nnet::multinom(variant ~ ns(DATE_NUM, df=2)+ns(DATE_NUM, df=2):continent+country, 
+system.time(fit <- nnet::multinom(variant ~ ns(DATE_NUM, df=3)+ns(DATE_NUM, df=3):continent+country, 
                                        weights=count, 
                                        data=data_agbyweekcountry1, 
                                        maxit=10000, MaxNWts=100000)) # 127s, longer if you use all GISAID+COGUK data
 # syntax of model to put on plot legend
-model = "variant ~ ns(date, df=2)+ns(date, df=2):continent+country" 
+model = "variant ~ ns(date, df=3)+ns(date, df=3):continent+country" 
 
 # TO DO: change to mclogit::mblogit fit (can take into account overdispersion &
 # latest github version should run - previously it was giving fitting errors) or
@@ -996,6 +999,46 @@ pl
 ggsave(file=file.path(plotdir, "predicted lineage freqs_FRANCE_logit scale.png"), width=12, height=5)
 
 
+# plot just for South Africa
+pl = qplot(data=fit_preds[fit_preds$variant!="Other"&fit_preds$country=="South Africa",], 
+           x=date, y=predicted, geom="blank") +
+  # facet_wrap(~ country) +
+  geom_ribbon(aes(y=predicted, ymin=conf.low, ymax=conf.high, colour=NULL,
+                  fill=variant), alpha=I(0.3)) +
+  geom_line(aes(colour=variant), alpha=I(1)) +
+  ylab("Share among newly diagnosed infections (%)") +
+  theme_hc() + xlab("") +
+  ggtitle("SARS-CoV2 LINEAGE FREQUENCIES IN SOUTH AFRICA",
+          subtitle=paste0("GISAID data up to ",today, " plus COG-UK data, multinomial fit ", model, ",\nonly South Africa shown here")) +
+  xaxis +  
+  scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
+                      labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
+  scale_fill_manual("variant", values=tail(as.vector(lineage_cols),-1)) +
+  scale_colour_manual("variant", values=tail(as.vector(lineage_cols),-1)) +
+  geom_point(data=data_agbyweekcountry1[data_agbyweekcountry1$variant!="Other"&
+                                          data_agbyweekcountry1$country=="South Africa",],
+             aes(x=collection_date, y=prop, size=total,
+                 colour=variant
+             ),
+             alpha=I(1)) +
+  scale_size_continuous("total number\nsequenced", trans="sqrt",
+                        range=c(0.5, 4), limits=c(1,max(data_agbyweekcountry1$total)), 
+                        breaks=c(10,100,1000, 10000), guide=F) +
+  # guides(fill=FALSE) +
+  # guides(colour=FALSE) +
+  theme(legend.position = "bottom") +
+  xlab("Collection date (start of week)") +
+  coord_cartesian(xlim=c(as.Date("2021-01-01"),NA), 
+                  ylim=c(0.0001, 0.99901), expand=0) +
+  labs(tag = tag) +
+  theme(plot.tag.position = "bottomright",
+        plot.tag = element_text(vjust = 1, hjust = 1, size=8)) # +
+# theme(plot.title=element_text(size=25)) +
+# theme(plot.subtitle=element_text(size=20))
+pl
+
+ggsave(file=file.path(plotdir, "predicted lineage freqs_South Africa_logit scale.png"), width=12, height=5)
+
 
 # plot just for DK
 pl = qplot(data=fit_preds[fit_preds$variant!="Other"&fit_preds$country=="Denmark",], 
@@ -1239,6 +1282,7 @@ fit_preds$cases[fit_preds$predicted<0.001] = NA
 fit_preds_sel = fit_preds
 # fit_preds_sel = fit_preds_sel[fit_preds_sel$country %in% sel_countries_fig,]
 fit_preds_sel = fit_preds_sel[fit_preds_sel$country %in% sel_countries,]
+fit_preds_sel = fit_preds_sel[fit_preds_sel$country!="Hong Kong",]
 fit_preds_sel$country = factor(fit_preds_sel$country)
 
 fit_preds2 = fit_preds_sel
@@ -1515,5 +1559,5 @@ Re_from_r(0.18, gamma_mean=4.7, gamma_sd=2.9) # from fit Moritz Gerstung for Ger
 # 2.1/6=35% of the population susceptible to BQ.1.1
 gc()
 
-save.image("~/Github/LineageExplorer/LineageExplorer/environment_07_11_2022.RData")
+save.image("~/Github/LineageExplorer/LineageExplorer/environment_13_11_2022.RData")
 
