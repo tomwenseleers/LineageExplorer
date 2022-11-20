@@ -2,7 +2,7 @@
 # DATA: GISAID & COG-UK
 
 # T. Wenseleers, RBDmutations lineage assignments added by Rodrigo Quiroga
-# last update 15 NOVEMBER 2022
+# last update 19 NOVEMBER 2022
 
 # note: script below is fairly memory hungry - best to run this on workstation 
 # with 64 Gb RAM - it runs quite fast though - just ca 30 mins including
@@ -34,6 +34,7 @@ library(marginaleffects)
 pacman::p_load_gh("Wytamma/GISAIDR", 
                   "melff/mclogit/pkg", "rvlenth/emmeans",
                   "epiforecasts/covidregionaldata")
+library(GISAIDR)
 
 # load some utility functions
 source(".//download_GISAID.R") # load function to download GISAID metadata download package (lacking records from last few days)
@@ -590,12 +591,12 @@ data_agbyweekcountry1$variant = relevel(data_agbyweekcountry1$variant, ref=basel
 
 set.seed(1)
 gc()
-system.time(fit <- nnet::multinom(variant ~ ns(DATE_NUM, df=3)+ns(DATE_NUM, df=3):continent+country, 
+system.time(fit <- nnet::multinom(variant ~ ns(DATE_NUM, df=2)+ns(DATE_NUM, df=2):continent+country, 
                                        weights=count, 
                                        data=data_agbyweekcountry1, 
                                        maxit=10000, MaxNWts=100000)) # 127s, longer if you use all GISAID+COGUK data
 # syntax of model to put on plot legend
-model = "variant ~ ns(date, df=3)+ns(date, df=3):continent+country" 
+model = "variant ~ ns(date, df=2)+ns(date, df=2):continent+country" 
 
 # TO DO: change to mclogit::mblogit fit (can take into account overdispersion &
 # latest github version should run - previously it was giving fitting errors) or
@@ -1559,5 +1560,5 @@ Re_from_r(0.18, gamma_mean=4.7, gamma_sd=2.9) # from fit Moritz Gerstung for Ger
 # 2.1/6=35% of the population susceptible to BQ.1.1
 gc()
 
-save.image("~/Github/LineageExplorer/LineageExplorer/environment_13_11_2022.RData")
+save.image("~/Github/LineageExplorer/LineageExplorer/environment_19_11_2022.RData")
 
