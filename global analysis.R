@@ -2,7 +2,7 @@
 # DATA: GISAID & COG-UK
 
 # T. Wenseleers, RBDmutations lineage assignments added by Rodrigo Quiroga
-# last update 19 NOVEMBER 2022
+# last update 30 NOVEMBER 2022
 
 # note: script below is fairly memory hungry - best to run this on workstation 
 # with 64 Gb RAM - it runs quite fast though - just ca 30 mins including
@@ -84,6 +84,7 @@ GISAID_max_submdate
 # https://github.com/Wytamma/GISAIDR/issues/27
 # https://github.com/Wytamma/GISAIDR/issues/26
 # so added extra function in download_GSIAD_records.R that fixes this
+library(GISAIDR)
 credentials = login(username = Sys.getenv("GISAIDR_USERNAME"),
                     password = Sys.getenv("GISAIDR_PASSWORD"),
                     database = "EpiCoV")
@@ -623,6 +624,7 @@ saveRDS(fit_best, file="~/Github/LineageExplorer/LineageExplorer/fits/multinom_f
 # CALCULATE GROWTH RATE ADVANTAGE OVER BASELINE REFERENCE LEVEL BA.5.2 ####
 
 # with new faster marginaleffects code
+library(marginaleffects)
 system.time(meffects <- marginaleffects(fit_best, 
                                                type = "link", # = additive log-ratio = growth rate advantage relative to BA.5.2
                                                variables = c("DATE_NUM"),
@@ -749,10 +751,16 @@ date.to = today_num+extrapolate
 
 # multinomial model predictions by country with CIs calculated using margineffects::predictions
 
-predgrid = expand.grid(list(DATE_NUM=as.numeric(seq(date.from, date.to)),
+step=2
+predgrid = expand.grid(list(DATE_NUM=as.numeric(seq(date.from, date.to, by=step)),
                             country=unique(data_agbyweekcountry1$country)))
 predgrid$continent = data_agbyweekcountry1$continent[match(predgrid$country,
                                                                 data_agbyweekcountry1$country)]
+fullpredgrid = expand.grid(list(DATE_NUM=as.numeric(seq(date.from, date.to)),
+                            country=unique(data_agbyweekcountry1$country)))
+fullpredgrid$continent = data_agbyweekcountry1$continent[match(fullpredgrid$country,
+                                                           data_agbyweekcountry1$country)]
+
 # note: now using Delta method on response scale, better to
 # calculate CIs as in Effects package on link scale (type="link") or
 # on isometric logratio scale (type="ilr") & then backtransform
@@ -799,9 +807,10 @@ write_csv(fit_preds, file=file.path(plotdir, "GISAID fitted lineage frequencies 
 
 # PLOT MULTINOMIAL FIT ON LOGIT SCALE ####
 
+ncls = round(sqrt(length(sel_countries)))
 pl = qplot(data=fit_preds[fit_preds$variant!="Other",], 
                          x=date, y=predicted, geom="blank") +
-  facet_wrap(~ country) +
+  facet_wrap(~ country, ncol=ncls) +
   geom_ribbon(aes(y=predicted, ymin=conf.low, ymax=conf.high, colour=NULL,
                   fill=variant), alpha=I(0.3)) +
   geom_line(aes(colour=variant), alpha=I(1)) +
@@ -835,7 +844,8 @@ pl = qplot(data=fit_preds[fit_preds$variant!="Other",],
 pl
 
 ggsave(file=file.path(plotdir, "predicted lineage freqs_logit scale.png"), 
-       width=4*sqrt(length(sel_countries)), height=(4/2)*sqrt(length(sel_countries)))
+       width=4*ncls, 
+       height=(4/1.2)*ncls)
 
 # zoomed in on last 6 months
 pl = qplot(data=fit_preds, 
@@ -875,7 +885,8 @@ pl = qplot(data=fit_preds,
 pl
 
 ggsave(file=file.path(plotdir, "predicted lineage freqs_last6months_logit scale.png"), 
-       width=4*sqrt(length(sel_countries)), height=(4/2)*sqrt(length(sel_countries)))
+       width=4*ncls, 
+       height=(4/1.2)*ncls)
 
 
 # plot just for Belgium
@@ -998,6 +1009,46 @@ pl = qplot(data=fit_preds[fit_preds$variant!="Other"&fit_preds$country=="France"
 pl
 
 ggsave(file=file.path(plotdir, "predicted lineage freqs_FRANCE_logit scale.png"), width=12, height=5)
+
+# plot just for Germany
+pl = qplot(data=fit_preds[fit_preds$variant!="Other"&fit_preds$country=="Germany",], 
+           x=date, y=predicted, geom="blank") +
+  # facet_wrap(~ country) +
+  geom_ribbon(aes(y=predicted, ymin=conf.low, ymax=conf.high, colour=NULL,
+                  fill=variant), alpha=I(0.3)) +
+  geom_line(aes(colour=variant), alpha=I(1)) +
+  ylab("Share among newly diagnosed infections (%)") +
+  theme_hc() + xlab("") +
+  ggtitle("SARS-CoV2 LINEAGE FREQUENCIES IN GERMANY",
+          subtitle=paste0("GISAID data up to ",today, " plus COG-UK data, multinomial fit ", model, ",\nonly Germany shown here")) +
+  xaxis +  
+  scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
+                      labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
+  scale_fill_manual("variant", values=tail(as.vector(lineage_cols),-1)) +
+  scale_colour_manual("variant", values=tail(as.vector(lineage_cols),-1)) +
+  geom_point(data=data_agbyweekcountry1[data_agbyweekcountry1$variant!="Other"&
+                                          data_agbyweekcountry1$country=="Germany",],
+             aes(x=collection_date, y=prop, size=total,
+                 colour=variant
+             ),
+             alpha=I(1)) +
+  scale_size_continuous("total number\nsequenced", trans="sqrt",
+                        range=c(0.5, 4), limits=c(1,max(data_agbyweekcountry1$total)), 
+                        breaks=c(10,100,1000, 10000), guide=F) +
+  # guides(fill=FALSE) +
+  # guides(colour=FALSE) +
+  theme(legend.position = "bottom") +
+  xlab("Collection date (start of week)") +
+  coord_cartesian(xlim=c(as.Date("2021-01-01"),NA), 
+                  ylim=c(0.0001, 0.99901), expand=0) +
+  labs(tag = tag) +
+  theme(plot.tag.position = "bottomright",
+        plot.tag = element_text(vjust = 1, hjust = 1, size=8)) # +
+# theme(plot.title=element_text(size=25)) +
+# theme(plot.subtitle=element_text(size=20))
+pl
+
+ggsave(file=file.path(plotdir, "predicted lineage freqs_GERMANY_logit scale.png"), width=12, height=5)
 
 
 # plot just for South Africa
@@ -1216,7 +1267,7 @@ ggsave(file=file.path(plotdir, "predicted lineage freqs_Singapore_logit scale.pn
 # plot predicted values as Muller plot
 pl = ggplot(data=fit_preds[fit_preds$date>=as.Date("2021-01-01"),], 
                     aes(x=date, y=predicted, group=variant)) +
-  facet_wrap(~ country, ncol=5) +
+  facet_wrap(~ country, ncol=ncls) +
   geom_col(aes(width=I(10), colour=NULL, fill=variant, group=variant), position="fill") +
   scale_fill_manual("", values=lineage_cols) +
   xaxis +
@@ -1235,11 +1286,11 @@ pl = ggplot(data=fit_preds[fit_preds$date>=as.Date("2021-01-01"),],
 pl
 
 ggsave(file=file.path(plotdir, "muller plot.png"), 
-       width=4*sqrt(length(sel_countries)), height=(4/2)*sqrt(length(sel_countries)))
+       width=4*ncls, 
+       height=(4/1.2)*ncls)
 
 
 # MAP VARIANT SHARE ONTO CASE NUMBERS ####
-
 
 country_data = get_national_data(countries=sel_countries,
                                  source="who",
@@ -1283,7 +1334,8 @@ fit_preds$cases[fit_preds$predicted<0.001] = NA
 fit_preds_sel = fit_preds
 # fit_preds_sel = fit_preds_sel[fit_preds_sel$country %in% sel_countries_fig,]
 fit_preds_sel = fit_preds_sel[fit_preds_sel$country %in% sel_countries,]
-fit_preds_sel = fit_preds_sel[fit_preds_sel$country!="Hong Kong",]
+fit_preds_sel = fit_preds_sel[!fit_preds_sel$country %in%
+                                c("Hong Kong","Czech Republic","Reunion"),]
 fit_preds_sel$country = factor(fit_preds_sel$country)
 
 fit_preds2 = fit_preds_sel
@@ -1294,7 +1346,7 @@ fit_preds2$variant = factor(fit_preds2$variant, levels=levels_VARIANTS)
 
 ggplot(data=fit_preds2, 
        aes(x=date, y=cases)) + 
-  facet_wrap(~ country, scale="free") +
+  facet_wrap(~ country, scale="free", ncol=ncls) +
   geom_line(aes(lwd=I(1), colour=variant, group=variant)) +
   geom_line(data=fit_preds2, aes(x=date, y=totnewcases_smoothed, lwd=I(1.5)), 
             colour=alpha("black",0.3)) +
@@ -1313,11 +1365,12 @@ ggplot(data=fit_preds2,
   theme(plot.subtitle=element_text(size=20)) 
 # coord_cartesian(xlim=c(as.Date("2021-01-01"),max(fit_india_multi_predsbystate2$collection_date)-20))
 
-ggsave(file=file.path(plotdir,"confirmed cases multinomial fit_by country_log10 scale.png"), width=19, height=8)
+ggsave(file=file.path(plotdir,"confirmed cases multinomial fit_by country_log10 scale.png"), 
+       width=4*ncls, height=4*ncls/1.2)
 
 ggplot(data=fit_preds2, 
        aes(x=date, y=cases)) + 
-  facet_wrap(~ country, scale="free") +
+  facet_wrap(~ country, scale="free", ncol=ncls) +
   geom_line(aes(lwd=I(1), colour=variant, group=variant)) +
   geom_line(data=fit_preds2, aes(x=date, y=totnewcases_smoothed, lwd=I(1.5)), 
             colour=alpha("black",0.3)) +
@@ -1336,12 +1389,13 @@ ggplot(data=fit_preds2,
   theme(plot.subtitle=element_text(size=20)) +
   coord_cartesian(xlim=c(as.Date("2022-01-01"),NA))
 
-ggsave(file=file.path(plotdir,"confirmed cases multinomial fit_by country_log10 scale_zoomed.png"), width=19, height=8)
+ggsave(file=file.path(plotdir,"confirmed cases multinomial fit_by country_log10 scale_zoomed.png"), 
+       width=4*ncls, height=4*ncls/1.2)
 
 # stacked area chart
 ggplot(data=fit_preds2, 
        aes(x=date, y=cases, group=variant)) + 
-  facet_wrap(~ country, scale="free_y") +
+  facet_wrap(~ country, scale="free_y", ncol=ncls) +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), 
             position="stack") +
   scale_fill_manual("", values=lineage_cols) +
@@ -1359,7 +1413,34 @@ ggplot(data=fit_preds2,
   theme(plot.subtitle=element_text(size=20)) +
   coord_cartesian(ylim=c(1,NA), xlim=c(as.Date("2020-01-01"),NA))
 
-ggsave(file=file.path(plotdir,"\\confirmed cases multinomial fit_stacked area plot by country.png"), width=19, height=8)
+ggsave(file=file.path(plotdir,"\\confirmed cases multinomial fit_stacked area plot by country.png"), 
+       width=4*ncls, height=4*ncls/1.2)
+
+
+# stacked area chart, some selected countries
+ggplot(data=fit_preds2[fit_preds2$country %in% 
+                         c("France", "Belgium", "Denmark", "Germany"),], 
+       aes(x=date, y=cases, group=variant)) + 
+  facet_wrap(~ country, scale="free_y", ncol=2) +
+  geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), 
+            position="stack") +
+  scale_fill_manual("", values=lineage_cols) +
+  # annotate("rect", xmin=max(GISAID_india$DATE_NUM)+1, 
+  #          xmax=as.Date("2021-05-31"), ymin=0, ymax=1, alpha=0.3, fill="white") + # extrapolated part
+  xaxis +
+  # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
+  theme_hc() + theme(legend.position="right", 
+                     axis.title.x=element_blank()) + 
+  ylab("New confirmed cases per day") +
+  ggtitle("NEW CONFIRMED SARS-CoV2 CASES BY VARIANT",
+          subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, " plus COG-UK data\nand multinomial fit ", model, ",\na few selected countries shown")) +
+  # coord_cartesian(xlim=c(as.Date("2021-06-01"),NA))
+  theme(plot.title=element_text(size=25)) +
+  theme(plot.subtitle=element_text(size=20)) +
+  coord_cartesian(ylim=c(1,NA), xlim=c(as.Date("2020-01-01"),NA))
+
+ggsave(file=file.path(plotdir,"\\confirmed cases multinomial fit_stacked area plot by country_sel countries.png"), 
+       width=6*2, height=6*2/2)
 
 
 # stacked area chart, just for Belgium
@@ -1508,7 +1589,7 @@ ggsave(file=file.path(plotdir,"\\confirmed cases multinomial fit_stacked area pl
 # zoomed in since june 2022
 ggplot(data=fit_preds2[fit_preds2$date>=as.Date("2022-06-01"),], 
        aes(x=date, y=cases, group=variant)) + 
-  facet_wrap(~ country, scale="free_y") +
+  facet_wrap(~ country, scale="free_y", ncol=ncls) +
   geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), 
             position="stack") +
   scale_fill_manual("", values=lineage_cols[-c(2,3,4,5,6,7,8)]) + # TO DO: determine dropped levels automatically
@@ -1526,7 +1607,8 @@ ggplot(data=fit_preds2[fit_preds2$date>=as.Date("2022-06-01"),],
   theme(plot.subtitle=element_text(size=20)) +
   coord_cartesian(ylim=c(1,NA), xlim=c(as.Date("2022-06-01"),NA))
 
-ggsave(file=file.path(plotdir,"\\confirmed cases multinomial fit_stacked area plot by country_zoomed.png"), width=19, height=8)
+ggsave(file=file.path(plotdir,"\\confirmed cases multinomial fit_stacked area plot by country_zoomed.png"), 
+       width=4*ncls, height=4*ncls/1.2)
 
 # TO DO : get IHME infection estimates from links below,
 # convolve these to cases & map them onto variant frequencies
@@ -1560,5 +1642,5 @@ Re_from_r(0.18, gamma_mean=4.7, gamma_sd=2.9) # from fit Moritz Gerstung for Ger
 # 2.1/6=35% of the population susceptible to BQ.1.1
 gc()
 
-save.image("~/Github/LineageExplorer/LineageExplorer/environment_19_11_2022.RData")
+save.image("~/Github/LineageExplorer/LineageExplorer/environment_02_12_2022.RData")
 
