@@ -209,6 +209,8 @@ length(unique(data$variant)) == length(levels_VARIANTS) # correct
 # note: in India BA.2.38 & BA.2.38.1 caused an infection wave in some states - hence separated out above
 # B.1.177+B.1.160+B.1.221 were behind the 2020 wave in fall in Europe & each had one spike mutations & a small growth rate advantage relative to predominant B.1.1
 
+# TO DO: maybe also add XBF, XBK and BR.2.1 - the main contenders in Europe besides CH.1.1 and XBB.1.5*
+
 # earliest realistic dates were taken from
 # https://raw.githubusercontent.com/nextstrain/ncov/master/defaults/clade_emergence_dates.tsv
 
