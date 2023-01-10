@@ -57,6 +57,9 @@ download_covSpectrum = function(source="GISAID",  # or "NCBI"
   return(data) 
 }
 
+# e.g. to get country breakdown over past month
+# download_covSpectrum(date_from="2022-12-01", country="Sweden", bydate=F) %>% arrange(count)
+
 
 # 2. function to check countries where at least minseqs of a variant have been detected over the past lastdays days ####
 countrieswithvariant = function (target_variant="XBB.1.5*", 
@@ -87,6 +90,8 @@ countrieswithvariant = function (target_variant="XBB.1.5*",
              arrange(desc(prop_variant))
   return(data)
 }
+
+
 
 
 
