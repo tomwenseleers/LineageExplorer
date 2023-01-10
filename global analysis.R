@@ -151,9 +151,15 @@ levels_VARIANTS = c("Other", "B.1.177 (EU1)", "B.1.160 (EU2)",
                     "Omicron (BA.2.38*)", 
                     "Omicron (BA.4*)", "Omicron (BA.4.6*)", 
                     "Omicron (BA.5*)", "Omicron (BA.5.2*)", "Omicron (BF.7*)", 
-                    "Omicron (BA.2.76*)", "Omicron (BA.2.75*)", 
-                    "Omicron (BQ.1*)", "Omicron (XAY.2*)",
-                    "Omicron (CH.1.1*)", "Omicron (XBB*)", 
+                    "Omicron (BA.2.76*)", 
+                    "Omicron (BA.2.75*)", 
+                    "Omicron (BQ.1*)", 
+                    "Omicron (BR.2.1*)",
+                    "Omicron (CH.1.1*)", 
+                    "Omicron (XAY.2*)",
+                    "Omicron (XBF*)",
+                    # "Omicron (XBK*)", # TO DO XBK* = BM.1.1* (Nextclade) + C1627T + S:F486P = https://cov-spectrum.org/explore/World/AllSamples/Past6M/variants?aaMutations=S%3AF486P&nucMutations=C1627T&nextcladePangoLineage=BM.1.1*
+                    "Omicron (XBB*)", 
                     "Omicron (XBB.1.5*)"
 )
 target_variant = "Omicron (XBB.1.5*)"
@@ -163,6 +169,8 @@ baseline = "Omicron (BQ.1*)"
 data$variant <- case_when(
   linplus("XBB.1.5") ~ "Omicron (XBB.1.5*)",
   linplus("XBB") ~ "Omicron (XBB*)",
+  linplus("BR.2.1") ~ "Omicron (BR.2.1*)",
+  linplus("XBF") ~ "Omicron (XBF*)",
   linplus("CH.1.1") ~ "Omicron (CH.1.1*)",
   linplus("XAY.2") ~ "Omicron (XAY.2*)",
   linplus("BQ.1")&
@@ -209,8 +217,6 @@ length(unique(data$variant)) == length(levels_VARIANTS) # correct
 # note: in India BA.2.38 & BA.2.38.1 caused an infection wave in some states - hence separated out above
 # B.1.177+B.1.160+B.1.221 were behind the 2020 wave in fall in Europe & each had one spike mutations & a small growth rate advantage relative to predominant B.1.1
 
-# TO DO: maybe also add XBF, XBK and BR.2.1 - the main contenders in Europe besides CH.1.1 and XBB.1.5*
-
 # earliest realistic dates were taken from
 # https://raw.githubusercontent.com/nextstrain/ncov/master/defaults/clade_emergence_dates.tsv
 
@@ -236,9 +242,11 @@ lineage_cols = case_when(
     levels_VARIANTS=="Omicron (BA.2.76*)" ~ "magenta4",
     levels_VARIANTS=="Omicron (BA.2.75*)" ~ "magenta",
     levels_VARIANTS=="Omicron (BQ.1*)" ~ "orange",
-    levels_VARIANTS=="Omicron (XAY.2*)" ~ "yellow2",
+    levels_VARIANTS=="Omicron (BR.2.1*)" ~ "orange3",
     levels_VARIANTS=="Omicron (CH.1.1*)" ~ "yellow3",  
-    levels_VARIANTS=="Omicron (XBB*)" ~ "cyan3",
+    levels_VARIANTS=="Omicron (XAY.2*)" ~ "cyan4",
+    levels_VARIANTS=="Omicron (XBF*)" ~ "cyan3",
+    levels_VARIANTS=="Omicron (XBB*)" ~ "cyan2",
     levels_VARIANTS=="Omicron (XBB.1.5*)" ~ "cyan"
   )
 names(lineage_cols) = levels_VARIANTS
@@ -377,7 +385,7 @@ system.time(fit_best$Hessian <- fastmultinomHess(fit_best, model.matrix(fit_best
 system.time(fit_best$vcov <- vcov(fit_best))  # 6s
 gc()
 
-save.image("~/Github/LineageExplorer/environment_2023_9_1.RData")x
+save.image("~/Github/LineageExplorer/environment_2023_10_1.RData")
 # load("~/Github/LineageExplorer/environment_2023_9_1.RData")
 
 # save multinom fit
@@ -385,8 +393,6 @@ saveRDS(fit_best, file="~/Github/LineageExplorer/LineageExplorer/fits/multinom_f
 
 
 # CALCULATE GROWTH RATE ADVANTAGE OVER BASELINE REFERENCE LEVEL BQ.1* TODAY ####
-
-## TO DO still a bug here with groth rate advantages coming out negative - need to fix this
 
 # with new faster marginaleffects code
 library(marginaleffects)
@@ -470,6 +476,11 @@ tbl = as.data.frame(table(data[data$variant %in% sel_variants,"region"],
 colnames(tbl) = c("region", "variant", "count")
 meffects_sel2$count = tbl$count[match(interaction(meffects_sel2$region, meffects_sel2$group),
                                       interaction(tbl$region, tbl$variant))]
+reg = "North America"
+meffects_sel2$group = factor(meffects_sel2$group, 
+                             levels=meffects_sel2[meffects_sel2$region==reg,"group"][order(meffects_sel2[meffects_sel2$region==reg,"dydx"],
+                                                                                           decreasing=TRUE)])
+
 # retain only estimates with total count > minvariantseqs per region/continet
 minvariantseqs = 50
 meffects_sel2 = meffects_sel2[meffects_sel2$count>=minvariantseqs, ]
@@ -508,6 +519,23 @@ qplot(data=meffects_sel2[meffects_sel2$region==reg,],
 
 ggsave(file=file.path(plotdir,"growth rate advantage VOCs_NAmerica.png"), width=7, height=5)
 
+reg = "Europe"
+qplot(data=meffects_sel2[meffects_sel2$region==reg,], 
+      x=group, y=dydx*100, ymin=conf.low*100, ymax=conf.high*100, fill=group, geom="col", 
+      width=I(0.7)) +
+  geom_linerange(aes(lwd=I(0.4))) + ylab("Growth rate advantage\nrelative to BQ.1* (% per day)") +
+  scale_fill_manual(values=cols) +
+  theme(legend.position="none") + xlab("") +
+  ggtitle(paste0("GROWTH RATE ADVANTAGE OF SARS-CoV2 VARIANTS\nIN ", toupper(reg)),
+          subtitle=paste0("based on multinomial fit ", model, "\nGISAID data") 
+  ) +
+  labs(tag = tag) +
+  theme(plot.tag.position = "bottomright",
+        plot.tag = element_text(vjust = 1, hjust = 1, size=8)) +
+  theme(axis.text.x = element_text(angle = 45, hjust=1))
+
+ggsave(file=file.path(plotdir,"growth rate advantage VOCs_Europe.png"), width=7, height=5)
+
 
 
 # PLOT MULTINOMIAL FIT ####
@@ -518,7 +546,7 @@ date.to = today_num+extrapolate
 
 # multinomial model predictions by country/divisions with CIs calculated using margineffects::predictions
 
-step=3
+step=4
 predgrid = expand.grid(list(date_num=as.numeric(seq(date.from, date.to, by=step)),
                             division=unique(data_agbyweekcountry1$division)))
 predgrid$region = data_agbyweekcountry1$region[match(predgrid$division,
