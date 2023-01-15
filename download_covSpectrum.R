@@ -59,7 +59,16 @@ download_covSpectrum = function(source="GISAID",  # or "NCBI"
 
 # e.g. to get country breakdown over past month
 # download_covSpectrum(date_from="2022-12-01", country="Sweden", bydate=F) %>% arrange(count)
-
+# breakdown for China
+# dat = download_covSpectrum(date_from="2022-12-13", country="China", bydate=F) %>% arrange(count)
+# dat$total = sum(dat$count)
+# dat$prop = dat$count/dat$total
+# dat$nextcladePangoLineage[dat$prop<0.02] = "Other"
+# dat = dat %>% group_by(nextcladePangoLineage) %>% summarise(count=sum(count))
+# dat = dat[order(dat$count),]
+# pie(dat$count, labels=dat$nextcladePangoLineage, col = rainbow(7)[sample(1:7)])
+# library(export)
+# graph2png(file="pie_breakdown_china.png", width=6, height=6)
 
 # 2. function to check countries where at least minseqs of a variant have been detected over the past lastdays days ####
 countrieswithvariant = function (target_variant="XBB.1.5*", 

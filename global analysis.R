@@ -2,7 +2,7 @@
 # DATA: GISAID OR NCBI DATA, ACCESSED VIA COVSPECTRUM API ####
 
 # T. Wenseleers
-# last update 8 JANUARY 2023
+# last update 15 JANUARY 2023
 
 # for similar analysis see https://nbviewer.org/github/gerstung-lab/SARS-CoV-2-International/blob/main/genomicsurveillance-int.ipynb#Check-some-fast-growing-lineages
 
@@ -31,7 +31,7 @@ if (file.exists("..//set_COVSPECTRUM_credentials.R")) source("..//set_COVSPECTRU
 # load (& if needed install) required packages & load some utility function ###
 # install.packages("pacman")
 library(pacman)
-pacman::p_load(devtools, nnet, splines, mclogit, readr, ggplot2, ggthemes, scales,
+pacman::p_load(devtools, nnet, splines, pracma, readr, ggplot2, ggthemes, scales,
                archive, dplyr, stringr, lubridate, tidyr, countrycode,
                memoise, readxl, covidregionaldata, tidyquant, data.table, R.utils,
                locatexec, pals, inspectdf, zoo, RSelenium, jsonlite)
@@ -39,7 +39,8 @@ Sys.setenv(GITHUB_PAT = "")
 if (!require(marginaleffects)) devtools::install_github("tomwenseleers/marginaleffects")
 require(marginaleffects)
 pacman::p_load_gh("melff/mclogit/pkg", "rvlenth/emmeans",
-                  "epiforecasts/covidregionaldata")
+                  "epiforecasts/covidregionaldata",
+                  "melff/mclogit/pkg")
 
 # load some utility functions to get aggregated NextcladePangolin lineage frequencies from covSPECTRUM
 source(".//download_covSpectrum.R") # utility function download_covSpectrum to download data from covSpectrum
@@ -61,7 +62,7 @@ toplist
 countries = unique(toplist$country)
 
 # define countries for which we would like to divide by division (state/province) ####
-countries_bydivision = c("USA", "India") 
+countries_bydivision = c("USA", "United Kingdom") # could be good for India too, but names need some fixing 
 
 # download variant data ####
 date_from = "2019-12-01"
@@ -88,10 +89,29 @@ sort(unique(data_percountry_perdivision$division))
 data_percountry_perdivision$division = gsub("Stockton", "California", data_percountry_perdivision$division, fixed=T)
 data_percountry_perdivision$division = gsub("Washington DC", "Washington", data_percountry_perdivision$division, fixed=T)
 data_percountry_perdivision = data_percountry_perdivision[!data_percountry_perdivision$division %in% 
-                                                            c(NA, "Un", "USA", "Stockton", "American Samoa",
+                                                            c(NA, "Un", "un", "USA", "Stockton", "American Samoa",
                                                               "Guam", "Northern Mariana Islands",
-                                                              "Puerto Rico", "Virgin Islands"),]
-sort(unique(data_percountry_perdivision$division))
+                                                              "Puerto Rico", "Virgin Islands",
+                                                              "Anguilla","Birmingham",
+                                                              "British Virgin Islands",
+                                                              "Cayman Islands",
+                                                              "Gibraltar",
+                                                              "Montserrat",
+                                                              "Turks and Caicos Islands"),]
+
+
+# aggregate US states into Northeast, South, West, Midwest ?
+aggregate_divisions = TRUE  
+keyval= read.csv("./data/division_aggregation.csv") 
+
+sort(unique(data_percountry_perdivision$division))[!sort(unique(data_percountry_perdivision$division)) %in% keyval$division] # OK
+
+if (aggregate_divisions) { 
+  data_percountry_perdivision = data_percountry_perdivision %>% 
+                                     left_join(keyval) %>%
+                                     mutate(division = value) %>%
+                                     select(-value)
+} 
 
 data = bind_rows(data_percountry, data_percountry_perdivision)
 
@@ -110,7 +130,7 @@ tag = paste("@TWenseleers\n",today)
 
 
 # define main variant lineages ####
-# I need to code this in a generic way as in 
+# I need to code this in a more generic way as in 
 # https://nbviewer.org/github/gerstung-lab/SARS-CoV-2-International/blob/main/genomicsurveillance-int.ipynb#Check-some-fast-growing-lineages
 # lineage_aliases = fromJSON("https://cov-spectrum.org/api/v2/resource/pango-lineage-alias")
 
@@ -156,7 +176,7 @@ levels_VARIANTS = c("Other", "B.1.177 (EU1)", "B.1.160 (EU2)",
                     "Omicron (BQ.1*)", 
                     "Omicron (BR.2.1*)",
                     "Omicron (CH.1.1*)", 
-                    "Omicron (XAY.2*)",
+                    "Deltacron (XAY.2*)",
                     "Omicron (XBF*)",
                     # "Omicron (XBK*)", # TO DO XBK* = BM.1.1* (Nextclade) + C1627T + S:F486P = https://cov-spectrum.org/explore/World/AllSamples/Past6M/variants?aaMutations=S%3AF486P&nucMutations=C1627T&nextcladePangoLineage=BM.1.1*
                     "Omicron (XBB*)", 
@@ -172,7 +192,7 @@ data$variant <- case_when(
   linplus("BR.2.1") ~ "Omicron (BR.2.1*)",
   linplus("XBF") ~ "Omicron (XBF*)",
   linplus("CH.1.1") ~ "Omicron (CH.1.1*)",
-  linplus("XAY.2") ~ "Omicron (XAY.2*)",
+  linplus("XAY.2") ~ "Deltacron (XAY.2*)",
   linplus("BQ.1")&
     datefrom("2022-02-01") ~ "Omicron (BQ.1*)",
   linplus("BA.2.75")&
@@ -244,7 +264,7 @@ lineage_cols = case_when(
     levels_VARIANTS=="Omicron (BQ.1*)" ~ "orange",
     levels_VARIANTS=="Omicron (BR.2.1*)" ~ "orange3",
     levels_VARIANTS=="Omicron (CH.1.1*)" ~ "yellow3",  
-    levels_VARIANTS=="Omicron (XAY.2*)" ~ "cyan4",
+    levels_VARIANTS=="Deltacron (XAY.2*)" ~ "cyan4",
     levels_VARIANTS=="Omicron (XBF*)" ~ "cyan3",
     levels_VARIANTS=="Omicron (XBB*)" ~ "cyan2",
     levels_VARIANTS=="Omicron (XBB.1.5*)" ~ "cyan"
@@ -293,6 +313,8 @@ levels_regions = c("Asia","North America","Europe","Africa","South America","Oce
 data$region = factor(data$region, levels=levels_regions)
 data$region = droplevels(data$region)
 
+table(data$region, data$variant)
+table(data$division, data$variant)
 
 
 # 2. COMBINED GLOBAL ANALYSIS USING MULTINOMIAL SPLINE FITS ####
@@ -366,13 +388,73 @@ gc()
 system.time(fit <- nnet::multinom(variant ~ ns(date_num, df=2)+ns(date_num, df=2):region+division, 
                                        weights=count, 
                                        data=data_agbyweekcountry1, 
-                                       maxit=10000, MaxNWts=100000)) # iter 2680, 649s
+                                       maxit=10000, MaxNWts=100000)) # iter 1530, 134s
 # syntax of model to put on plot legend
 model = "variant ~ ns(date, df=2)+ns(date, df=2):region+division" 
 
 # TO DO: change to mclogit::mblogit fit (can take into account overdispersion &
-# latest github version should run - previously it was giving fitting errors) or
-# the MGLM package - but that one also gave fitting errors
+# latest github version now runs OK) or
+# the MGLM package (MGLMreg or with regularisation MGLMsparsereg, both allow for overdispersion with
+# dist="DM" or dist="NegMN") - but that one gave fitting errors
+
+# # NOTE
+# # mblogit & MGLM syntax shown on small data subset
+# datsubs = data_agbyweekcountry1[(data_agbyweekcountry1$variant %in% c("Omicron (BQ.1*)", 
+#                                                                       "Omicron (XBB.1.5*)",
+#                                                                       "Omicron (XBB*)")) &
+#                                   data_agbyweekcountry1$date>=as.Date("2022-08-01"),]
+# datsubs$variant = droplevels(datsubs$variant)
+# datsubs$region = droplevels(datsubs$region)
+# datsubs$division = droplevels(datsubs$division)
+# saveRDS(datsubs, file="../data.rds")
+# datsubs = readRDS(file="../data.rds")
+# 
+# # example dataset
+# download.file("https://www.dropbox.com/s/o6iu51wu7x90omd/data.rds?dl=1", 
+#               "../data.rds", 
+#               method = "auto", mode="wb")
+# datsubs = readRDS(file = "../data.rds")
+# 
+# # first nnet::multinom : runs OK
+# library(nnet)
+# fit_nnet <- nnet::multinom(variant ~ ns(date_num, df=2) + ns(date_num, df=2):region + division, 
+#                            weights = count, 
+#                            data = datsubs, 
+#                            maxit = 10000, MaxNWts = 100000)
+# # hist(coef(fit_nnet))
+# # range(coef(fit_nnet))
+# 
+# # syntax for mblogit multinomial fit with overdispersion is
+# devtools::install_github("melff/mclogit",subdir="pkg")
+# library(mclogit)
+# fit_mblogit <- mblogit(formula=variant ~ ns(date_num, df=2) + ns(date_num, df=2):region + division, # runs OK too
+#                                                weights=count,
+#                                                data=datsubs,
+#                                                from.table=TRUE, 
+#                                                dispersion=TRUE, # fit overdispersion?
+#                                                control=mclogit.control(maxit=10000))
+# # hist(coef(fit_mblogit))
+# # range(coef(fit_mblogit))
+# 
+# # syntax for MGLM should be the following (I think), but returns an error
+# library(MGLM)
+# datsubs_wide <- datsubs %>%
+#   pivot_wider(names_from = variant,
+#               values_from = count) %>%
+#   replace(is.na(.), 0)
+# Y <- as.matrix(datsubs_wide %>% select(tail(names(.), length(unique(datsubs$variant)) )))
+# Y <- sweep(Y, 1, FUN="/", rowSums(Y))
+# X <- model.matrix(formula(~ns(date_num, df=2) + ns(date_num, df=2):region + division), data=datsubs_wide)
+# fit_MGLM <- MGLM::MGLMreg(Y ~ X, 
+#                      dist = "MN", # or DMN for Dirichlet Multinomial or NegMN for Negative Multinomial, see also MGLMsparsereg
+#                      weight = datsubs_wide$count,
+#                      maxiters = 10000)
+# # gives error
+# # Error in if (is.nan(ll.Newton) || ll.Newton >= 0) { : 
+# # missing value where TRUE/FALSE needed
+# # In addition: There were 41 warnings (use warnings() to see them)
+
+
 
 # model to use below - I just fitted 1 possible model now - one could vary df etc
 fit_best = fit
@@ -380,16 +462,16 @@ fit_best = fit
 # we calculate the Hessian using my own faster Rcpp Kronecker-product based function
 source(".//fastmultinomHess.R") # faster way to calculation Hessian of multinomial fits
 gc()
-system.time(fit_best$Hessian <- fastmultinomHess(fit_best, model.matrix(fit_best))) # 81s
+system.time(fit_best$Hessian <- fastmultinomHess(fit_best, model.matrix(fit_best))) # 7s
 # we add variance-covariance matrix as extra slot to be re-used later
-system.time(fit_best$vcov <- vcov(fit_best))  # 6s
+system.time(fit_best$vcov <- vcov(fit_best))  # 1s
 gc()
 
-save.image("~/Github/LineageExplorer/environment_2023_10_1.RData")
-# load("~/Github/LineageExplorer/environment_2023_9_1.RData")
+save.image("./environment_2023_01_15.RData")
+# load("./environment_2023_01_15.RData")
 
 # save multinom fit
-saveRDS(fit_best, file="~/Github/LineageExplorer/LineageExplorer/fits/multinom_fit.rds")
+saveRDS(fit_best, file="./fits/multinom_fit.rds")
 
 
 # CALCULATE GROWTH RATE ADVANTAGE OVER BASELINE REFERENCE LEVEL BQ.1* TODAY ####
@@ -402,7 +484,7 @@ system.time(meffects <- marginaleffects(fit_best,
                                                by = c("group"),
                                                vcov = fit_best$vcov,
                                                newdata = datagrid(date_num = today_num 
-                                               ))) # 30s
+                                               ))) # 15s
 
 # growth rate advantage compared to reference level BA.5.2 by region
 system.time(meffects_byregion <- marginaleffects(fit_best, 
@@ -412,7 +494,7 @@ system.time(meffects_byregion <- marginaleffects(fit_best,
                                                vcov = fit_best$vcov,
                                                newdata = datagrid(date_num = today_num,
                                                                   region = unique(data_agbyweekcountry1$region)
-                                               ))) # 30s
+                                               ))) # 15s
 
 # for all pairwise growth rate differences:
 # growth_differences = comparisons(
@@ -440,7 +522,7 @@ system.time(meffects_byregion <- marginaleffects(fit_best,
 # TO DO: order by selective advantage and then take top lastn
 lastn = 11 # last n variants to show - change in top n ?
 sel_variants = tail(levels_VARIANTS,lastn)
-sel_variants = sel_variants[!sel_variants %in% c(baseline, "Omicron (BA.4.6*)", "Omicron (BA.5*)")]
+sel_variants = sel_variants[!sel_variants %in% c(baseline, "Omicron (BA.4.6*)", "Omicron (BA.5*)", "Omicron (BA.2.76*)")]
 meffects_sel1 = meffects[meffects$group %in% sel_variants,]
 meffects_sel1$group = factor(meffects_sel1$group, levels=meffects_sel1$group[order(meffects_sel1$dydx, decreasing=T)])
 cols = colorRampPalette(c("red3", "blue3"))(length(levels(meffects_sel1$group)))
@@ -462,7 +544,7 @@ ggsave(file=file.path(plotdir,"growth rate advantage VOCs_overall.png"), width=7
 # plot of growth rate advantage of last X newest variants by continent
 # TO DO: order by selective advantage and then take top n
 sel_variants = tail(levels_VARIANTS,lastn)
-sel_variants = sel_variants[!sel_variants %in% c(baseline, "Omicron (BA.4.6*)", "Omicron (BA.5*)")]
+sel_variants = sel_variants[!sel_variants %in% c(baseline, "Omicron (BA.4.6*)", "Omicron (BA.5*)", "Omicron (BA.2.76*)")]
 sel_regions = unique(data_agbyweekcountry1$region)
 # sel_regions = sel_regions[!sel_regions %in% c("Africa")] # too little data
 meffects_sel2 = meffects_byregion[meffects_byregion$region %in% sel_regions,]
@@ -476,19 +558,20 @@ tbl = as.data.frame(table(data[data$variant %in% sel_variants,"region"],
 colnames(tbl) = c("region", "variant", "count")
 meffects_sel2$count = tbl$count[match(interaction(meffects_sel2$region, meffects_sel2$group),
                                       interaction(tbl$region, tbl$variant))]
-reg = "North America"
+reg = "Europe" # sort by growth advantages in this region
 meffects_sel2$group = factor(meffects_sel2$group, 
                              levels=meffects_sel2[meffects_sel2$region==reg,"group"][order(meffects_sel2[meffects_sel2$region==reg,"dydx"],
                                                                                            decreasing=TRUE)])
 
 # retain only estimates with total count > minvariantseqs per region/continet
-minvariantseqs = 50
+minvariantseqs = 30
 meffects_sel2 = meffects_sel2[meffects_sel2$count>=minvariantseqs, ]
+nregions = length(unique(meffects_sel2$region))
 
 qplot(data=meffects_sel2, 
       x=group, y=dydx*100, ymin=conf.low*100, ymax=conf.high*100, fill=group, geom="col", 
       width=I(0.7)) +
-  facet_wrap(~ region) +
+  facet_wrap(~ region, ncol=1) +
   geom_linerange(aes(lwd=I(0.4))) + ylab("Growth rate advantage\nrelative to BQ.1* (% per day)") +
   scale_fill_manual(values=cols) +
   theme(legend.position="none") + xlab("") +
@@ -500,7 +583,7 @@ qplot(data=meffects_sel2,
         plot.tag = element_text(vjust = 1, hjust = 1, size=8)) +
   theme(axis.text.x = element_text(angle = 45, hjust=1))
 
-ggsave(file=file.path(plotdir,"growth rate advantage VOCs_by continent.png"), width=7, height=5)
+ggsave(file=file.path(plotdir,"growth rate advantage VOCs_by continent.png"), width=7, height=2*nregions)
 
 reg = "North America"
 qplot(data=meffects_sel2[meffects_sel2$region==reg,], 
@@ -541,36 +624,38 @@ ggsave(file=file.path(plotdir,"growth rate advantage VOCs_Europe.png"), width=7,
 # PLOT MULTINOMIAL FIT ####
 
 extrapolate = 14
-date.from = as.numeric(as.Date("2020-01-01"))
+# date.from = as.numeric(as.Date("2020-01-01"))
+date.from = as.numeric(as.Date("2021-01-01"))
 date.to = today_num+extrapolate
 
 # multinomial model predictions by country/divisions with CIs calculated using margineffects::predictions
 
-step=4
+step=1
 predgrid = expand.grid(list(date_num=as.numeric(seq(date.from, date.to, by=step)),
                             division=unique(data_agbyweekcountry1$division)))
 predgrid$region = data_agbyweekcountry1$region[match(predgrid$division,
                                                      data_agbyweekcountry1$division)]
 
 
-# note: now using Delta method on response scale, better to
+# note: now using Delta method on response scale, better would be to
 # calculate CIs as in Effects package on link scale (type="link") or
-# on isometric logratio scale (type="ilr") & then backtransform
+# on even better on isometric logratio scale (type="ilr") & then backtransform
 # but still having some problems with over/underflows with
-# type="link" and type="ilr"=isometric logratio is a bit more hassle to backtransform
+# type="link" and type="ilr"=isometric logratio is a bit more hassle to backtransform 
+# (though working correctly)
 
 # rm(fit_preds)
 gc()
 system.time(fit_preds <- data.frame(predictions(fit_best, 
                        newdata = predgrid,
                        type = "probs",
-                       vcov = fit_best$vcov))) # %>% # 810s
+                       vcov = fit_best$vcov))) # %>% # 178s
              # transform(conf.low = predicted - 1.96 * std.error,
              #          conf.high = predicted + 1.96 * std.error) %>%
              # group_by(rowid) |>
              #mutate_at(c("predicted", "conf.low", "conf.high"), function (x) plogis(x)))
 range(fit_preds$predicted)
-hist(fit_preds$predicted) # comes out as either 0 or 1 - fix bug
+
 gc()
 fit_preds$conf.high[fit_preds$conf.high>0.99999] = 0.99999 # slight artefact of Delta method on response scale
 # fit_preds$conf.high[fit_preds$conf.high<1E-10] = 1E-10
@@ -608,7 +693,7 @@ pl = qplot(data=fit_preds[fit_preds$variant!="Other",],
   ylab("Share among newly diagnosed infections (%)") +
   theme_hc() + xlab("") +
   ggtitle("SARS-CoV2 LINEAGE FREQUENCIES",
-          subtitle=paste0("GISAID data up to ",today, ", multinomial fit ", model, ",\nall countries with >=", minseqs, " XBB.1.5* sequences included, using NextCladePangolin lineages")) +
+          subtitle=paste0("GISAID data up to ",today, ", multinomial fit \n", model, ",\nall countries with >=", minseqs, " XBB.1.5* sequences included, using NextCladePangolin lineages")) +
   scale_x_date(date_breaks = "3 months", date_labels =  "%b %Y") +   
   theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +  
   scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
@@ -636,8 +721,8 @@ pl = qplot(data=fit_preds[fit_preds$variant!="Other",],
 pl
 
 ggsave(file=file.path(plotdir, "predicted lineage freqs_logit scale.png"), 
-       width=2*ncls, 
-       height=(2/1.5)*ncls)
+       width=3*ncls, 
+       height=(3/1.5)*ncls)
 
 
 # zoomed in on last 6 months
@@ -650,7 +735,7 @@ pl = qplot(data=fit_preds[fit_preds$variant!="Other",],
   ylab("Share among newly diagnosed infections (%)") +
   theme_hc() + xlab("") +
   ggtitle("SARS-CoV2 LINEAGE FREQUENCIES",
-          subtitle=paste0("GISAID data up to ",today, ", multinomial fit ", model, ",\nall countries with >=", minseqs, " XBB.1.5* sequences included, using NextCladePangolin lineages")) +
+          subtitle=paste0("GISAID data up to ",today, ", multinomial fit \n", model, ",\nall countries with >=", minseqs, " XBB.1.5* sequences included, using NextCladePangolin lineages")) +
   scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y", expand=FALSE) +   
   theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +  
   scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
@@ -679,98 +764,61 @@ pl = qplot(data=fit_preds[fit_preds$variant!="Other",],
 pl
 
 ggsave(file=file.path(plotdir, "predicted lineage freqs_last6months_logit scale.png"), 
-       width=2*ncls, 
-       height=(2/1.5)*ncls)
+       width=3*ncls, 
+       height=(3/1.5)*ncls)
 
 
-# plot for selected divisions
-divisions = c("New York","Connecticut","New Hampshire","Massachusetts","Rhode Island","New Jersey","Pennsylvania",
-              "Israel","Netherlands","United Kingdom","Canada","Denmark","Germany","France")
+# plot with predictions per division/country for each region/continent
 
-ncls = round(length(divisions)/2) # round(sqrt(length(divisions)))
-pl = qplot(data=fit_preds[fit_preds$variant!="Other"&fit_preds$division %in% divisions,], 
+regions = unique(fit_preds$region)
+for (region in regions) {
+datsubs = fit_preds[fit_preds$variant!="Other"&fit_preds$region==region,]
+ndivisions = length(unique(datsubs$division))
+pl = qplot(data=datsubs, 
            x=date, y=predicted, geom="blank") +
-  facet_wrap(~ division, ncol=ncls) +
+  facet_wrap(~ division, ncol=1) +
   geom_ribbon(aes(y=predicted, ymin=conf.low, ymax=conf.high, colour=NULL,
                   fill=variant), alpha=I(0.3)) +
   geom_line(aes(colour=variant), alpha=I(1)) +
   ylab("Share among newly diagnosed infections (%)") +
   theme_hc() + xlab("") +
-  ggtitle("SARS-CoV2 LINEAGE FREQUENCIES",
-          subtitle=paste0("GISAID data up to ",today, "\nusing NextCladePangolin lineages\nmultinomial fit ", model)) +
-  scale_x_date(date_breaks = "3 months", date_labels =  "%b %Y") +   
+  ggtitle(paste0("SARS-CoV2 LINEAGE FREQUENCIES IN ", toupper(region)),
+          subtitle=paste0("GISAID data up to ",today, "\nmultinomial fit ", model, "\nusing NextCladePangolin lineages")) +
+  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y") +   
   theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +  
   scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
                       labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
-  scale_fill_manual("variant", values=tail(as.vector(lineage_cols),-1)) +
-  scale_colour_manual("variant", values=tail(as.vector(lineage_cols),-1)) +
-  geom_point(data=data_agbyweekcountry1[data_agbyweekcountry1$variant!="Other"&data_agbyweekcountry1$division %in% divisions,],
+  scale_fill_manual("", values=tail(as.vector(lineage_cols),-1)) +
+  scale_colour_manual("", values=tail(as.vector(lineage_cols),-1)) +
+  geom_point(data=data_agbyweekcountry1[data_agbyweekcountry1$variant!="Other"&data_agbyweekcountry1$region==region,],
              aes(x=date, y=prop, size=total,
                  colour=variant
              ),
              alpha=I(1)) +
   scale_size_continuous("total number\nsequenced", trans="sqrt",
-                        range=c(0.1, 3), limits=c(1,max(data_agbyweekcountry1$total)), 
-                        breaks=c(10,100,1000, 10000)) +
+                        range=c(0.5, 4), limits=c(1,max(data_agbyweekcountry1$total)), 
+                        breaks=c(10,100,1000, 10000), guide=F) +
   # guides(fill=FALSE) +
   # guides(colour=FALSE) +
-  theme(legend.position = "right") +
+  theme(legend.position = "bottom") +
   xlab("Collection date (start of week)") +
   coord_cartesian(xlim=c(as.Date("2021-01-01"),NA), 
                   ylim=c(0.0001, 0.99901), expand=0) +
-  theme(plot.title=element_text(size=25)) +
-  theme(plot.subtitle=element_text(size=20)) +
-  labs(tag = tag) + theme(plot.tag.position = "bottomright", plot.tag = element_text(vjust = 1, hjust = 1, size=8))
-pl
-
-ggsave(file=file.path(plotdir, "predicted lineage freqs_logit scale_selected states countries.png"), 
-       width=2*ncls, 
-       height=0.75*ncls)
-
-# zoomed in on last 6 months
-pl = qplot(data=fit_preds[fit_preds$variant!="Other"&fit_preds$division %in% divisions,], 
-           x=date, y=predicted, geom="blank") +
-  facet_wrap(~ division, ncol=ncls) +
-  geom_ribbon(aes(y=predicted, ymin=conf.low, ymax=conf.high, colour=NULL,
-                  fill=variant), alpha=I(0.3)) +
-  geom_line(aes(colour=variant), alpha=I(1)) +
-  ylab("Share among newly diagnosed infections (%)") +
-  theme_hc() + xlab("") +
-  ggtitle("SARS-CoV2 LINEAGE FREQUENCIES",
-          subtitle=paste0("GISAID data up to ",today, "\nusing NextCladePangolin lineages\nmultinomial fit ", model)) +
-  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y", expand=FALSE) +   
-  theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +  
-  scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
-                      labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
-  scale_fill_manual("variant", values=tail(as.vector(lineage_cols),-1)) +
-  scale_colour_manual("variant", values=tail(as.vector(lineage_cols),-1)) +
-  geom_point(data=data_agbyweekcountry1[data_agbyweekcountry1$variant!="Other"&data_agbyweekcountry1$division %in% divisions,],
-             aes(x=date, y=prop, size=total,
-                 colour=variant
-             ),
-             alpha=I(1)) +
-  scale_size_continuous("total number\nsequenced", trans="sqrt",
-                        range=c(0.1, 3), limits=c(1,max(data_agbyweekcountry1$total)), 
-                        breaks=c(10,100,1000, 10000)) +
-  # guides(fill=FALSE) +
-  # guides(colour=FALSE) +
-  theme(legend.position = "right") +
-  xlab("Collection date (start of week)") +
-  coord_cartesian(xlim=c(today-30*6,NA), 
-                  ylim=c(0.0001, 0.99901), expand=0) +
   labs(tag = tag) +
   theme(plot.tag.position = "bottomright",
-        plot.tag = element_text(vjust = 1, hjust = 1, size=8)) +
-  theme(plot.title=element_text(size=25)) +
-  theme(plot.subtitle=element_text(size=20))
+        plot.tag = element_text(vjust = 1, hjust = 1, size=8)) # +
+# theme(plot.title=element_text(size=40)) 
+# theme(plot.subtitle=element_text(size=20))
 pl
 
-ggsave(file=file.path(plotdir, "predicted lineage freqs_last6months_logit scale_selected states countries.png"), 
-       width=3*ncls, 
-       height=1*ncls)
+ggsave(file=file.path(plotdir, paste0("predicted lineage freqs_", region, "_logit scale.png")), width=9, height=3+2*ndivisions)
+
+}
 
 
+# separate plots for each division/country
 
+divisions = unique(data_agbyweekcountry1$division)
 for (division in divisions) {
 
 # plot just for given division
@@ -783,13 +831,13 @@ pl = qplot(data=fit_preds[fit_preds$variant!="Other"&fit_preds$division==divisio
   ylab("Share among newly diagnosed\ninfections (%)") +
   theme_hc() + xlab("") +
   ggtitle(paste0("SARS-CoV2 LINEAGE FREQUENCIES IN ", toupper(division)),
-          subtitle=paste0("GISAID data up to ",today, ", multinomial fit ", model, ", using NextCladePangolin lineages")) +
+          subtitle=paste0("GISAID data up to ",today, "\nmultinomial fit ", model, "\nusing NextCladePangolin lineages")) +
   scale_x_date(date_breaks = "3 months", date_labels =  "%b %Y") +   
   theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +  
   scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
                       labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
-  scale_fill_manual("variant", values=tail(as.vector(lineage_cols),-1)) +
-  scale_colour_manual("variant", values=tail(as.vector(lineage_cols),-1)) +
+  scale_fill_manual("", values=tail(as.vector(lineage_cols),-1)) +
+  scale_colour_manual("", values=tail(as.vector(lineage_cols),-1)) +
   geom_point(data=data_agbyweekcountry1[data_agbyweekcountry1$variant!="Other"&
                                           data_agbyweekcountry1$division==division,],
              aes(x=date, y=prop, size=total,
@@ -812,15 +860,66 @@ pl = qplot(data=fit_preds[fit_preds$variant!="Other"&fit_preds$division==divisio
 # theme(plot.subtitle=element_text(size=20))
 pl
 
-ggsave(file=file.path(plotdir, paste0("predicted lineage freqs_",division,"_logit scale.png")), width=12, height=5)
+ggsave(file=file.path(plotdir, paste0("predicted lineage freqs_",division,"_logit scale.png")), width=9, height=6)
 
 }
 
 
+# STILL NEED TO FINISH PART BELOW ####
+
+# map variant shares onto estimated infections as estimated by IHME ####
+
+ihme = bind_rows(read_csv("https://ihmecovid19storage.blob.core.windows.net/archive/2022-12-16/data_download_file_reference_2020.csv"),
+                 read_csv("https://ihmecovid19storage.blob.core.windows.net/archive/2022-12-16/data_download_file_reference_2021.csv"),
+                 read_csv("https://ihmecovid19storage.blob.core.windows.net/archive/2022-12-16/data_download_file_reference_2022.csv"),
+                 read_csv("https://ihmecovid19storage.blob.core.windows.net/archive/2022-12-16/data_download_file_reference_2023.csv"))
+
+
+
+# map US variant shares by region onto cases & wastewater surveillance data, cf. github Biobot Analytics ####
+# https://github.com/biobotanalytics/covid19-wastewater-data
+# I will need to estimate incidence from wastewater surveillance prevalence data
+wastewater_US_byregion = read.csv("https://raw.githubusercontent.com/biobotanalytics/covid19-wastewater-data/master/wastewater_by_region.csv") %>%
+  rename(date = sampling_week,
+         division = region) %>% 
+  select(-population) %>% 
+  filter(division != "Nationwide")
+wastewater_US_byregion$date = as.Date(wastewater_US_byregion$date)
+
+# linearly interpolate concentrations for all weekdays
+grid = expand.grid(division=unique(wastewater_US_byregion$division),
+                   date=seq(min(wastewater_US_byregion$date), 
+                            today, by = '1 day') ) 
+pop_by_year_interpol = left_join(grid, pop_by_year) %>%
+  mutate(POPULATION =
+           interp1(x=as.numeric(DATE)[!is.na(POPULATION)],
+                   y=POPULATION[!is.na(POPULATION)],
+                   xi=as.numeric(DATE),
+                   method="linear", # or cubic or spline
+                   extrap=TRUE) )
+
+
+wastewater_US_byregion$division = paste0("USA - ", wastewater_US_byregion$division)
+wastewater_US_byregion$division = factor(wastewater_US_byregion$division, levels=as.character(levels(fit_preds$division)))
+
+wastewater_US_bycounty = read.csv("https://raw.githubusercontent.com/biobotanalytics/covid19-wastewater-data/master/wastewater_by_county.csv") %>%
+  rename(date = sampling_week) %>% 
+  select(-X)
+wastewater_US_bycounty$date = as.Date(wastewater_US_bycounty$date)
+
+fit_preds$effective_concentration_rolling_average = NULL
+fit_preds = fit_preds %>% left_join(wastewater_US_byregion, by=c("date","division"))
+
+
+cases_US_byregion = read.csv("https://raw.githubusercontent.com/biobotanalytics/covid19-wastewater-data/master/cases_by_region.csv")
+
+cases_US_bycounty = read.csv("https://raw.githubusercontent.com/biobotanalytics/covid19-wastewater-data/master/cases_by_county.csv")
 
 
 # TO DO: DIDN'T UPDATE PART BELOW YET
 # (map share of variants on cases & hospitalisations etc - should get US data by state)
+# TO DO:  map variant share onto US Biobot wastewater data 
+# https://github.com/biobotanalytics/covid19-wastewater-data
 
 
 # plot predicted values as Muller plot
