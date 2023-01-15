@@ -832,7 +832,7 @@ pl = qplot(data=fit_preds[fit_preds$variant!="Other"&fit_preds$division==divisio
   theme_hc() + xlab("") +
   ggtitle(paste0("SARS-CoV2 LINEAGE FREQUENCIES IN ", toupper(division)),
           subtitle=paste0("GISAID data up to ",today, "\nmultinomial fit ", model, "\nusing NextCladePangolin lineages")) +
-  scale_x_date(date_breaks = "3 months", date_labels =  "%b %Y") +   
+  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y") +   
   theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +  
   scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
                       labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
@@ -873,12 +873,16 @@ ihme = bind_rows(read_csv("https://ihmecovid19storage.blob.core.windows.net/arch
                  read_csv("https://ihmecovid19storage.blob.core.windows.net/archive/2022-12-16/data_download_file_reference_2021.csv"),
                  read_csv("https://ihmecovid19storage.blob.core.windows.net/archive/2022-12-16/data_download_file_reference_2022.csv"),
                  read_csv("https://ihmecovid19storage.blob.core.windows.net/archive/2022-12-16/data_download_file_reference_2023.csv"))
+names(ihme)
+unique(ihme$location_name)
 
+# for England: map variant shares onto incidence data derived from ONS prevalence data
+# see https://github.com/epiforecasts/inc2prev/tree/master/data-processed
 
 
 # map US variant shares by region onto cases & wastewater surveillance data, cf. github Biobot Analytics ####
 # https://github.com/biobotanalytics/covid19-wastewater-data
-# I will need to estimate incidence from wastewater surveillance prevalence data
+# I will need to estimate incidence from wastewater surveillance prevalence data then
 wastewater_US_byregion = read.csv("https://raw.githubusercontent.com/biobotanalytics/covid19-wastewater-data/master/wastewater_by_region.csv") %>%
   rename(date = sampling_week,
          division = region) %>% 
@@ -886,17 +890,17 @@ wastewater_US_byregion = read.csv("https://raw.githubusercontent.com/biobotanaly
   filter(division != "Nationwide")
 wastewater_US_byregion$date = as.Date(wastewater_US_byregion$date)
 
-# linearly interpolate concentrations for all weekdays
-grid = expand.grid(division=unique(wastewater_US_byregion$division),
-                   date=seq(min(wastewater_US_byregion$date), 
-                            today, by = '1 day') ) 
-pop_by_year_interpol = left_join(grid, pop_by_year) %>%
-  mutate(POPULATION =
-           interp1(x=as.numeric(DATE)[!is.na(POPULATION)],
-                   y=POPULATION[!is.na(POPULATION)],
-                   xi=as.numeric(DATE),
-                   method="linear", # or cubic or spline
-                   extrap=TRUE) )
+# # linearly interpolate concentrations for all weekdays
+# grid = expand.grid(division=unique(wastewater_US_byregion$division),
+#                    date=seq(min(wastewater_US_byregion$date), 
+#                             today, by = '1 day') ) 
+# pop_by_year_interpol = left_join(grid, pop_by_year) %>%
+#   mutate(POPULATION =
+#            interp1(x=as.numeric(DATE)[!is.na(POPULATION)],
+#                    y=POPULATION[!is.na(POPULATION)],
+#                    xi=as.numeric(DATE),
+#                    method="linear", # or cubic or spline
+#                    extrap=TRUE) )
 
 
 wastewater_US_byregion$division = paste0("USA - ", wastewater_US_byregion$division)
