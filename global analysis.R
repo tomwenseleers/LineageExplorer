@@ -2,7 +2,7 @@
 # DATA: GISAID OR NCBI DATA, ACCESSED VIA COVSPECTRUM API ####
 
 # T. Wenseleers
-# last update 15 JANUARY 2023
+# last update 17 JANUARY 2023
 
 # for similar analysis see https://nbviewer.org/github/gerstung-lab/SARS-CoV-2-International/blob/main/genomicsurveillance-int.ipynb#Check-some-fast-growing-lineages
 
@@ -874,7 +874,7 @@ ihme = bind_rows(read_csv("https://ihmecovid19storage.blob.core.windows.net/arch
                  read_csv("https://ihmecovid19storage.blob.core.windows.net/archive/2022-12-16/data_download_file_reference_2022.csv"),
                  read_csv("https://ihmecovid19storage.blob.core.windows.net/archive/2022-12-16/data_download_file_reference_2023.csv"))
 names(ihme)
-unique(ihme$location_name)
+sort(unique(ihme$location_name))
 
 # for England: map variant shares onto incidence data derived from ONS prevalence data
 # see https://github.com/epiforecasts/inc2prev/tree/master/data-processed
