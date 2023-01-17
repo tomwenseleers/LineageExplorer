@@ -467,8 +467,8 @@ system.time(fit_best$Hessian <- fastmultinomHess(fit_best, model.matrix(fit_best
 system.time(fit_best$vcov <- vcov(fit_best))  # 1s
 gc()
 
-save.image("./environment_2023_01_15.RData")
-# load("./environment_2023_01_15.RData")
+save.image("./environment_2023_01_17.RData")
+# load("./environment_2023_01_17.RData")
 
 # save multinom fit
 saveRDS(fit_best, file="./fits/multinom_fit.rds")
