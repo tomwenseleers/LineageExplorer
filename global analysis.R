@@ -2,7 +2,7 @@
 # DATA: GISAID OR NCBI DATA, ACCESSED VIA COVSPECTRUM API ####
 
 # T. Wenseleers
-# last update 17 JANUARY 2023
+# last update 19 JANUARY 2023
 
 # for similar analysis see https://nbviewer.org/github/gerstung-lab/SARS-CoV-2-International/blob/main/genomicsurveillance-int.ipynb#Check-some-fast-growing-lineages
 
@@ -467,8 +467,9 @@ system.time(fit_best$Hessian <- fastmultinomHess(fit_best, model.matrix(fit_best
 system.time(fit_best$vcov <- vcov(fit_best))  # 1s
 gc()
 
-save.image("./environment_2023_01_17.RData")
-# load("./environment_2023_01_17.RData")
+# save environment
+save.image("./environment.RData")
+# load("./environment.RData")
 
 # save multinom fit
 saveRDS(fit_best, file="./fits/multinom_fit.rds")
@@ -865,445 +866,445 @@ ggsave(file=file.path(plotdir, paste0("predicted lineage freqs_",division,"_logi
 }
 
 
-# STILL NEED TO FINISH PART BELOW ####
-
-# map variant shares onto estimated infections as estimated by IHME ####
-
-ihme = bind_rows(read_csv("https://ihmecovid19storage.blob.core.windows.net/archive/2022-12-16/data_download_file_reference_2020.csv"),
-                 read_csv("https://ihmecovid19storage.blob.core.windows.net/archive/2022-12-16/data_download_file_reference_2021.csv"),
-                 read_csv("https://ihmecovid19storage.blob.core.windows.net/archive/2022-12-16/data_download_file_reference_2022.csv"),
-                 read_csv("https://ihmecovid19storage.blob.core.windows.net/archive/2022-12-16/data_download_file_reference_2023.csv"))
-names(ihme)
-sort(unique(ihme$location_name))
-
-# for England: map variant shares onto incidence data derived from ONS prevalence data
-# see https://github.com/epiforecasts/inc2prev/tree/master/data-processed
-
-
-# map US variant shares by region onto cases & wastewater surveillance data, cf. github Biobot Analytics ####
-# https://github.com/biobotanalytics/covid19-wastewater-data
-# I will need to estimate incidence from wastewater surveillance prevalence data then
-wastewater_US_byregion = read.csv("https://raw.githubusercontent.com/biobotanalytics/covid19-wastewater-data/master/wastewater_by_region.csv") %>%
-  rename(date = sampling_week,
-         division = region) %>% 
-  select(-population) %>% 
-  filter(division != "Nationwide")
-wastewater_US_byregion$date = as.Date(wastewater_US_byregion$date)
-
-# # linearly interpolate concentrations for all weekdays
-# grid = expand.grid(division=unique(wastewater_US_byregion$division),
-#                    date=seq(min(wastewater_US_byregion$date), 
-#                             today, by = '1 day') ) 
-# pop_by_year_interpol = left_join(grid, pop_by_year) %>%
-#   mutate(POPULATION =
-#            interp1(x=as.numeric(DATE)[!is.na(POPULATION)],
-#                    y=POPULATION[!is.na(POPULATION)],
-#                    xi=as.numeric(DATE),
-#                    method="linear", # or cubic or spline
-#                    extrap=TRUE) )
-
-
-wastewater_US_byregion$division = paste0("USA - ", wastewater_US_byregion$division)
-wastewater_US_byregion$division = factor(wastewater_US_byregion$division, levels=as.character(levels(fit_preds$division)))
-
-wastewater_US_bycounty = read.csv("https://raw.githubusercontent.com/biobotanalytics/covid19-wastewater-data/master/wastewater_by_county.csv") %>%
-  rename(date = sampling_week) %>% 
-  select(-X)
-wastewater_US_bycounty$date = as.Date(wastewater_US_bycounty$date)
-
-fit_preds$effective_concentration_rolling_average = NULL
-fit_preds = fit_preds %>% left_join(wastewater_US_byregion, by=c("date","division"))
-
-
-cases_US_byregion = read.csv("https://raw.githubusercontent.com/biobotanalytics/covid19-wastewater-data/master/cases_by_region.csv")
-
-cases_US_bycounty = read.csv("https://raw.githubusercontent.com/biobotanalytics/covid19-wastewater-data/master/cases_by_county.csv")
-
-
-# TO DO: DIDN'T UPDATE PART BELOW YET
-# (map share of variants on cases & hospitalisations etc - should get US data by state)
-# TO DO:  map variant share onto US Biobot wastewater data 
-# https://github.com/biobotanalytics/covid19-wastewater-data
-
-
-# plot predicted values as Muller plot
-pl = ggplot(data=fit_preds[fit_preds$date>=as.Date("2021-01-01"),], 
-                    aes(x=date, y=predicted, group=variant)) +
-  facet_wrap(~ division, ncol=ncls) +
-  geom_area(aes(width=I(10), colour=NULL, fill=variant, group=variant), position="fill") +
-  scale_fill_manual("", values=lineage_cols) +
-  scale_x_date(date_breaks = "3 months", date_labels =  "%b %Y") +   
-  theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +
-  # guides(color = guide_legend(reverse=F, nrow=2, byrow=T), fill = guide_legend(reverse=F, nrow=2, byrow=T)) +
-  theme_hc() +
-  ylab("Share") +
-  theme(legend.position="right",
-        axis.title.x=element_blank()) +
-  labs(title = "SARS-CoV2 LINEAGE FREQUENCIES",
-       subtitle=paste0("GISAID data up to ",today, ", multinomial fit ", model, ",\nall countries with >=", minseqs, " XBB.1.5* sequences shown")) +
-  annotate("rect", 
-           xmin=max(data$date)+1, 
-           xmax=as.Date(date.to, origin="1970-01-01")+5, 
-           ymin=0, ymax=1, alpha=0.5, fill="white") + # extrapolated part
-  theme(plot.title=element_text(size=25)) +
-  theme(plot.subtitle=element_text(size=20))
-pl
-
-ggsave(file=file.path(plotdir, "muller plot.png"), 
-       width=4*ncls, 
-       height=(4/1.2)*ncls)
-
-
-# MAP VARIANT SHARE ONTO CASE NUMBERS ####
-
-country_data = get_national_data(countries=sel_countries,
-                                 source="who",
-                                 level=1)
-# sel_countries_fig = c("Austria", "Belgium", "Denmark", "France", "Germany", 
-#                       "Italy", "Netherlands", "New Zealand", "Singapore", "United Kingdom")
-# country_data = get_national_data(countries=sel_countries_fig,
+# # STILL NEED TO FINISH PART BELOW ####
+# 
+# # map variant shares onto estimated infections as estimated by IHME ####
+# 
+# ihme = bind_rows(read_csv("https://ihmecovid19storage.blob.core.windows.net/archive/2022-12-16/data_download_file_reference_2020.csv"),
+#                  read_csv("https://ihmecovid19storage.blob.core.windows.net/archive/2022-12-16/data_download_file_reference_2021.csv"),
+#                  read_csv("https://ihmecovid19storage.blob.core.windows.net/archive/2022-12-16/data_download_file_reference_2022.csv"),
+#                  read_csv("https://ihmecovid19storage.blob.core.windows.net/archive/2022-12-16/data_download_file_reference_2023.csv"))
+# names(ihme)
+# sort(unique(ihme$location_name))
+# 
+# # for England: map variant shares onto incidence data derived from ONS prevalence data
+# # see https://github.com/epiforecasts/inc2prev/tree/master/data-processed
+# 
+# 
+# # map US variant shares by region onto cases & wastewater surveillance data, cf. github Biobot Analytics ####
+# # https://github.com/biobotanalytics/covid19-wastewater-data
+# # I will need to estimate incidence from wastewater surveillance prevalence data then
+# wastewater_US_byregion = read.csv("https://raw.githubusercontent.com/biobotanalytics/covid19-wastewater-data/master/wastewater_by_region.csv") %>%
+#   rename(date = sampling_week,
+#          division = region) %>% 
+#   select(-population) %>% 
+#   filter(division != "Nationwide")
+# wastewater_US_byregion$date = as.Date(wastewater_US_byregion$date)
+# 
+# # # linearly interpolate concentrations for all weekdays
+# # grid = expand.grid(division=unique(wastewater_US_byregion$division),
+# #                    date=seq(min(wastewater_US_byregion$date), 
+# #                             today, by = '1 day') ) 
+# # pop_by_year_interpol = left_join(grid, pop_by_year) %>%
+# #   mutate(POPULATION =
+# #            interp1(x=as.numeric(DATE)[!is.na(POPULATION)],
+# #                    y=POPULATION[!is.na(POPULATION)],
+# #                    xi=as.numeric(DATE),
+# #                    method="linear", # or cubic or spline
+# #                    extrap=TRUE) )
+# 
+# 
+# wastewater_US_byregion$division = paste0("USA - ", wastewater_US_byregion$division)
+# wastewater_US_byregion$division = factor(wastewater_US_byregion$division, levels=as.character(levels(fit_preds$division)))
+# 
+# wastewater_US_bycounty = read.csv("https://raw.githubusercontent.com/biobotanalytics/covid19-wastewater-data/master/wastewater_by_county.csv") %>%
+#   rename(date = sampling_week) %>% 
+#   select(-X)
+# wastewater_US_bycounty$date = as.Date(wastewater_US_bycounty$date)
+# 
+# fit_preds$effective_concentration_rolling_average = NULL
+# fit_preds = fit_preds %>% left_join(wastewater_US_byregion, by=c("date","division"))
+# 
+# 
+# cases_US_byregion = read.csv("https://raw.githubusercontent.com/biobotanalytics/covid19-wastewater-data/master/cases_by_region.csv")
+# 
+# cases_US_bycounty = read.csv("https://raw.githubusercontent.com/biobotanalytics/covid19-wastewater-data/master/cases_by_county.csv")
+# 
+# 
+# # TO DO: DIDN'T UPDATE PART BELOW YET
+# # (map share of variants on cases & hospitalisations etc - should get US data by state)
+# # TO DO:  map variant share onto US Biobot wastewater data 
+# # https://github.com/biobotanalytics/covid19-wastewater-data
+# 
+# 
+# # plot predicted values as Muller plot
+# pl = ggplot(data=fit_preds[fit_preds$date>=as.Date("2021-01-01"),], 
+#                     aes(x=date, y=predicted, group=variant)) +
+#   facet_wrap(~ division, ncol=ncls) +
+#   geom_area(aes(width=I(10), colour=NULL, fill=variant, group=variant), position="fill") +
+#   scale_fill_manual("", values=lineage_cols) +
+#   scale_x_date(date_breaks = "3 months", date_labels =  "%b %Y") +   
+#   theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +
+#   # guides(color = guide_legend(reverse=F, nrow=2, byrow=T), fill = guide_legend(reverse=F, nrow=2, byrow=T)) +
+#   theme_hc() +
+#   ylab("Share") +
+#   theme(legend.position="right",
+#         axis.title.x=element_blank()) +
+#   labs(title = "SARS-CoV2 LINEAGE FREQUENCIES",
+#        subtitle=paste0("GISAID data up to ",today, ", multinomial fit ", model, ",\nall countries with >=", minseqs, " XBB.1.5* sequences shown")) +
+#   annotate("rect", 
+#            xmin=max(data$date)+1, 
+#            xmax=as.Date(date.to, origin="1970-01-01")+5, 
+#            ymin=0, ymax=1, alpha=0.5, fill="white") + # extrapolated part
+#   theme(plot.title=element_text(size=25)) +
+#   theme(plot.subtitle=element_text(size=20))
+# pl
+# 
+# ggsave(file=file.path(plotdir, "muller plot.png"), 
+#        width=4*ncls, 
+#        height=(4/1.2)*ncls)
+# 
+# 
+# # MAP VARIANT SHARE ONTO CASE NUMBERS ####
+# 
+# country_data = get_national_data(countries=sel_countries,
 #                                  source="who",
 #                                  level=1)
-country_data$country[country_data$country=="United States"] = "USA"
-country_data$country = factor(country_data$country, levels=levels(fit_preds$country))
-country_data = country_data[country_data$date<(max(country_data$date)-3),] # drop data last 3 days
-qplot(data=country_data, x=date, y=cases_new, group=country, geom="blank", colour=country) +
-  facet_wrap(~country, scale="free_y") +
-  geom_ma(ma_fun = SMA, n = 7, lty=1) +
-  # scale_colour_hue("") +
-  ylab("New cases per day") +
-  labs(tag = tag) +
-  theme(plot.tag.position = "bottomright",
-        plot.tag = element_text(vjust = 1, hjust = 1, size=8)) +
-  coord_trans(y="sqrt") +
-  theme(axis.text.x = element_text(angle = 45, hjust=1)) +
-  xlab("") +
-  theme(legend.position="none") +
-  ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY",
-          subtitle="7 day simple moving average, using\nWHO case data accessed via covidregionaldata package")
-# ggsave(file=file.path(plotdir, "new cases countries with more than 10 sequenced BA_2_75 cases.png"), width=7, height=5)
-
-fit_preds$totnewcases = 
-  country_data$cases_new[match(interaction(fit_preds$country,
-                                          fit_preds$date),
-                                      interaction(country_data$country, 
-                                                  country_data$date))]
-fit_preds = fit_preds %>% 
-  group_by(country) %>% 
-  mutate(totnewcases_smoothed = rollmean(totnewcases, 7, na.pad = T))
-fit_preds$cases = fit_preds$totnewcases_smoothed*fit_preds$predicted
-fit_preds$cases[fit_preds$cases==0] = NA
-fit_preds$cases[fit_preds$predicted<0.001] = NA
-
-fit_preds_sel = fit_preds
-# fit_preds_sel = fit_preds_sel[fit_preds_sel$country %in% sel_countries_fig,]
-fit_preds_sel = fit_preds_sel[fit_preds_sel$country %in% sel_countries,]
-fit_preds_sel = fit_preds_sel[!fit_preds_sel$country %in%
-                                c("Hong Kong","Czech Republic","Reunion"),]
-fit_preds_sel$country = factor(fit_preds_sel$country)
-
-fit_preds2 = fit_preds_sel
-fit_preds2$cases[fit_preds2$cases==0] = NA
-fit_preds2$cases[fit_preds2$cases<=1] = NA
-fit_preds2$country = factor(fit_preds2$country)
-fit_preds2$variant = factor(fit_preds2$variant, levels=levels_VARIANTS)
-
-ggplot(data=fit_preds2, 
-       aes(x=date, y=cases)) + 
-  facet_wrap(~ country, scale="free", ncol=ncls) +
-  geom_line(aes(lwd=I(1), colour=variant, group=variant)) +
-  geom_line(data=fit_preds2, aes(x=date, y=totnewcases_smoothed, lwd=I(1.5)), 
-            colour=alpha("black",0.3)) +
-  # geom_line(aes(lwd=I(1), colour=LINEAGE2, group=LINEAGE2)) +
-  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y") +   theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +
-  # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
-  theme_hc() + theme(legend.position="right", 
-                     axis.title.x=element_blank()) + 
-  ylab("New confirmed cases per day") +
-  ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT",
-          subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, " plus COG-UK data\nand multinomial fit ", model, ",\nselected countries with >=", min_n, " level5 or level6+ variant sequences shown")) +
-  scale_colour_manual("lineage", values=lineage_cols) +
-  scale_y_log10() +
-  coord_cartesian(xlim=c(as.Date("2021-01-01"),NA)) +
-  theme(plot.title=element_text(size=25)) +
-  theme(plot.subtitle=element_text(size=20)) 
-# coord_cartesian(xlim=c(as.Date("2021-01-01"),max(fit_india_multi_predsbystate2$date)-20))
-
-ggsave(file=file.path(plotdir,"confirmed cases multinomial fit_by country_log10 scale.png"), 
-       width=4*ncls, height=4*ncls/1.2)
-
-ggplot(data=fit_preds2, 
-       aes(x=date, y=cases)) + 
-  facet_wrap(~ country, scale="free", ncol=ncls) +
-  geom_line(aes(lwd=I(1), colour=variant, group=variant)) +
-  geom_line(data=fit_preds2, aes(x=date, y=totnewcases_smoothed, lwd=I(1.5)), 
-            colour=alpha("black",0.3)) +
-  # geom_line(aes(lwd=I(1), colour=LINEAGE2, group=LINEAGE2)) +
-  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y") +   theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +
-  # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
-  theme_hc() + theme(legend.position="right", 
-                     axis.title.x=element_blank()) + 
-  ylab("New confirmed cases per day") +
-  ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT",
-          subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, " plus COG-UK data\nand multinomial fit ", model, ",\nselected countries with >=", min_n, " level5 or level6+ variant sequences shown")) +
-  scale_colour_manual("lineage", values=lineage_cols) +
-  scale_y_log10() +
-  # coord_cartesian(ylim=c(1,NA), xlim=c(as.Date("2021-01-01"),NA)) +
-  theme(plot.title=element_text(size=25)) +
-  theme(plot.subtitle=element_text(size=20)) +
-  coord_cartesian(xlim=c(as.Date("2022-01-01"),NA))
-
-ggsave(file=file.path(plotdir,"confirmed cases multinomial fit_by country_log10 scale_zoomed.png"), 
-       width=4*ncls, height=4*ncls/1.2)
-
-# stacked area chart
-ggplot(data=fit_preds2, 
-       aes(x=date, y=cases, group=variant)) + 
-  facet_wrap(~ country, scale="free_y", ncol=ncls) +
-  geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), 
-            position="stack") +
-  scale_fill_manual("", values=lineage_cols) +
-  # annotate("rect", xmin=max(GISAID_india$date_num)+1, 
-  #          xmax=as.Date("2021-05-31"), ymin=0, ymax=1, alpha=0.3, fill="white") + # extrapolated part
-  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y") +   theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +
-  # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
-  theme_hc() + theme(legend.position="right", 
-                     axis.title.x=element_blank()) + 
-  ylab("New confirmed cases per day") +
-  ggtitle("NEW CONFIRMED SARS-CoV2 CASES BY VARIANT",
-          subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, " plus COG-UK data\nand multinomial fit ", model, ",\nselected countries with >=", min_n, " level5 or level6+ variant sequences shown")) +
-  # coord_cartesian(xlim=c(as.Date("2021-06-01"),NA))
-  theme(plot.title=element_text(size=25)) +
-  theme(plot.subtitle=element_text(size=20)) +
-  coord_cartesian(ylim=c(1,NA), xlim=c(as.Date("2020-01-01"),NA))
-
-ggsave(file=file.path(plotdir,"\\confirmed cases multinomial fit_stacked area plot by country.png"), 
-       width=4*ncls, height=4*ncls/1.2)
-
-
-# stacked area chart, some selected countries
-ggplot(data=fit_preds2[fit_preds2$country %in% 
-                         c("France", "Belgium", "Denmark", "Germany"),], 
-       aes(x=date, y=cases, group=variant)) + 
-  facet_wrap(~ country, scale="free_y", ncol=2) +
-  geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), 
-            position="stack") +
-  scale_fill_manual("", values=lineage_cols) +
-  # annotate("rect", xmin=max(GISAID_india$date_num)+1, 
-  #          xmax=as.Date("2021-05-31"), ymin=0, ymax=1, alpha=0.3, fill="white") + # extrapolated part
-  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y") +   theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +
-  # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
-  theme_hc() + theme(legend.position="right", 
-                     axis.title.x=element_blank()) + 
-  ylab("New confirmed cases per day") +
-  ggtitle("NEW CONFIRMED SARS-CoV2 CASES BY VARIANT",
-          subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, " plus COG-UK data\nand multinomial fit ", model, ",\na few selected countries shown")) +
-  # coord_cartesian(xlim=c(as.Date("2021-06-01"),NA))
-  theme(plot.title=element_text(size=25)) +
-  theme(plot.subtitle=element_text(size=20)) +
-  coord_cartesian(ylim=c(1,NA), xlim=c(as.Date("2020-01-01"),NA))
-
-ggsave(file=file.path(plotdir,"\\confirmed cases multinomial fit_stacked area plot by country_sel countries.png"), 
-       width=6*2, height=6*2/2)
-
-
-# stacked area chart, just for Belgium
-ggplot(data=fit_preds2[fit_preds2$country=="Belgium",], 
-       aes(x=date, y=cases, group=variant)) + 
-  # facet_wrap(~ country, scale="free_y") +
-  geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), 
-            position="stack") +
-  scale_fill_manual("", values=lineage_cols) +
-  # annotate("rect", xmin=max(GISAID_india$date_num)+1, 
-  #          xmax=as.Date("2021-05-31"), ymin=0, ymax=1, alpha=0.3, fill="white") + # extrapolated part
-  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y") +   theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +
-  # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
-  theme_hc() + theme(legend.position="right", 
-                     axis.title.x=element_blank()) + 
-  ylab("New confirmed cases per day") +
-  ggtitle("NEW CONFIRMED SARS-CoV2 CASES BY VARIANT IN BELGIUM",
-          subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, "\nand multinomial fit ", model, ",\nHere only showing data for Belgium")) +
-  # coord_cartesian(xlim=c(as.Date("2021-06-01"),NA))
-  theme(plot.title=element_text(size=25)) +
-  theme(plot.subtitle=element_text(size=20)) +
-  coord_cartesian(ylim=c(1,NA), xlim=c(as.Date("2020-01-01"),NA))
-
-ggsave(file=file.path(plotdir,"\\confirmed cases multinomial fit_stacked area plot_BELGIUM.png"), width=12, height=6)
-
-# stacked area chart, just for France
-ggplot(data=fit_preds2[fit_preds2$country=="France",], 
-       aes(x=date, y=cases, group=variant)) + 
-  # facet_wrap(~ country, scale="free_y") +
-  geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), 
-            position="stack") +
-  scale_fill_manual("", values=lineage_cols) +
-  # annotate("rect", xmin=max(GISAID_india$date_num)+1, 
-  #          xmax=as.Date("2021-05-31"), ymin=0, ymax=1, alpha=0.3, fill="white") + # extrapolated part
-  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y") +   theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +
-  # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
-  theme_hc() + theme(legend.position="right", 
-                     axis.title.x=element_blank()) + 
-  ylab("New confirmed cases per day") +
-  ggtitle("NEW CONFIRMED SARS-CoV2 CASES BY VARIANT IN FRANCE",
-          subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, "\nand multinomial fit ", model, ",\nHere only showing data for France")) +
-  # coord_cartesian(xlim=c(as.Date("2021-06-01"),NA))
-  theme(plot.title=element_text(size=25)) +
-  theme(plot.subtitle=element_text(size=20)) +
-  coord_cartesian(ylim=c(1,NA), xlim=c(as.Date("2020-01-01"),NA))
-
-ggsave(file=file.path(plotdir,"\\confirmed cases multinomial fit_stacked area plot_FRANCE.png"), width=12, height=6)
-
-
-# stacked area chart, just for Switzerland
-ggplot(data=fit_preds2[fit_preds2$country=="Switzerland",], 
-       aes(x=date, y=cases, group=variant)) + 
-  # facet_wrap(~ country, scale="free_y") +
-  geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), 
-            position="stack") +
-  scale_fill_manual("", values=lineage_cols) +
-  # annotate("rect", xmin=max(GISAID_india$date_num)+1, 
-  #          xmax=as.Date("2021-05-31"), ymin=0, ymax=1, alpha=0.3, fill="white") + # extrapolated part
-  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y") +   theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +
-  # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
-  theme_hc() + theme(legend.position="right", 
-                     axis.title.x=element_blank()) + 
-  ylab("New confirmed cases per day") +
-  ggtitle("NEW CONFIRMED SARS-CoV2 CASES BY VARIANT IN SWITZERLAND",
-          subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, "\nand multinomial fit ", model, ",\nHere only showing data for Switzerland")) +
-  # coord_cartesian(xlim=c(as.Date("2021-06-01"),NA))
-  theme(plot.title=element_text(size=25)) +
-  theme(plot.subtitle=element_text(size=20)) +
-  coord_cartesian(ylim=c(1,NA), xlim=c(as.Date("2020-01-01"),NA))
-
-ggsave(file=file.path(plotdir,"\\confirmed cases multinomial fit_stacked area plot_SWITZERLAND.png"), width=12, height=6)
-
-
-# stacked area chart, just for United Kingdom
-ggplot(data=fit_preds2[fit_preds2$country=="United Kingdom",], 
-       aes(x=date, y=cases, group=variant)) + 
-  # facet_wrap(~ country, scale="free_y") +
-  geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), 
-            position="stack") +
-  scale_fill_manual("", values=lineage_cols) +
-  # annotate("rect", xmin=max(GISAID_india$date_num)+1, 
-  #          xmax=as.Date("2021-05-31"), ymin=0, ymax=1, alpha=0.3, fill="white") + # extrapolated part
-  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y") +   theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +
-  # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
-  theme_hc() + theme(legend.position="right", 
-                     axis.title.x=element_blank()) + 
-  ylab("New confirmed cases per day") +
-  ggtitle("NEW CONFIRMED SARS-CoV2 CASES BY VARIANT IN THE UK",
-          subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, " & COG-UK data\nand multinomial fit ", model, ",\nHere only showing data for the UK")) +
-  # coord_cartesian(xlim=c(as.Date("2021-06-01"),NA))
-  theme(plot.title=element_text(size=25)) +
-  theme(plot.subtitle=element_text(size=20)) +
-  coord_cartesian(ylim=c(1,NA), xlim=c(as.Date("2020-01-01"),NA))
-
-ggsave(file=file.path(plotdir,"\\confirmed cases multinomial fit_stacked area plot_UK.png"), width=12, height=6)
-
-
-# stacked area chart, just for Singapore
-ggplot(data=fit_preds2[fit_preds2$country=="Singapore",], 
-       aes(x=date, y=cases, group=variant)) + 
-  # facet_wrap(~ country, scale="free_y") +
-  geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), 
-            position="stack") +
-  scale_fill_manual("", values=lineage_cols) +
-  # annotate("rect", xmin=max(GISAID_india$date_num)+1, 
-  #          xmax=as.Date("2021-05-31"), ymin=0, ymax=1, alpha=0.3, fill="white") + # extrapolated part
-  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y") +   theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +
-  # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
-  theme_hc() + theme(legend.position="right", 
-                     axis.title.x=element_blank()) + 
-  ylab("New confirmed cases per day") +
-  ggtitle("NEW CONFIRMED SARS-CoV2 CASES BY VARIANT IN SINGAPORE",
-          subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, "\nand multinomial fit ", model, ",\nHere only showing data for Singapore")) +
-  # coord_cartesian(xlim=c(as.Date("2021-06-01"),NA))
-  theme(plot.title=element_text(size=25)) +
-  theme(plot.subtitle=element_text(size=20)) +
-  coord_cartesian(ylim=c(1,NA), xlim=c(as.Date("2020-01-01"),NA))
-
-ggsave(file=file.path(plotdir,"\\confirmed cases multinomial fit_stacked area plot_SINGAPORE.png"), width=12, height=6)
-
-# stacked area chart, just for Israel
-ggplot(data=fit_preds2[fit_preds2$country=="Israel",],
-       aes(x=date, y=cases, group=variant)) +
-  # facet_wrap(~ country, scale="free_y") +
-  geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant),
-            position="stack") +
-  scale_fill_manual("", values=lineage_cols) +
-  # annotate("rect", xmin=max(GISAID_india$date_num)+1,
-  #          xmax=as.Date("2021-05-31"), ymin=0, ymax=1, alpha=0.3, fill="white") + # extrapolated part
-  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y") +   theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +
-  # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
-  theme_hc() + theme(legend.position="right",
-                     axis.title.x=element_blank()) +
-  ylab("New confirmed cases per day") +
-  ggtitle("NEW CONFIRMED SARS-CoV2 CASES BY VARIANT IN ISRAEL",
-          subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, "\nand multinomial fit ", model, ",\nHere only showing data for Israel")) +
-  # coord_cartesian(xlim=c(as.Date("2021-06-01"),NA))
-  theme(plot.title=element_text(size=25)) +
-  theme(plot.subtitle=element_text(size=20)) +
-  coord_cartesian(ylim=c(1,NA), xlim=c(as.Date("2020-01-01"),NA))
-
-ggsave(file=file.path(plotdir,"\\confirmed cases multinomial fit_stacked area plot_ISRAEL.png"), width=12, height=6)
-
-
-
-# zoomed in since june 2022
-ggplot(data=fit_preds2[fit_preds2$date>=as.Date("2022-06-01"),], 
-       aes(x=date, y=cases, group=variant)) + 
-  facet_wrap(~ country, scale="free_y", ncol=ncls) +
-  geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), 
-            position="stack") +
-  scale_fill_manual("", values=lineage_cols[-c(2,3,4,5,6,7,8)]) + # TO DO: determine dropped levels automatically
-  # annotate("rect", xmin=max(GISAID_india$date_num)+1, 
-  #          xmax=as.Date("2021-05-31"), ymin=0, ymax=1, alpha=0.3, fill="white") + # extrapolated part
-  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y") +   theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) + 
-  # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
-  theme_hc() + theme(legend.position="right", 
-                     axis.title.x=element_blank()) + 
-  ylab("New confirmed cases per day") +
-  ggtitle("NEW CONFIRMED SARS-CoV2 CASES BY VARIANT",
-          subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, " plus COG-UK data\nand multinomial fit ", model, ",\nselected countries with >=", min_n, " level5 or level6+ variant sequences shown")) +
-  # coord_cartesian(xlim=c(as.Date("2021-06-01"),NA))
-  theme(plot.title=element_text(size=25)) +
-  theme(plot.subtitle=element_text(size=20)) +
-  coord_cartesian(ylim=c(1,NA), xlim=c(as.Date("2022-06-01"),NA))
-
-ggsave(file=file.path(plotdir,"\\confirmed cases multinomial fit_stacked area plot by country_zoomed.png"), 
-       width=4*ncls, height=4*ncls/1.2)
-
-# TO DO : get IHME infection estimates from links below,
-# convolve these to cases & map them onto variant frequencies
-# https://www.healthdata.org/covid/data-downloads
-# https://ihmecovid19storage.blob.core.windows.net/archive/2022-07-19/data_download_file_reference_2020.csv
-# https://ihmecovid19storage.blob.core.windows.net/archive/2022-07-19/data_download_file_reference_2021.csv
-# https://ihmecovid19storage.blob.core.windows.net/archive/2022-07-19/data_download_file_reference_2022.csv
-
-# TO DO : get mortality data from Eurostat with Eurostat package & https://www.mortality.org/Data/STMF
-# & for the US CDC Wonder data or usmortality.com
-# convolve case data by variant to mortality data & calculate
-# death toll of each variant
-
-# TO DO : finish spatial multinomial tensor spline fit in function of latitude & longitude & time
-# (especially good for countries with limited or no sequencing data)
-
-
-# FUNCTION TO CALCULATE EFFECTIVE REPRODUCTION NUMBER R FROM
-# THE INSTANTANEOUS GROWTH RATE r, ASSUMING A GAMMA DISTRIBUTED GENERATION TIME
-# from epiforecasts package growth_to_R
-# https://github.com/epiforecasts/EpiNow2/blob/5015e75f7048c2580b2ebe83e46d63124d014861/R/utilities.R#L109
-# https://royalsocietypublishing.org/doi/10.1098/rsif.2020.0144
-# (better if distribution is known to be gamma, based on the full integral)
-Re_from_r <- function(r, gamma_mean=4.7, gamma_sd=2.9) {
-  k <- (gamma_sd / gamma_mean)^2
-  R <- (1 + k * r * gamma_mean)^(1 / k)
-  return(R)
-}
-
-Re_from_r(0.18, gamma_mean=4.7, gamma_sd=2.9) # from fit Moritz Gerstung for Germany
-# 2.1/6=35% of the population susceptible to BQ.1.1
-gc()
-
+# # sel_countries_fig = c("Austria", "Belgium", "Denmark", "France", "Germany", 
+# #                       "Italy", "Netherlands", "New Zealand", "Singapore", "United Kingdom")
+# # country_data = get_national_data(countries=sel_countries_fig,
+# #                                  source="who",
+# #                                  level=1)
+# country_data$country[country_data$country=="United States"] = "USA"
+# country_data$country = factor(country_data$country, levels=levels(fit_preds$country))
+# country_data = country_data[country_data$date<(max(country_data$date)-3),] # drop data last 3 days
+# qplot(data=country_data, x=date, y=cases_new, group=country, geom="blank", colour=country) +
+#   facet_wrap(~country, scale="free_y") +
+#   geom_ma(ma_fun = SMA, n = 7, lty=1) +
+#   # scale_colour_hue("") +
+#   ylab("New cases per day") +
+#   labs(tag = tag) +
+#   theme(plot.tag.position = "bottomright",
+#         plot.tag = element_text(vjust = 1, hjust = 1, size=8)) +
+#   coord_trans(y="sqrt") +
+#   theme(axis.text.x = element_text(angle = 45, hjust=1)) +
+#   xlab("") +
+#   theme(legend.position="none") +
+#   ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY",
+#           subtitle="7 day simple moving average, using\nWHO case data accessed via covidregionaldata package")
+# # ggsave(file=file.path(plotdir, "new cases countries with more than 10 sequenced BA_2_75 cases.png"), width=7, height=5)
+# 
+# fit_preds$totnewcases = 
+#   country_data$cases_new[match(interaction(fit_preds$country,
+#                                           fit_preds$date),
+#                                       interaction(country_data$country, 
+#                                                   country_data$date))]
+# fit_preds = fit_preds %>% 
+#   group_by(country) %>% 
+#   mutate(totnewcases_smoothed = rollmean(totnewcases, 7, na.pad = T))
+# fit_preds$cases = fit_preds$totnewcases_smoothed*fit_preds$predicted
+# fit_preds$cases[fit_preds$cases==0] = NA
+# fit_preds$cases[fit_preds$predicted<0.001] = NA
+# 
+# fit_preds_sel = fit_preds
+# # fit_preds_sel = fit_preds_sel[fit_preds_sel$country %in% sel_countries_fig,]
+# fit_preds_sel = fit_preds_sel[fit_preds_sel$country %in% sel_countries,]
+# fit_preds_sel = fit_preds_sel[!fit_preds_sel$country %in%
+#                                 c("Hong Kong","Czech Republic","Reunion"),]
+# fit_preds_sel$country = factor(fit_preds_sel$country)
+# 
+# fit_preds2 = fit_preds_sel
+# fit_preds2$cases[fit_preds2$cases==0] = NA
+# fit_preds2$cases[fit_preds2$cases<=1] = NA
+# fit_preds2$country = factor(fit_preds2$country)
+# fit_preds2$variant = factor(fit_preds2$variant, levels=levels_VARIANTS)
+# 
+# ggplot(data=fit_preds2, 
+#        aes(x=date, y=cases)) + 
+#   facet_wrap(~ country, scale="free", ncol=ncls) +
+#   geom_line(aes(lwd=I(1), colour=variant, group=variant)) +
+#   geom_line(data=fit_preds2, aes(x=date, y=totnewcases_smoothed, lwd=I(1.5)), 
+#             colour=alpha("black",0.3)) +
+#   # geom_line(aes(lwd=I(1), colour=LINEAGE2, group=LINEAGE2)) +
+#   scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y") +   theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +
+#   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
+#   theme_hc() + theme(legend.position="right", 
+#                      axis.title.x=element_blank()) + 
+#   ylab("New confirmed cases per day") +
+#   ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT",
+#           subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, " plus COG-UK data\nand multinomial fit ", model, ",\nselected countries with >=", min_n, " level5 or level6+ variant sequences shown")) +
+#   scale_colour_manual("lineage", values=lineage_cols) +
+#   scale_y_log10() +
+#   coord_cartesian(xlim=c(as.Date("2021-01-01"),NA)) +
+#   theme(plot.title=element_text(size=25)) +
+#   theme(plot.subtitle=element_text(size=20)) 
+# # coord_cartesian(xlim=c(as.Date("2021-01-01"),max(fit_india_multi_predsbystate2$date)-20))
+# 
+# ggsave(file=file.path(plotdir,"confirmed cases multinomial fit_by country_log10 scale.png"), 
+#        width=4*ncls, height=4*ncls/1.2)
+# 
+# ggplot(data=fit_preds2, 
+#        aes(x=date, y=cases)) + 
+#   facet_wrap(~ country, scale="free", ncol=ncls) +
+#   geom_line(aes(lwd=I(1), colour=variant, group=variant)) +
+#   geom_line(data=fit_preds2, aes(x=date, y=totnewcases_smoothed, lwd=I(1.5)), 
+#             colour=alpha("black",0.3)) +
+#   # geom_line(aes(lwd=I(1), colour=LINEAGE2, group=LINEAGE2)) +
+#   scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y") +   theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +
+#   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
+#   theme_hc() + theme(legend.position="right", 
+#                      axis.title.x=element_blank()) + 
+#   ylab("New confirmed cases per day") +
+#   ggtitle("NEW CONFIRMED SARS-CoV2 CASES PER DAY BY VARIANT",
+#           subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, " plus COG-UK data\nand multinomial fit ", model, ",\nselected countries with >=", min_n, " level5 or level6+ variant sequences shown")) +
+#   scale_colour_manual("lineage", values=lineage_cols) +
+#   scale_y_log10() +
+#   # coord_cartesian(ylim=c(1,NA), xlim=c(as.Date("2021-01-01"),NA)) +
+#   theme(plot.title=element_text(size=25)) +
+#   theme(plot.subtitle=element_text(size=20)) +
+#   coord_cartesian(xlim=c(as.Date("2022-01-01"),NA))
+# 
+# ggsave(file=file.path(plotdir,"confirmed cases multinomial fit_by country_log10 scale_zoomed.png"), 
+#        width=4*ncls, height=4*ncls/1.2)
+# 
+# # stacked area chart
+# ggplot(data=fit_preds2, 
+#        aes(x=date, y=cases, group=variant)) + 
+#   facet_wrap(~ country, scale="free_y", ncol=ncls) +
+#   geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), 
+#             position="stack") +
+#   scale_fill_manual("", values=lineage_cols) +
+#   # annotate("rect", xmin=max(GISAID_india$date_num)+1, 
+#   #          xmax=as.Date("2021-05-31"), ymin=0, ymax=1, alpha=0.3, fill="white") + # extrapolated part
+#   scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y") +   theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +
+#   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
+#   theme_hc() + theme(legend.position="right", 
+#                      axis.title.x=element_blank()) + 
+#   ylab("New confirmed cases per day") +
+#   ggtitle("NEW CONFIRMED SARS-CoV2 CASES BY VARIANT",
+#           subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, " plus COG-UK data\nand multinomial fit ", model, ",\nselected countries with >=", min_n, " level5 or level6+ variant sequences shown")) +
+#   # coord_cartesian(xlim=c(as.Date("2021-06-01"),NA))
+#   theme(plot.title=element_text(size=25)) +
+#   theme(plot.subtitle=element_text(size=20)) +
+#   coord_cartesian(ylim=c(1,NA), xlim=c(as.Date("2020-01-01"),NA))
+# 
+# ggsave(file=file.path(plotdir,"\\confirmed cases multinomial fit_stacked area plot by country.png"), 
+#        width=4*ncls, height=4*ncls/1.2)
+# 
+# 
+# # stacked area chart, some selected countries
+# ggplot(data=fit_preds2[fit_preds2$country %in% 
+#                          c("France", "Belgium", "Denmark", "Germany"),], 
+#        aes(x=date, y=cases, group=variant)) + 
+#   facet_wrap(~ country, scale="free_y", ncol=2) +
+#   geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), 
+#             position="stack") +
+#   scale_fill_manual("", values=lineage_cols) +
+#   # annotate("rect", xmin=max(GISAID_india$date_num)+1, 
+#   #          xmax=as.Date("2021-05-31"), ymin=0, ymax=1, alpha=0.3, fill="white") + # extrapolated part
+#   scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y") +   theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +
+#   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
+#   theme_hc() + theme(legend.position="right", 
+#                      axis.title.x=element_blank()) + 
+#   ylab("New confirmed cases per day") +
+#   ggtitle("NEW CONFIRMED SARS-CoV2 CASES BY VARIANT",
+#           subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, " plus COG-UK data\nand multinomial fit ", model, ",\na few selected countries shown")) +
+#   # coord_cartesian(xlim=c(as.Date("2021-06-01"),NA))
+#   theme(plot.title=element_text(size=25)) +
+#   theme(plot.subtitle=element_text(size=20)) +
+#   coord_cartesian(ylim=c(1,NA), xlim=c(as.Date("2020-01-01"),NA))
+# 
+# ggsave(file=file.path(plotdir,"\\confirmed cases multinomial fit_stacked area plot by country_sel countries.png"), 
+#        width=6*2, height=6*2/2)
+# 
+# 
+# # stacked area chart, just for Belgium
+# ggplot(data=fit_preds2[fit_preds2$country=="Belgium",], 
+#        aes(x=date, y=cases, group=variant)) + 
+#   # facet_wrap(~ country, scale="free_y") +
+#   geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), 
+#             position="stack") +
+#   scale_fill_manual("", values=lineage_cols) +
+#   # annotate("rect", xmin=max(GISAID_india$date_num)+1, 
+#   #          xmax=as.Date("2021-05-31"), ymin=0, ymax=1, alpha=0.3, fill="white") + # extrapolated part
+#   scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y") +   theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +
+#   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
+#   theme_hc() + theme(legend.position="right", 
+#                      axis.title.x=element_blank()) + 
+#   ylab("New confirmed cases per day") +
+#   ggtitle("NEW CONFIRMED SARS-CoV2 CASES BY VARIANT IN BELGIUM",
+#           subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, "\nand multinomial fit ", model, ",\nHere only showing data for Belgium")) +
+#   # coord_cartesian(xlim=c(as.Date("2021-06-01"),NA))
+#   theme(plot.title=element_text(size=25)) +
+#   theme(plot.subtitle=element_text(size=20)) +
+#   coord_cartesian(ylim=c(1,NA), xlim=c(as.Date("2020-01-01"),NA))
+# 
+# ggsave(file=file.path(plotdir,"\\confirmed cases multinomial fit_stacked area plot_BELGIUM.png"), width=12, height=6)
+# 
+# # stacked area chart, just for France
+# ggplot(data=fit_preds2[fit_preds2$country=="France",], 
+#        aes(x=date, y=cases, group=variant)) + 
+#   # facet_wrap(~ country, scale="free_y") +
+#   geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), 
+#             position="stack") +
+#   scale_fill_manual("", values=lineage_cols) +
+#   # annotate("rect", xmin=max(GISAID_india$date_num)+1, 
+#   #          xmax=as.Date("2021-05-31"), ymin=0, ymax=1, alpha=0.3, fill="white") + # extrapolated part
+#   scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y") +   theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +
+#   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
+#   theme_hc() + theme(legend.position="right", 
+#                      axis.title.x=element_blank()) + 
+#   ylab("New confirmed cases per day") +
+#   ggtitle("NEW CONFIRMED SARS-CoV2 CASES BY VARIANT IN FRANCE",
+#           subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, "\nand multinomial fit ", model, ",\nHere only showing data for France")) +
+#   # coord_cartesian(xlim=c(as.Date("2021-06-01"),NA))
+#   theme(plot.title=element_text(size=25)) +
+#   theme(plot.subtitle=element_text(size=20)) +
+#   coord_cartesian(ylim=c(1,NA), xlim=c(as.Date("2020-01-01"),NA))
+# 
+# ggsave(file=file.path(plotdir,"\\confirmed cases multinomial fit_stacked area plot_FRANCE.png"), width=12, height=6)
+# 
+# 
+# # stacked area chart, just for Switzerland
+# ggplot(data=fit_preds2[fit_preds2$country=="Switzerland",], 
+#        aes(x=date, y=cases, group=variant)) + 
+#   # facet_wrap(~ country, scale="free_y") +
+#   geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), 
+#             position="stack") +
+#   scale_fill_manual("", values=lineage_cols) +
+#   # annotate("rect", xmin=max(GISAID_india$date_num)+1, 
+#   #          xmax=as.Date("2021-05-31"), ymin=0, ymax=1, alpha=0.3, fill="white") + # extrapolated part
+#   scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y") +   theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +
+#   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
+#   theme_hc() + theme(legend.position="right", 
+#                      axis.title.x=element_blank()) + 
+#   ylab("New confirmed cases per day") +
+#   ggtitle("NEW CONFIRMED SARS-CoV2 CASES BY VARIANT IN SWITZERLAND",
+#           subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, "\nand multinomial fit ", model, ",\nHere only showing data for Switzerland")) +
+#   # coord_cartesian(xlim=c(as.Date("2021-06-01"),NA))
+#   theme(plot.title=element_text(size=25)) +
+#   theme(plot.subtitle=element_text(size=20)) +
+#   coord_cartesian(ylim=c(1,NA), xlim=c(as.Date("2020-01-01"),NA))
+# 
+# ggsave(file=file.path(plotdir,"\\confirmed cases multinomial fit_stacked area plot_SWITZERLAND.png"), width=12, height=6)
+# 
+# 
+# # stacked area chart, just for United Kingdom
+# ggplot(data=fit_preds2[fit_preds2$country=="United Kingdom",], 
+#        aes(x=date, y=cases, group=variant)) + 
+#   # facet_wrap(~ country, scale="free_y") +
+#   geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), 
+#             position="stack") +
+#   scale_fill_manual("", values=lineage_cols) +
+#   # annotate("rect", xmin=max(GISAID_india$date_num)+1, 
+#   #          xmax=as.Date("2021-05-31"), ymin=0, ymax=1, alpha=0.3, fill="white") + # extrapolated part
+#   scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y") +   theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +
+#   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
+#   theme_hc() + theme(legend.position="right", 
+#                      axis.title.x=element_blank()) + 
+#   ylab("New confirmed cases per day") +
+#   ggtitle("NEW CONFIRMED SARS-CoV2 CASES BY VARIANT IN THE UK",
+#           subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, " & COG-UK data\nand multinomial fit ", model, ",\nHere only showing data for the UK")) +
+#   # coord_cartesian(xlim=c(as.Date("2021-06-01"),NA))
+#   theme(plot.title=element_text(size=25)) +
+#   theme(plot.subtitle=element_text(size=20)) +
+#   coord_cartesian(ylim=c(1,NA), xlim=c(as.Date("2020-01-01"),NA))
+# 
+# ggsave(file=file.path(plotdir,"\\confirmed cases multinomial fit_stacked area plot_UK.png"), width=12, height=6)
+# 
+# 
+# # stacked area chart, just for Singapore
+# ggplot(data=fit_preds2[fit_preds2$country=="Singapore",], 
+#        aes(x=date, y=cases, group=variant)) + 
+#   # facet_wrap(~ country, scale="free_y") +
+#   geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), 
+#             position="stack") +
+#   scale_fill_manual("", values=lineage_cols) +
+#   # annotate("rect", xmin=max(GISAID_india$date_num)+1, 
+#   #          xmax=as.Date("2021-05-31"), ymin=0, ymax=1, alpha=0.3, fill="white") + # extrapolated part
+#   scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y") +   theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +
+#   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
+#   theme_hc() + theme(legend.position="right", 
+#                      axis.title.x=element_blank()) + 
+#   ylab("New confirmed cases per day") +
+#   ggtitle("NEW CONFIRMED SARS-CoV2 CASES BY VARIANT IN SINGAPORE",
+#           subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, "\nand multinomial fit ", model, ",\nHere only showing data for Singapore")) +
+#   # coord_cartesian(xlim=c(as.Date("2021-06-01"),NA))
+#   theme(plot.title=element_text(size=25)) +
+#   theme(plot.subtitle=element_text(size=20)) +
+#   coord_cartesian(ylim=c(1,NA), xlim=c(as.Date("2020-01-01"),NA))
+# 
+# ggsave(file=file.path(plotdir,"\\confirmed cases multinomial fit_stacked area plot_SINGAPORE.png"), width=12, height=6)
+# 
+# # stacked area chart, just for Israel
+# ggplot(data=fit_preds2[fit_preds2$country=="Israel",],
+#        aes(x=date, y=cases, group=variant)) +
+#   # facet_wrap(~ country, scale="free_y") +
+#   geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant),
+#             position="stack") +
+#   scale_fill_manual("", values=lineage_cols) +
+#   # annotate("rect", xmin=max(GISAID_india$date_num)+1,
+#   #          xmax=as.Date("2021-05-31"), ymin=0, ymax=1, alpha=0.3, fill="white") + # extrapolated part
+#   scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y") +   theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +
+#   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
+#   theme_hc() + theme(legend.position="right",
+#                      axis.title.x=element_blank()) +
+#   ylab("New confirmed cases per day") +
+#   ggtitle("NEW CONFIRMED SARS-CoV2 CASES BY VARIANT IN ISRAEL",
+#           subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, "\nand multinomial fit ", model, ",\nHere only showing data for Israel")) +
+#   # coord_cartesian(xlim=c(as.Date("2021-06-01"),NA))
+#   theme(plot.title=element_text(size=25)) +
+#   theme(plot.subtitle=element_text(size=20)) +
+#   coord_cartesian(ylim=c(1,NA), xlim=c(as.Date("2020-01-01"),NA))
+# 
+# ggsave(file=file.path(plotdir,"\\confirmed cases multinomial fit_stacked area plot_ISRAEL.png"), width=12, height=6)
+# 
+# 
+# 
+# # zoomed in since june 2022
+# ggplot(data=fit_preds2[fit_preds2$date>=as.Date("2022-06-01"),], 
+#        aes(x=date, y=cases, group=variant)) + 
+#   facet_wrap(~ country, scale="free_y", ncol=ncls) +
+#   geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), 
+#             position="stack") +
+#   scale_fill_manual("", values=lineage_cols[-c(2,3,4,5,6,7,8)]) + # TO DO: determine dropped levels automatically
+#   # annotate("rect", xmin=max(GISAID_india$date_num)+1, 
+#   #          xmax=as.Date("2021-05-31"), ymin=0, ymax=1, alpha=0.3, fill="white") + # extrapolated part
+#   scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y") +   theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) + 
+#   # guides(color = guide_legend(reverse=F, nrow=1, byrow=T), fill = guide_legend(reverse=F, nrow=1, byrow=T)) +
+#   theme_hc() + theme(legend.position="right", 
+#                      axis.title.x=element_blank()) + 
+#   ylab("New confirmed cases per day") +
+#   ggtitle("NEW CONFIRMED SARS-CoV2 CASES BY VARIANT",
+#           subtitle=paste0("case data accessed via the covidregionaldata package\nlineage frequencies based on GISAID data up to ",today, " plus COG-UK data\nand multinomial fit ", model, ",\nselected countries with >=", min_n, " level5 or level6+ variant sequences shown")) +
+#   # coord_cartesian(xlim=c(as.Date("2021-06-01"),NA))
+#   theme(plot.title=element_text(size=25)) +
+#   theme(plot.subtitle=element_text(size=20)) +
+#   coord_cartesian(ylim=c(1,NA), xlim=c(as.Date("2022-06-01"),NA))
+# 
+# ggsave(file=file.path(plotdir,"\\confirmed cases multinomial fit_stacked area plot by country_zoomed.png"), 
+#        width=4*ncls, height=4*ncls/1.2)
+# 
+# # TO DO : get IHME infection estimates from links below,
+# # convolve these to cases & map them onto variant frequencies
+# # https://www.healthdata.org/covid/data-downloads
+# # https://ihmecovid19storage.blob.core.windows.net/archive/2022-07-19/data_download_file_reference_2020.csv
+# # https://ihmecovid19storage.blob.core.windows.net/archive/2022-07-19/data_download_file_reference_2021.csv
+# # https://ihmecovid19storage.blob.core.windows.net/archive/2022-07-19/data_download_file_reference_2022.csv
+# 
+# # TO DO : get mortality data from Eurostat with Eurostat package & https://www.mortality.org/Data/STMF
+# # & for the US CDC Wonder data or usmortality.com
+# # convolve case data by variant to mortality data & calculate
+# # death toll of each variant
+# 
+# # TO DO : finish spatial multinomial tensor spline fit in function of latitude & longitude & time
+# # (especially good for countries with limited or no sequencing data)
+# 
+# 
+# # FUNCTION TO CALCULATE EFFECTIVE REPRODUCTION NUMBER R FROM
+# # THE INSTANTANEOUS GROWTH RATE r, ASSUMING A GAMMA DISTRIBUTED GENERATION TIME
+# # from epiforecasts package growth_to_R
+# # https://github.com/epiforecasts/EpiNow2/blob/5015e75f7048c2580b2ebe83e46d63124d014861/R/utilities.R#L109
+# # https://royalsocietypublishing.org/doi/10.1098/rsif.2020.0144
+# # (better if distribution is known to be gamma, based on the full integral)
+# Re_from_r <- function(r, gamma_mean=4.7, gamma_sd=2.9) {
+#   k <- (gamma_sd / gamma_mean)^2
+#   R <- (1 + k * r * gamma_mean)^(1 / k)
+#   return(R)
+# }
+# 
+# Re_from_r(0.18, gamma_mean=4.7, gamma_sd=2.9) # from fit Moritz Gerstung for Germany
+# # 2.1/6=35% of the population susceptible to BQ.1.1
+# gc()
+# 
 

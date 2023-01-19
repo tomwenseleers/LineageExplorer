@@ -26,7 +26,19 @@ Here current growth rate advantages of different variants relative to currently 
 
 Here fitted variant frequencies (share of sequenced genomes) through time for some selected countries or states :
 
+![](plots/GISAID/predicted%20lineage%20freqs_logit%20scale.png)
+
 ![](plots/GISAID/predicted%20lineage%20freqs_last6months_logit%20scale.png)
+
+![](plots/GISAID/predicted%20lineage%20freqs_USA%20-%20Northeast_logit%20scale.png)
+
+![](plots/GISAID/predicted%20lineage%20freqs_England_logit%20scale.png)
+
+![](plots/GISAID/predicted%20lineage%20freqs_Scotland_logit%20scale.png)
+
+![](plots/GISAID/predicted%20lineage%20freqs_Denmark_logit%20scale.png)
+
+![](plots/GISAID/predicted%20lineage%20freqs_Israel_logit%20scale.png)
 
 ## Limitations
 
