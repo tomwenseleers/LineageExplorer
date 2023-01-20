@@ -2,7 +2,7 @@
 # DATA: GISAID OR NCBI DATA, ACCESSED VIA COVSPECTRUM API ####
 
 # T. Wenseleers
-# last update 19 JANUARY 2023
+# last update 20 JANUARY 2023
 
 # for similar analysis see https://nbviewer.org/github/gerstung-lab/SARS-CoV-2-International/blob/main/genomicsurveillance-int.ipynb#Check-some-fast-growing-lineages
 
@@ -173,6 +173,7 @@ levels_VARIANTS = c("Other", "B.1.177 (EU1)", "B.1.160 (EU2)",
                     "Omicron (BA.5*)", "Omicron (BA.5.2*)", "Omicron (BF.7*)", 
                     "Omicron (BA.2.76*)", 
                     "Omicron (BA.2.75*)", 
+                    "Omicron (BQ.1.1*)",
                     "Omicron (BQ.1*)", 
                     "Omicron (BR.2.1*)",
                     "Omicron (CH.1.1*)", 
@@ -183,7 +184,7 @@ levels_VARIANTS = c("Other", "B.1.177 (EU1)", "B.1.160 (EU2)",
                     "Omicron (XBB.1.5*)"
 )
 target_variant = "Omicron (XBB.1.5*)"
-baseline = "Omicron (BQ.1*)"
+baseline = "Omicron (BQ.1.1*)"
 # I am using this order in plots, baseline is in fits coded as reference level
 
 data$variant <- case_when(
@@ -193,6 +194,8 @@ data$variant <- case_when(
   linplus("XBF") ~ "Omicron (XBF*)",
   linplus("CH.1.1") ~ "Omicron (CH.1.1*)",
   linplus("XAY.2") ~ "Deltacron (XAY.2*)",
+  linplus("BQ.1.1")&
+    datefrom("2022-02-01") ~ "Omicron (BQ.1.1*)",
   linplus("BQ.1")&
     datefrom("2022-02-01") ~ "Omicron (BQ.1*)",
   linplus("BA.2.75")&
@@ -261,7 +264,8 @@ lineage_cols = case_when(
     levels_VARIANTS=="Omicron (BF.7*)" ~ "dodgerblue",
     levels_VARIANTS=="Omicron (BA.2.76*)" ~ "magenta4",
     levels_VARIANTS=="Omicron (BA.2.75*)" ~ "magenta",
-    levels_VARIANTS=="Omicron (BQ.1*)" ~ "orange",
+    levels_VARIANTS=="Omicron (BQ.1.1*)" ~ "orange",
+    levels_VARIANTS=="Omicron (BQ.1*)" ~ "orange2",
     levels_VARIANTS=="Omicron (BR.2.1*)" ~ "orange3",
     levels_VARIANTS=="Omicron (CH.1.1*)" ~ "yellow3",  
     levels_VARIANTS=="Deltacron (XAY.2*)" ~ "cyan4",
@@ -375,6 +379,21 @@ muller_raw_all
 
 ggsave(file=file.path(plotdir,"muller plot_raw data.png"), width=12, height=5)
 
+ggplot(data=data_agbyweekcountry1[data_agbyweekcountry1$division=="England",], aes(x=date, y=count, group=variant)) +
+  geom_area(aes(lwd=I(1.2), colour=NULL, fill=variant, group=variant), position="fill") +
+  scale_fill_manual("", values=lineage_cols) +
+  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y") +
+  theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +
+  # guides(color = guide_legend(reverse=F, nrow=2, byrow=T), fill = guide_legend(reverse=F, nrow=2, byrow=T)) +
+  theme_hc() +
+  ylab("Share") +
+  theme(legend.position="right",
+        axis.title.x=element_blank()) +
+  labs(title = "SARS-CoV2 LINEAGE FREQUENCIES",
+       subtitle=paste0("Raw GISAID data up to ",today," (using NextClade Pangolin lineages)")) +
+  coord_cartesian(xlim=c(min(data$date),max(data$date)), expand=c(0)) +
+  labs(tag = tag) + theme(plot.tag.position = "bottomright", plot.tag = element_text(vjust = 1, hjust = 1, size=8))
+
 
 
 
@@ -475,12 +494,12 @@ save.image("./environment.RData")
 saveRDS(fit_best, file="./fits/multinom_fit.rds")
 
 
-# CALCULATE GROWTH RATE ADVANTAGE OVER BASELINE REFERENCE LEVEL BQ.1* TODAY ####
+# CALCULATE GROWTH RATE ADVANTAGE OVER BASELINE REFERENCE LEVEL BQ.1.1* TODAY ####
 
 # with new faster marginaleffects code
 library(marginaleffects)
 system.time(meffects <- marginaleffects(fit_best, 
-                                               type = "link", # = additive log-ratio = growth rate advantage relative to BQ.1*
+                                               type = "link", # = additive log-ratio = growth rate advantage relative to BQ.1.1*
                                                variables = c("date_num"),
                                                by = c("group"),
                                                vcov = fit_best$vcov,
@@ -489,7 +508,7 @@ system.time(meffects <- marginaleffects(fit_best,
 
 # growth rate advantage compared to reference level BA.5.2 by region
 system.time(meffects_byregion <- marginaleffects(fit_best, 
-                                               type = "link", # = additive log-ratio = growth rate advantage relative to BQ.1*
+                                               type = "link", # = additive log-ratio = growth rate advantage relative to BQ.1.1*
                                                variables = c("date_num"),
                                                by = c("group", "region"),
                                                vcov = fit_best$vcov,
@@ -530,7 +549,7 @@ cols = colorRampPalette(c("red3", "blue3"))(length(levels(meffects_sel1$group)))
 qplot(data=meffects_sel1, 
       x=group, y=dydx*100, ymin=conf.low*100, ymax=conf.high*100, fill=group, geom="col", 
       width=I(0.7)) +
-  geom_linerange(aes(lwd=I(0.4))) + ylab("Growth rate advantage\nrelative to BQ.1* (% per day)") +
+  geom_linerange(aes(lwd=I(0.4))) + ylab("Growth rate advantage\nrelative to BQ.1.1* (% per day)") +
   scale_fill_manual(values=cols) +
   theme(legend.position="none") + xlab("") +
   ggtitle("GROWTH RATE ADVANTAGE OF SARS-CoV2 VARIANTS",
@@ -573,7 +592,7 @@ qplot(data=meffects_sel2,
       x=group, y=dydx*100, ymin=conf.low*100, ymax=conf.high*100, fill=group, geom="col", 
       width=I(0.7)) +
   facet_wrap(~ region, ncol=1) +
-  geom_linerange(aes(lwd=I(0.4))) + ylab("Growth rate advantage\nrelative to BQ.1* (% per day)") +
+  geom_linerange(aes(lwd=I(0.4))) + ylab("Growth rate advantage\nrelative to BQ.1.1* (% per day)") +
   scale_fill_manual(values=cols) +
   theme(legend.position="none") + xlab("") +
   ggtitle("GROWTH RATE ADVANTAGE OF SARS-CoV2 VARIANTS",
@@ -590,7 +609,7 @@ reg = "North America"
 qplot(data=meffects_sel2[meffects_sel2$region==reg,], 
       x=group, y=dydx*100, ymin=conf.low*100, ymax=conf.high*100, fill=group, geom="col", 
       width=I(0.7)) +
-  geom_linerange(aes(lwd=I(0.4))) + ylab("Growth rate advantage\nrelative to BQ.1* (% per day)") +
+  geom_linerange(aes(lwd=I(0.4))) + ylab("Growth rate advantage\nrelative to BQ.1.1* (% per day)") +
   scale_fill_manual(values=cols) +
   theme(legend.position="none") + xlab("") +
   ggtitle(paste0("GROWTH RATE ADVANTAGE OF SARS-CoV2 VARIANTS\nIN ", toupper(reg)),
@@ -607,7 +626,7 @@ reg = "Europe"
 qplot(data=meffects_sel2[meffects_sel2$region==reg,], 
       x=group, y=dydx*100, ymin=conf.low*100, ymax=conf.high*100, fill=group, geom="col", 
       width=I(0.7)) +
-  geom_linerange(aes(lwd=I(0.4))) + ylab("Growth rate advantage\nrelative to BQ.1* (% per day)") +
+  geom_linerange(aes(lwd=I(0.4))) + ylab("Growth rate advantage\nrelative to BQ.1.1* (% per day)") +
   scale_fill_manual(values=cols) +
   theme(legend.position="none") + xlab("") +
   ggtitle(paste0("GROWTH RATE ADVANTAGE OF SARS-CoV2 VARIANTS\nIN ", toupper(reg)),

@@ -108,6 +108,8 @@ data_percountry_perdivision = data_percountry_perdivision[!data_percountry_perdi
            date = V2,
            nextcladePangoLineage = V3
            )
+  subsettoONS = FALSE # subset to ONS samples?
+  if (subsettoONS) data_percountry_perdivision = data_percountry_perdivision[grepl("QEUH", data_percountry_perdivision$id),]
   data_percountry_perdivision$division = str_extract(data_percountry_perdivision$id, "^[^/]+")
   data_percountry_perdivision$region = "United Kingdom"
   data_percountry_perdivision$count = 1
@@ -189,6 +191,7 @@ levels_VARIANTS = c("Other", "B.1.177 (EU1)", "B.1.160 (EU2)",
                     "Omicron (BA.5*)", "Omicron (BA.5.2*)", "Omicron (BF.7*)", 
                     "Omicron (BA.2.76*)", 
                     "Omicron (BA.2.75*)", 
+                    "Omicron (BQ.1.1*)",
                     "Omicron (BQ.1*)", 
                     "Omicron (BR.2.1*)",
                     "Omicron (CH.1.1*)", 
@@ -199,7 +202,7 @@ levels_VARIANTS = c("Other", "B.1.177 (EU1)", "B.1.160 (EU2)",
                     "Omicron (XBB.1.5*)"
 )
 target_variant = "Omicron (XBB.1.5*)"
-baseline = "Omicron (BQ.1*)"
+baseline = "Omicron (BQ.1.1*)"
 # I am using this order in plots, baseline is in fits coded as reference level
 
 data$variant <- case_when(
@@ -209,6 +212,8 @@ data$variant <- case_when(
   linplus("XBF") ~ "Omicron (XBF*)",
   linplus("CH.1.1") ~ "Omicron (CH.1.1*)",
   linplus("XAY.2") ~ "Deltacron (XAY.2*)",
+  linplus("BQ.1.1")&
+    datefrom("2022-02-01") ~ "Omicron (BQ.1.1*)",
   linplus("BQ.1")&
     datefrom("2022-02-01") ~ "Omicron (BQ.1*)",
   linplus("BA.2.75")&
@@ -278,6 +283,7 @@ lineage_cols = case_when(
     levels_VARIANTS=="Omicron (BA.2.76*)" ~ "magenta4",
     levels_VARIANTS=="Omicron (BA.2.75*)" ~ "magenta",
     levels_VARIANTS=="Omicron (BQ.1*)" ~ "orange",
+    levels_VARIANTS=="Omicron (BQ.1.1*)" ~ "orange2",
     levels_VARIANTS=="Omicron (BR.2.1*)" ~ "orange3",
     levels_VARIANTS=="Omicron (CH.1.1*)" ~ "yellow3",  
     levels_VARIANTS=="Deltacron (XAY.2*)" ~ "cyan4",
@@ -512,7 +518,7 @@ gc()
 if (source!="COGUK") saveRDS(fit_best, file="./fits/multinom_fit.rds") else saveRDS(fit_best, file="./fits/multinom_fit_COGUK.rds")
 
 
-# CALCULATE GROWTH RATE ADVANTAGE OVER BASELINE REFERENCE LEVEL BQ.1* TODAY ####
+# CALCULATE GROWTH RATE ADVANTAGE OVER BASELINE REFERENCE LEVEL BQ.1.1* TODAY ####
 
 # with new faster marginaleffects code
 library(marginaleffects)
@@ -578,13 +584,14 @@ meffects_sel1 = meffects[meffects$group %in% sel_variants,]
 meffects_sel1$group = factor(meffects_sel1$group, levels=meffects_sel1$group[order(meffects_sel1$dydx, decreasing=T)])
 cols = colorRampPalette(c("red3", "blue3"))(length(levels(meffects_sel1$group)))
 if (source!="COGUK") { subtit = paste0("based on multinomial fit ", model, "\nGISAID data with NextcladePangolin lineage definition,\nusing data from countries with >=", minseqs, " XBB.1.5* sequences") } else {
-  subtit = paste0("based on multinomial fit ", model, "\nCOG-UK data with NextcladePangolin lineages called by Dave McNally") 
+  subtit = paste0("based on multinomial fit ", model, "\nCOG-UK data with NextcladePangolin lineages called by Dave McNally")
+  if (subsettoONS) subtit = paste0(subtit, " (ONS subset)")
   }
 
 qplot(data=meffects_sel1, 
       x=group, y=dydx*100, ymin=conf.low*100, ymax=conf.high*100, fill=group, geom="col", 
       width=I(0.7)) +
-  geom_linerange(aes(lwd=I(0.4))) + ylab("Growth rate advantage\nrelative to BQ.1* (% per day)") +
+  geom_linerange(aes(lwd=I(0.4))) + ylab("Growth rate advantage\nrelative to BQ.1.1* (% per day)") +
   scale_fill_manual(values=cols) +
   theme(legend.position="none") + xlab("") +
   ggtitle("GROWTH RATE ADVANTAGE OF SARS-CoV2 VARIANTS",
@@ -594,7 +601,7 @@ qplot(data=meffects_sel1,
         plot.tag = element_text(vjust = 1, hjust = 1, size=8)) +
   theme(axis.text.x = element_text(angle = 45, hjust=1))
   
-ggsave(file=file.path(plotdir,"growth rate advantage VOCs_overall.png"), width=7, height=5)
+if (!subsettoONS) ggsave(file=file.path(plotdir,"growth rate advantage VOCs_overall.png"), width=7, height=5) else ggsave(file=file.path(plotdir,"growth rate advantage VOCs_overall_ONS.png"), width=7, height=5)
 
 # plot of growth rate advantage of last X newest variants by continent
 # TO DO: order by selective advantage and then take top n
