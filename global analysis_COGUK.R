@@ -2,7 +2,7 @@
 # DATA: COG-UK, NextCladePangolineages called by DaveMc Nally, see https://ukcovid.xyz/variant-landscape.php and https://ukcovid.xyz/cog.csv ####
 
 # T. Wenseleers
-# last update 19 JANUARY 2023
+# last update 20 JANUARY 2023
 
 # for similar analysis see https://nbviewer.org/github/gerstung-lab/SARS-CoV-2-International/blob/main/genomicsurveillance-int.ipynb#Check-some-fast-growing-lineages
 

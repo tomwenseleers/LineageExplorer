@@ -2,6 +2,20 @@ download.file("https://www.dropbox.com/s/o6iu51wu7x90omd/data.rds?dl=1",
               "../data.rds",
               method = "auto", mode="wb")
 datsubs = readRDS(file = "../data.rds")
+unique(datsubs$division)
+datsubs = datsubs[datsubs$division %in% c("New York", "Connecticut", "Israel", "India", "United Kingdom", "Denmark"),]
+datsubs$division = droplevels(datsubs$division)
+datsubs$region = droplevels(datsubs$region)
+k = length(levels(datsubs$variant)) # nr of categories = 3
+
+require(mclustAddons)
+
+softMax = function(eta) { require(mclustAddons)   # inverse link function for multinomial, note mclustAddons also has softmax(eta)
+  s = as.vector(logsumexp(eta))
+  mu = exp(eta-s) # = exp(eta) / rowSums(exp(eta)), but numerically more stable
+  return(mu)
+}
+
 
 # 1. nnet::multinom fit ####
 library(nnet)
@@ -10,8 +24,25 @@ fit_nnet <- nnet::multinom(variant ~ date_num + date_num:region + division,
                            weights = count,
                            data = datsubs,
                            maxit = 10000, MaxNWts = 100000)
-hist(coef(fit_nnet))
-range(coef(fit_nnet))
+coefs_nnet = coef(fit_nnet)
+dim(coefs_nnet) # 2 x 9 = (nr. categories k-1 x nr. of cols in design matrix X)
+range(coefs_nnet) # -1873.8221   771.3715
+
+X = model.matrix(fit_nnet)
+colnames(X)
+coefs = coefs_nnet
+fit_preds = data.frame(softmax(X %*% t(rbind("Omicron (BQ.1*)"=0,coefs))))
+colnames(fit_preds) = levels(datsubs$variant)
+fit_preds = cbind(datsubs, fit_preds)
+fit_preds_long = data.frame(fit_preds %>% pivot_longer(cols=any_of(levels(datsubs$variant)), values_to="share"))
+qplot(data=fit_preds_long, x=date, y=share, group=name, colour=name, geom="line") +
+  facet_wrap(~ division, ncol=2) +
+  scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
+                      labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
+  coord_cartesian(ylim=c(0.0001, 0.99901), expand=0) +
+  theme_few()
+
+
 
 # 2. mblogit multinomial fit ####
 # devtools::install_github("melff/mclogit",subdir="pkg")
@@ -22,11 +53,25 @@ fit_mblogit <- mblogit(formula=variant ~ date_num + date_num:region + division, 
                                                from.table=FALSE,
                                                dispersion=FALSE, # fit overdispersion?
                                                control=mclogit.control(maxit=10000))
-hist(coef(fit_mblogit))
-range(coef(fit_mblogit))
+coefs_mblogit = coef(fit_mblogit)
+coefs_mblogit = matrix(coefs_mblogit, nrow=k-1)
+rownames(coefs_mblogit) = levels(datsubs$variant)[-1]
+X = model.matrix(fit_mblogit)
+colnames(X)
+colnames(coefs_mblogit) = colnames(X)
+range(coefs_mblogit) # -1975.9324   923.4077
 
-plot(coef(fit_nnet),
-     coef(fit_mblogit), pch=16)
+coefs = coefs_mblogit
+fit_preds = data.frame(softmax(X %*% t(rbind("Omicron (BQ.1*)"=0,coefs))))
+colnames(fit_preds) = levels(datsubs$variant)
+fit_preds = cbind(datsubs, fit_preds)
+fit_preds_long = data.frame(fit_preds %>% pivot_longer(cols=any_of(levels(datsubs$variant)), values_to="share"))
+qplot(data=fit_preds_long, x=date, y=share, group=name, colour=name, geom="line") +
+  facet_wrap(~ division, ncol=2) +
+  scale_y_continuous( trans="logit", breaks=c(10^seq(-5,0),0.5,0.9,0.99,0.999),
+                      labels = c("0.001","0.01","0.1","1","10","100","50","90","99","99.9")) +
+  coord_cartesian(ylim=c(0.0001, 0.99901), expand=0) +
+  theme_few()
 
 
 # 3. regular minimal IRLS GLM algorithm, adapted from https://bwlewis.github.io/GLM/
@@ -146,11 +191,7 @@ inverse_softMax_to_clr = function(mu) { log_mu = log(mu)
 inverse_softMax_to_alr = function(mu) { eta = log(mu)-log(mu[,1]) # link function for multinomial: converts predictions on response scale to additive log ratio scale
                                         return(eta) }
 
-softMax = function(eta) { require(mclustAddons)   # inverse link function for multinomial, note mclustAddons also has softmax(eta)
-                s = as.vector(logsumexp(eta))
-                mu = exp(eta-s) # = exp(eta) / rowSums(exp(eta)), but numerically more stable
-                return(mu)
-                }
+
 
 
 multinom_irls = function(X, # covariate matrix
