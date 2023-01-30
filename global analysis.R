@@ -2,7 +2,7 @@
 # DATA: GISAID OR NCBI DATA, ACCESSED VIA COVSPECTRUM API ####
 
 # T. Wenseleers
-# last update 25 JANUARY 2023
+# last update 30 JANUARY 2023
 
 # for similar analysis see https://nbviewer.org/github/gerstung-lab/SARS-CoV-2-International/blob/main/genomicsurveillance-int.ipynb#Check-some-fast-growing-lineages
 
@@ -650,7 +650,7 @@ date.to = today_num+extrapolate
 
 # multinomial model predictions by country/divisions with CIs calculated using margineffects::predictions
 
-step=1
+step=2
 predgrid = expand.grid(list(date_num=as.numeric(seq(date.from, date.to, by=step)),
                             division=unique(data_agbyweekcountry1$division)))
 predgrid$region = data_agbyweekcountry1$region[match(predgrid$division,
