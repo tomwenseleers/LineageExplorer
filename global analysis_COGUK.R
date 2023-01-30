@@ -587,7 +587,29 @@ cols = colorRampPalette(c("red3", "blue3"))(length(levels(meffects_sel1$group)))
 if (source!="COGUK") { subtit = paste0("based on multinomial fit ", model, "\nGISAID data with NextcladePangolin lineage definition,\nusing data from countries with >=", minseqs, " XBB.1.5* sequences") } else {
   subtit = paste0("based on multinomial fit ", model, "\nCOG-UK data with NextcladePangolin lineages called by Dave McNally")
   if (subsettoONS) subtit = paste0(subtit, " (ONS subset)")
-  }
+}
+
+meffects_sel1
+#   rowid type              group     term    contrast         dydx    std.error   statistic p.value   conf.low     conf.high
+# 9      1 link    Omicron (BF.7*) date_num mean(dY/dX) -0.038322684 2.704503e-06 -14169.9558       0 -0.038327985 -0.038317383
+# 10     1 link Omicron (BA.2.75*) date_num mean(dY/dX) -0.023699525 9.299756e-06  -2548.4028       0 -0.023717752 -0.023681298
+# 11     1 link    Omicron (BQ.1*) date_num mean(dY/dX) -0.007870475 1.111827e-06  -7078.8642       0 -0.007872654 -0.007868296
+# 12     1 link  Omicron (BR.2.1*) date_num mean(dY/dX)  0.073234807 5.414604e-06  13525.4230       0  0.073224195  0.073245420
+# 13     1 link  Omicron (CH.1.1*) date_num mean(dY/dX)  0.040366566 1.039418e-06  38835.7272       0  0.040364529  0.040368603
+# 14     1 link Deltacron (XAY.2*) date_num mean(dY/dX) -0.009185985 5.167657e-05   -177.7592       0 -0.009287269 -0.009084701
+# 15     1 link     Omicron (XBF*) date_num mean(dY/dX)  0.077109497 3.849013e-06  20033.5745       0  0.077101953  0.077117041
+# 16     1 link     Omicron (XBB*) date_num mean(dY/dX) -0.014194067 1.704315e-06  -8328.3127       0 -0.014197408 -0.014190727
+# 17     1 link Omicron (XBB.1.5*) date_num mean(dY/dX)  0.086893918 1.896541e-06  45817.0639       0  0.086890201  0.086897635
+# predicted predicted_hi predicted_lo
+# 9  -4.8614709   -4.8616051   -4.8614709
+# 10 -6.8547093   -6.8547923   -6.8547093
+# 11 -1.6526025   -1.6526300   -1.6526025
+# 12 -1.9874630   -1.9872067   -1.9874630
+# 13  0.4207816    0.4209229    0.4207816
+# 14 -9.4826896   -9.4827217   -9.4826896
+# 15 -1.1182985   -1.1180287   -1.1182985
+# 16 -2.8897311   -2.8897807   -2.8897311
+# 17  0.6485660    0.6488702    0.6485660
 
 qplot(data=meffects_sel1, 
       x=group, y=dydx*100, ymin=conf.low*100, ymax=conf.high*100, fill=group, geom="col", 
