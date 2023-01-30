@@ -2,7 +2,7 @@
 # DATA: COG-UK, NextCladePangolineages called by DaveMc Nally, see https://ukcovid.xyz/variant-landscape.php and https://ukcovid.xyz/cog.csv ####
 
 # T. Wenseleers
-# last update 20 JANUARY 2023
+# last update 30 JANUARY 2023
 
 # for similar analysis see https://nbviewer.org/github/gerstung-lab/SARS-CoV-2-International/blob/main/genomicsurveillance-int.ipynb#Check-some-fast-growing-lineages
 
@@ -254,6 +254,7 @@ data$variant <- case_when(
   )
 
 length(unique(data$variant)) == length(levels_VARIANTS) # correct
+max(data$date) # "2023-01-13"
 
 # note: in India BA.2.38 & BA.2.38.1 caused an infection wave in some states - hence separated out above
 # B.1.177+B.1.160+B.1.221 were behind the 2020 wave in fall in Europe & each had one spike mutations & a small growth rate advantage relative to predominant B.1.1
