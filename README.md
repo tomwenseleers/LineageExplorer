@@ -1,4 +1,4 @@
-## ![](plots/GISAID/predicted%20lineage%20freqs_last6months_logit%20scale.png)LineageExplorer: Estimate growth rate advantage of SARS-CoV2 variants of concern based on international genomic surveillance data and multinomial spline fits
+## LineageExplorer: Estimate growth rate advantage of SARS-CoV2 variants of concern based on international genomic surveillance data and multinomial spline fits
 
 **Tom Wenseleers**
 
