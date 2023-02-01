@@ -2,7 +2,7 @@
 # DATA: GISAID OR NCBI DATA, ACCESSED VIA COVSPECTRUM API ####
 
 # T. Wenseleers
-# last update 30 JANUARY 2023
+# last update 1 FEBRUARY 2023
 
 # for similar analysis see https://nbviewer.org/github/gerstung-lab/SARS-CoV-2-International/blob/main/genomicsurveillance-int.ipynb#Check-some-fast-growing-lineages
 
@@ -506,7 +506,63 @@ system.time(meffects <- marginaleffects(fit_best,
                                                newdata = datagrid(date_num = today_num 
                                                ))) # 15s
 
-# growth rate advantage compared to reference level BA.5.2 by region
+meffects
+# rowid type                group     term    contrast         dydx    std.error  statistic       p.value     conf.low
+# 1      1 link    Omicron (BQ.1.1*) date_num mean(dY/dX)  0.000000000 0.0000000000        NaN           NaN  0.000000000
+# 2      1 link                Other date_num mean(dY/dX) -0.005668994 0.0001694021  -33.46472 1.572193e-245 -0.006001016
+# 3      1 link        B.1.177 (EU1) date_num mean(dY/dX) -0.475543422 0.0022311139 -213.14171  0.000000e+00 -0.479916325
+# 4      1 link        B.1.160 (EU2) date_num mean(dY/dX) -0.433694439 0.0037709665 -115.00883  0.000000e+00 -0.441085397
+# 5      1 link  B.1.221 (20A/S:98F) date_num mean(dY/dX) -0.482432418 0.0056316331  -85.66475  0.000000e+00 -0.493470217
+# 6      1 link                 Beta date_num mean(dY/dX) -0.130876069 0.0016962927  -77.15418  0.000000e+00 -0.134200742
+# 7      1 link                Alpha date_num mean(dY/dX) -0.286078579 0.0011508217 -248.58635  0.000000e+00 -0.288334148
+# 8      1 link                Delta date_num mean(dY/dX) -0.394057334 0.0008396494 -469.31177  0.000000e+00 -0.395703016
+# 9      1 link      Omicron (BA.1*) date_num mean(dY/dX) -0.396884532 0.0010407146 -381.35769  0.000000e+00 -0.398924295
+# 10     1 link      Omicron (BA.2*) date_num mean(dY/dX) -0.242717538 0.0004963978 -488.95776  0.000000e+00 -0.243690460
+# 11     1 link Omicron (BA.2.12.1*) date_num mean(dY/dX) -0.252638458 0.0008218404 -307.40575  0.000000e+00 -0.254249235
+# 12     1 link   Omicron (BA.2.38*) date_num mean(dY/dX) -0.172155587 0.0012914175 -133.30746  0.000000e+00 -0.174686719
+# 13     1 link      Omicron (BA.4*) date_num mean(dY/dX) -0.059031499 0.0004116577 -143.39949  0.000000e+00 -0.059838334
+# 14     1 link    Omicron (BA.4.6*) date_num mean(dY/dX) -0.037604203 0.0003751398 -100.24051  0.000000e+00 -0.038339463
+# 15     1 link      Omicron (BA.5*) date_num mean(dY/dX) -0.032064419 0.0002001874 -160.17199  0.000000e+00 -0.032456779
+# 16     1 link    Omicron (BA.5.2*) date_num mean(dY/dX) -0.034277538 0.0002001460 -171.26269  0.000000e+00 -0.034669817
+# 17     1 link      Omicron (BF.7*) date_num mean(dY/dX) -0.021398255 0.0002686889  -79.63953  0.000000e+00 -0.021924875
+# 18     1 link   Omicron (BA.2.76*) date_num mean(dY/dX) -0.079731515 0.0020761226  -38.40405  0.000000e+00 -0.083800640
+# 19     1 link   Omicron (BA.2.75*) date_num mean(dY/dX) -0.042634292 0.0005645844  -75.51447  0.000000e+00 -0.043740857
+# 20     1 link      Omicron (BQ.1*) date_num mean(dY/dX) -0.009566649 0.0002199825  -43.48822  0.000000e+00 -0.009997807
+# 21     1 link    Omicron (BR.2.1*) date_num mean(dY/dX)  0.044178981 0.0025325187   17.44468  3.778206e-68  0.039215336
+# 22     1 link    Omicron (CH.1.1*) date_num mean(dY/dX)  0.048473979 0.0005037058   96.23471  0.000000e+00  0.047486734
+# 23     1 link   Deltacron (XAY.2*) date_num mean(dY/dX)  0.032451273 0.0017868900   18.16076  1.055607e-73  0.028949033
+# 24     1 link       Omicron (XBF*) date_num mean(dY/dX)  0.056345373 0.0015936244   35.35675 7.897128e-274  0.053221927
+# 25     1 link       Omicron (XBB*) date_num mean(dY/dX)  0.006314387 0.0004083559   15.46295  6.170737e-54  0.005514024
+# 26     1 link   Omicron (XBB.1.5*) date_num mean(dY/dX)  0.091992664 0.0016012307   57.45122  0.000000e+00  0.088854309
+# conf.high    predicted predicted_hi predicted_lo
+# 1   0.000000000    0.0000000    0.0000000    0.0000000
+# 2  -0.005336972   -2.2453591   -2.2460099   -2.2453591
+# 3  -0.471170519 -194.1235515 -194.1781439 -194.1235515
+# 4  -0.426303480 -181.4802652 -181.5300534 -181.4802652
+# 5  -0.471394620 -201.2949223 -201.3503055 -201.2949223
+# 6  -0.127551396  -47.7455377  -47.7605623  -47.7455377
+# 7  -0.283823009  -99.9504903  -99.9833321  -99.9504903
+# 8  -0.392411651 -110.0496734 -110.0949111 -110.0496734
+# 9  -0.394844769  -89.8353583  -89.8809207  -89.8353583
+# 10 -0.241744617  -45.0318149  -45.0596789  -45.0318149
+# 11 -0.251027680  -44.0200989  -44.0491018  -44.0200989
+# 12 -0.169624455  -34.1940194  -34.2137829  -34.1940194
+# 13 -0.058224665   -9.9236383   -9.9304151   -9.9236383
+# 14 -0.036868942   -5.8752595   -5.8795765   -5.8752595
+# 15 -0.031672059   -4.2578294   -4.2615104   -4.2578294
+# 16 -0.033885259   -3.8490784   -3.8530135   -3.8490784
+# 17 -0.020871634   -3.8344226   -3.8368791   -3.8344226
+# 18 -0.075662389  -17.2360931  -17.2452463  -17.2360931
+# 19 -0.041527727   -7.2670859   -7.2719803   -7.2670859
+# 20 -0.009135491   -1.4988843   -1.4999825   -1.4988843
+# 21  0.049142627   -3.0022582   -2.9971864   -3.0022582
+# 22  0.049461225    1.0038965    1.0094613    1.0038965
+# 23  0.035953513   -9.9938155   -9.9900901   -9.9938155
+# 24  0.059468820   -1.8620793   -1.8556109   -1.8620793
+# 25  0.007114750   -2.1107470   -2.1100221   -2.1107470
+# 26  0.095131018    0.7917323    0.8022931    0.7917323
+
+# growth rate advantage compared to reference level by region
 system.time(meffects_byregion <- marginaleffects(fit_best, 
                                                type = "link", # = additive log-ratio = growth rate advantage relative to BQ.1.1*
                                                variables = c("date_num"),
@@ -540,9 +596,9 @@ system.time(meffects_byregion <- marginaleffects(fit_best,
 
 # plot of growth rate advantage of last n newest variants
 # TO DO: order by selective advantage and then take top lastn
-lastn = 11 # last n variants to show - change in top n ?
+lastn = 13 # last n variants to show - change in top n ?
 sel_variants = tail(levels_VARIANTS,lastn)
-sel_variants = sel_variants[!sel_variants %in% c(baseline, "Omicron (BA.4.6*)", "Omicron (BA.5*)", "Omicron (BA.2.76*)")]
+sel_variants = sel_variants[!sel_variants %in% c(baseline, "Omicron (BA.4.6*)", "Omicron (BA.2.76*)")]
 meffects_sel1 = meffects[meffects$group %in% sel_variants,]
 meffects_sel1$group = factor(meffects_sel1$group, levels=meffects_sel1$group[order(meffects_sel1$dydx, decreasing=T)])
 cols = colorRampPalette(c("red3", "blue3"))(length(levels(meffects_sel1$group)))
@@ -564,7 +620,7 @@ ggsave(file=file.path(plotdir,"growth rate advantage VOCs_overall.png"), width=7
 # plot of growth rate advantage of last X newest variants by continent
 # TO DO: order by selective advantage and then take top n
 sel_variants = tail(levels_VARIANTS,lastn)
-sel_variants = sel_variants[!sel_variants %in% c(baseline, "Omicron (BA.4.6*)", "Omicron (BA.5*)", "Omicron (BA.2.76*)")]
+sel_variants = sel_variants[!sel_variants %in% c(baseline, "Omicron (BA.4.6*)", "Omicron (BA.2.76*)")]
 sel_regions = unique(data_agbyweekcountry1$region)
 # sel_regions = sel_regions[!sel_regions %in% c("Africa")] # too little data
 meffects_sel2 = meffects_byregion[meffects_byregion$region %in% sel_regions,]
