@@ -2,14 +2,9 @@
 # DATA: COG-UK, NextCladePangolineages called by DaveMc Nally, see https://ukcovid.xyz/variant-landscape.php and https://ukcovid.xyz/cog.csv ####
 
 # T. Wenseleers
-# last update 1 FEBRUARY 2023
+# last update 9 FEBRUARY 2023
 
 # for similar analysis see https://nbviewer.org/github/gerstung-lab/SARS-CoV-2-International/blob/main/genomicsurveillance-int.ipynb#Check-some-fast-growing-lineages
-
-# note: script below is fairly memory hungry - best to run this on workstation 
-# with 64 Gb RAM - it runs quite fast though - just ca 30 mins including
-# downloading all the lastest data from GISAID & COG-UK
-
 
 # rm(list = ls()) # clear workspace
 gc()
@@ -199,13 +194,15 @@ levels_VARIANTS = c("Other", "B.1.177 (EU1)", "B.1.160 (EU2)",
                     "Omicron (XBF*)",
                     # "Omicron (XBK*)", # TO DO XBK* = BM.1.1* (Nextclade) + C1627T + S:F486P = https://cov-spectrum.org/explore/World/AllSamples/Past6M/variants?aaMutations=S%3AF486P&nucMutations=C1627T&nextcladePangoLineage=BM.1.1*
                     "Omicron (XBB*)", 
-                    "Omicron (XBB.1.5*)"
+                    "Omicron (XBB.1.5*)",
+                    "Omicron (XBB.1.9.1*)"
 )
 target_variant = "Omicron (XBB.1.5*)"
 baseline = "Omicron (BQ.1.1*)"
 # I am using this order in plots, baseline is in fits coded as reference level
 
 data$variant <- case_when(
+  linplus("XBB.1.9") ~ "Omicron (XBB.1.9*)",
   linplus("XBB.1.5") ~ "Omicron (XBB.1.5*)",
   linplus("XBB") ~ "Omicron (XBB*)",
   linplus("BR.2.1") ~ "Omicron (BR.2.1*)",
@@ -290,7 +287,8 @@ lineage_cols = case_when(
     levels_VARIANTS=="Deltacron (XAY.2*)" ~ "cyan4",
     levels_VARIANTS=="Omicron (XBF*)" ~ "cyan3",
     levels_VARIANTS=="Omicron (XBB*)" ~ "cyan2",
-    levels_VARIANTS=="Omicron (XBB.1.5*)" ~ "cyan"
+    levels_VARIANTS=="Omicron (XBB.1.5*)" ~ "cyan",
+    levels_VARIANTS=="Omicron (XBB.1.9.1*)" ~ "yellow"
   )
 names(lineage_cols) = levels_VARIANTS
 length(levels_VARIANTS) == length(lineage_cols) # correct
@@ -578,7 +576,7 @@ system.time(meffects_byregion <- marginaleffects(fit_best,
 
 # plot of growth rate advantage of last n newest variants
 # TO DO: order by selective advantage and then take top lastn
-lastn = 13 # last n variants to show - change in top n ?
+lastn = 14 # last n variants to show - change in top n ?
 sel_variants = tail(levels_VARIANTS,lastn)
 sel_variants = sel_variants[!sel_variants %in% c(baseline, "Omicron (BA.4.6*)", "Omicron (BA.2.76*)")]
 meffects_sel1 = meffects[meffects$group %in% sel_variants,]
@@ -590,30 +588,8 @@ if (source!="COGUK") { subtit = paste0("based on multinomial fit ", model, "\nGI
 }
 
 meffects_sel1
-# rowid type              group     term    contrast         dydx    std.error   statistic p.value     conf.low    conf.high
-# 7      1 link    Omicron (BA.5*) date_num mean(dY/dX) -0.031555334 2.945481e-06 -10713.1358       0 -0.031561107 -0.031549561
-# 8      1 link  Omicron (BA.5.2*) date_num mean(dY/dX) -0.031264893 2.107663e-06 -14833.9120       0 -0.031269024 -0.031260763
-# 9      1 link    Omicron (BF.7*) date_num mean(dY/dX) -0.038322684 2.704502e-06 -14169.9604       0 -0.038327985 -0.038317383
-# 10     1 link Omicron (BA.2.75*) date_num mean(dY/dX) -0.023699525 9.299756e-06  -2548.4028       0 -0.023717752 -0.023681298
-# 11     1 link    Omicron (BQ.1*) date_num mean(dY/dX) -0.007870475 1.111827e-06  -7078.8642       0 -0.007872654 -0.007868296
-# 12     1 link  Omicron (BR.2.1*) date_num mean(dY/dX)  0.073234808 5.414600e-06  13525.4318       0  0.073224195  0.073245420
-# 13     1 link  Omicron (CH.1.1*) date_num mean(dY/dX)  0.040366566 1.039418e-06  38835.7272       0  0.040364529  0.040368603
-# 14     1 link Deltacron (XAY.2*) date_num mean(dY/dX) -0.009185985 5.167657e-05   -177.7592       0 -0.009287269 -0.009084701
-# 15     1 link     Omicron (XBF*) date_num mean(dY/dX)  0.077109497 3.849011e-06  20033.5875       0  0.077101953  0.077117041
-# 16     1 link     Omicron (XBB*) date_num mean(dY/dX) -0.014194067 1.704315e-06  -8328.3114       0 -0.014197408 -0.014190727
-# 17     1 link Omicron (XBB.1.5*) date_num mean(dY/dX)  0.086893918 1.896539e-06  45817.0937       0  0.086890201  0.086897635
-# predicted predicted_hi predicted_lo
-# 7  -4.8632849   -4.8633953   -4.8632849
-# 8  -4.1157625   -4.1158719   -4.1157625
-# 9  -4.9381163   -4.9382504   -4.9381163
-# 10 -6.9021084   -6.9021913   -6.9021084
-# 11 -1.6683434   -1.6683710   -1.6683434
-# 12 -1.8409934   -1.8407371   -1.8409934
-# 13  0.5015148    0.5016560    0.5015148
-# 14 -9.5010615   -9.5010937   -9.5010615
-# 15 -0.9640796   -0.9638097   -0.9640796
-# 16 -2.9181192   -2.9181689   -2.9181192
-# 17  0.8223539    0.8226580    0.8223539
+
+write.csv(meffects_sel1, file.path(plotdir, "growth rate advantage all variants vs BQ_1_1.csv"), row.names=F)
 
 qplot(data=meffects_sel1, 
       x=group, y=dydx*100, ymin=conf.low*100, ymax=conf.high*100, fill=group, geom="col", 
