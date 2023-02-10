@@ -2,7 +2,7 @@
 # DATA: GISAID OR NCBI DATA, ACCESSED VIA COVSPECTRUM API ####
 
 # T. Wenseleers
-# last update 6 FEBRUARY 2023
+# last update 10 FEBRUARY 2023
 
 # for similar analysis see https://nbviewer.org/github/gerstung-lab/SARS-CoV-2-International/blob/main/genomicsurveillance-int.ipynb#Check-some-fast-growing-lineages
 
@@ -296,7 +296,7 @@ data$floor_date = fast_strptime(as.character(cut(data$date, "week")), "%Y-%m-%d"
 data$date_num = as.numeric(data$date)
 
 # sort countries by incidence of target variant
-data$country = factor(data$country, levels=toplist$country)
+data$country = factor(data$country, levels=unique(toplist$country))
 
 # sort divisions/states & countries by incidence of target variant
 total_count_target_variant = data %>%
