@@ -50,10 +50,10 @@ source(".//download_covSpectrum.R") # utility function download_covSpectrum to d
 target_variant = "XBB.1.5*"
 
 # select countries to use in analyses, here those with >=5 XBB.1.5* sequences ####
-# over the past 30 days & 100 sequenced genomes in total over that period
+# over the past 60 days & 100 sequenced genomes in total over that period
 minseqs = 5
 mintotalseqs = 100
-lastdays = 30
+lastdays = 60
 toplist = countrieswithvariant(target_variant="XBB.1.5*", 
                                  minseqs=minseqs,
                                  mintotalseqs=mintotalseqs,
@@ -339,7 +339,7 @@ data_agbyweek1 = left_join(data_agbyweek1, data_agbyweek1_total) %>%
 data_agbyweek1 = as.data.frame(data_agbyweek1)
 data_agbyweek1$date = as.Date(data_agbyweek1$date)
 data_agbyweek1$date_num = as.numeric(data_agbyweek1$date)
-# write.csv(data_agbyweek1, file=".//data//COVSPECTRUM//COVSPECTRUM aggregated counts by week_all.csv", row.names=F)
+write.csv(data_agbyweek1, file=".//plots//GISAID//COVSPECTRUM aggregated counts by week_all.csv", row.names=F)
 
 
 # AGGREGATED DATA BY WEEK & COUNTRY/DIVISION ####
@@ -657,7 +657,7 @@ date.to = today_num+extrapolate
 
 # multinomial model predictions by country/divisions with CIs calculated using margineffects::predictions
 
-step=2
+step=4
 predgrid = expand.grid(list(date_num=as.numeric(seq(date.from, date.to, by=step)),
                             division=unique(data_agbyweekcountry1$division)))
 predgrid$region = data_agbyweekcountry1$region[match(predgrid$division,
@@ -838,7 +838,8 @@ pl = qplot(data=datsubs,
 # theme(plot.subtitle=element_text(size=20))
 pl
 
-ggsave(file=file.path(plotdir, paste0("predicted lineage freqs_", region, "_logit scale.png")), width=9, height=3+2*ndivisions)
+ggsave(file=file.path(plotdir, paste0("predicted lineage freqs_", region, "_logit scale.png")), 
+       width=9, height=3+2*ndivisions, limitsize = FALSE)
 
 }
 
