@@ -26,7 +26,7 @@ download_covSpectrum = function(source="GISAID",  # or "NCBI"
   query = paste0(
     base_url,
     "dateFrom=", date_from,
-    "&host=Human",
+    "&(host=Homo sapiensORhost=Human)", # NCBI uses "Homo sapiens" 
     "&fields=region,country"
   )
   if (bypangolineage) query = paste0(query, ",nextcladePangoLineage")
