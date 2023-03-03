@@ -2,7 +2,7 @@
 # DATA: GISAID OR NCBI DATA, ACCESSED VIA COVSPECTRUM API ####
 
 # T. Wenseleers
-# last update 24 FEBRUARY 2023
+# last update 3 MARCH 2023
 
 # for similar analysis see https://nbviewer.org/github/gerstung-lab/SARS-CoV-2-International/blob/main/genomicsurveillance-int.ipynb#Check-some-fast-growing-lineages
 
@@ -182,14 +182,14 @@ levels_VARIANTS = c("Other", "B.1.177 (EU1)", "B.1.160 (EU2)",
                     # "Omicron (XBK*)", # TO DO XBK* = BM.1.1* (Nextclade) + C1627T + S:F486P = https://cov-spectrum.org/explore/World/AllSamples/Past6M/variants?aaMutations=S%3AF486P&nucMutations=C1627T&nextcladePangoLineage=BM.1.1*
                     "Omicron (XBB*)", 
                     "Omicron (XBB.1.5*)",
-                    "Omicron (XBB.1.9.1*)"
+                    "Omicron (XBB.1.9.1*+1.9.2*)"
 )
 target_variant = "Omicron (XBB.1.5*)"
 baseline = "Omicron (BQ.1.1*)"
 # I am using this order in plots, baseline is in fits coded as reference level
 
 data$variant <- case_when(
-  linplus("XBB.1.9.1") ~ "Omicron (XBB.1.9.1*)",
+  linplus("XBB.1.9.1")|linplus("XBB.1.9.2") ~ "Omicron (XBB.1.9.1*+1.9.2*)",
   linplus("XBB.1.5") ~ "Omicron (XBB.1.5*)",
   linplus("XBB") ~ "Omicron (XBB*)",
   linplus("BR.2.1") ~ "Omicron (BR.2.1*)",
@@ -269,12 +269,12 @@ lineage_cols = case_when(
     levels_VARIANTS=="Omicron (BQ.1.1*)" ~ "orange",
     levels_VARIANTS=="Omicron (BQ.1*)" ~ "orange2",
     levels_VARIANTS=="Omicron (BR.2.1*)" ~ "orange3",
-    levels_VARIANTS=="Omicron (CH.1.1*)" ~ "yellow3",  
+    levels_VARIANTS=="Omicron (CH.1.1*)" ~ "cyan",  
     levels_VARIANTS=="Deltacron (XAY.2*)" ~ "cyan4",
     levels_VARIANTS=="Omicron (XBF*)" ~ "cyan3",
-    levels_VARIANTS=="Omicron (XBB*)" ~ "cyan2",
-    levels_VARIANTS=="Omicron (XBB.1.5*)" ~ "cyan",
-    levels_VARIANTS=="Omicron (XBB.1.9.1*)" ~ "yellow"
+    levels_VARIANTS=="Omicron (XBB*)" ~ "yellow3",
+    levels_VARIANTS=="Omicron (XBB.1.5*)" ~ "yellow2",
+    levels_VARIANTS=="Omicron (XBB.1.9.1*+1.9.2*)" ~ "yellow"
   )
 names(lineage_cols) = levels_VARIANTS
 length(levels_VARIANTS) == length(lineage_cols) # correct
