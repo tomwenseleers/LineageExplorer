@@ -893,6 +893,73 @@ ggsave(file=file.path(plotdir, paste0("predicted lineage freqs_",division,"_logi
 }
 
 
+# plot predicted values as Muller plot across all divisions shown in multipanel plot
+pl = ggplot(data=fit_preds[fit_preds$date>=as.Date("2021-01-01"),],
+            aes(x=date, y=predicted, group=variant)) +
+  facet_wrap(~ division, ncol=ncls) +
+  geom_area(aes(width=I(10), colour=NULL, fill=variant, group=variant), position="fill") +
+  scale_fill_manual("", values=lineage_cols) +
+  scale_x_date(date_breaks = "3 months", date_labels =  "%b %Y") +
+  theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +
+  # guides(color = guide_legend(reverse=F, nrow=2, byrow=T), fill = guide_legend(reverse=F, nrow=2, byrow=T)) +
+  theme_hc() +
+  ylab("Share") +
+  theme(legend.position="right",
+        axis.title.x=element_blank()) +
+  labs(title = "SARS-CoV2 LINEAGE FREQUENCIES",
+       subtitle=paste0("GISAID data up to ",today, ", multinomial fit ", model, ",\nall countries with >=", minseqs, " XBB.1.5* sequences shown")) +
+  annotate("rect",
+           xmin=max(data$date)+1,
+           xmax=as.Date(date.to, origin="1970-01-01"),
+           ymin=0, ymax=1, alpha=0.5, fill="white") + # extrapolated part
+  theme(plot.title=element_text(size=25)) +
+  theme(plot.subtitle=element_text(size=20)) +
+  labs(tag = tag) +
+  theme(plot.tag.position = "bottomright",
+        plot.tag = element_text(vjust = 1, hjust = 1, size=8)) +
+  coord_cartesian(xlim=as.Date(c(NA, today), origin="1970-01-01"), expand=F)
+pl
+
+ggsave(file=file.path(plotdir, "predicted lineage freqs_muller plot.png"),
+       width=3*ncls, 
+       height=(3/1.5)*ncls)
+
+
+# separate Muller plots for each division/country
+
+divisions = unique(data_agbyweekcountry1$division)
+for (division in divisions) {
+  pl = ggplot(data=fit_preds[fit_preds$date>=as.Date("2021-01-01")&fit_preds$division==division,],
+              aes(x=date, y=predicted, group=variant)) +
+    geom_area(aes(width=I(10), colour=NULL, fill=variant, group=variant), position="fill") +
+    scale_fill_manual("", values=lineage_cols) +
+    ggtitle(paste0("SARS-CoV2 LINEAGE FREQUENCIES IN ", toupper(division)),
+            subtitle=paste0("GISAID data up to ",today, "\nmultinomial fit ", model, "\nusing NextCladePangolin lineages")) +
+    scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y") +   
+    theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +  
+    # guides(color = guide_legend(reverse=F, nrow=2, byrow=T), fill = guide_legend(reverse=F, nrow=2, byrow=T)) +
+    theme_hc() +
+    ylab("Share") +
+    theme(legend.position="bottom",
+          axis.title.x=element_blank()) +
+    annotate("rect",
+             xmin=max(data$date)+1,
+             xmax=as.Date(today, origin="1970-01-01"),
+             ymin=0, ymax=1, alpha=0.5, fill="white") + # extrapolated part
+    # theme(plot.title=element_text(size=25)) +
+    # theme(plot.subtitle=element_text(size=20)) +
+    labs(tag = tag) +
+    theme(plot.tag.position = "bottomright",
+          plot.tag = element_text(vjust = 1, hjust = 1, size=8)) +
+    coord_cartesian(xlim=as.Date(c(NA, today), origin="1970-01-01"), expand=F)
+  pl
+  
+  ggsave(file=file.path(plotdir, paste0("predicted lineage freqs_",division,"_muller plot.png")), width=9, height=6)
+}
+
+
+
+
 # # STILL NEED TO FINISH PART BELOW ####
 # 
 # # map variant shares onto estimated infections as estimated by IHME ####
@@ -954,32 +1021,7 @@ ggsave(file=file.path(plotdir, paste0("predicted lineage freqs_",division,"_logi
 # # https://github.com/biobotanalytics/covid19-wastewater-data
 # 
 # 
-# # plot predicted values as Muller plot
-# pl = ggplot(data=fit_preds[fit_preds$date>=as.Date("2021-01-01"),], 
-#                     aes(x=date, y=predicted, group=variant)) +
-#   facet_wrap(~ division, ncol=ncls) +
-#   geom_area(aes(width=I(10), colour=NULL, fill=variant, group=variant), position="fill") +
-#   scale_fill_manual("", values=lineage_cols) +
-#   scale_x_date(date_breaks = "3 months", date_labels =  "%b %Y") +   
-#   theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +
-#   # guides(color = guide_legend(reverse=F, nrow=2, byrow=T), fill = guide_legend(reverse=F, nrow=2, byrow=T)) +
-#   theme_hc() +
-#   ylab("Share") +
-#   theme(legend.position="right",
-#         axis.title.x=element_blank()) +
-#   labs(title = "SARS-CoV2 LINEAGE FREQUENCIES",
-#        subtitle=paste0("GISAID data up to ",today, ", multinomial fit ", model, ",\nall countries with >=", minseqs, " XBB.1.5* sequences shown")) +
-#   annotate("rect", 
-#            xmin=max(data$date)+1, 
-#            xmax=as.Date(date.to, origin="1970-01-01")+5, 
-#            ymin=0, ymax=1, alpha=0.5, fill="white") + # extrapolated part
-#   theme(plot.title=element_text(size=25)) +
-#   theme(plot.subtitle=element_text(size=20))
-# pl
-# 
-# ggsave(file=file.path(plotdir, "muller plot.png"), 
-#        width=4*ncls, 
-#        height=(4/1.2)*ncls)
+
 # 
 # 
 # # MAP VARIANT SHARE ONTO CASE NUMBERS ####
