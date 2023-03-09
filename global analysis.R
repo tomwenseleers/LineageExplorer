@@ -2,7 +2,7 @@
 # DATA: GISAID OR NCBI DATA, ACCESSED VIA COVSPECTRUM API ####
 
 # T. Wenseleers
-# last update 3 MARCH 2023
+# last update 9 MARCH 2023
 
 # for similar analysis see https://nbviewer.org/github/gerstung-lab/SARS-CoV-2-International/blob/main/genomicsurveillance-int.ipynb#Check-some-fast-growing-lineages
 
@@ -182,14 +182,16 @@ levels_VARIANTS = c("Other", "B.1.177 (EU1)", "B.1.160 (EU2)",
                     # "Omicron (XBK*)", # TO DO XBK* = BM.1.1* (Nextclade) + C1627T + S:F486P = https://cov-spectrum.org/explore/World/AllSamples/Past6M/variants?aaMutations=S%3AF486P&nucMutations=C1627T&nextcladePangoLineage=BM.1.1*
                     "Omicron (XBB*)", 
                     "Omicron (XBB.1.5*)",
-                    "Omicron (XBB.1.9.1*+1.9.2*)"
+                    "Omicron (XBB.1.9.1/2*+1.11.1*)"
 )
 target_variant = "Omicron (XBB.1.5*)"
 baseline = "Omicron (BQ.1.1*)"
 # I am using this order in plots, baseline is in fits coded as reference level
 
+# TO DO: add XBB.1.16 = T12730A, T28297C, A28447G = S:E180V S:K478R S:S486P ORF9b:I5T ORF9b:N55S ORF1a:L3829F ORF1b:D1746Y
+
 data$variant <- case_when(
-  linplus("XBB.1.9.1")|linplus("XBB.1.9.2") ~ "Omicron (XBB.1.9.1*+1.9.2*)",
+  linplus("XBB.1.9.1")|linplus("XBB.1.9.2")|linplus("EG.1")|linplus("XBB.1.11.1") ~ "Omicron (XBB.1.9.1/2*+1.11.1*)",
   linplus("XBB.1.5") ~ "Omicron (XBB.1.5*)",
   linplus("XBB") ~ "Omicron (XBB*)",
   linplus("BR.2.1") ~ "Omicron (BR.2.1*)",
@@ -274,7 +276,7 @@ lineage_cols = case_when(
     levels_VARIANTS=="Omicron (XBF*)" ~ "cyan3",
     levels_VARIANTS=="Omicron (XBB*)" ~ "yellow3",
     levels_VARIANTS=="Omicron (XBB.1.5*)" ~ "yellow2",
-    levels_VARIANTS=="Omicron (XBB.1.9.1*+1.9.2*)" ~ "yellow"
+    levels_VARIANTS=="Omicron (XBB.1.9.1/2*+1.11.1*)" ~ "yellow"
   )
 names(lineage_cols) = levels_VARIANTS
 length(levels_VARIANTS) == length(lineage_cols) # correct
@@ -964,17 +966,28 @@ for (division in divisions) {
 # 
 # # map variant shares onto estimated infections as estimated by IHME ####
 # 
-# ihme = bind_rows(read_csv("https://ihmecovid19storage.blob.core.windows.net/archive/2022-12-16/data_download_file_reference_2020.csv"),
-#                  read_csv("https://ihmecovid19storage.blob.core.windows.net/archive/2022-12-16/data_download_file_reference_2021.csv"),
-#                  read_csv("https://ihmecovid19storage.blob.core.windows.net/archive/2022-12-16/data_download_file_reference_2022.csv"),
-#                  read_csv("https://ihmecovid19storage.blob.core.windows.net/archive/2022-12-16/data_download_file_reference_2023.csv"))
-# names(ihme)
-# sort(unique(ihme$location_name))
-# 
-# # for England: map variant shares onto incidence data derived from ONS prevalence data
-# # see https://github.com/epiforecasts/inc2prev/tree/master/data-processed
-# 
-# 
+ihme = bind_rows(read_csv("https://ihmecovid19storage.blob.core.windows.net/archive/2022-12-16/data_download_file_reference_2020.csv"),
+                 read_csv("https://ihmecovid19storage.blob.core.windows.net/archive/2022-12-16/data_download_file_reference_2021.csv"),
+                 read_csv("https://ihmecovid19storage.blob.core.windows.net/archive/2022-12-16/data_download_file_reference_2022.csv"),
+                 read_csv("https://ihmecovid19storage.blob.core.windows.net/archive/2022-12-16/data_download_file_reference_2023.csv"))
+names(ihme)
+sort(unique(ihme$location_name))
+
+# for England: map variant shares onto incidence data derived from ONS prevalence data
+# see https://github.com/epiforecasts/inc2prev/tree/master/data-processed
+infections_ENG = read_csv("https://raw.githubusercontent.com/epiforecasts/inc2prev/master/outputs/estimates_national.csv") %>%
+  filter(variable == "England" & name=="infections")
+range(infections_ENG$date, na.rm=T)
+plot(infections_ENG$date, infections_ENG$median, type="l") # infection incidence (% infected per day)
+# use last datapoint & implied case infection ratio to give estimated infections for most recent datapoints?
+# see also https://github.com/PaulMainwood/infectdeaths https://twitter.com/PaulMainwood/status/1627826107163594754
+
+cuminfections_ENG = read_csv("https://raw.githubusercontent.com/epiforecasts/inc2prev/master/outputs/cumulative_national.csv") %>%
+  filter(variable == "England" & level == "national" & name=="cumulative_infections") 
+plot(cuminfections_ENG$date, cuminfections_ENG$q50, type="l") # infection incidence (% infected per day)
+# use 1st datapoint to scale cases & estimate infections before 2020-04-12 ?
+
+
 # # map US variant shares by region onto cases & wastewater surveillance data, cf. github Biobot Analytics ####
 # # https://github.com/biobotanalytics/covid19-wastewater-data
 # # I will need to estimate incidence from wastewater surveillance prevalence data then
