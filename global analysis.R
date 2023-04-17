@@ -2,7 +2,7 @@
 # DATA: GISAID OR NCBI DATA, ACCESSED VIA COVSPECTRUM API ####
 
 # T. Wenseleers
-# last update 31 MARCH 2023 
+# last update 17 APRIL 2023 
 
 # for similar analysis see https://nbviewer.org/github/gerstung-lab/SARS-CoV-2-International/blob/main/genomicsurveillance-int.ipynb#Check-some-fast-growing-lineages
 
@@ -54,7 +54,7 @@ target_variant = "XBB.1.5*"
 minseqs = 5
 mintotalseqs = 100
 lastdays = 60
-toplist = countrieswithvariant(target_variant="XBB.1.5*", 
+toplist = countrieswithvariant(target_variant=target_variant, 
                                  minseqs=minseqs,
                                  mintotalseqs=mintotalseqs,
                                  lastdays=lastdays)
@@ -105,6 +105,7 @@ aggregate_divisions = TRUE
 keyval= read.csv("./data/division_aggregation.csv") 
 
 sort(unique(data_percountry_perdivision$division))[!sort(unique(data_percountry_perdivision$division)) %in% keyval$division] # OK
+# should be empty, otherwise add entries to ./data/division_aggregation.csv
 
 if (aggregate_divisions) { 
   data_percountry_perdivision = data_percountry_perdivision %>% 
@@ -181,16 +182,18 @@ levels_VARIANTS = c("Other", "B.1.177 (EU1)", "B.1.160 (EU2)",
                     "Omicron (XBF*)",
                     "Omicron (XBB*)", 
                     "Omicron (XBB.1.5*)",
-                    "Omicron (XBB.1.9.1/2*+1.11.1*)",
-                    "Omicron (XBB.1.16*)"
+                    "Omicron (XBB.1.9.1/2*)",
+                    "Omicron (XBB.1.16*)"#,
+                    #"Deltacron (XBC.1*)"
 )
-target_variant = "Omicron (XBB.1.5*)"
-baseline = "Omicron (BQ.1.1*)"
+target_variant = "Omicron (XBB.1.16*)"
+baseline = "Omicron (XBB.1.5*)"
 # I am using this order in plots, baseline is in fits coded as reference level
 
 data$variant <- case_when(
+  # linplus("XBC.1") ~ "Deltacron (XBC.1*)",
   linplus("XBB.1.16") ~ "Omicron (XBB.1.16*)",
-  linplus("XBB.1.9.1")|linplus("XBB.1.9.2")|linplus("EG.1")|linplus("XBB.1.11.1") ~ "Omicron (XBB.1.9.1/2*+1.11.1*)",
+  linplus("XBB.1.9.1")|linplus("XBB.1.9.2")|linplus("EG.1") ~ "Omicron (XBB.1.9.1/2*)",
   linplus("XBB.1.5") ~ "Omicron (XBB.1.5*)",
   linplus("XBB") ~ "Omicron (XBB*)",
   linplus("BR.2.1") ~ "Omicron (BR.2.1*)",
@@ -275,8 +278,9 @@ lineage_cols = case_when(
     levels_VARIANTS=="Omicron (XBF*)" ~ "cyan3",
     levels_VARIANTS=="Omicron (XBB*)" ~ "yellow3",
     levels_VARIANTS=="Omicron (XBB.1.5*)" ~ "yellow2",
-    levels_VARIANTS=="Omicron (XBB.1.9.1/2*+1.11.1*)" ~ "yellow",
-    levels_VARIANTS=="Omicron (XBB.1.16*)" ~ "tomato"
+    levels_VARIANTS=="Omicron (XBB.1.9.1/2*)" ~ "yellow",
+    levels_VARIANTS=="Omicron (XBB.1.16*)" ~ "tomato" #,
+    # levels_VARIANTS=="Deltacron (XBC.1*)" ~ "tomato3"
   )
 names(lineage_cols) = levels_VARIANTS
 length(levels_VARIANTS) == length(lineage_cols) # correct
@@ -499,7 +503,7 @@ save.image("./environment.RData")
 saveRDS(fit_best, file="./fits/multinom_fit.rds")
 
 
-# CALCULATE GROWTH RATE ADVANTAGE OVER BASELINE REFERENCE LEVEL BQ.1.1* TODAY ####
+# CALCULATE GROWTH RATE ADVANTAGE OVER BASELINE REFERENCE LEVEL TODAY ####
 
 # with new faster marginaleffects code
 library(marginaleffects)
@@ -513,7 +517,7 @@ system.time(meffects <- marginaleffects(fit_best,
 
 meffects
 
-write.csv(meffects, file.path(plotdir, "growth rate advantage all variants vs BQ_1_1.csv"), row.names=F)
+write.csv(meffects, file.path(plotdir, paste0("growth rate advantage all variants vs ", gsub("[)*\\Omicron (]", "", baseline), ".csv")), row.names=F)
 
 # growth rate advantage compared to reference level by region
 system.time(meffects_byregion <- marginaleffects(fit_best, 
@@ -555,10 +559,11 @@ sel_variants = sel_variants[!sel_variants %in% c(baseline, "Omicron (BA.4.6*)", 
 meffects_sel1 = meffects[meffects$group %in% sel_variants,]
 meffects_sel1$group = factor(meffects_sel1$group, levels=meffects_sel1$group[order(meffects_sel1$dydx, decreasing=T)])
 cols = colorRampPalette(c("red3", "blue3"))(length(levels(meffects_sel1$group)))
+basel = gsub("[)*\\Omicron (]", "", baseline)
 qplot(data=meffects_sel1, 
       x=group, y=dydx*100, ymin=conf.low*100, ymax=conf.high*100, fill=group, geom="col", 
       width=I(0.7)) +
-  geom_linerange(aes(lwd=I(0.4))) + ylab("Growth rate advantage\nrelative to BQ.1.1* (% per day)") +
+  geom_linerange(aes(lwd=I(0.4))) + ylab(paste0("Growth rate advantage\nrelative to ", basel, " (% per day)")) +
   scale_fill_manual(values=cols) +
   theme(legend.position="none") + xlab("") +
   ggtitle("GROWTH RATE ADVANTAGE OF SARS-CoV2 VARIANTS",
@@ -601,7 +606,7 @@ qplot(data=meffects_sel2,
       x=group, y=dydx*100, ymin=conf.low*100, ymax=conf.high*100, fill=group, geom="col", 
       width=I(0.7)) +
   facet_wrap(~ region, ncol=1) +
-  geom_linerange(aes(lwd=I(0.4))) + ylab("Growth rate advantage\nrelative to BQ.1.1* (% per day)") +
+  geom_linerange(aes(lwd=I(0.4))) + ylab(paste0("Growth rate advantage\nrelative to ", basel, " (% per day)")) +
   scale_fill_manual(values=cols) +
   theme(legend.position="none") + xlab("") +
   ggtitle("GROWTH RATE ADVANTAGE OF SARS-CoV2 VARIANTS",
@@ -618,7 +623,7 @@ reg = "North America"
 qplot(data=meffects_sel2[meffects_sel2$region==reg,], 
       x=group, y=dydx*100, ymin=conf.low*100, ymax=conf.high*100, fill=group, geom="col", 
       width=I(0.7)) +
-  geom_linerange(aes(lwd=I(0.4))) + ylab("Growth rate advantage\nrelative to BQ.1.1* (% per day)") +
+  geom_linerange(aes(lwd=I(0.4))) + ylab(paste0("Growth rate advantage\nrelative to ", basel, " (% per day)")) +
   scale_fill_manual(values=cols) +
   theme(legend.position="none") + xlab("") +
   ggtitle(paste0("GROWTH RATE ADVANTAGE OF SARS-CoV2 VARIANTS\nIN ", toupper(reg)),
@@ -635,7 +640,7 @@ reg = "Europe"
 qplot(data=meffects_sel2[meffects_sel2$region==reg,], 
       x=group, y=dydx*100, ymin=conf.low*100, ymax=conf.high*100, fill=group, geom="col", 
       width=I(0.7)) +
-  geom_linerange(aes(lwd=I(0.4))) + ylab("Growth rate advantage\nrelative to BQ.1.1* (% per day)") +
+  geom_linerange(aes(lwd=I(0.4))) + ylab(paste0("Growth rate advantage\nrelative to ", basel, " (% per day)")) +
   scale_fill_manual(values=cols) +
   theme(legend.position="none") + xlab("") +
   ggtitle(paste0("GROWTH RATE ADVANTAGE OF SARS-CoV2 VARIANTS\nIN ", toupper(reg)),

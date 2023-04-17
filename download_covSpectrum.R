@@ -12,6 +12,8 @@ download_covSpectrum = function(source="GISAID",  # or "NCBI"
                                 ) {
   require(jsonlite)
   
+  options("timeout"=240)
+  
   # set REACT_APP_LAPIS_ACCESS_KEY as environment variable using Sys.setenv(REACT_APP_LAPIS_ACCESS_KEY = "XXXX") 
   # to be able to access COVSPECTRUM private GISAID part, cf. https://cov-spectrum.org/static/js/main.b4ab11d7.js
   if (file.exists("..//set_COVSPECTRUM_credentials.R")) source("..//set_COVSPECTRUM_credentials.R") 
