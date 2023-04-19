@@ -529,6 +529,8 @@ system.time(meffects_byregion <- marginaleffects(fit_best,
                                                                   region = unique(data_agbyweekcountry1$region)
                                                ))) # 15s
 
+write.csv(meffects_byregion, file.path(plotdir, paste0("growth rate advantage all variants vs ", gsub("[)*\\Omicron (]", "", baseline), "_by region.csv")), row.names=F)
+
 # for all pairwise growth rate differences:
 # growth_differences = comparisons(
 #   fit_best,
